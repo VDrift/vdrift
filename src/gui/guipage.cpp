@@ -228,12 +228,108 @@ static void ConnectActions(
 		size_t n = actionstr.find(':', pos);
 		if (n < posn && n + 1 < len && actionstr[n + 1] == '"')
 			posn = actionstr.find('"', n + 2) + 1;
+
 		std::string action = actionstr.substr(pos, posn - pos);
 		pos = posn;
 
 		typename ActionMap::const_iterator it = actionmap.find(action);
 		if (it != actionmap.end())
 			it->second->connect(signal);
+	}
+}
+
+template <class ActionMap, class WidgetMap, class WidgetListMap, class ActionValSet, class ActionValnSet>
+static void ParseActions(
+	const std::string & actions,
+	const ActionMap & vactionmap,
+	const WidgetMap & widgetmap,
+	const WidgetListMap & widgetlistmap,
+	ActionValSet & action_val_set,
+	ActionValnSet & action_valn_set)
+{
+	size_t len = actions.size();
+	size_t pos = 0;
+	while(pos < len)
+	{
+		pos = actions.find_first_not_of(' ', pos);
+		if (pos >= len)
+			break;
+
+		// get next action with value
+		size_t posn = actions.find(' ', pos);
+		size_t n = actions.find(':', pos);
+		if (n > posn)
+		{
+			pos = posn;
+			continue;
+		}
+
+		if (n + 1 < len && actions[n + 1] == '"')
+			posn = actions.find('"', n + 2) + 1;
+
+		std::string action = actions.substr(pos, posn - pos);
+		std::string aname = actions.substr(pos, n - pos);
+
+		pos = posn;
+
+		// check if action is in vactionmap
+		typename ActionMap::const_iterator vai = vactionmap.find(aname);
+		if (vai != vactionmap.end())
+		{
+			action_val_set.insert(std::make_pair(action, vai->second));
+			continue;
+		}
+
+		size_t wn = aname.find('.');
+		if (wn == 0 || wn == std::string::npos)
+			continue;
+
+		std::string wname = aname.substr(0, wn);
+		std::string pname = aname.substr(wn + 1);
+
+		// check if action is setting a widget property
+		typename WidgetMap::const_iterator wi = widgetmap.find(wname);
+		if (wi != widgetmap.end())
+		{
+			Slot1<const std::string &> * pslot;
+			if (wi->second->GetProperty(pname, pslot))
+				action_val_set.insert(std::make_pair(action, pslot));
+			continue;
+		}
+
+		// check if action is setting a widget list property (only valid for control lists)
+		typename WidgetListMap::const_iterator wli = widgetlistmap.find(wname);
+		if (wli != widgetlistmap.end())
+		{
+			Slot2<int, const std::string &> * pslot;
+			if (wli->second->GetProperty(pname, pslot))
+				action_valn_set.insert(std::make_pair(action, pslot));
+		}
+	}
+}
+
+template <class ActionValSet, class SignalValList, class ActionMap>
+static void RegisterActions(
+	const GuiLanguage & lang,
+	const ActionValSet & actionvs,
+	SignalValList & signalvs,
+	ActionMap & actionmap)
+{
+	signalvs.reserve(actionvs.size());
+	for (typename ActionValSet::const_iterator i = actionvs.begin(); i != actionvs.end(); ++i)
+	{
+		signalvs.push_back(typename SignalValList::value_type());
+		typename SignalValList::value_type & cb = signalvs.back();
+
+		const std::string & value = i->first;
+		size_t n = value.find(':') + 1;
+		if (value[n] == '"')
+			cb.value = lang(value.substr(n + 1, value.size() - n - 2));
+		else
+			cb.value = value.substr(n);
+
+		i->second->connect(cb.signal);
+		actionmap[i->first] = &cb.action;
 	}
 }
 
@@ -504,117 +600,35 @@ bool GuiPage::Load(
 
 	// first pass iterates over control signals to retrieve unique
 	// actions with parameter and widget property calls (action_value_set)
+	typedef std::pair<std::string, Slot2<int, const std::string &>*> ActionValn;
 	typedef std::pair<std::string, Slot1<const std::string &>*> ActionVal;
+	std::set<ActionValn> action_valn_set;
 	std::set<ActionVal> action_val_set;
 	for (size_t i = 0; i < controlit.size(); ++i)
 	{
+		std::string actionstr;
 		const Config::const_iterator & section = controlit[i];
 		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
 		{
-			std::string actions;
-			if (!pagefile.get(section, GuiControl::signal_names[j], actions))
-				continue;
-
-			size_t len = actions.size();
-			size_t pos = 0;
-			while(pos < len)
+			if (pagefile.get(section, GuiControl::signal_names[j], actionstr))
 			{
-				pos = actions.find_first_not_of(' ', pos);
-				if (pos >= len)
-					break;
-
-				// get next action with value
-				size_t posn = actions.find(' ', pos);
-				size_t n = actions.find(':', pos);
-				if (n > posn)
-				{
-					pos = posn;
-					continue;
-				}
-
-				if (n + 1 < len && actions[n + 1] == '"')
-					posn = actions.find('"', n + 2) + 1;
-
-				std::string action = actions.substr(pos, posn - pos);
-				std::string aname = actions.substr(pos, n - pos);
-				pos = posn;
-
-				StrSlotMap::const_iterator vai = vactionmap.find(aname);
-				if (vai != vactionmap.end())
-				{
-					action_val_set.insert(std::make_pair(action, vai->second));
-					continue;
-				}
-
-				// check if action is setting a widget property
-				size_t wn = aname.find('.');
-				if (wn == 0 || wn == std::string::npos)
-					continue;
-
-				std::string wname = aname.substr(0, wn);
-				std::map<std::string, GuiWidget*>::const_iterator wi = widgetmap.find(wname);
-				if (wi == widgetmap.end())
-					continue;
-
-				std::string pname = aname.substr(wn + 1);
-				Slot1<const std::string &> * pslot;
-				if (wi->second->GetProperty(pname, pslot))
-					action_val_set.insert(std::make_pair(action, pslot));
+				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
+					action_val_set, action_valn_set);
 			}
 		}
 	}
-
-	// iterate over control list signals now
-	typedef std::pair<std::string, Slot2<int, const std::string &>*> ActionValn;
-	std::set<ActionValn> action_valn_set;
-	for (size_t i = 0; i < controlnit.size(); ++i)
+	// page event actions
 	{
-		const Config::const_iterator & section = controlnit[i];
-		for (size_t j = 0; j < GuiControlList::signal_names.size(); ++j)
+		std::string actionstr;
+		if (pagefile.get("", "onfocus", actionstr))
 		{
-			std::string actions;
-			if (!pagefile.get(section, GuiControlList::signal_names[j], actions))
-				continue;
-
-			size_t len = actions.size();
-			size_t pos = 0;
-			while(pos < len)
-			{
-				pos = actions.find_first_not_of(' ', pos);
-				if (pos >= len)
-					break;
-
-				// get next action with value
-				size_t posn = actions.find(' ', pos);
-				size_t n = actions.find(':', pos);
-				if (n > posn)
-				{
-					pos = posn;
-					continue;
-				}
-
-				if (n + 1 < len && actions[n + 1] == '"')
-					posn = actions.find('"', n + 2) + 1;
-
-				std::string action = actions.substr(pos, posn - pos);
-				std::string aname = actions.substr(pos, n - pos);
-				pos = posn;
-
-				// check if action is setting a widget property
-				size_t wn = aname.find('.');
-				if (wn == 0 || wn == std::string::npos)
-					continue;
-
-				std::string wname = aname.substr(0, wn);
-				std::map<std::string, GuiWidgetList*>::const_iterator wi = widgetlistmap.find(wname);
-				if (wi == widgetlistmap.end())
-					continue;
-
-				std::string pname = aname.substr(wn + 1);
-				Slot2<int, const std::string &> * pslot;
-				if (wi->second->GetProperty(pname, pslot))
-					action_valn_set.insert(std::make_pair(action, pslot));
-			}
+			ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
+				action_val_set, action_valn_set);
+		}
+		if (pagefile.get("", "oncancel", actionstr))
+		{
+			ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
+				action_val_set, action_valn_set);
 		}
 	}
 
@@ -630,39 +644,8 @@ bool GuiPage::Load(
 	}
 
 	// register action calls with a parameter, so that they can be signaled by controls
-	// extra pass to avoid action_set reallocations
-	action_set.reserve(action_val_set.size());
-	for (std::set<ActionVal>::iterator i = action_val_set.begin(); i != action_val_set.end(); ++i)
-	{
-		action_set.push_back(SignalVal());
-		SignalVal & cb = action_set.back();
-
-		const std::string & value = i->first;
-		size_t n = value.find(':') + 1;
-		if (value[n] == '"')
-			cb.value = lang(value.substr(n + 1, value.size() - n - 2));
-		else
-			cb.value = value.substr(n);
-		i->second->connect(cb.signal);
-
-		actionmap[i->first] = &cb.action;
-	}
-	action_setn.reserve(action_valn_set.size());
-	for (std::set<ActionValn>::iterator i = action_valn_set.begin(); i != action_valn_set.end(); ++i)
-	{
-		action_setn.push_back(SignalValn());
-		SignalValn & cb = action_setn.back();
-
-		const std::string & value = i->first;
-		size_t n = value.find(':') + 1;
-		if (value[n] == '"')
-			cb.value = lang(value.substr(n + 1, value.size() - n - 2));
-		else
-			cb.value = value.substr(n);
-		i->second->connect(cb.signal);
-
-		nactionmap[i->first] = &cb.action;
-	}
+	RegisterActions(lang, action_val_set, action_set, actionmap);
+	RegisterActions(lang, action_valn_set, action_setn, nactionmap);
 
 	// final pass to connect control signals with their actions
 	for (size_t i = 0; i < controlit.size(); ++i)
@@ -688,8 +671,7 @@ bool GuiPage::Load(
 				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j]);
 		}
 	}
-
-	// connect page event handlers
+	// page event signals
 	{
 		std::string actionstr;
 		if (pagefile.get("", "onfocus", actionstr))
