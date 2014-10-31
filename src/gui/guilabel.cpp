@@ -24,6 +24,8 @@ GuiLabel::GuiLabel() :
 	m_font(0),
 	m_x(0),
 	m_y(0),
+	m_w(0),
+	m_h(0),
 	m_scalex(0),
 	m_scaley(0),
 	m_align(0)
@@ -60,7 +62,7 @@ void GuiLabel::SetupDrawable(
 	if (align == -1) x -= w * 0.5;
 	else if (align == 0) x -= textw * 0.5;
 	else if (align == 1) x -= (textw - w * 0.5);
-	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_r, m_g, m_b);
+	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_rgb[0], m_rgb[1], m_rgb[2]);
 }
 
 bool GuiLabel::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)

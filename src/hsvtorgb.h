@@ -106,6 +106,16 @@ inline void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
 	}
 }
 
+inline void HSVtoRGB(float hsv[3], float rgb[3])
+{
+	HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
+}
+
+inline void RGBtoHSV(float rgb[3], float hsv[3])
+{
+	RGBtoHSV(rgb[0], rgb[1], rgb[2], hsv[0], hsv[1], hsv[2]);
+}
+
 inline unsigned PackRGB(float r, float g, float b)
 {
 	unsigned rgb = 0;

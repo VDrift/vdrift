@@ -68,8 +68,9 @@ public:
 	Slot1<const std::string &> set_val;
 
 protected:
-	float m_r, m_g, m_b, m_a;	// color and alpha
-	float m_h, m_s, m_v;		// hue, sat, val cache
+	float m_rgb[3];
+	float m_hsv[3];
+	float m_alpha;
 	bool m_visible;
 	bool m_update;
 
