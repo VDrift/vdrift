@@ -86,27 +86,27 @@ void GuiWidget::SetRGB(float r, float g, float b)
 
 void GuiWidget::SetOpacity(float value)
 {
-	m_alpha = (value > 0) ? (value < 1) ? 1 - value : 0 : 1;
+	m_alpha = value;
 	m_update = true;
 }
 
 void GuiWidget::SetHue(float value)
 {
-	m_hsv[0] = (value > 0) ? (value < 1) ? value : 1 : 0;
+	m_hsv[0] = value;
 	HSVtoRGB(m_hsv, m_rgb);
 	m_update = true;
 }
 
 void GuiWidget::SetSat(float value)
 {
-	m_hsv[1] = (value > 0) ? (value < 1) ? value : 1 : 0;
+	m_hsv[1] = value;
 	HSVtoRGB(m_hsv, m_rgb);
 	m_update = true;
 }
 
 void GuiWidget::SetVal(float value)
 {
-	m_hsv[2] = (value > 0) ? (value < 1) ? value : 1 : 0;
+	m_hsv[2] = value;
 	HSVtoRGB(m_hsv, m_rgb);
 	m_update = true;
 }
