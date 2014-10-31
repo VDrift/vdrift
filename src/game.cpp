@@ -498,21 +498,23 @@ bool Game::InitGUI(const std::string & pagename)
 	std::map<std::string, GuiOption::List> valuelists;
 	PopulateValueLists(valuelists);
 
+	std::map<std::string, Signal1<const std::string &>*> vsignalmap;
 	std::map<std::string, Slot0*> actionmap;
 	InitActionMap(actionmap);
 
 	if (!gui.Load(
-			menufiles,
-			valuelists,
-			pathmanager.GetDataPath(),
-			pathmanager.GetOptionsFile(),
-			settings.GetSkin(),
-			settings.GetLanguage(),
-			(float)window.GetH() / window.GetW(),
-			actionmap,
-			content,
-			info_output,
-			error_output))
+		menufiles,
+		valuelists,
+		pathmanager.GetDataPath(),
+		pathmanager.GetOptionsFile(),
+		settings.GetSkin(),
+		settings.GetLanguage(),
+		(float)window.GetH() / window.GetW(),
+		vsignalmap,
+		actionmap,
+		content,
+		info_output,
+		error_output))
 	{
 		error_output << "Error loading GUI files" << std::endl;
 		return false;

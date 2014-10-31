@@ -52,7 +52,8 @@ public:
 		const std::string & skinname,
 		const std::string & language,
 		const float screenhwratio,
-		std::map <std::string, Slot0*> actionmap,
+		StrSignalMap vsignalmap,
+		SlotMap actionmap,
 		ContentManager & content,
 		std::ostream & info_output,
 		std::ostream & error_output);
