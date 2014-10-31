@@ -45,8 +45,6 @@ public:
 
 	void SetText(const std::string & text);
 
-	const std::string & GetText() const;
-
 	Slot1<const std::string &> set_value;
 
 private:

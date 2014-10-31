@@ -140,18 +140,13 @@ void UpdateManager::Show(Gui & gui)
 	}
 
 	// find the car/track at index cur_object_id
-	std::string objectname;
-	int count = 0;
 	while (cur_object_id < 0)
 		cur_object_id = allobjects.size() + cur_object_id;
 	cur_object_id = cur_object_id % allobjects.size();
-	for (std::set <std::string>::const_iterator i = allobjects.begin(); i != allobjects.end(); i++, count++)
-	{
-		if (count == cur_object_id)
-		{
-			objectname = *i;
-		}
-	}
+
+	std::set <std::string>::const_iterator it = allobjects.begin();
+	std::advance(it, cur_object_id);
+	objectname = *it;
 
 	if (verbose)
 	{
@@ -204,10 +199,9 @@ void UpdateManager::Show(Gui & gui)
 
 bool UpdateManager::ApplyUpdate(GameDownloader downloader, Gui & gui, const PathManager & pathmanager)
 {
-	std::string objectname;
-	if (!gui.GetLabelText(guipage, "name", objectname))
+	if (objectname.empty())
 	{
-		error_output << "Couldn't find the name label to update in " + guipage + "." << std::endl;
+		error_output << "ApplyUpdate: No object set for update" << std::endl;
 		return false;
 	}
 

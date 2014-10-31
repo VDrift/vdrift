@@ -84,11 +84,6 @@ void GuiLabel::SetText(const std::string & text)
 	m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
 }
 
-const std::string & GuiLabel::GetText() const
-{
-	return m_text;
-}
-
 Drawable & GuiLabel::GetDrawable(SceneNode & scene)
 {
 	return scene.GetDrawList().text.get(m_draw);

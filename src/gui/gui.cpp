@@ -533,21 +533,6 @@ bool Gui::SetLabelText(const std::string & pagename, const std::string & labelna
 	return true;
 }
 
-bool Gui::GetLabelText(const std::string & pagename, const std::string & labelname, std::string & text_output)
-{
-	PageMap::iterator p = pages.find(pagename);
-	if (p == pages.end())
-		return false;
-
-	GuiLabel * label = p->second.GetLabel(labelname);
-	if (!label)
-		return false;
-
-	text_output = label->GetText();
-
-	return true;
-}
-
 void Gui::SetLabelText(const std::string & pagename, const std::map<std::string, std::string> & label_text)
 {
 	PageMap::iterator p = pages.find(pagename);
