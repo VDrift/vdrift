@@ -308,28 +308,44 @@ static void ParseActions(
 	}
 }
 
-template <class ActionValSet, class SignalValList, class ActionMap>
+template <class ActionValSet, class SignalValVec, class ActionMap>
 static void RegisterActions(
 	const GuiLanguage & lang,
 	const ActionValSet & actionvs,
-	SignalValList & signalvs,
+	SignalValVec & signalvs,
 	ActionMap & actionmap)
 {
 	signalvs.reserve(actionvs.size());
 	for (typename ActionValSet::const_iterator i = actionvs.begin(); i != actionvs.end(); ++i)
 	{
-		signalvs.push_back(typename SignalValList::value_type());
-		typename SignalValList::value_type & cb = signalvs.back();
+		signalvs.push_back(typename SignalValVec::value_type());
 
-		const std::string & value = i->first;
-		size_t n = value.find(':') + 1;
-		if (value[n] == '"')
-			cb.value = lang(value.substr(n + 1, value.size() - n - 2));
+		const std::string & action = i->first;
+		size_t n = action.find(':') + 1;
+		if (action[n] == '"')
+			signalvs.back().value = lang(action.substr(n + 1, action.size() - n - 2));
 		else
-			cb.value = value.substr(n);
+			signalvs.back().value = action.substr(n);
+		i->second->connect(signalvs.back().signal);
 
-		i->second->connect(cb.signal);
-		actionmap[i->first] = &cb.action;
+		actionmap[action] = &signalvs.back().action;
+	}
+}
+
+template <class ControlSecVec, class ControlVec, class ControlCbVec, class ActionMap>
+static void RegisterControls(
+	const ControlSecVec & controlsecs,
+	const ControlVec & controls,
+	GuiPage * page,
+	ControlCbVec & controlcbs,
+	ActionMap & actionmap)
+{
+	for (size_t i = 0; i < controlsecs.size(); ++i)
+	{
+		controlcbs.push_back(typename ControlCbVec::value_type());
+		controlcbs.back().page = page;
+		controlcbs.back().control = controls[i];
+		actionmap[controlsecs[i]->first] = &controlcbs.back().action;
 	}
 }
 
@@ -342,14 +358,7 @@ GuiPage::GuiPage() :
 
 GuiPage::~GuiPage()
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		delete *i;
-	}
-	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
-	{
-		delete *i;
-	}
+	Clear();
 }
 
 bool GuiPage::Load(
@@ -579,17 +588,17 @@ bool GuiPage::Load(
 					}
 				}
 
+				control = control_list;
 				controlnit.push_back(section);
 				controllists.push_back(control_list);
-				control = control_list;
 			}
 			else
 			{
 				control = new GuiControl();
+				controlit.push_back(section);
+				controls.push_back(control);
 			}
 			control->SetRect(x0, y0, x1, y1);
-			controlit.push_back(section);
-			controls.push_back(control);
 
 			if (focus)
 				active_control = control;
@@ -598,59 +607,52 @@ bool GuiPage::Load(
 
 	// load control actions (connect control signals)
 
-	// first pass iterates over control signals to retrieve unique
-	// actions with parameter and widget property calls (action_value_set)
+	// parse control event actions with values(arguments)
 	typedef std::pair<std::string, Slot2<int, const std::string &>*> ActionValn;
 	typedef std::pair<std::string, Slot1<const std::string &>*> ActionVal;
 	std::set<ActionValn> action_valn_set;
 	std::set<ActionVal> action_val_set;
+	std::string actionstr;
 	for (size_t i = 0; i < controlit.size(); ++i)
 	{
-		std::string actionstr;
-		const Config::const_iterator & section = controlit[i];
 		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
 		{
-			if (pagefile.get(section, GuiControl::signal_names[j], actionstr))
-			{
+			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
 					action_val_set, action_valn_set);
-			}
 		}
 	}
-	// page event actions
+	for (size_t i = 0; i < controlnit.size(); ++i)
 	{
-		std::string actionstr;
-		if (pagefile.get("", "onfocus", actionstr))
+		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
 		{
-			ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
-				action_val_set, action_valn_set);
-		}
-		if (pagefile.get("", "oncancel", actionstr))
-		{
-			ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
-				action_val_set, action_valn_set);
+			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
+				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
+					action_val_set, action_valn_set);
 		}
 	}
 
-	// register controls, so that they can be activated/focused by control signals
-	// extra pass to avoid control_set reallocations
-	control_set.reserve(controls.size());
-	for (size_t i = 0; i < controls.size(); ++i)
-	{
-		control_set.push_back(ControlCb());
-		control_set.back().page = this;
-		control_set.back().control = controls[i];
-		actionmap[controlit[i]->first] = &control_set.back().action;
-	}
+	// parse page event actions with values
+	if (pagefile.get("", "onfocus", actionstr))
+		ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
+			action_val_set, action_valn_set);
+
+	if (pagefile.get("", "oncancel", actionstr))
+		ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
+			action_val_set, action_valn_set);
+
+	// register controls, so that they can be activated by control events
+	control_set.reserve(controlit.size() + controlnit.size());
+	RegisterControls(controlit, controls, this, control_set, actionmap);
+	RegisterControls(controlnit, controllists, this, control_set, actionmap);
 
 	// register action calls with a parameter, so that they can be signaled by controls
 	RegisterActions(lang, action_val_set, action_set, actionmap);
 	RegisterActions(lang, action_valn_set, action_setn, nactionmap);
 
-	// final pass to connect control signals with their actions
+	// connect control signals with their actions
 	for (size_t i = 0; i < controlit.size(); ++i)
 	{
-		std::string actionstr;
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
@@ -664,26 +666,30 @@ bool GuiPage::Load(
 	}
 	for (size_t i = 0; i < controlnit.size(); ++i)
 	{
-		std::string actionstr;
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
+			{
+				ConnectActions(actionstr, actionmap, controllists[i]->m_signal[j]);
 				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j]);
+			}
 		}
 	}
-	// page event signals
-	{
-		std::string actionstr;
-		if (pagefile.get("", "onfocus", actionstr))
-			ConnectActions(actionstr, actionmap, onfocus);
 
-		if (pagefile.get("", "oncancel", actionstr))
-			ConnectActions(actionstr, actionmap, oncancel);
-	}
+	// connect page event signals with their actions
+	if (pagefile.get("", "onfocus", actionstr))
+		ConnectActions(actionstr, actionmap, onfocus);
+
+	if (pagefile.get("", "oncancel", actionstr))
+		ConnectActions(actionstr, actionmap, oncancel);
+
+	controls.insert(controls.end(), controllists.begin(), controllists.end());
 
 	// set active control
 	if (!active_control && !controls.empty())
 		active_control = controls[0];
+
+	// enable active control
 	if (active_control)
 		active_control->Signal(GuiControl::FOCUS);
 
@@ -801,28 +807,30 @@ SceneNode & GuiPage::GetNode(SceneNode & parentnode)
 
 void GuiPage::Clear(SceneNode & parentnode)
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		delete *i;
-	}
-	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
-	{
-		delete *i;
-	}
-
-	widgets.clear();
-	controls.clear();
-	labels.clear();
-	control_set.clear();
-	action_set.clear();
-	action_setn.clear();
-
 	if (s.valid())
 	{
 		SceneNode & sref = parentnode.GetNode(s);
 		sref.Clear();
+		s.invalidate();
 	}
-	s.invalidate();
+
+	Clear();
+}
+
+void GuiPage::Clear()
+{
+	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+		delete *i;
+
+	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
+		delete *i;
+
+	labels.clear();
+	controls.clear();
+	widgets.clear();
+	control_set.clear();
+	action_set.clear();
+	action_setn.clear();
 }
 
 void GuiPage::SetActiveControl(GuiControl & control)

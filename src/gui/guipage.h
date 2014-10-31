@@ -88,10 +88,10 @@ public:
 
 private:
 	std::map <std::string, GuiLabel *> labels;
-	std::vector <GuiControl *> controls;			// active widgets (process input)
-	std::vector <GuiWidget *> widgets;				// passive widgets
-	GuiControl * default_control;					// default active control
-	GuiControl * active_control;					// current active control
+	std::vector <GuiControl *> controls;
+	std::vector <GuiWidget *> widgets;
+	GuiControl * default_control;
+	GuiControl * active_control;
 	SceneNode::Handle s;
 	std::string name;
 
@@ -139,6 +139,8 @@ private:
 	Signal0 onfocus, oncancel;				// page action signals
 
 	void Clear(SceneNode & parentnode);
+
+	void Clear();
 
 	void SetActiveControl(GuiControl & control);
 };
