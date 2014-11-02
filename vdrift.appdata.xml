@@ -2,7 +2,8 @@
 <!-- Copyright 2014 Sergej Forat <core13@gmx.net> -->
 <application>
  <id type="desktop">vdrift.desktop</id>
- <licence>CC0</licence>
+ <metadata_license>CC0-1.0</metadata_license>
+ <project_license>GPL-3.0+</project_license>
  <name>VDrift</name>
  <summary>Car Racing Simulator</summary>
  <description>
