@@ -40,7 +40,6 @@
 #include "cargraphics.h"
 #include "carsound.h"
 #include "carinfo.h"
-#include "hud.h"
 #include "inputgraph.h"
 #include "sound/sound.h"
 #include "camera.h"
@@ -163,8 +162,6 @@ private:
 
 	void UpdateTrackMap();
 
-	void ShowHUD(bool value);
-
 	void ShowLoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
 
 	void ProcessNewSettings();
@@ -203,9 +200,9 @@ private:
 	// game actions
 	void QuitGame();
 	void LeaveGame();
-	void StartPractice();
 	void StartRace();
-	void ReturnToGame();
+	void PauseGame();
+	void ContinueGame();
 	void RestartGame();
 	void StartReplay();
 	void HandleOnlineClicked();
@@ -247,6 +244,7 @@ private:
 	void BindActionsToGUI();
 	void RegisterActions();
 	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
+	void InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap);
 
 	Slot1<const std::string &> set_car_toedit;
 	Slot1<const std::string &> set_car_startpos;
@@ -262,6 +260,25 @@ private:
 	Slot1<const std::string &> set_cars_num;
 	Slot1<const std::string &> set_control;
 	std::vector<Slot0> actions;
+
+	// hud info signals
+	Signal1<const std::string &> signal_debug_info[4];
+	Signal1<const std::string &> signal_message;
+	Signal1<const std::string &> signal_cur_lap_time;
+	Signal1<const std::string &> signal_last_lap_time;
+	Signal1<const std::string &> signal_best_lap_time;
+	Signal1<const std::string &> signal_lap;
+	Signal1<const std::string &> signal_pos;
+	Signal1<const std::string &> signal_score;
+	Signal1<const std::string &> signal_speed;
+	Signal1<const std::string &> signal_gear;
+	Signal1<const std::string &> signal_shift;
+	Signal1<const std::string &> signal_rpm_norm;
+	Signal1<const std::string &> signal_rpm;
+	Signal1<const std::string &> signal_abs;
+	Signal1<const std::string &> signal_tcs;
+	Signal1<const std::string &> signal_gas;
+	Signal1<const std::string &> signal_nos;
 
 	std::ostream & info_output;
 	std::ostream & error_output;
@@ -337,7 +354,6 @@ private:
 	TrackMap trackmap;
 	Track track;
 	Gui gui;
-	Hud hud;
 	InputGraph inputgraph;
 	LoadingScreen loadingscreen;
 	Timer timer;
