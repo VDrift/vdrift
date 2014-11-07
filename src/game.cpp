@@ -1509,9 +1509,9 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 	gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
 	nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
 
-	signal_cur_lap_time(GetTimeString(timer.GetPlayerTime()));
-	signal_last_lap_time(GetTimeString(timer.GetLastLap()));
-	signal_best_lap_time(GetTimeString(timer.GetBestLap()));
+	signal_lap_time[0](GetTimeString(timer.GetPlayerTime()));
+	signal_lap_time[1](GetTimeString(timer.GetLastLap()));
+	signal_lap_time[2](GetTimeString(timer.GetBestLap()));
 
 	signal_pos(placestr.str());
 	signal_lap(lapstr.str());
@@ -3209,9 +3209,9 @@ void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & 
 	signalmap["car.debug2.str"] = &signal_debug_info[2];
 	signalmap["car.debug3.str"] = &signal_debug_info[3];
 	signalmap["car.message.str"] = &signal_message;
-	signalmap["car.cur_lap_time.str"] = &signal_cur_lap_time;
-	signalmap["car.last_lap_time.str"] = &signal_last_lap_time;
-	signalmap["car.best_lap_time.str"] = &signal_best_lap_time;
+	signalmap["car.cur_lap_time.str"] = &signal_lap_time[0];
+	signalmap["car.last_lap_time.str"] = &signal_lap_time[1];
+	signalmap["car.best_lap_time.str"] = &signal_lap_time[2];
 	signalmap["car.lap.str"] = &signal_lap;
 	signalmap["car.pos.str"] = &signal_pos;
 	signalmap["car.score.str"] = &signal_score;

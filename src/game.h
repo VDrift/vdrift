@@ -266,9 +266,7 @@ private:
 	// hud info signals
 	Signal1<const std::string &> signal_debug_info[4];
 	Signal1<const std::string &> signal_message;
-	Signal1<const std::string &> signal_cur_lap_time;
-	Signal1<const std::string &> signal_last_lap_time;
-	Signal1<const std::string &> signal_best_lap_time;
+	Signal1<const std::string &> signal_lap_time[3];
 	Signal1<const std::string &> signal_lap;
 	Signal1<const std::string &> signal_pos;
 	Signal1<const std::string &> signal_score;
