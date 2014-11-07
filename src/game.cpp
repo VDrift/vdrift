@@ -1362,9 +1362,7 @@ void Game::UpdateCarInputs(int carid)
 
 	// Record car state.
 	if (replay.GetRecording())
-	{
 		replay.RecordFrame(carid, carinputs, car);
-	}
 
 	// Local player input processing starts here.
 	if (carcontrols_local.first != &car)
@@ -1374,99 +1372,7 @@ void Game::UpdateCarInputs(int carid)
 
 	// Update player HUD
 	if (settings.GetShowHUD())
-	{
-		const GuiLanguage & lang = gui.GetLanguageDict();
-
-		if (settings.GetDebugInfo())
-		{
-			std::ostringstream debug_info[4];
-			car.DebugPrint(debug_info[0], true, false, false, false);
-			car.DebugPrint(debug_info[1], false, true, false, false);
-			car.DebugPrint(debug_info[2], false, false, true, false);
-			car.DebugPrint(debug_info[3], false, false, false, true);
-
-			signal_debug_info[0](debug_info[0].str());
-			signal_debug_info[1](debug_info[1].str());
-			signal_debug_info[2](debug_info[2].str());
-			signal_debug_info[3](debug_info[3].str());
-		}
-
-		std::pair <int, int> curplace = timer.GetPlayerPlace();
-		std::ostringstream placestr;
-		placestr << curplace.first << " / " << curplace.second;
-
-		int cur_lap = std::max(1, std::min(timer.GetPlayerCurrentLap(), race_laps));
-		std::ostringstream lapstr;
-		if (race_laps > 0)
-			lapstr << cur_lap << " / " << race_laps;
-		else
-			lapstr << "0 / 0";
-
-		int id = cartimerids[&car];
-		int score = timer.GetDriftScore(id);
-		std::ostringstream scorestr;
-		scorestr << score;
-
-		std::ostringstream msgstr;
-		if (race_laps > 0)
-		{
-			float stagingtimeleft = timer.GetStagingTimeLeft();
-			if (stagingtimeleft > 0.5)
-				msgstr << (int)stagingtimeleft + 1;
-			else if (stagingtimeleft > 0.0)
-				msgstr << lang("Ready");
-			else if (stagingtimeleft < 0.0 && stagingtimeleft > -1.0)
-				msgstr << lang("GO");
-			else if (timer.GetPlayerCurrentLap() > race_laps)
-				msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
-		}
-		if (!msgstr && timer.GetIsDrifting(id))
-			msgstr << "+" << (int)timer.GetThisDriftScore(id);
-
-		int gear = car.GetTransmission().GetGear();
-		std::ostringstream gearstr;
-		if (gear == -1)
-			gearstr << "R";
-		else if (gear == 0)
-			gearstr << "N";
-		else
-			gearstr << gear;
-
-		int speed = std::fabs(settings.GetMPH() ? car.GetSpeedMPS() * 2.237 : car.GetSpeedMPS() * 3.6);
-		std::ostringstream speedstr;
-		speedstr << std::setfill('0') << std::setw(3) << speed;
-
-		std::ostringstream shiftstr, rpmnstr, rpmstr;
-		shiftstr << int(car.GetTachoRPM() >= car.GetEngine().GetRedline());
-		rpmnstr << car.GetTachoRPM() / car.GetEngine().GetRPMLimit();
-		rpmstr << int(car.GetTachoRPM());
-
-		std::ostringstream absstr, tcsstr, gasstr, nosstr;
-		absstr << (car.GetABSActive() ? 1.0 : 0.3);
-		tcsstr << (car.GetTCSActive() ? 1.0 : 0.3);
-		gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
-		nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
-
-		signal_cur_lap_time(GetTimeString(timer.GetPlayerTime()));
-		signal_last_lap_time(GetTimeString(timer.GetLastLap()));
-		signal_best_lap_time(GetTimeString(timer.GetBestLap()));
-
-		signal_pos(placestr.str());
-		signal_lap(lapstr.str());
-		signal_score(scorestr.str());
-		signal_message(msgstr.str());
-
-		signal_gear(gearstr.str());
-		signal_speed(speedstr.str());
-		signal_shift(shiftstr.str());
-		signal_rpm_norm(rpmnstr.str());
-		signal_rpm(rpmstr.str());
-
-		signal_abs(absstr.str());
-		signal_tcs(tcsstr.str());
-		signal_gas(gasstr.str());
-		signal_nos(nosstr.str());
-	}
+		UpdateHUD(carinputs, car);
 
 	// Handle camera mode change inputs.
 	Camera * old_camera = active_camera;
@@ -1527,6 +1433,101 @@ void Game::UpdateCarInputs(int carid)
 
 	// Move up the close shadow distance if we're in the cockpit.
 	graphics->SetCloseShadow(incar ? 1.0 : 5.0);
+}
+
+void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & car)
+{
+	const GuiLanguage & lang = gui.GetLanguageDict();
+
+	if (settings.GetDebugInfo())
+	{
+		std::ostringstream debug_info[4];
+		car.DebugPrint(debug_info[0], true, false, false, false);
+		car.DebugPrint(debug_info[1], false, true, false, false);
+		car.DebugPrint(debug_info[2], false, false, true, false);
+		car.DebugPrint(debug_info[3], false, false, false, true);
+
+		signal_debug_info[0](debug_info[0].str());
+		signal_debug_info[1](debug_info[1].str());
+		signal_debug_info[2](debug_info[2].str());
+		signal_debug_info[3](debug_info[3].str());
+	}
+
+	std::pair <int, int> curplace = timer.GetPlayerPlace();
+	std::ostringstream placestr;
+	placestr << curplace.first << " / " << curplace.second;
+
+	int cur_lap = std::max(1, std::min(timer.GetPlayerCurrentLap(), race_laps));
+	std::ostringstream lapstr;
+	if (race_laps > 0)
+		lapstr << cur_lap << " / " << race_laps;
+	else
+		lapstr << "0 / 0";
+
+	int id = cartimerids[&car];
+	int score = timer.GetDriftScore(id);
+	std::ostringstream scorestr;
+	scorestr << score;
+
+	std::ostringstream msgstr;
+	if (race_laps > 0)
+	{
+		float stagingtimeleft = timer.GetStagingTimeLeft();
+		if (stagingtimeleft > 0.5)
+			msgstr << (int)stagingtimeleft + 1;
+		else if (stagingtimeleft > 0.0)
+			msgstr << lang("Ready");
+		else if (stagingtimeleft < 0.0 && stagingtimeleft > -1.0)
+			msgstr << lang("GO");
+		else if (timer.GetPlayerCurrentLap() > race_laps)
+			msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
+	}
+	if (!msgstr && timer.GetIsDrifting(id))
+		msgstr << "+" << (int)timer.GetThisDriftScore(id);
+
+	int gear = car.GetTransmission().GetGear();
+	std::ostringstream gearstr;
+	if (gear == -1)
+		gearstr << "R";
+	else if (gear == 0)
+		gearstr << "N";
+	else
+		gearstr << gear;
+
+	int speed = std::fabs(settings.GetMPH() ? car.GetSpeedMPS() * 2.237 : car.GetSpeedMPS() * 3.6);
+	std::ostringstream speedstr;
+	speedstr << std::setfill('0') << std::setw(3) << speed;
+
+	std::ostringstream shiftstr, rpmnstr, rpmstr;
+	shiftstr << int(car.GetTachoRPM() >= car.GetEngine().GetRedline());
+	rpmnstr << car.GetTachoRPM() / car.GetEngine().GetRPMLimit();
+	rpmstr << int(car.GetTachoRPM());
+
+	std::ostringstream absstr, tcsstr, gasstr, nosstr;
+	absstr << (car.GetABSActive() ? 1.0 : 0.3);
+	tcsstr << (car.GetTCSActive() ? 1.0 : 0.3);
+	gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
+	nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
+
+	signal_cur_lap_time(GetTimeString(timer.GetPlayerTime()));
+	signal_last_lap_time(GetTimeString(timer.GetLastLap()));
+	signal_best_lap_time(GetTimeString(timer.GetBestLap()));
+
+	signal_pos(placestr.str());
+	signal_lap(lapstr.str());
+	signal_score(scorestr.str());
+	signal_message(msgstr.str());
+
+	signal_gear(gearstr.str());
+	signal_speed(speedstr.str());
+	signal_shift(shiftstr.str());
+	signal_rpm_norm(rpmnstr.str());
+	signal_rpm(rpmstr.str());
+
+	signal_abs(absstr.str());
+	signal_tcs(tcsstr.str());
+	signal_gas(gasstr.str());
+	signal_nos(nosstr.str());
 }
 
 bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)

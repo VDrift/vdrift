@@ -101,6 +101,8 @@ private:
 
 	void UpdateCarInputs(int carid);
 
+	void UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & car);
+
 	void UpdateTimer();
 
 	/// Check eventsystem state and update GUI
