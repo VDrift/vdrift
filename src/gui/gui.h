@@ -34,7 +34,8 @@ public:
 
 	const std::string & GetLastPageName() const;
 
-	SceneNode & GetNode();
+	// return currently active nodes
+	std::pair<SceneNode*, SceneNode*> GetNodes();
 
 	bool Active() const;
 
@@ -113,7 +114,6 @@ private:
 	PageMap::iterator last_active_page;
 	PageMap::iterator active_page;
 	PageMap::iterator next_active_page;
-	SceneNode node;
 	GuiLanguage lang;
 	Font font;
 	float m_cursorx, m_cursory;			///< cache cursor position

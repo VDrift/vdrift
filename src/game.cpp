@@ -747,14 +747,17 @@ void Game::Draw(float dt)
 {
 	PROFILER.beginBlock("scenegraph");
 	std::vector<SceneNode*> nodes;
-	nodes.reserve(6);
+	nodes.reserve(7);
 	nodes.push_back(&debugnode);
 	nodes.push_back(&inputgraph.GetNode());
 	nodes.push_back(&dynamicsdraw.getNode());
 	nodes.push_back(&trackmap.GetNode());
 	nodes.push_back(&tire_smoke.GetNode());
 	if (pause || settings.GetShowHUD())
-		nodes.push_back(&gui.GetNode());
+	{
+		if (gui.GetNodes().first) nodes.push_back(gui.GetNodes().first);
+		if (gui.GetNodes().second) nodes.push_back(gui.GetNodes().second);
+	}
 	graphics->BindDynamicVertexData(nodes);
 
 	graphics->ClearDynamicDrawables();
@@ -768,11 +771,15 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
-	for (std::vector<CarGraphics>::iterator i = car_graphics.begin(); i != car_graphics.end(); ++i)
-		graphics->AddDynamicNode(i->GetNode());
+	for (std::vector<CarGraphics>::iterator it = car_graphics.begin(); it != car_graphics.end(); ++it)
+	{
+		graphics->AddDynamicNode(it->GetNode());
+	}
 	if (pause || settings.GetShowHUD())
-		graphics->AddDynamicNode(gui.GetNode());
-	//gui.GetNode().DebugPrint(info_output);
+	{
+		if (gui.GetNodes().first) graphics->AddDynamicNode(*gui.GetNodes().first);
+		if (gui.GetNodes().second) graphics->AddDynamicNode(*gui.GetNodes().second);
+	}
 	PROFILER.endBlock("scenegraph");
 
 	// Send scene information to the graphics subsystem.
@@ -2320,15 +2327,21 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
 	std::vector<SceneNode*> nodes;
-	if (drawGui)
-		nodes.push_back(&gui.GetNode());
 	nodes.push_back(&loadingscreen.GetNode());
+	if (drawGui)
+	{
+		if (gui.GetNodes().first) nodes.push_back(gui.GetNodes().first);
+		if (gui.GetNodes().second) nodes.push_back(gui.GetNodes().second);
+	}
 	graphics->BindDynamicVertexData(nodes);
 
 	graphics->ClearDynamicDrawables();
-	if (drawGui)
-		graphics->AddDynamicNode(gui.GetNode());
 	graphics->AddDynamicNode(loadingscreen.GetNode());
+	if (drawGui)
+	{
+		if (gui.GetNodes().first) graphics->AddDynamicNode(*gui.GetNodes().first);
+		if (gui.GetNodes().second) graphics->AddDynamicNode(*gui.GetNodes().second);
+	}
 
 	graphics->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
 	window.SwapBuffers();

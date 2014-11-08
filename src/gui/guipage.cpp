@@ -372,14 +372,10 @@ bool GuiPage::Load(
 	const StrSlotMap & vactionmap,
 	IntSlotMap nactionmap,
 	SlotMap actionmap,
-	SceneNode & parentnode,
 	ContentManager & content,
 	std::ostream & error_output)
 {
-	assert(!s.valid());
-	Clear(parentnode);
-	s = parentnode.AddNode();
-	SceneNode & sref = GetNode(parentnode);
+	Clear();
 
 	Config pagefile;
 	if (!pagefile.load(path))
@@ -444,7 +440,7 @@ bool GuiPage::Load(
 				}
 
 				// init drawable
-				widget_list->SetupDrawable(sref, font, align, scalex, scaley, r.z);
+				widget_list->SetupDrawable(node, font, align, scalex, scaley, r.z);
 
 				widgetlistmap[section->first] = widget_list;
 				widget = widget_list;
@@ -459,7 +455,7 @@ bool GuiPage::Load(
 
 				GuiLabel * new_widget = new GuiLabel();
 				new_widget->SetupDrawable(
-					sref, font, align, scalex, scaley,
+					node, font, align, scalex, scaley,
 					r.x, r.y, r.w, r.h, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_value);
@@ -482,7 +478,7 @@ bool GuiPage::Load(
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// init drawable
-				widget_list->SetupDrawable(sref, content, path, ext, r.z);
+				widget_list->SetupDrawable(node, content, path, ext, r.z);
 
 				// connect with the value list
 				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
@@ -508,7 +504,7 @@ bool GuiPage::Load(
 			{
 				GuiImage * new_widget = new GuiImage();
 				new_widget->SetupDrawable(
-					sref, content, path, ext,
+					node, content, path, ext,
 					r.x, r.y, r.w, r.h, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_image);
@@ -531,7 +527,7 @@ bool GuiPage::Load(
 
 			GuiSlider * new_widget = new GuiSlider();
 			new_widget->SetupDrawable(
-				sref, bartex,
+				node, bartex,
 				r.x, r.y, r.w, r.h, r.z,
 				fill, error_output);
 
@@ -699,13 +695,10 @@ bool GuiPage::Load(
 	return true;
 }
 
-void GuiPage::SetVisible(SceneNode & parent, bool value)
+void GuiPage::SetVisible(bool value)
 {
-	SceneNode & sref = GetNode(parent);
 	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->SetVisible(sref, value);
-	}
+		(*i)->SetVisible(node, value);
 
 	if (!value)
 	{
@@ -718,13 +711,10 @@ void GuiPage::SetVisible(SceneNode & parent, bool value)
 	}
 }
 
-void GuiPage::SetAlpha(SceneNode & parent, float value)
+void GuiPage::SetAlpha(float value)
 {
-	SceneNode & sref = parent.GetNode(s);
 	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->SetAlpha(sref, value);
-	}
+		(*i)->SetAlpha(node, value);
 }
 
 void GuiPage::ProcessInput(
@@ -773,13 +763,10 @@ void GuiPage::ProcessInput(
 	}
 }
 
-void GuiPage::Update(SceneNode & parent, float dt)
+void GuiPage::Update(float dt)
 {
-	SceneNode & sref = parent.GetNode(s);
 	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->Update(sref, dt);
-	}
+		(*i)->Update(node, dt);
 }
 
 void GuiPage::SetLabelText(const std::map<std::string, std::string> & label_text)
@@ -800,21 +787,9 @@ GuiLabel * GuiPage::GetLabel(const std::string & name)
 	return 0;
 }
 
-SceneNode & GuiPage::GetNode(SceneNode & parentnode)
+SceneNode & GuiPage::GetNode()
 {
-	return parentnode.GetNode(s);
-}
-
-void GuiPage::Clear(SceneNode & parentnode)
-{
-	if (s.valid())
-	{
-		SceneNode & sref = parentnode.GetNode(s);
-		sref.Clear();
-		s.invalidate();
-	}
-
-	Clear();
+	return node;
 }
 
 void GuiPage::Clear()
@@ -825,6 +800,7 @@ void GuiPage::Clear()
 	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
 		delete *i;
 
+	node.Clear();
 	labels.clear();
 	controls.clear();
 	widgets.clear();

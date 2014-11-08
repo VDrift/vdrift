@@ -61,13 +61,12 @@ public:
 		const StrSlotMap & vactionmap,
 		IntSlotMap nactionmap,
 		SlotMap actionmap,
-		SceneNode & parentnode,
 		ContentManager & content,
 		std::ostream & error_output);
 
-	void SetVisible(SceneNode & parent, bool value);
+	void SetVisible(bool value);
 
-	void SetAlpha(SceneNode & parent, float value);
+	void SetAlpha(float value);
 
 	/// execute game actions and update gui options
 	void ProcessInput(
@@ -78,13 +77,13 @@ public:
 		bool select, bool cancel);
 
 	/// tell all child widgets to do as update tick
-	void Update(SceneNode & parent, float dt);
+	void Update(float dt);
 
 	void SetLabelText(const std::map<std::string, std::string> & label_text);
 
 	GuiLabel * GetLabel(const std::string & name);
 
-	SceneNode & GetNode(SceneNode & parentnode);
+	SceneNode & GetNode();
 
 private:
 	std::map <std::string, GuiLabel *> labels;
@@ -92,7 +91,7 @@ private:
 	std::vector <GuiWidget *> widgets;
 	GuiControl * default_control;
 	GuiControl * active_control;
-	SceneNode::Handle s;
+	SceneNode node;
 	std::string name;
 
 	// each control registers a ControlCB
