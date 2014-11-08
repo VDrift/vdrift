@@ -165,12 +165,6 @@ SceneNode & Gui::GetNode()
 	return node;
 }
 
-GuiPage & Gui::GetPage(const std::string & name)
-{
-	assert(pages.find(name) != pages.end());
-	return pages[name];
-}
-
 bool Gui::Active() const
 {
 	return (active_page != pages.end());
@@ -521,15 +515,15 @@ void Gui::RegisterOptions(
 
 bool Gui::SetLabelText(const std::string & pagename, const std::string & labelname, const std::string & text)
 {
-	if (pages.find(pagename) == pages.end())
+	PageMap::iterator p = pages.find(pagename);
+	if (p == pages.end())
 		return false;
 
-	GuiLabel * label = GetPage(pagename).GetLabel(labelname);
+	GuiLabel * label = p->second.GetLabel(labelname);
 	if (!label)
 		return false;
 
 	label->SetText(text);
-
 	return true;
 }
 
@@ -543,28 +537,22 @@ void Gui::SetLabelText(const std::string & pagename, const std::map<std::string,
 void Gui::SetLabelText(const std::map<std::string, std::string> & label_text)
 {
 	for (PageMap::iterator p = pages.begin(); p != pages.end(); ++p)
-	{
 		p->second.SetLabelText(label_text);
-	}
 }
 
-std::string Gui::GetOptionValue(const std::string & name) const
+const std::string & Gui::GetOptionValue(const std::string & name) const
 {
 	OptionMap::const_iterator it = options.find(name);
 	if (it != options.end())
-	{
 		return it->second.GetCurrentStorageValue();
-	}
-	return std::string();
+	return null;
 }
 
 void Gui::SetOptionValue(const std::string & name, const std::string & value)
 {
 	OptionMap::iterator it = options.find(name);
 	if (it != options.end())
-	{
 		it->second.SetCurrentValue(value);
-	}
 }
 
 GuiOption & Gui::GetOption(const std::string & name)
