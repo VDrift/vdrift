@@ -57,8 +57,6 @@
 
 #define _PRINTSIZE_(x) {std::cout << #x << ": " << sizeof(x) << std::endl;}
 
-#define USE_STATIC_OPTIMIZATION_FOR_TRACK
-
 template <typename T>
 static std::string cast(const T &t) {
 	std::ostringstream os;
@@ -764,9 +762,6 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(debugnode);
 	graphics->AddDynamicNode(inputgraph.GetNode());
 	graphics->AddDynamicNode(dynamicsdraw.getNode());
-#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics->AddDynamicNode(track.GetTrackNode());
-#endif
 	graphics->AddDynamicNode(track.GetBodyNode());
 	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
@@ -1832,10 +1827,8 @@ bool Game::LoadTrack(const std::string & trackname)
 	}
 
 	// Build static drawlist.
-#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	graphics->ClearStaticDrawables();
 	graphics->AddStaticNode(track.GetTrackNode());
-#endif
 
 	return true;
 }
@@ -1886,10 +1879,8 @@ void Game::LoadGarage()
 	}
 
 	// Build static drawlist.
-#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	graphics->ClearStaticDrawables();
 	graphics->AddStaticNode(track.GetTrackNode());
-#endif
 
 	// Load car.
 	SetGarageCar();
