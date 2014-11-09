@@ -37,8 +37,6 @@ public:
 	// return currently active nodes
 	std::pair<SceneNode*, SceneNode*> GetNodes();
 
-	bool Active() const;
-
 	bool GetInGame() const;
 
 	void SetInGame(bool value);

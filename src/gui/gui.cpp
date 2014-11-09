@@ -170,11 +170,6 @@ std::pair<SceneNode*, SceneNode*> Gui::GetNodes()
 	return std::make_pair(n1, n2);
 }
 
-bool Gui::Active() const
-{
-	return (active_page != pages.end());
-}
-
 bool Gui::GetInGame() const
 {
 	return ingame;
