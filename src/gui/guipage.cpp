@@ -470,7 +470,7 @@ bool GuiPage::Load(
 		}
 		else if (pagefile.get(section, "image", value))
 		{
-			std::string ext, path = texpath;
+			std::string slider, ext, path = texpath;
 			pagefile.get(section, "path", path);
 			pagefile.get(section, "ext", ext);
 
@@ -500,6 +500,29 @@ bool GuiPage::Load(
 				widgetlistmap[section->first] = widget_list;
 				widget = widget_list;
 			}
+			else if (pagefile.get(section, "slider", slider))
+			{
+				bool fill = false;
+				pagefile.get(section, "fill", fill);
+
+				TextureInfo texinfo;
+				texinfo.mipmap = false;
+				texinfo.repeatu = false;
+				texinfo.repeatv = false;
+				std::tr1::shared_ptr<Texture> tex;
+				content.load(tex, texpath, value, texinfo);
+
+				GuiSlider * new_widget = new GuiSlider();
+				new_widget->SetupDrawable(
+					node, tex,
+					r.x, r.y, r.w, r.h, r.z,
+					fill, error_output);
+
+				ConnectAction(slider, vsignalmap, new_widget->set_value);
+
+				widgetmap[section->first] = new_widget;
+				widget = new_widget;
+			}
 			else
 			{
 				GuiImage * new_widget = new GuiImage();
@@ -512,29 +535,6 @@ bool GuiPage::Load(
 				widgetmap[section->first] = new_widget;
 				widget = new_widget;
 			}
-		}
-		else if (pagefile.get(section, "slider", value))
-		{
-			bool fill = false;
-			pagefile.get(section, "fill", fill);
-
-			TextureInfo texinfo;
-			texinfo.mipmap = false;
-			texinfo.repeatu = false;
-			texinfo.repeatv = false;
-			std::tr1::shared_ptr<Texture> bartex;
-			content.load(bartex, texpath, "white.png", texinfo);
-
-			GuiSlider * new_widget = new GuiSlider();
-			new_widget->SetupDrawable(
-				node, bartex,
-				r.x, r.y, r.w, r.h, r.z,
-				fill, error_output);
-
-			ConnectAction(value, vsignalmap, new_widget->set_value);
-
-			widgetmap[section->first] = new_widget;
-			widget = new_widget;
 		}
 
 		// set widget properties (connect property slots)
