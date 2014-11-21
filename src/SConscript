@@ -94,6 +94,7 @@ src = Split("""
 		gui/guilanguage.cpp
 		gui/guioption.cpp
 		gui/guipage.cpp
+		gui/guiradialslider.cpp
 		gui/guislider.cpp
 		gui/guiwidget.cpp
 		gui/guiwidgetlist.cpp

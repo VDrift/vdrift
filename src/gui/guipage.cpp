@@ -24,6 +24,7 @@
 #include "guiimage.h"
 #include "guilabel.h"
 #include "guislider.h"
+#include "guiradialslider.h"
 #include "guicontrollist.h"
 #include "guiimagelist.h"
 #include "guilabellist.h"
@@ -512,16 +513,36 @@ bool GuiPage::Load(
 				std::tr1::shared_ptr<Texture> tex;
 				content.load(tex, texpath, value, texinfo);
 
-				GuiSlider * new_widget = new GuiSlider();
-				new_widget->SetupDrawable(
-					node, tex,
-					r.x, r.y, r.w, r.h, r.z,
-					fill, error_output);
+				float radius = 0.0;
+				if (pagefile.get(section, "radius", radius))
+				{
+					float start_angle(0), end_angle(2 * M_PI);
+					pagefile.get(section, "start-angle", start_angle);
+					pagefile.get(section, "end-angle", end_angle);
 
-				ConnectAction(slider, vsignalmap, new_widget->set_value);
+					GuiRadialSlider * new_widget = new GuiRadialSlider();
+					new_widget->SetupDrawable(
+						node, tex,
+						r.x, r.y, r.w, r.h, r.z,
+						start_angle, end_angle, radius,
+						hwratio, fill, error_output);
 
-				widgetmap[section->first] = new_widget;
-				widget = new_widget;
+					ConnectAction(slider, vsignalmap, new_widget->set_value);
+					widget = new_widget;
+				}
+				else
+				{
+					GuiSlider * new_widget = new GuiSlider();
+					new_widget->SetupDrawable(
+						node, tex,
+						r.x, r.y, r.w, r.h, r.z,
+						fill, error_output);
+
+					ConnectAction(slider, vsignalmap, new_widget->set_value);
+					widget = new_widget;
+				}
+
+				widgetmap[section->first] = widget;
 			}
 			else
 			{
