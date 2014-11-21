@@ -1497,10 +1497,9 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 		gearstr << gear;
 
 	float speed_scale = (settings.GetMPH() ? 2.237 : 3.6);
-	float speed_max = (settings.GetMPH() ? 200 : 320);
 	float speed = std::fabs(car.GetSpeedMPS()) * speed_scale;
 	float speedometer = car.GetMaxSpeedMPS() * speed_scale;
-	speedometer = std::min(speed_max, std::max(120.0f, std::ceil(speedometer / 40.0f) * 40.0f));
+	speedometer = std::min(320.0f, std::max(120.0f, std::ceil(speedometer / 40.0f) * 40.0f));
 
 	float rpm = car.GetTachoRPM();
 	float tachometer = car.GetEngine().GetRPMLimit();
