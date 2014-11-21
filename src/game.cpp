@@ -1496,14 +1496,26 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 	else
 		gearstr << gear;
 
-	int speed = std::fabs(settings.GetMPH() ? car.GetSpeedMPS() * 2.237 : car.GetSpeedMPS() * 3.6);
-	std::ostringstream speedstr;
-	speedstr << std::setfill('0') << std::setw(3) << speed;
+	float speed_scale = (settings.GetMPH() ? 2.237 : 3.6);
+	float speed_max = (settings.GetMPH() ? 200 : 320);
+	float speed = std::fabs(car.GetSpeedMPS()) * speed_scale;
+	float speedometer = car.GetMaxSpeedMPS() * speed_scale;
+	speedometer = std::min(speed_max, std::max(120.0f, std::ceil(speedometer / 40.0f) * 40.0f));
 
-	std::ostringstream shiftstr, rpmnstr, rpmstr;
-	shiftstr << int(car.GetTachoRPM() >= car.GetEngine().GetRedline());
-	rpmnstr << car.GetTachoRPM() / car.GetEngine().GetRPMLimit();
-	rpmstr << int(car.GetTachoRPM());
+	float rpm = car.GetTachoRPM();
+	float tachometer = car.GetEngine().GetRPMLimit();
+	tachometer = std::min(20000.0f, std::max(8000.0f, std::ceil(tachometer / 2000.0f) * 2000.0f));
+
+	std::ostringstream speedostr, speednstr, speedstr;
+	speedostr << int(speedometer);
+	speednstr << speed / speedometer;
+	speedstr << std::setfill('0') << std::setw(3) << int(speed);
+
+	std::ostringstream shiftstr, tachostr, rpmnstr, rpmstr;
+	shiftstr << int(rpm >= car.GetEngine().GetRedline());
+	tachostr << int(tachometer);
+	rpmnstr << rpm / tachometer;
+	rpmstr << int(rpm);
 
 	std::ostringstream absstr, tcsstr, gasstr, nosstr;
 	absstr << (car.GetABSActive() ? 1.0 : 0.3);
@@ -1521,8 +1533,13 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 	signal_message(msgstr.str());
 
 	signal_gear(gearstr.str());
-	signal_speed(speedstr.str());
 	signal_shift(shiftstr.str());
+
+	signal_speedometer(speedostr.str());
+	signal_speed_norm(speednstr.str());
+	signal_speed(speedstr.str());
+
+	signal_tachometer(tachostr.str());
 	signal_rpm_norm(rpmnstr.str());
 	signal_rpm(rpmstr.str());
 
@@ -3208,24 +3225,27 @@ void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 
 void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap)
 {
-	signalmap["car.debug0.str"] = &signal_debug_info[0];
-	signalmap["car.debug1.str"] = &signal_debug_info[1];
-	signalmap["car.debug2.str"] = &signal_debug_info[2];
-	signalmap["car.debug3.str"] = &signal_debug_info[3];
-	signalmap["car.message.str"] = &signal_message;
-	signalmap["car.cur_lap_time.str"] = &signal_lap_time[0];
-	signalmap["car.last_lap_time.str"] = &signal_lap_time[1];
-	signalmap["car.best_lap_time.str"] = &signal_lap_time[2];
-	signalmap["car.lap.str"] = &signal_lap;
-	signalmap["car.pos.str"] = &signal_pos;
-	signalmap["car.score.str"] = &signal_score;
-	signalmap["car.speed.val"] = &signal_speed;
-	signalmap["car.gear.str"] = &signal_gear;
-	signalmap["car.shift.val"] = &signal_shift;
+	signalmap["car.debug0"] = &signal_debug_info[0];
+	signalmap["car.debug1"] = &signal_debug_info[1];
+	signalmap["car.debug2"] = &signal_debug_info[2];
+	signalmap["car.debug3"] = &signal_debug_info[3];
+	signalmap["car.message"] = &signal_message;
+	signalmap["car.cur_lap_time"] = &signal_lap_time[0];
+	signalmap["car.last_lap_time"] = &signal_lap_time[1];
+	signalmap["car.best_lap_time"] = &signal_lap_time[2];
+	signalmap["car.lap"] = &signal_lap;
+	signalmap["car.pos"] = &signal_pos;
+	signalmap["car.score"] = &signal_score;
+	signalmap["car.gear"] = &signal_gear;
+	signalmap["car.shift"] = &signal_shift;
+	signalmap["car.speedometer"] = &signal_speedometer;
+	signalmap["car.speed.norm"] = &signal_speed_norm;
+	signalmap["car.speed"] = &signal_speed;
+	signalmap["car.tachometer"] = &signal_tachometer;
 	signalmap["car.rpm.norm"] = &signal_rpm_norm;
-	signalmap["car.rpm.val"] = &signal_rpm;
-	signalmap["car.abs.val"] = &signal_abs;
-	signalmap["car.tcs.val"] = &signal_tcs;
-	signalmap["car.gas.val"] = &signal_gas;
-	signalmap["car.nos.val"] = &signal_nos;
+	signalmap["car.rpm"] = &signal_rpm;
+	signalmap["car.abs"] = &signal_abs;
+	signalmap["car.tcs"] = &signal_tcs;
+	signalmap["car.gas"] = &signal_gas;
+	signalmap["car.nos"] = &signal_nos;
 }

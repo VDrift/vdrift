@@ -270,9 +270,12 @@ private:
 	Signal1<const std::string &> signal_lap;
 	Signal1<const std::string &> signal_pos;
 	Signal1<const std::string &> signal_score;
-	Signal1<const std::string &> signal_speed;
 	Signal1<const std::string &> signal_gear;
 	Signal1<const std::string &> signal_shift;
+	Signal1<const std::string &> signal_speedometer;
+	Signal1<const std::string &> signal_speed_norm;
+	Signal1<const std::string &> signal_speed;
+	Signal1<const std::string &> signal_tachometer;
 	Signal1<const std::string &> signal_rpm_norm;
 	Signal1<const std::string &> signal_rpm;
 	Signal1<const std::string &> signal_abs;
