@@ -744,6 +744,7 @@ void Game::Test()
 void Game::Draw(float dt)
 {
 	PROFILER.beginBlock("scenegraph");
+
 	std::vector<SceneNode*> nodes;
 	nodes.reserve(7);
 	nodes.push_back(&debugnode);
@@ -751,11 +752,13 @@ void Game::Draw(float dt)
 	nodes.push_back(&dynamicsdraw.getNode());
 	nodes.push_back(&trackmap.GetNode());
 	nodes.push_back(&tire_smoke.GetNode());
-	if (pause || settings.GetShowHUD())
-	{
-		if (gui.GetNodes().first) nodes.push_back(gui.GetNodes().first);
-		if (gui.GetNodes().second) nodes.push_back(gui.GetNodes().second);
-	}
+
+	if (gui.GetNodes().first)
+		nodes.push_back(gui.GetNodes().first);
+
+	if (gui.GetNodes().second)
+		nodes.push_back(gui.GetNodes().second);
+
 	graphics->BindDynamicVertexData(nodes);
 
 	graphics->ClearDynamicDrawables();
@@ -766,15 +769,16 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
+
 	for (std::vector<CarGraphics>::iterator it = car_graphics.begin(); it != car_graphics.end(); ++it)
-	{
 		graphics->AddDynamicNode(it->GetNode());
-	}
-	if (pause || settings.GetShowHUD())
-	{
-		if (gui.GetNodes().first) graphics->AddDynamicNode(*gui.GetNodes().first);
-		if (gui.GetNodes().second) graphics->AddDynamicNode(*gui.GetNodes().second);
-	}
+
+	if (gui.GetNodes().first)
+		graphics->AddDynamicNode(*gui.GetNodes().first);
+
+	if (gui.GetNodes().second)
+		graphics->AddDynamicNode(*gui.GetNodes().second);
+
 	PROFILER.endBlock("scenegraph");
 
 	// Send scene information to the graphics subsystem.
@@ -1373,7 +1377,7 @@ void Game::UpdateCarInputs(int carid)
 	inputgraph.Update(carinputs);
 
 	// Update player HUD
-	if (settings.GetShowHUD())
+	if (settings.GetHUD() != "NoHud")
 		UpdateHUD(carinputs, car);
 
 	// Handle camera mode change inputs.
@@ -2337,8 +2341,11 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	nodes.push_back(&loadingscreen.GetNode());
 	if (drawGui)
 	{
-		if (gui.GetNodes().first) nodes.push_back(gui.GetNodes().first);
-		if (gui.GetNodes().second) nodes.push_back(gui.GetNodes().second);
+		if (gui.GetNodes().first)
+			nodes.push_back(gui.GetNodes().first);
+
+		if (gui.GetNodes().second)
+			nodes.push_back(gui.GetNodes().second);
 	}
 	graphics->BindDynamicVertexData(nodes);
 
@@ -2346,8 +2353,11 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	graphics->AddDynamicNode(loadingscreen.GetNode());
 	if (drawGui)
 	{
-		if (gui.GetNodes().first) graphics->AddDynamicNode(*gui.GetNodes().first);
-		if (gui.GetNodes().second) graphics->AddDynamicNode(*gui.GetNodes().second);
+		if (gui.GetNodes().first)
+			graphics->AddDynamicNode(*gui.GetNodes().first);
+
+		if (gui.GetNodes().second)
+			graphics->AddDynamicNode(*gui.GetNodes().second);
 	}
 
 	graphics->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
@@ -2599,6 +2609,8 @@ void Game::QuitGame()
 
 void Game::LeaveGame()
 {
+	gui.SetInGame(false);
+
 	PauseGame();
 
 	ai.ClearCars();
@@ -2618,9 +2630,6 @@ void Game::LeaveGame()
 
 	if (replay.GetPlaying())
 		replay.Reset();
-
-	gui.SetInGame(false);
-	gui.ActivatePage("Main", 0.25, error_output);
 
 	graphics->ClearStaticDrawables();
 
@@ -2656,6 +2665,8 @@ void Game::PauseGame()
 	if (settings.GetInputGraph())
 		inputgraph.Hide();
 
+	gui.ActivatePage("Main", 0.25, error_output);
+
 	pause = true;
 }
 
@@ -2666,6 +2677,8 @@ void Game::ContinueGame()
 
 	if (settings.GetInputGraph())
 		inputgraph.Show();
+
+	gui.ActivatePage(settings.GetHUD(), 0.25, error_output);
 
 	pause = false;
 }
