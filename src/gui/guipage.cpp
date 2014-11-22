@@ -55,16 +55,27 @@ static Rect LoadRect(
 			x = l * hwratio;
 		else if (pagefile.get(section, "right", r))
 			x = 1 - (r + w) * hwratio;
+		else if (pagefile.get(section, "center-left", l))
+			x = 0.5 + l * hwratio;
+		else if (pagefile.get(section, "center-right", r))
+			x = 0.5 - (r + w) * hwratio;
 		w = w * hwratio;
 	}
 	else
 	{
 		float l(0), r(0);
-		pagefile.get(section, "left", l);
-		pagefile.get(section, "right", r);
-		x = l * hwratio;
-		w = 1 - (l + r) * hwratio;
+		if (!pagefile.get(section, "left", l))
+			l = l * hwratio;
+		else if (pagefile.get(section, "center-left", l))
+			l = 0.5 + l * hwratio;
+		if (pagefile.get(section, "right", r))
+			r = r * hwratio;
+		else if (pagefile.get(section, "center-right", r))
+			r = 0.5 + r * hwratio;
+		x = l;
+		w = 1 - (l + r);
 	}
+
 	if (pagefile.get(section, "height", h))
 	{
 		float t(0), b(0);
