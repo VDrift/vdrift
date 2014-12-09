@@ -572,18 +572,19 @@ bool GuiPage::Load(
 		// set widget properties (connect property slots)
 		if (widget)
 		{
-			std::string color, opacity, hue, sat, val;
-			pagefile.get(section, "color", color);
-			pagefile.get(section, "opacity", opacity);
-			pagefile.get(section, "hue", hue);
-			pagefile.get(section, "sat", sat);
-			pagefile.get(section, "val", val);
-
-			ConnectAction(color, vsignalmap, widget->set_color);
-			ConnectAction(opacity, vsignalmap, widget->set_opacity);
-			ConnectAction(hue, vsignalmap, widget->set_hue);
-			ConnectAction(sat, vsignalmap, widget->set_sat);
-			ConnectAction(val, vsignalmap, widget->set_val);
+			std::string val;
+			if (pagefile.get(section, "visible", val))
+				ConnectAction(val, vsignalmap, widget->set_visible);
+			if (pagefile.get(section, "opacity", val))
+				ConnectAction(val, vsignalmap, widget->set_opacity);
+			if (pagefile.get(section, "color", val))
+				ConnectAction(val, vsignalmap, widget->set_color);
+			if (pagefile.get(section, "hue", val))
+				ConnectAction(val, vsignalmap, widget->set_hue);
+			if (pagefile.get(section, "sat", val))
+				ConnectAction(val, vsignalmap, widget->set_sat);
+			if (pagefile.get(section, "val", val))
+				ConnectAction(val, vsignalmap, widget->set_val);
 
 			widgets.push_back(widget);
 		}
@@ -729,9 +730,6 @@ bool GuiPage::Load(
 
 void GuiPage::SetVisible(bool value)
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		(*i)->SetVisible(node, value);
-
 	if (!value)
 	{
 		if (default_control)
