@@ -100,9 +100,6 @@ src = Split("""
 		gui/guiwidgetlist.cpp
 		gui/text_draw.cpp
 		http.cpp
-		hudbar.cpp
-		hud.cpp
-		hudgauge.cpp
 		joepack.cpp
 		joeserialize.cpp
 		k1999.cpp
