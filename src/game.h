@@ -40,7 +40,6 @@
 #include "cargraphics.h"
 #include "carsound.h"
 #include "carinfo.h"
-#include "inputgraph.h"
 #include "sound/sound.h"
 #include "camera.h"
 #include "camera_free.h"
@@ -270,6 +269,9 @@ private:
 	Signal1<const std::string &> signal_lap;
 	Signal1<const std::string &> signal_pos;
 	Signal1<const std::string &> signal_score;
+	Signal1<const std::string &> signal_steering;
+	Signal1<const std::string &> signal_throttle;
+	Signal1<const std::string &> signal_brake;
 	Signal1<const std::string &> signal_gear;
 	Signal1<const std::string &> signal_shift;
 	Signal1<const std::string &> signal_speedometer;
@@ -357,7 +359,6 @@ private:
 	TrackMap trackmap;
 	Track track;
 	Gui gui;
-	InputGraph inputgraph;
 	LoadingScreen loadingscreen;
 	Timer timer;
 	Replay replay;

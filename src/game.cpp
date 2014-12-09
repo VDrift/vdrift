@@ -147,7 +147,6 @@ void Game::Start(std::list <std::string> & args)
 	/*_PRINTSIZE_(graphics);
 	_PRINTSIZE_(eventsystem);
 	_PRINTSIZE_(sound);
-	_PRINTSIZE_(generic_sounds);
 	_PRINTSIZE_(settings);
 	_PRINTSIZE_(pathmanager);
 	_PRINTSIZE_(track);
@@ -155,8 +154,6 @@ void Game::Start(std::list <std::string> & args)
 	_PRINTSIZE_(gui);
 	_PRINTSIZE_(rootnode);
 	_PRINTSIZE_(collision);
-	_PRINTSIZE_(hud);
-	_PRINTSIZE_(inputgraph);
 	_PRINTSIZE_(loadingscreen);
 	_PRINTSIZE_(loadingscreen_node);
 	_PRINTSIZE_(timer);
@@ -248,14 +245,6 @@ void Game::Start(std::list <std::string> & args)
 		error_output << "Error loading the loading screen" << std::endl;
 		return;
 	}
-
-	// Initialise input graph.
-	if (!inputgraph.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content))
-	{
-		error_output << "Error initializing input graph" << std::endl;
-		return;
-	}
-	inputgraph.Hide();
 
 	// Initialize FPS counter.
 	{
@@ -746,9 +735,8 @@ void Game::Draw(float dt)
 	PROFILER.beginBlock("scenegraph");
 
 	std::vector<SceneNode*> nodes;
-	nodes.reserve(7);
+	nodes.reserve(6);
 	nodes.push_back(&debugnode);
-	nodes.push_back(&inputgraph.GetNode());
 	nodes.push_back(&dynamicsdraw.getNode());
 	nodes.push_back(&trackmap.GetNode());
 	nodes.push_back(&tire_smoke.GetNode());
@@ -763,7 +751,6 @@ void Game::Draw(float dt)
 
 	graphics->ClearDynamicDrawables();
 	graphics->AddDynamicNode(debugnode);
-	graphics->AddDynamicNode(inputgraph.GetNode());
 	graphics->AddDynamicNode(dynamicsdraw.getNode());
 	graphics->AddDynamicNode(track.GetBodyNode());
 	graphics->AddDynamicNode(track.GetRacinglineNode());
@@ -1374,8 +1361,6 @@ void Game::UpdateCarInputs(int carid)
 	if (carcontrols_local.first != &car)
 		return;
 
-	inputgraph.Update(carinputs);
-
 	// Update player HUD
 	if (settings.GetHUD() != "NoHud")
 		UpdateHUD(carinputs, car);
@@ -1457,6 +1442,18 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 		signal_debug_info[1](debug_info[1].str());
 		signal_debug_info[2](debug_info[2].str());
 		signal_debug_info[3](debug_info[3].str());
+	}
+
+	if (settings.GetInputGraph())
+	{
+		std::ostringstream steeringstr, throttlestr, brakestr;
+		steeringstr << carinputs[CarInput::STEER_RIGHT] - carinputs[CarInput::STEER_LEFT];
+		throttlestr << carinputs[CarInput::THROTTLE];
+		brakestr << carinputs[CarInput::BRAKE];
+
+		signal_steering(steeringstr.str());
+		signal_throttle(throttlestr.str());
+		signal_brake(brakestr.str());
 	}
 
 	std::pair <int, int> curplace = timer.GetPlayerPlace();
@@ -2639,7 +2636,6 @@ void Game::LeaveGame()
 	car_graphics.clear();
 	car_sounds.clear();
 	sound.Update(true);
-	inputgraph.Hide();
 	trackmap.Unload();
 	timer.Unload();
 	active_camera = 0;
@@ -2662,9 +2658,6 @@ void Game::PauseGame()
 	if (settings.GetMouseGrab())
 		window.ShowMouseCursor(true);
 
-	if (settings.GetInputGraph())
-		inputgraph.Hide();
-
 	gui.ActivatePage("Main", 0.25, error_output);
 
 	pause = true;
@@ -2674,9 +2667,6 @@ void Game::ContinueGame()
 {
 	if (settings.GetMouseGrab())
 		window.ShowMouseCursor(false);
-
-	if (settings.GetInputGraph())
-		inputgraph.Show();
 
 	gui.ActivatePage(settings.GetHUD(), 0.25, error_output);
 
@@ -3248,6 +3238,9 @@ void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & 
 	signalmap["car.lap"] = &signal_lap;
 	signalmap["car.pos"] = &signal_pos;
 	signalmap["car.score"] = &signal_score;
+	signalmap["car.steering"] = &signal_steering;
+	signalmap["car.throttle"] = &signal_throttle;
+	signalmap["car.brake"] = &signal_brake;
 	signalmap["car.gear"] = &signal_gear;
 	signalmap["car.shift"] = &signal_shift;
 	signalmap["car.speedometer"] = &signal_speedometer;
