@@ -69,14 +69,6 @@ void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 	}
 }
 
-void GuiWidgetList::SetVisible(SceneNode & scene, bool value)
-{
-	for (size_t i = 0; i < m_elements.size(); ++i)
-	{
-		m_elements[i]->SetVisible(scene, value);
-	}
-}
-
 bool GuiWidgetList::GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot)
 {
 	if (name == "hue")

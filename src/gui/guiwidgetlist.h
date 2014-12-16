@@ -40,9 +40,6 @@ public:
 	/// scale alpha [0, 1]
 	void SetAlpha(SceneNode & scene, float value);
 
-	/// override visibility
-	void SetVisible(SceneNode & scene, bool value);
-
 	/// element properties
 	virtual bool GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot);
 

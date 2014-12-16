@@ -94,14 +94,12 @@ src = Split("""
 		gui/guilanguage.cpp
 		gui/guioption.cpp
 		gui/guipage.cpp
+		gui/guiradialslider.cpp
 		gui/guislider.cpp
 		gui/guiwidget.cpp
 		gui/guiwidgetlist.cpp
 		gui/text_draw.cpp
 		http.cpp
-		hudbar.cpp
-		hud.cpp
-		hudgauge.cpp
 		joepack.cpp
 		joeserialize.cpp
 		k1999.cpp

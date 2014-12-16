@@ -522,7 +522,7 @@ void VertexArray::Translate(float x, float y, float z)
 void VertexArray::Rotate(float a, float x, float y, float z)
 {
 	Quat q;
-	q.Rotate(a,x,y,z);
+	q.SetAxisAngle(a, x, y, z);
 
 	assert(vertices.size() % 3 == 0);
 	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)

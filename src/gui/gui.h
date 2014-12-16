@@ -34,11 +34,8 @@ public:
 
 	const std::string & GetLastPageName() const;
 
-	SceneNode & GetNode();
-
-	GuiPage & GetPage(const std::string & name);
-
-	bool Active() const;
+	// return currently active nodes
+	std::pair<SceneNode*, SceneNode*> GetNodes();
 
 	bool GetInGame() const;
 
@@ -81,8 +78,6 @@ public:
 
 	void Update(float dt);
 
-	/// if settings_are_newer is true, then this function will revise its internal options
-	/// to match the settings passed in.  otherwise, it'll operate the other way around
 	void GetOptions(std::map <std::string, std::string> & options) const;
 	void SetOptions(const std::map <std::string, std::string> & options);
 
@@ -100,7 +95,7 @@ public:
 	void SetLabelText(const std::map<std::string, std::string> & label_text);
 
 	/// access options
-	std::string GetOptionValue(const std::string & name) const;
+	const std::string & GetOptionValue(const std::string & name) const;
 	void SetOptionValue(const std::string & name, const std::string & value);
 	GuiOption & GetOption(const std::string & name);
 
@@ -117,7 +112,6 @@ private:
 	PageMap::iterator last_active_page;
 	PageMap::iterator active_page;
 	PageMap::iterator next_active_page;
-	SceneNode node;
 	GuiLanguage lang;
 	Font font;
 	float m_cursorx, m_cursory;			///< cache cursor position

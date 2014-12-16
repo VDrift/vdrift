@@ -24,6 +24,7 @@
 #include "guiimage.h"
 #include "guilabel.h"
 #include "guislider.h"
+#include "guiradialslider.h"
 #include "guicontrollist.h"
 #include "guiimagelist.h"
 #include "guilabellist.h"
@@ -54,16 +55,27 @@ static Rect LoadRect(
 			x = l * hwratio;
 		else if (pagefile.get(section, "right", r))
 			x = 1 - (r + w) * hwratio;
+		else if (pagefile.get(section, "center-left", l))
+			x = 0.5 + l * hwratio;
+		else if (pagefile.get(section, "center-right", r))
+			x = 0.5 - (r + w) * hwratio;
 		w = w * hwratio;
 	}
 	else
 	{
 		float l(0), r(0);
-		pagefile.get(section, "left", l);
-		pagefile.get(section, "right", r);
-		x = l * hwratio;
-		w = 1 - (l + r) * hwratio;
+		if (!pagefile.get(section, "left", l))
+			l = l * hwratio;
+		else if (pagefile.get(section, "center-left", l))
+			l = 0.5 + l * hwratio;
+		if (pagefile.get(section, "right", r))
+			r = r * hwratio;
+		else if (pagefile.get(section, "center-right", r))
+			r = 0.5 + r * hwratio;
+		x = l;
+		w = 1 - (l + r);
 	}
+
 	if (pagefile.get(section, "height", h))
 	{
 		float t(0), b(0);
@@ -372,14 +384,10 @@ bool GuiPage::Load(
 	const StrSlotMap & vactionmap,
 	IntSlotMap nactionmap,
 	SlotMap actionmap,
-	SceneNode & parentnode,
 	ContentManager & content,
 	std::ostream & error_output)
 {
-	assert(!s.valid());
-	Clear(parentnode);
-	s = parentnode.AddNode();
-	SceneNode & sref = GetNode(parentnode);
+	Clear();
 
 	Config pagefile;
 	if (!pagefile.load(path))
@@ -444,7 +452,7 @@ bool GuiPage::Load(
 				}
 
 				// init drawable
-				widget_list->SetupDrawable(sref, font, align, scalex, scaley, r.z);
+				widget_list->SetupDrawable(node, font, align, scalex, scaley, r.z);
 
 				widgetlistmap[section->first] = widget_list;
 				widget = widget_list;
@@ -459,7 +467,7 @@ bool GuiPage::Load(
 
 				GuiLabel * new_widget = new GuiLabel();
 				new_widget->SetupDrawable(
-					sref, font, align, scalex, scaley,
+					node, font, align, scalex, scaley,
 					r.x, r.y, r.w, r.h, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_value);
@@ -474,7 +482,7 @@ bool GuiPage::Load(
 		}
 		else if (pagefile.get(section, "image", value))
 		{
-			std::string ext, path = texpath;
+			std::string slider, ext, path = texpath;
 			pagefile.get(section, "path", path);
 			pagefile.get(section, "ext", ext);
 
@@ -482,7 +490,7 @@ bool GuiPage::Load(
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// init drawable
-				widget_list->SetupDrawable(sref, content, path, ext, r.z);
+				widget_list->SetupDrawable(node, content, path, ext, r.z);
 
 				// connect with the value list
 				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
@@ -504,11 +512,54 @@ bool GuiPage::Load(
 				widgetlistmap[section->first] = widget_list;
 				widget = widget_list;
 			}
+			else if (pagefile.get(section, "slider", slider))
+			{
+				bool fill = false;
+				pagefile.get(section, "fill", fill);
+
+				TextureInfo texinfo;
+				texinfo.mipmap = false;
+				texinfo.repeatu = false;
+				texinfo.repeatv = false;
+				std::tr1::shared_ptr<Texture> tex;
+				content.load(tex, texpath, value, texinfo);
+
+				float radius = 0.0;
+				if (pagefile.get(section, "radius", radius))
+				{
+					float start_angle(0), end_angle(2 * M_PI);
+					pagefile.get(section, "start-angle", start_angle);
+					pagefile.get(section, "end-angle", end_angle);
+
+					GuiRadialSlider * new_widget = new GuiRadialSlider();
+					new_widget->SetupDrawable(
+						node, tex,
+						r.x, r.y, r.w, r.h, r.z,
+						start_angle, end_angle, radius,
+						hwratio, fill, error_output);
+
+					ConnectAction(slider, vsignalmap, new_widget->set_value);
+					widget = new_widget;
+				}
+				else
+				{
+					GuiSlider * new_widget = new GuiSlider();
+					new_widget->SetupDrawable(
+						node, tex,
+						r.x, r.y, r.w, r.h, r.z,
+						fill, error_output);
+
+					ConnectAction(slider, vsignalmap, new_widget->set_value);
+					widget = new_widget;
+				}
+
+				widgetmap[section->first] = widget;
+			}
 			else
 			{
 				GuiImage * new_widget = new GuiImage();
 				new_widget->SetupDrawable(
-					sref, content, path, ext,
+					node, content, path, ext,
 					r.x, r.y, r.w, r.h, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_image);
@@ -517,45 +568,23 @@ bool GuiPage::Load(
 				widget = new_widget;
 			}
 		}
-		else if (pagefile.get(section, "slider", value))
-		{
-			bool fill = false;
-			pagefile.get(section, "fill", fill);
-
-			TextureInfo texinfo;
-			texinfo.mipmap = false;
-			texinfo.repeatu = false;
-			texinfo.repeatv = false;
-			std::tr1::shared_ptr<Texture> bartex;
-			content.load(bartex, texpath, "white.png", texinfo);
-
-			GuiSlider * new_widget = new GuiSlider();
-			new_widget->SetupDrawable(
-				sref, bartex,
-				r.x, r.y, r.w, r.h, r.z,
-				fill, error_output);
-
-			ConnectAction(value, vsignalmap, new_widget->set_value);
-
-			widgetmap[section->first] = new_widget;
-			widget = new_widget;
-		}
 
 		// set widget properties (connect property slots)
 		if (widget)
 		{
-			std::string color, opacity, hue, sat, val;
-			pagefile.get(section, "color", color);
-			pagefile.get(section, "opacity", opacity);
-			pagefile.get(section, "hue", hue);
-			pagefile.get(section, "sat", sat);
-			pagefile.get(section, "val", val);
-
-			ConnectAction(color, vsignalmap, widget->set_color);
-			ConnectAction(opacity, vsignalmap, widget->set_opacity);
-			ConnectAction(hue, vsignalmap, widget->set_hue);
-			ConnectAction(sat, vsignalmap, widget->set_sat);
-			ConnectAction(val, vsignalmap, widget->set_val);
+			std::string val;
+			if (pagefile.get(section, "visible", val))
+				ConnectAction(val, vsignalmap, widget->set_visible);
+			if (pagefile.get(section, "opacity", val))
+				ConnectAction(val, vsignalmap, widget->set_opacity);
+			if (pagefile.get(section, "color", val))
+				ConnectAction(val, vsignalmap, widget->set_color);
+			if (pagefile.get(section, "hue", val))
+				ConnectAction(val, vsignalmap, widget->set_hue);
+			if (pagefile.get(section, "sat", val))
+				ConnectAction(val, vsignalmap, widget->set_sat);
+			if (pagefile.get(section, "val", val))
+				ConnectAction(val, vsignalmap, widget->set_val);
 
 			widgets.push_back(widget);
 		}
@@ -699,14 +728,8 @@ bool GuiPage::Load(
 	return true;
 }
 
-void GuiPage::SetVisible(SceneNode & parent, bool value)
+void GuiPage::SetVisible(bool value)
 {
-	SceneNode & sref = GetNode(parent);
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->SetVisible(sref, value);
-	}
-
 	if (!value)
 	{
 		if (default_control)
@@ -718,13 +741,10 @@ void GuiPage::SetVisible(SceneNode & parent, bool value)
 	}
 }
 
-void GuiPage::SetAlpha(SceneNode & parent, float value)
+void GuiPage::SetAlpha(float value)
 {
-	SceneNode & sref = parent.GetNode(s);
 	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->SetAlpha(sref, value);
-	}
+		(*i)->SetAlpha(node, value);
 }
 
 void GuiPage::ProcessInput(
@@ -773,13 +793,10 @@ void GuiPage::ProcessInput(
 	}
 }
 
-void GuiPage::Update(SceneNode & parent, float dt)
+void GuiPage::Update(float dt)
 {
-	SceneNode & sref = parent.GetNode(s);
 	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->Update(sref, dt);
-	}
+		(*i)->Update(node, dt);
 }
 
 void GuiPage::SetLabelText(const std::map<std::string, std::string> & label_text)
@@ -800,21 +817,9 @@ GuiLabel * GuiPage::GetLabel(const std::string & name)
 	return 0;
 }
 
-SceneNode & GuiPage::GetNode(SceneNode & parentnode)
+SceneNode & GuiPage::GetNode()
 {
-	return parentnode.GetNode(s);
-}
-
-void GuiPage::Clear(SceneNode & parentnode)
-{
-	if (s.valid())
-	{
-		SceneNode & sref = parentnode.GetNode(s);
-		sref.Clear();
-		s.invalidate();
-	}
-
-	Clear();
+	return node;
 }
 
 void GuiPage::Clear()
@@ -825,6 +830,7 @@ void GuiPage::Clear()
 	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
 		delete *i;
 
+	node.Clear();
 	labels.clear();
 	controls.clear();
 	widgets.clear();

@@ -17,31 +17,55 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _HUDBAR_H
-#define _HUDBAR_H
+#ifndef _GUI_RADIAL_SLIDER_H
+#define _GUI_RADIAL_SLIDER_H
 
-#include "graphics/vertexarray.h"
+#include "guiwidget.h"
 #include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
 #include "memory.h"
 
 class Texture;
 
-class HudBar
+class GuiRadialSlider : public GuiWidget
 {
 public:
-	void Set(
-		SceneNode & parent,
-		std::tr1::shared_ptr<Texture> & tex,
-		float x, float y, float w, float h,
-		float opacity,
-		bool flip);
+	GuiRadialSlider();
 
-	void SetVisible(SceneNode & parent, bool newvis);
+	~GuiRadialSlider();
+
+	void Update(SceneNode & scene, float dt);
+
+	void SetupDrawable(
+		SceneNode & node,
+		const std::tr1::shared_ptr<Texture> & texture,
+		float x, float y, float w, float h, float z,
+		float start_angle, float end_angle, float radius,
+		float dar, bool fill, std::ostream & error_output);
+
+	Slot1<const std::string &> set_value;
 
 private:
-	SceneNode::DrawableHandle draw;
-	std::tr1::shared_ptr<Texture> texture;
-	VertexArray verts;
+	std::tr1::shared_ptr<Texture> m_texture;
+	SceneNode::DrawableHandle m_draw;
+	VertexArray m_varray;
+	float m_x, m_y, m_w, m_h;
+	float m_start_angle;
+	float m_end_angle;
+	float m_radius;
+	float m_value;
+	float m_dar;
+	bool m_fill;
+
+	GuiRadialSlider(const GuiRadialSlider & other);
+
+	void SetValue(const std::string & value);
+
+	Drawable & GetDrawable(SceneNode & node);
+
+	void InitDrawable(SceneNode & node, float draworder);
+
+	void UpdateVertexArray();
 };
 
-#endif // _HUDBAR_H
+#endif // _GUI_RADIAL_SLIDER_H

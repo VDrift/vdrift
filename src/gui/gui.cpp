@@ -160,20 +160,14 @@ const std::string & Gui::GetLastPageName() const
 	return last_active_page->first;
 }
 
-SceneNode & Gui::GetNode()
+std::pair<SceneNode*, SceneNode*> Gui::GetNodes()
 {
-	return node;
-}
-
-GuiPage & Gui::GetPage(const std::string & name)
-{
-	assert(pages.find(name) != pages.end());
-	return pages[name];
-}
-
-bool Gui::Active() const
-{
-	return (active_page != pages.end());
+	SceneNode *n1 = NULL, *n2 = NULL;
+	if (active_page != pages.end())
+		n1 = &active_page->second.GetNode();
+	if (animation_counter > 0 && last_active_page != pages.end())
+		n2 = &last_active_page->second.GetNode();
+	return std::make_pair(n1, n2);
 }
 
 bool Gui::GetInGame() const
@@ -191,9 +185,6 @@ void Gui::Unload()
 	// clear out maps
 	pages.clear();
 	options.clear();
-
-	// clear out the scenegraph
-	node.Clear();
 
 	// reset variables
 	animation_counter = 0;
@@ -279,7 +270,7 @@ bool Gui::Load(
 		if (!i->second.Load(
 			pagepath, texpath, screenhwratio, lang, font,
 			vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap,
-			node, content, error_output))
+			content, error_output))
 		{
 			error_output << "Error loading GUI page: " << pagepath << std::endl;
 			return false;
@@ -310,9 +301,8 @@ bool Gui::Load(
 void Gui::Deactivate()
 {
 	for (std::map<std::string, GuiPage>::iterator i = pages.begin(); i != pages.end(); ++i)
-	{
-		i->second.SetVisible(node, false);
-	}
+		i->second.SetVisible(false);
+
 	last_active_page = pages.end();
 	active_page = pages.end();
 	next_active_page = pages.end();
@@ -350,14 +340,14 @@ void Gui::Update(float dt)
 
 	if (active_page != pages.end())
 	{
-		active_page->second.Update(node, dt);
+		active_page->second.Update(dt);
 		if (fade)
 		{
 			// fade in new active page
 			// ease curve: 3 * p^2 - 2 * p^3
 			float p = 1.0 - animation_counter / animation_count_start;
 			float alpha = 3 * p * p - 2 * p * p * p;
-			active_page->second.SetAlpha(node, alpha);
+			active_page->second.SetAlpha(alpha);
 			//dlog << active_page->first << " fade in: " << alpha << std::endl;
 		}
 	}
@@ -367,7 +357,7 @@ void Gui::Update(float dt)
 		// fade out previous active page
 		float p = animation_counter / animation_count_start;
 		float alpha = 3 * p * p - 2 * p * p * p;
-		last_active_page->second.SetAlpha(node, alpha);
+		last_active_page->second.SetAlpha(alpha);
 		//dlog << last_active_page->first << " fade out: " << alpha << std::endl;
 	}
 
@@ -376,7 +366,7 @@ void Gui::Update(float dt)
 		// deactivate previously active page after fading out
 		if (animation_count_start > 0 && last_active_page != pages.end())
 		{
-			last_active_page->second.SetVisible(node, false);
+			last_active_page->second.SetVisible(false);
 			//dlog << last_active_page->first << " deactivate" << std::endl;
 		}
 
@@ -385,19 +375,19 @@ void Gui::Update(float dt)
 		next_active_page = pages.end();
 
 		// activate new page
-		active_page->second.SetVisible(node, true);
-		active_page->second.Update(node, dt);
+		active_page->second.SetVisible(true);
+		active_page->second.Update(dt);
 		//dlog << active_page->first << " activate" << std::endl;
 
 		if (next_animation_count_start > 0)
 		{
 			// start fading in new active page
-			active_page->second.SetAlpha(node, 0.0);
+			active_page->second.SetAlpha(0.0);
 		}
 		else if (last_active_page != pages.end())
 		{
 			// deactivate previously active page
-			last_active_page->second.SetVisible(node, false);
+			last_active_page->second.SetVisible(false);
 			//dlog << last_active_page->first << " deactivate" << std::endl;
 		}
 
@@ -521,15 +511,15 @@ void Gui::RegisterOptions(
 
 bool Gui::SetLabelText(const std::string & pagename, const std::string & labelname, const std::string & text)
 {
-	if (pages.find(pagename) == pages.end())
+	PageMap::iterator p = pages.find(pagename);
+	if (p == pages.end())
 		return false;
 
-	GuiLabel * label = GetPage(pagename).GetLabel(labelname);
+	GuiLabel * label = p->second.GetLabel(labelname);
 	if (!label)
 		return false;
 
 	label->SetText(text);
-
 	return true;
 }
 
@@ -543,28 +533,22 @@ void Gui::SetLabelText(const std::string & pagename, const std::map<std::string,
 void Gui::SetLabelText(const std::map<std::string, std::string> & label_text)
 {
 	for (PageMap::iterator p = pages.begin(); p != pages.end(); ++p)
-	{
 		p->second.SetLabelText(label_text);
-	}
 }
 
-std::string Gui::GetOptionValue(const std::string & name) const
+const std::string & Gui::GetOptionValue(const std::string & name) const
 {
 	OptionMap::const_iterator it = options.find(name);
 	if (it != options.end())
-	{
 		return it->second.GetCurrentStorageValue();
-	}
-	return std::string();
+	return null;
 }
 
 void Gui::SetOptionValue(const std::string & name, const std::string & value)
 {
 	OptionMap::iterator it = options.find(name);
 	if (it != options.end())
-	{
 		it->second.SetCurrentValue(value);
-	}
 }
 
 GuiOption & Gui::GetOption(const std::string & name)

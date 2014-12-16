@@ -28,8 +28,9 @@ GuiWidget::GuiWidget() :
 {
 	m_rgb[0] = 1, m_rgb[1] = 1, m_rgb[2] = 1;
 	m_hsv[0] = 0, m_hsv[1] = 0, m_hsv[2] = 1;
-	set_color.call.bind<GuiWidget, &GuiWidget::SetColor>(this);
+	set_visible.call.bind<GuiWidget, &GuiWidget::SetVisible>(this);
 	set_opacity.call.bind<GuiWidget, &GuiWidget::SetOpacity>(this);
+	set_color.call.bind<GuiWidget, &GuiWidget::SetColor>(this);
 	set_hue.call.bind<GuiWidget, &GuiWidget::SetHue>(this);
 	set_sat.call.bind<GuiWidget, &GuiWidget::SetSat>(this);
 	set_val.call.bind<GuiWidget, &GuiWidget::SetVal>(this);
@@ -39,8 +40,9 @@ void GuiWidget::Update(SceneNode & scene, float dt)
 {
 	if (m_update)
 	{
-		GetDrawable(scene).SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha);
-		GetDrawable(scene).SetDrawEnable(m_visible);
+		Drawable & d = GetDrawable(scene);
+		d.SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha);
+		d.SetDrawEnable(m_visible && m_alpha > 0);
 		m_update = false;
 	}
 }
@@ -48,11 +50,6 @@ void GuiWidget::Update(SceneNode & scene, float dt)
 void GuiWidget::SetAlpha(SceneNode & scene, float value)
 {
 	GetDrawable(scene).SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha * value);
-}
-
-void GuiWidget::SetVisible(SceneNode & scene, bool value)
-{
-	GetDrawable(scene).SetDrawEnable(m_visible & value);
 }
 
 bool GuiWidget::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
@@ -63,10 +60,12 @@ bool GuiWidget::GetProperty(const std::string & name, Slot1<const std::string &>
 		return (slot = &set_sat);
 	if (name == "val")
 		return (slot = &set_val);
-	if (name == "opacity")
-		return (slot = &set_opacity);
 	if (name == "color")
 		return (slot = &set_color);
+	if (name == "opacity")
+		return (slot = &set_opacity);
+	if (name == "visible")
+		return (slot = &set_visible);
 	return (slot = NULL);
 }
 
@@ -111,14 +110,15 @@ void GuiWidget::SetVal(float value)
 	m_update = true;
 }
 
-void GuiWidget::SetColor(const std::string & value)
+void GuiWidget::SetVisible(const std::string & value)
 {
 	if (value.empty()) return;
 
+	bool v = false;
 	std::istringstream s(value);
-	Vec3 v;
-	s >> v;
-	SetRGB(v[0], v[1], v[2]);
+	s >> std::boolalpha >> v;
+	m_visible = v;
+	m_update = true;
 }
 
 void GuiWidget::SetOpacity(const std::string & value)
@@ -129,6 +129,16 @@ void GuiWidget::SetOpacity(const std::string & value)
 	float v;
 	s >> v;
 	SetOpacity(v);
+}
+
+void GuiWidget::SetColor(const std::string & value)
+{
+	if (value.empty()) return;
+
+	std::istringstream s(value);
+	Vec3 v;
+	s >> v;
+	SetRGB(v[0], v[1], v[2]);
 }
 
 void GuiWidget::SetHue(const std::string & value)

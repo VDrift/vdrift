@@ -74,14 +74,19 @@ bool GuiLabel::GetProperty(const std::string & name, Slot1<const std::string &> 
 
 void GuiLabel::SetText(const std::string & text)
 {
-	assert(m_font);
-	m_text = text;
-	float x = m_x;
-	float textw = m_font->GetWidth(m_text) * m_scalex;
-	if (m_align == -1) x -= m_w * 0.5;
-	else if (m_align == 0) x -= textw * 0.5;
-	else if (m_align == 1) x -= (textw - m_w * 0.5);
-	m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
+	if (m_text != text)
+	{
+		assert(m_font);
+		m_text = text;
+
+		float x = m_x;
+		float textw = m_font->GetWidth(m_text) * m_scalex;
+		if (m_align == -1) x -= m_w * 0.5;
+		else if (m_align == 0) x -= textw * 0.5;
+		else if (m_align == 1) x -= (textw - m_w * 0.5);
+
+		m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
+	}
 }
 
 Drawable & GuiLabel::GetDrawable(SceneNode & scene)

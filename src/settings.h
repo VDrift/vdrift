@@ -132,9 +132,9 @@ public:
 		return trackmap;
 	}
 
-	bool GetShowHUD() const
+	const std::string & GetHUD() const
 	{
-		return show_hud;
+		return hud;
 	}
 
 	int GetAnisotropy() const
@@ -144,7 +144,7 @@ public:
 
 	float GetFOV() const
 	{
-		return FOV;
+		return fov;
 	}
 
 	bool GetABS() const
@@ -417,8 +417,8 @@ private:
 	int antialiasing; //0 or 1 mean off
 	int anisotropic; //0 or 1 mean off
 	bool trackmap;
-	bool show_hud;
-	float FOV;
+	std::string hud;
+	float fov;
 	bool abs;
 	bool tcs;
 	std::string joytype;

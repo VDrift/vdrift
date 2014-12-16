@@ -56,8 +56,8 @@ Settings::Settings() :
 	antialiasing(0),
 	anisotropic(0),
 	trackmap(true),
-	show_hud(true),
-	FOV(45.0),
+	hud("Hud"),
+	fov(45.0),
 	abs(true),
 	tcs(true),
 	joytype("joystick"),
@@ -163,8 +163,8 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "anisotropic", anisotropic);
 	Param(config, write, section, "antialiasing", antialiasing);
 	Param(config, write, section, "trackmap", trackmap);
-	Param(config, write, section, "show_hud", show_hud);
-	Param(config, write, section, "FOV", FOV);
+	Param(config, write, section, "hud", hud);
+	Param(config, write, section, "camerafov", fov);
 	Param(config, write, section, "mph", mph);
 	Param(config, write, section, "view_distance", view_distance);
 	Param(config, write, section, "racingline", racingline);

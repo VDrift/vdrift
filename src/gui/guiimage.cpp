@@ -35,18 +35,24 @@ GuiImage::~GuiImage()
 
 void GuiImage::Update(SceneNode & scene, float dt)
 {
-	GuiWidget::Update(scene, dt);
-	Drawable & d = GetDrawable(scene);
-	if (d.GetDrawEnable() && m_load)
+	if (m_update)
 	{
-		assert(m_content);
-		TextureInfo texinfo;
-		texinfo.mipmap = false;
-		texinfo.repeatu = false;
-		texinfo.repeatv = false;
-		m_content->load(m_texture, m_path, m_name + m_ext, texinfo);
-		d.SetTextures(m_texture->GetId());
-		m_load = false;
+		Drawable & d = GetDrawable(scene);
+		d.SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha);
+		d.SetDrawEnable(!m_name.empty() && m_visible && m_alpha > 0);
+		m_update = false;
+
+		if (m_load)
+		{
+			assert(m_content);
+			TextureInfo texinfo;
+			texinfo.mipmap = false;
+			texinfo.repeatu = false;
+			texinfo.repeatv = false;
+			m_content->load(m_texture, m_path, m_name + m_ext, texinfo);
+			d.SetTextures(m_texture->GetId());
+			m_load = false;
+		}
 	}
 }
 
@@ -62,11 +68,12 @@ void GuiImage::SetupDrawable(
 	m_ext = ext;
 	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
 	m_draw = scene.GetDrawList().twodim.insert(Drawable());
-	m_visible = false;
+
 	Drawable & d = GetDrawable(scene);
 	d.SetVertArray(&m_varray);
 	d.SetCull(false);
 	d.SetDrawOrder(z);
+	d.SetDrawEnable(false);
 }
 
 bool GuiImage::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
@@ -82,7 +89,6 @@ void GuiImage::SetImage(const std::string & value)
 	{
 		m_name = value;
 		m_load = !value.empty();
-		m_visible = m_load;
 		m_update = true;
 	}
 }
