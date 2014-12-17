@@ -7,6 +7,8 @@ but was inspired and owes much to the Vamos physics engine. It is released under
 the GNU General Public License (GPL) v3. It is currently available for FreeBSD,
 Linux, Mac OS X and Windows.
 
+[![Build Status](https://travis-ci.org/VDrift/vdrift.svg?branch=master)](https://travis-ci.org/VDrift/vdrift)
+
 Mission Statement
 -----------------
 
