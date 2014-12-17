@@ -1,21 +1,39 @@
 language: cpp
+
 compiler:
   - gcc
   - clang
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "b26s1x6M4B5y3akDOi6DdWshyzjRkkcum6zhaYfz0kZ03uEYtGkuSk0b/55hrEA31v3Ujkb0XQGdlS/9R3fqt9P+FgHIBIic0rNGici/QZRr3DdLyPUskLSJOkaAtz0BeaXzYMFL9SOwUgJVHBxKsr+vStBzr4qF+w7KeRbGn8g="
+
 git:
   submodules: false
+
 cache: apt
+
 before_install:
   - sudo add-apt-repository -y ppa:zoogie/sdl2-snapshots
   - sudo add-apt-repository -y ppa:roblib/ppa
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y scons libsdl2-dev libsdl2-image-dev
   - sudo apt-get install -qq -y libbullet-dev libvorbis-dev libcurl4-gnutls-dev
+
 script:
-  - scons
-branches:
-  only:
-    - master
+  - if [ "$COVERITY_SCAN_BRANCH" != 1 ]; then scons; fi
+
+addons:
+  coverity_scan:
+    project:
+      name: "VDrift/vdrift"
+      description: "Build submitted via Travis CI"
+    notification_email: core13@gmx.net
+    build_command: "scons"
+    branch_pattern: coverity_scan
+
 notifications:
   email:
     recipients:
