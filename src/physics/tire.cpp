@@ -110,7 +110,7 @@ btVector3 Tire::getForce(
 	// combined slip
 	btScalar Gx = PacejkaGx(sigma, alpha);
 	btScalar Gy = PacejkaGy(sigma, alpha);
-	btScalar Svy = PacejkaSvy(sigma, alpha, camber, Dy, dFz);
+	btScalar Svy = PacejkaSvy(sigma, alpha, camber, dFz, Dy);
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0 + Svy;
 
