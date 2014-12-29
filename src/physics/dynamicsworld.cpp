@@ -129,8 +129,7 @@ bool DynamicsWorld::castRay(
 	rayTest(origin, p, ray);
 
 	// track geometry collision
-	bool geometryHit = ray.hasHit();
-	if (geometryHit)
+	if (ray.hasHit())
 	{
 		p = ray.m_hitPointWorld;
 		n = ray.m_hitNormalWorld;
@@ -138,23 +137,21 @@ bool DynamicsWorld::castRay(
 		c = ray.m_collisionObject;
 		if (c->isStaticObject())
 		{
-			TrackSurface* tsc = static_cast<TrackSurface*>(c->getUserPointer());
-			const std::vector<TrackSurface> & surfaces = track->GetSurfaces();
-			if (tsc >= &surfaces[0] && tsc <= &surfaces[surfaces.size()-1])
+			TrackSurface * ts = static_cast<TrackSurface*>(c->getUserPointer());
+			if (c->getCollisionShape()->isCompound())
+				ts = static_cast<TrackSurface*>(ray.m_shape->getUserPointer());
+
+			// verify surface pointer
+			if (track)
 			{
-				s = tsc;
+				const std::vector<TrackSurface> & surfaces = track->GetSurfaces();
+				if (ts < &surfaces[0] || ts > &surfaces[surfaces.size() - 1])
+					ts = NULL;
+				assert(ts);
 			}
-#ifndef EXTBULLET
-			else if (c->getCollisionShape()->isCompound())
-			{
-				TRACKSURFACE* tss = static_cast<TRACKSURFACE*>(ray.m_shape->getUserPointer());
-				if (tss >= &surfaces[0] && tss <= &surfaces[surfaces.size()-1])
-				{
-					s = tss;
-				}
-			}
-#endif
-			//std::cerr << "static object without surface" << std::endl;
+
+			if (ts)
+				s = ts;
 		}
 
 		// track bezierpatch collision
