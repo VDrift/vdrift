@@ -27,6 +27,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <ctime>
 
 static inline float ConvertToMPH(float ms)
 {
@@ -145,9 +146,9 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 {
 	info_output << "Testing maximum speed" << std::endl;
 
-	double maxtime = 300.0;
-	double t = 0.;
-	double dt = 1/90.0;
+	float maxtime = 300.0;
+	float t = 0.;
+	float dt = 1/90.0;
 	int i = 0;
 
 	std::pair <float, float> maxspeed;
@@ -168,6 +169,7 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 
 	ResetCar();
 
+	clock_t cpu_timer_start = clock();
 	while (t < maxtime)
 	{
 		if (car.GetTransmission().GetGear() == 1 &&
@@ -226,20 +228,22 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 		t += dt;
 		i++;
 	}
+	clock_t cpu_timer_stop = clock();
 
 	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << std::endl;
 	info_output << "Downforce at maximum speed: " << downforcestr << std::endl;
-	info_output << "0-60 MPH time: " << timeto60-timeto60start << " s" << std::endl;
+	info_output << "0-60 MPH time: " << timeto60 - timeto60start << " s" << std::endl;
 	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
+	info_output << "Simulation performance: " << t / float(cpu_timer_stop - cpu_timer_start) * CLOCKS_PER_SEC << std::endl;
 }
 
 void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Testing stopping distance" << std::endl;
 
-	double maxtime = 300.0;
-	double t = 0.;
-	double dt = 1/90.0;
+	float maxtime = 300.0;
+	float t = 0.;
+	float dt = 1/90.0;
 	int i = 0;
 
 	float stopthreshold = 0.1; //if the speed (in m/s) is less than this value, discontinue the testing
