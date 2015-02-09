@@ -20,8 +20,7 @@
 #ifndef _DYNAMICSWORLD_H
 #define _DYNAMICSWORLD_H
 
-#include "btBulletCollisionCommon.h"
-#include "btBulletDynamicsCommon.h"
+#include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
 
 #include <iosfwd>
 

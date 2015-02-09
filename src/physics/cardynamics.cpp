@@ -28,6 +28,9 @@
 #include "cfg/ptree.h"
 #include "macros.h"
 
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
+#include "BulletCollision/CollisionShapes/btCylinderShape.h"
+
 template<class T>
 static inline bool isnan(const T & x)
 {

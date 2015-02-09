@@ -23,6 +23,9 @@
 #include "coordinatesystem.h"
 #include "tobullet.h"
 
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
+
 Track::Track() : racingline_visible(false)
 {
 	// Constructor.
@@ -85,7 +88,7 @@ int Track::ObjectsNumLoaded() const
 
 bool Track::Loaded() const
 {
-    return data.loaded;
+	return data.loaded;
 }
 
 void Track::Clear()
@@ -99,13 +102,14 @@ void Track::Clear()
 
 	for (int i = 0, n = data.shapes.size(); i < n; ++i)
 	{
-		btCollisionShape * shape = data.shapes[i];
-		delete shape;
+		delete data.shapes[i];
 	}
 	data.shapes.clear();
 
 	for (int i = 0, n = data.meshes.size(); i < n; ++i)
+	{
 		delete data.meshes[i];
+	}
 	data.meshes.clear();
 
 	data.static_node.Clear();

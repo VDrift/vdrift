@@ -24,6 +24,9 @@
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
 
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
+
 #include <vector>
 #include <iostream>
 #include <sstream>

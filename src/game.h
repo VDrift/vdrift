@@ -54,6 +54,10 @@
 #include "updatemanager.h"
 #include "game_downloader.h"
 
+#include "BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h"
+#include "BulletCollision/BroadphaseCollision/btDbvtBroadphase.h"
+#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
+
 #include <iosfwd>
 #include <string>
 #include <list>

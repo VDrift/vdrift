@@ -23,6 +23,8 @@
 #include "tobullet.h"
 #include "track.h"
 
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+
 #define EXTBULLET
 
 struct MyRayResultCallback : public btCollisionWorld::RayResultCallback

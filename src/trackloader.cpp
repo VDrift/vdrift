@@ -27,6 +27,12 @@
 #include "graphics/texture.h"
 #include "graphics/model.h"
 
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
+#include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
+#include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+
 #define EXTBULLET
 
 static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
