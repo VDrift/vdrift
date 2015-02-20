@@ -1021,13 +1021,11 @@ void Game::UpdateTimer()
 	for (int i = 0; i != car_dynamics.size(); ++i)
 	{
 		const CarDynamics & car = car_dynamics[i];
-		int carid = cartimerids[&car];
-
 		bool advance = false;
 		int nextsector = 0;
 		if (track.GetSectors() > 0)
 		{
-			nextsector = (timer.GetLastSector(carid) + 1) % track.GetSectors();
+			nextsector = (timer.GetLastSector(i) + 1) % track.GetSectors();
 			for (int p = 0; p < 4; ++p)
 			{
 				const Bezier * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
@@ -1039,7 +1037,7 @@ void Game::UpdateTimer()
 		}
 
 		if (advance)
-			timer.Lap(carid, nextsector);
+			timer.Lap(i, nextsector);
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
@@ -1072,7 +1070,7 @@ void Game::UpdateTimer()
 			if (forwardvec.Magnitude() > 0.0001)
 				dist_from_back = relative_pos.dot(forwardvec.Normalize());
 
-			timer.UpdateDistance(carid, curpatch->GetDistFromStart() + dist_from_back);
+			timer.UpdateDistance(i, curpatch->GetDistFromStart() + dist_from_back);
 			//std::cout << curpatch->GetDistFromStart() << ", " << dist_from_back << std::endl;
 			//std::cout << curpatch->GetDistFromStart() + dist_from_back << std::endl;
 		}
@@ -1278,12 +1276,13 @@ void Game::UpdateCars(float dt)
 
 		AddTireSmokeParticles(car_dynamics[i], dt);
 
-		UpdateDriftScore(car_dynamics[i], dt);
+		UpdateDriftScore(i, dt);
 	}
 }
 
-void Game::UpdateCarInputs(int carid)
+void Game::UpdateCarInputs(const int carid)
 {
+	assert(carid >= 0 && carid < car_dynamics.size());
 	CarDynamics & car = car_dynamics[carid];
 	CarGraphics & car_gfx = car_graphics[carid];
 	CarSound & car_snd = car_sounds[carid];
@@ -1344,7 +1343,7 @@ void Game::UpdateCarInputs(int carid)
 	{
 		carinputs[CarInput::BRAKE] = 1.0;
 	}
-	else if (race_laps > 0 && (int)timer.GetCurrentLap(cartimerids[&car]) > race_laps)
+	else if (race_laps > 0 && (int)timer.GetCurrentLap(carid) > race_laps)
 	{
 		carinputs[CarInput::BRAKE] = 1.0;
 		carinputs[CarInput::THROTTLE] = 0.0;
@@ -1363,7 +1362,7 @@ void Game::UpdateCarInputs(int carid)
 
 	// Update player HUD
 	if (settings.GetHUD() != "NoHud")
-		UpdateHUD(carinputs, car);
+		UpdateHUD(carid, carinputs);
 
 	// Handle camera mode change inputs.
 	Camera * old_camera = active_camera;
@@ -1426,8 +1425,10 @@ void Game::UpdateCarInputs(int carid)
 	graphics->SetCloseShadow(incar ? 1.0 : 5.0);
 }
 
-void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & car)
+void Game::UpdateHUD(const int carid, const std::vector<float> & carinputs)
 {
+	assert(carid >= 0 && carid < car_dynamics.size());
+	const CarDynamics & car = car_dynamics[carid];
 	const GuiLanguage & lang = gui.GetLanguageDict();
 
 	if (settings.GetDebugInfo())
@@ -1467,8 +1468,7 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 	else
 		lapstr << "0 / 0";
 
-	int id = cartimerids[&car];
-	int score = timer.GetDriftScore(id);
+	int score = timer.GetDriftScore(carid);
 	std::ostringstream scorestr;
 	scorestr << score;
 
@@ -1485,8 +1485,8 @@ void Game::UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & c
 		else if (timer.GetPlayerCurrentLap() > race_laps)
 			msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
 	}
-	if (!msgstr && timer.GetIsDrifting(id))
-		msgstr << "+" << (int)timer.GetThisDriftScore(id);
+	if (!msgstr && timer.GetIsDrifting(carid))
+		msgstr << "+" << (int)timer.GetThisDriftScore(carid);
 
 	int gear = car.GetTransmission().GetGear();
 	std::ostringstream gearstr;
@@ -1613,7 +1613,9 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Add cars to the timer system.
 	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
-		cartimerids[&car_dynamics[i]] = timer.AddCar(car_info[i].name);
+		int carid = timer.AddCar(car_info[i].name);
+		assert(carid == i);
+
 		if (carcontrols_local.first == &car_dynamics[i])
 			timer.SetPlayerCarId(i);
 	}
@@ -2523,10 +2525,10 @@ void Game::UpdateParticleGraphics()
 	}
 }
 
-void Game::UpdateDriftScore(const CarDynamics & car, float dt)
+void Game::UpdateDriftScore(const int carid, const float dt)
 {
-	// Assert that the car is registered with the timer system.
-	assert(cartimerids.find(&car) != cartimerids.end());
+	assert(carid >= 0 && carid < car_dynamics.size());
+	const CarDynamics & car = car_dynamics[carid];
 
 	// Make sure the car is not off track.
 	int wheel_count = 0;
@@ -2563,7 +2565,7 @@ void Game::UpdateDriftScore(const CarDynamics & car, float dt)
 			// Drift starts when the angle > 0.2 (around 11.5 degrees).
 			// Drift ends when the angle < 0.1 (aournd 5.7 degrees).
 			float angle_threshold(0.2);
-			if (timer.GetIsDrifting(cartimerids[&car])) angle_threshold = 0.1;
+			if (timer.GetIsDrifting(carid)) angle_threshold = 0.1;
 
 			is_drifting = (car_angle > angle_threshold && car_angle <= M_PI / 2.0);
 			spin_out = (car_angle > M_PI / 2.0);
@@ -2572,17 +2574,15 @@ void Game::UpdateDriftScore(const CarDynamics & car, float dt)
 			if (is_drifting)
 			{
 				// Base score is the drift distance.
-				timer.IncrementThisDriftScore(cartimerids[&car], dt * car_speed);
+				timer.IncrementThisDriftScore(carid, dt * car_speed);
 
 				// Bonus score calculation is now done in TIMER.
-				timer.UpdateMaxDriftAngleSpeed(cartimerids[&car], car_angle, car_speed);
-				//std::cout << timer.GetDriftScore(cartimerids[&car]) << " + " << timer.GetThisDriftScore(cartimerids[&car]) << std::endl;
+				timer.UpdateMaxDriftAngleSpeed(carid, car_angle, car_speed);
 			}
 		}
 	}
 
-	timer.SetIsDrifting(cartimerids[&car], is_drifting, on_track && !spin_out);
-	//std::cout << is_drifting << ", " << on_track << ", " << car_angle << std::endl;
+	timer.SetIsDrifting(carid, is_drifting, on_track && !spin_out);
 }
 
 void Game::BeginStartingUp()

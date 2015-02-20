@@ -102,9 +102,9 @@ private:
 
 	void UpdateCars(float dt);
 
-	void UpdateCarInputs(int carid);
+	void UpdateCarInputs(const int carid);
 
-	void UpdateHUD(const std::vector<float> & carinputs, const CarDynamics & car);
+	void UpdateHUD(const int carid, const std::vector<float> & carinputs);
 
 	void UpdateTimer();
 
@@ -186,7 +186,7 @@ private:
 
 	void UpdateParticleGraphics();
 
-	void UpdateDriftScore(const CarDynamics & car, float dt);
+	void UpdateDriftScore(const int carid, const float dt);
 
 	std::string GetReplayRecordingFilename();
 
@@ -339,7 +339,6 @@ private:
 	Camera * active_camera;
 
 	std::pair <CarDynamics *, CarControlMap> carcontrols_local;
-	std::map <const CarDynamics *, int> cartimerids;
 	btAlignedObjectArray <CarDynamics> car_dynamics;
 	std::vector <CarGraphics> car_graphics;
 	std::vector <CarSound> car_sounds;
