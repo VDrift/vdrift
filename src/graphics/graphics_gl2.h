@@ -96,6 +96,8 @@ public:
 
 	virtual bool GetShadows() const;
 
+	virtual void SetFixedSkybox(bool enable);
+
 	virtual void SetSunDirection(const Vec3 & value);
 
 	virtual void SetContrast(float value);
@@ -198,6 +200,7 @@ private:
 	Vec3 light_direction;
 	std::tr1::shared_ptr<Sky> sky;
 	bool sky_dynamic;
+	bool fixed_skybox;
 
 	void ChangeDisplay(
 		const int width, const int height,

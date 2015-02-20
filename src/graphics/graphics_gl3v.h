@@ -94,6 +94,8 @@ public:
 
 	virtual bool GetShadows() const;
 
+	virtual void SetFixedSkybox(bool enable);
+
 	virtual void SetSunDirection(const Vec3 & value);
 
 	virtual void SetContrast(float value);
@@ -114,6 +116,7 @@ private:
 	int w, h;
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	bool initialized;
+	bool fixed_skybox;
 	Vec3 lastCameraPosition;
 	Vec3 light_direction;
 

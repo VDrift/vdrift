@@ -88,6 +88,9 @@ public:
 
 	virtual bool GetShadows() const = 0;
 
+	/// move skybox geometry with the camera
+	virtual void SetFixedSkybox(bool enable) = 0;
+
 	virtual void SetSunDirection(const Vec3 & value) = 0;
 
 	virtual void SetContrast(float value) = 0;

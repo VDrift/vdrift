@@ -248,7 +248,8 @@ GraphicsGL2::GraphicsGL2() :
 	renderconfigfile("basic.conf"),
 	renderscene(vertex_buffer),
 	postprocess(vertex_buffer, screen_quad),
-	sky_dynamic(false)
+	sky_dynamic(false),
+	fixed_skybox(true)
 {
 	const unsigned int faces[2 * 3] = {
 		0, 1, 2,
@@ -486,6 +487,8 @@ void GraphicsGL2::SetupScene(
 		cam = cameras["default"];
 		cam.view_distance = 10000;
 		cam.pos = Vec3(0);
+		if (fixed_skybox)
+			cam.pos[2] = cam_position[2];
 	}
 
 	// create a camera for the dynamic reflections
@@ -660,6 +663,11 @@ void GraphicsGL2::SetCloseShadow(float value)
 bool GraphicsGL2::GetShadows() const
 {
 	return shadows;
+}
+
+void GraphicsGL2::SetFixedSkybox(bool enable)
+{
+	fixed_skybox = enable;
 }
 
 void GraphicsGL2::SetSunDirection(const Vec3 & value)

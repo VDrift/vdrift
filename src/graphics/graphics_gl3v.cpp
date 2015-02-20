@@ -36,6 +36,7 @@ GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	renderer(gl),
 	logNextGlFrame(false),
 	initialized(false),
+	fixed_skybox(true),
 	closeshadow(5.f)
 {
 	// initialize the full screen quad
@@ -243,6 +244,9 @@ void GraphicsGL3::SetupScene(
 		h);
 
 	Vec3 skyboxCamPosition(0,0,0);
+	if (fixed_skybox)
+		skyboxCamPosition[2] = cam_position[2];
+
 	setCameraPerspective("skybox",
 		skyboxCamPosition,
 		cam_rotation,
@@ -729,6 +733,11 @@ void GraphicsGL3::SetCloseShadow ( float value )
 bool GraphicsGL3::GetShadows() const
 {
 	return true;
+}
+
+void GraphicsGL3::SetFixedSkybox(bool enable)
+{
+	fixed_skybox = enable;
 }
 
 void GraphicsGL3::SetSunDirection(const Vec3 & value)

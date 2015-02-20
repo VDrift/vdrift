@@ -128,6 +128,11 @@ public:
 		return data.reverse;
 	}
 
+	bool IsFixedSkybox() const
+	{
+		return !data.vertical_tracking_skyboxes;
+	}
+
 	const std::vector<TrackSurface> & GetSurfaces() const
 	{
 		return data.surfaces;

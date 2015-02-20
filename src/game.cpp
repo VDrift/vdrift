@@ -1846,6 +1846,7 @@ bool Game::LoadTrack(const std::string & trackname)
 	// Build static drawlist.
 	graphics->ClearStaticDrawables();
 	graphics->AddStaticNode(track.GetTrackNode());
+	graphics->SetFixedSkybox(track.IsFixedSkybox());
 
 	return true;
 }
@@ -1898,6 +1899,7 @@ void Game::LoadGarage()
 	// Build static drawlist.
 	graphics->ClearStaticDrawables();
 	graphics->AddStaticNode(track.GetTrackNode());
+	graphics->SetFixedSkybox(track.IsFixedSkybox());
 
 	// Load car.
 	SetGarageCar();
