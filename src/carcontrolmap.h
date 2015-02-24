@@ -20,15 +20,16 @@
 #ifndef _CARCONTROLMAP_H
 #define _CARCONTROLMAP_H
 
-#include "eventsystem.h"
 #include "gameinput.h"
 
+#include <cassert>
 #include <iosfwd>
 #include <string>
 #include <vector>
 #include <map>
 
 class Config;
+class EventSystem;
 
 class CarControlMap
 {

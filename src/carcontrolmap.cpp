@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "carcontrolmap.h"
+#include "eventsystem.h"
 #include "cfg/config.h"
 
 #include <string>
