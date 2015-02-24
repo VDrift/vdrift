@@ -1485,7 +1485,7 @@ void Game::UpdateHUD(const int carid, const std::vector<float> & carinputs)
 		else if (timer.GetPlayerCurrentLap() > race_laps)
 			msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
 	}
-	if (!msgstr && timer.GetIsDrifting(carid))
+	if (msgstr.tellp() <= 0 && timer.GetIsDrifting(carid))
 		msgstr << "+" << (int)timer.GetThisDriftScore(carid);
 
 	int gear = car.GetTransmission().GetGear();
