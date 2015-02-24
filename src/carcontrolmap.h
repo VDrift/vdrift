@@ -43,7 +43,10 @@ public:
 	void Save(Config & controlfile);
 
 	/// query the eventsystem for info, then return the resulting input array
-	const std::vector <float> & ProcessInput(const std::string & joytype, EventSystem & eventsystem, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter);
+	const std::vector <float> & ProcessInput(
+		const std::string & joytype, const EventSystem & eventsystem,
+		float dt, bool joy_200, float carms, float speedsens,
+		int screenw, int screenh, float button_ramp, bool hgateshifter);
 
 	const std::vector< float > & GetInputs() const {return inputs;}
 
