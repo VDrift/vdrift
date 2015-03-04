@@ -246,14 +246,6 @@ void Game::Start(std::list <std::string> & args)
 		return;
 	}
 
-	// Initialize FPS counter.
-	{
-		float screenhwratio = (float)window.GetH()/window.GetW();
-		float w = 0.06;
-		fps_draw.Init(debugnode, fonts["futuresans"], "", 0.5-w*0.5,1.0-0.02, screenhwratio*0.03,0.03);
-		fps_draw.SetDrawOrder(debugnode, 150);
-	}
-
 	// Initialize profiling text.
 	if (profilingmode)
 	{
@@ -1982,9 +1974,6 @@ void Game::CalculateFPS()
 	}
 	fps_avg /= 10.0;
 
-	std::ostringstream fpsstr;
-	fpsstr << "FPS: " << (int)fps_avg;
-
 	// Don't start looking an min/max until we've put out a few frames.
 	if (fps_min == 0 && frame > 20)
 	{
@@ -2002,18 +1991,9 @@ void Game::CalculateFPS()
 
 	if (settings.GetShowFps())
 	{
-		float screenhwratio = (float)window.GetH() / window.GetW();
-		float scaley = 0.03;
-		float scalex = scaley * screenhwratio;
-		float w = fps_draw.GetWidth("FPS: 100") * screenhwratio;
-		float x = 0.5 - w * 0.5;
-		float y = 1 - scaley;
-		fps_draw.Revise(fpsstr.str(), x, y, scalex, scaley);
-		fps_draw.SetDrawEnable(debugnode, true);
-	}
-	else
-	{
-		fps_draw.SetDrawEnable(debugnode, false);
+		std::ostringstream fpsstr;
+		fpsstr << (int)fps_avg;
+		signal_fps(fpsstr.str());
 	}
 
 	if (profilingmode && frame % 10 == 0)
@@ -3229,6 +3209,8 @@ void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 
 void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap)
 {
+	signalmap["game.fps"] = &signal_fps;
+
 	signalmap["car.debug0"] = &signal_debug_info[0];
 	signalmap["car.debug1"] = &signal_debug_info[1];
 	signalmap["car.debug2"] = &signal_debug_info[2];

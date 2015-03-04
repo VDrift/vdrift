@@ -266,6 +266,9 @@ private:
 	Slot1<const std::string &> set_control;
 	std::vector<Slot0> actions;
 
+	// game info signals
+	Signal1<const std::string &> signal_fps;
+
 	// hud info signals
 	Signal1<const std::string &> signal_debug_info[4];
 	Signal1<const std::string &> signal_message;
@@ -313,7 +316,6 @@ private:
 	std::string renderconfigfile;
 
 	SceneNode debugnode;
-	TextDrawable fps_draw;
 	TextDrawable profiling_text;
 
 	std::vector <float> fps_track;
