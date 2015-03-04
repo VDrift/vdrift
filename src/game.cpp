@@ -55,8 +55,6 @@
 	#define OS_NAME "Unix"
 #endif
 
-#define _PRINTSIZE_(x) {std::cout << #x << ": " << sizeof(x) << std::endl;}
-
 template <typename T>
 static std::string cast(const T &t) {
 	std::ostringstream os;
@@ -144,23 +142,6 @@ Game::~Game()
 /* Start the game with the given arguments... */
 void Game::Start(std::list <std::string> & args)
 {
-	/*_PRINTSIZE_(graphics);
-	_PRINTSIZE_(eventsystem);
-	_PRINTSIZE_(sound);
-	_PRINTSIZE_(settings);
-	_PRINTSIZE_(pathmanager);
-	_PRINTSIZE_(track);
-	_PRINTSIZE_(trackmap);
-	_PRINTSIZE_(gui);
-	_PRINTSIZE_(rootnode);
-	_PRINTSIZE_(collision);
-	_PRINTSIZE_(loadingscreen);
-	_PRINTSIZE_(loadingscreen_node);
-	_PRINTSIZE_(timer);
-	_PRINTSIZE_(replay);
-	_PRINTSIZE_(tire_smoke);
-	_PRINTSIZE_(ai);*/
-
 	if (!ParseArguments(args))
 	{
 		return;
