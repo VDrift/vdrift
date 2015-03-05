@@ -211,19 +211,9 @@ void Game::Start(std::list <std::string> & args)
 	}
 
 	// Load GUI.
-	if (!InitGUI("Main"))
+	if (!InitGUI())
 	{
 		error_output << "Error initializing graphical user interface" << std::endl;
-		return;
-	}
-
-	// Load loading screen assets.
-	if (!loadingscreen.Init(
-			pathmanager.GetGUITextureDir(settings.GetSkin()),
-			window.GetW(), window.GetH(),
-			content, fonts["futuresans"]))
-	{
-		error_output << "Error loading the loading screen" << std::endl;
 		return;
 	}
 
@@ -431,7 +421,7 @@ void Game::InitPlayerCar()
 	player_car_id = 0;
 }
 
-bool Game::InitGUI(const std::string & pagename)
+bool Game::InitGUI()
 {
 	std::list <std::string> menufiles;
 	std::string menufolder = pathmanager.GetGUIMenuPath(settings.GetSkin());
@@ -498,9 +488,6 @@ bool Game::InitGUI(const std::string & pagename)
 
 	// Set input control labels
 	LoadControlsIntoGUI();
-
-	// Show main page.
-	gui.ActivatePage(pagename, 0.5, error_output);
 
 	return true;
 }
@@ -981,10 +968,12 @@ void Game::ProcessGameInputs()
 		std::string currentPage = gui.GetActivePageName();
 
 		// Reload GUI
-		if (!InitGUI(currentPage))
+		if (!InitGUI())
 		{
 			error_output << "Error reloading GUI" << std::endl;
 		}
+
+		gui.ActivatePage(currentPage, 0.5, error_output);
 	}
 }
 
@@ -1753,7 +1742,7 @@ bool Game::LoadCar(
 
 bool Game::LoadTrack(const std::string & trackname)
 {
-	ShowLoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
+	gui.ActivatePage("Loading", 0.5, error_output);
 
 	if (!track.DeferredLoad(
 		content, dynamics,
@@ -1773,13 +1762,13 @@ bool Game::LoadTrack(const std::string & trackname)
 
 	bool success = true;
 	int count = 0;
+	int count_max = track.ObjectsNum();
+	int displayevery = count_max / 50;
 	while (!track.Loaded() && success)
 	{
-		int displayevery = track.ObjectsNum() / 50;
 		if (displayevery == 0 || count % displayevery == 0)
-		{
-			ShowLoadingScreen(count, track.ObjectsNum(), false, "", 0.5, 0.5);
-		}
+			ShowLoadingScreen(count, count_max, "");
+
 		success = track.ContinueDeferredLoad();
 		count++;
 	}
@@ -1833,7 +1822,7 @@ void Game::LoadGarage()
 	// Load track explicitly to avoid track reversed car orientation issue.
 	// Proper fix would be to support reversed car orientation in garage.
 
-	ShowLoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
+	gui.ActivatePage("Loading", 0.5, error_output);
 
 	bool track_reverse = false;
 	bool track_dynamic = false;
@@ -1854,13 +1843,13 @@ void Game::LoadGarage()
 
 	bool success = true;
 	int count = 0;
+	int count_max = track.ObjectsNum();
+	int displayevery = count_max / 50;
 	while (!track.Loaded() && success)
 	{
-		int displayevery = track.ObjectsNum() / 50;
 		if (displayevery == 0 || count % displayevery == 0)
-		{
-			ShowLoadingScreen(count, track.ObjectsNum(), false, "", 0.5, 0.5);
-		}
+			ShowLoadingScreen(count, count_max, "");
+
 		success = track.ContinueDeferredLoad();
 		count++;
 	}
@@ -1878,6 +1867,9 @@ void Game::LoadGarage()
 
 	// Load car.
 	SetGarageCar();
+
+	// Show main page.
+	gui.ActivatePage("Main", 0.5, error_output);
 }
 
 void Game::SetGarageCar()
@@ -2294,35 +2286,35 @@ void Game::ProcessNewSettings()
 	sound.SetAttenuation(settings.GetSoundAttenuation());
 }
 
-void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y)
+void Game::ShowLoadingScreen(float progress, float progress_max, const std::string & /*optional_text*/)
 {
-	assert(max > 0);
-	loadingscreen.Update(progress/max, optionalText, x, y);
+	assert(progress_max > 0);
+
+	std::ostringstream loadstr;
+	loadstr << progress / progress_max;
+	signal_loading(loadstr.str());
+
+	// Tick the gui.
+	eventsystem.BeginFrame();
+	gui.Update(eventsystem.Get_dt());
+	eventsystem.EndFrame();
 
 	std::vector<SceneNode*> nodes;
-	nodes.push_back(&loadingscreen.GetNode());
-	if (drawGui)
-	{
-		if (gui.GetNodes().first)
-			nodes.push_back(gui.GetNodes().first);
-
-		if (gui.GetNodes().second)
-			nodes.push_back(gui.GetNodes().second);
-	}
+	nodes.reserve(2);
+	if (gui.GetNodes().first)
+		nodes.push_back(gui.GetNodes().first);
+	if (gui.GetNodes().second)
+		nodes.push_back(gui.GetNodes().second);
 	graphics->BindDynamicVertexData(nodes);
 
 	graphics->ClearDynamicDrawables();
-	graphics->AddDynamicNode(loadingscreen.GetNode());
-	if (drawGui)
-	{
-		if (gui.GetNodes().first)
-			graphics->AddDynamicNode(*gui.GetNodes().first);
-
-		if (gui.GetNodes().second)
-			graphics->AddDynamicNode(*gui.GetNodes().second);
-	}
+	if (gui.GetNodes().first)
+		graphics->AddDynamicNode(*gui.GetNodes().first);
+	if (gui.GetNodes().second)
+		graphics->AddDynamicNode(*gui.GetNodes().second);
 
 	graphics->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
+
 	window.SwapBuffers();
 	graphics->DrawScene(error_output);
 }
@@ -2353,6 +2345,9 @@ bool Game::Download(const std::vector <std::string> & urls)
 		return false;
 	}
 
+	const std::string gui_page = gui.GetActivePageName();
+	gui.ActivatePage("Loading", 0.5, error_output);
+
 	for (unsigned int i = 0; i < urls.size(); i++)
 	{
 		std::string url = urls[i];
@@ -2360,8 +2355,10 @@ bool Game::Download(const std::vector <std::string> & urls)
 		if (!requestSuccess)
 		{
 			http.CancelAllRequests();
+			gui.ActivatePage(gui_page, 0.5, error_output);
 			return false;
 		}
+
 		bool userCancel = false;
 		while (http.Tick() && !userCancel)
 		{
@@ -2369,6 +2366,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 			if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down || eventsystem.GetQuit())
 			{
 				http.CancelAllRequests();
+				gui.ActivatePage(gui_page, 0.5, error_output);
 				return false;
 			}
 
@@ -2378,6 +2376,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 			if (info.state == HttpInfo::FAILED)
 			{
 				http.CancelAllRequests();
+				gui.ActivatePage(gui_page, 0.5, error_output);
 				error_output << "Failed when downloading URL: " << url << std::endl;
 				return false;
 			}
@@ -2394,12 +2393,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 			if (info.totalsize > 0)
 				total = info.totalsize;
 
-			// Tick the GUI...
-			eventsystem.BeginFrame();
-			gui.Update(eventsystem.Get_dt());
-			eventsystem.EndFrame();
-
-			ShowLoadingScreen(fmod(info.downloaded,total), total, true, text.str(), 0.5, 0.5);
+			ShowLoadingScreen(fmod(info.downloaded, total), total, text.str());
 		}
 
 		HttpInfo info;
@@ -2407,11 +2401,13 @@ bool Game::Download(const std::vector <std::string> & urls)
 		if (info.state == HttpInfo::FAILED)
 		{
 			http.CancelAllRequests();
+			gui.ActivatePage(gui_page, 0.5, error_output);
 			error_output << "Failed when downloading URL: " << url << std::endl;
 			return false;
 		}
 	}
 
+	gui.ActivatePage(gui_page, 0.5, error_output);
 	return true;
 }
 
@@ -3190,6 +3186,7 @@ void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 
 void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap)
 {
+	signalmap["game.loading"] = &signal_loading;
 	signalmap["game.fps"] = &signal_fps;
 
 	signalmap["car.debug0"] = &signal_debug_info[0];

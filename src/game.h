@@ -44,7 +44,6 @@
 #include "camera.h"
 #include "camera_free.h"
 #include "trackmap.h"
-#include "loadingscreen.h"
 #include "timer.h"
 #include "replay.h"
 #include "forcefeedback.h"
@@ -90,7 +89,7 @@ private:
 
 	bool InitSound();
 
-	bool InitGUI(const std::string & pagename);
+	bool InitGUI();
 
 	void Test();
 
@@ -167,7 +166,7 @@ private:
 
 	void UpdateTrackMap();
 
-	void ShowLoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
+	void ShowLoadingScreen(float progress, float progress_max, const std::string & optional_text);
 
 	void ProcessNewSettings();
 
@@ -267,6 +266,7 @@ private:
 	std::vector<Slot0> actions;
 
 	// game info signals
+	Signal1<const std::string &> signal_loading;
 	Signal1<const std::string &> signal_fps;
 
 	// hud info signals
@@ -364,7 +364,6 @@ private:
 	TrackMap trackmap;
 	Track track;
 	Gui gui;
-	LoadingScreen loadingscreen;
 	Timer timer;
 	Replay replay;
 	Ai ai;
