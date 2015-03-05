@@ -64,7 +64,7 @@ static Rect LoadRect(
 	else
 	{
 		float l(0), r(0);
-		if (!pagefile.get(section, "left", l))
+		if (pagefile.get(section, "left", l))
 			l = l * hwratio;
 		else if (pagefile.get(section, "center-left", l))
 			l = 0.5 + l * hwratio;
