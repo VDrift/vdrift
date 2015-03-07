@@ -112,6 +112,7 @@ void PerformanceTesting::Test(
 	info_output << carname << " Summary:\n"
 		<< "Mass including driver and fuel: " << 1 / car.GetInvMass() << " kg\n"
 		<< "Center of mass: " << cm[0] << ", " << cm[1] << ", " << cm[2] << " m" << std::endl;
+	info_output << "Estimated maximum speed: " << ConvertToMPH(car.GetMaxSpeedMPS()) << " MPH" << std::endl;
 
 	std::ostringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
