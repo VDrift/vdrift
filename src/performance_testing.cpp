@@ -107,10 +107,11 @@ void PerformanceTesting::Test(
 		return;
 	}
 
+	btVector3 cm = -car.GetCenterOfMassOffset();
 	info_output << "Car dynamics loaded" << std::endl;
-	info_output << carname << " Summary:\n" <<
-			"Mass (kg) including driver and fuel: " << 1 / car.GetInvMass() << "\n" <<
-			"Center of mass (m): " << car.GetCenterOfMass() << std::endl;
+	info_output << carname << " Summary:\n"
+		<< "Mass including driver and fuel: " << 1 / car.GetInvMass() << " kg\n"
+		<< "Center of mass: " << cm[0] << ", " << cm[1] << ", " << cm[2] << " m" << std::endl;
 
 	std::ostringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);

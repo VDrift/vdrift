@@ -146,6 +146,8 @@ public:
 
 	const CarSuspension & GetSuspension(WheelPosition pos) const {return *suspension[pos];}
 
+	const btVector3 & GetCenterOfMassOffset() const;
+
 	btScalar GetAerodynamicDownforceCoefficient() const;
 
 	btScalar GetAeordynamicDragCoefficient() const;
@@ -232,8 +234,6 @@ protected:
 	btScalar feedback;
 
 	btVector3 GetDownVector() const;
-
-	const btVector3 & GetCenterOfMassOffset() const;
 
 	btQuaternion LocalToWorld(const btQuaternion & local) const;
 
