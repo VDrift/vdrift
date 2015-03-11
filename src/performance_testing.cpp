@@ -156,9 +156,9 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 	float dt = 1/90.0;
 	int i = 0;
 
-	std::pair <float, float> maxspeed;
-	maxspeed.first = 0;
-	maxspeed.second = 0;
+	std::pair <float, float> maxspeed(0, 0);
+	float maxlift = 0;
+	float maxdrag = 0;
 	float lastsecondspeed = 0;
 	float stopthreshold = 0.001; //if the accel (in m/s^2) is less than this value, discontinue the testing
 
@@ -169,8 +169,6 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 
 	float timetoquarter = maxtime;
 	float quarterspeed = 0;
-
-	std::string downforcestr = "N/A";
 
 	ResetCar();
 
@@ -188,14 +186,12 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 		world.update(dt);
 
 		float car_speed = car.GetSpeed();
-
 		if (car_speed > maxspeed.second)
 		{
 			maxspeed.first = t;
-			maxspeed.second = car.GetSpeed();
-			std::ostringstream dfs;
-			dfs << -car.GetTotalAero()[2] << " N; " << -car.GetTotalAero()[2]/car.GetTotalAero()[0] << ":1 lift/drag";
-			downforcestr = dfs.str();
+			maxspeed.second = car_speed;
+			maxlift = car.GetTotalAero()[2];
+			maxdrag = car.GetTotalAero()[0];
 		}
 
 		if (car_speed < timeto60startthreshold)
@@ -236,7 +232,7 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 	clock_t cpu_timer_stop = clock();
 
 	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << std::endl;
-	info_output << "Downforce at maximum speed: " << downforcestr << std::endl;
+	info_output << "Downforce at maximum speed: " << -maxlift << " N; L/D: " << -maxlift / maxdrag << std::endl;
 	info_output << "0-60 MPH time: " << timeto60 - timeto60start << " s" << std::endl;
 	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
 	info_output << "Simulation performance: " << t / float(cpu_timer_stop - cpu_timer_start) * CLOCKS_PER_SEC << std::endl;
