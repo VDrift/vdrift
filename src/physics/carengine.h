@@ -33,6 +33,7 @@ class PTree;
 
 struct CarEngineInfo
 {
+	btScalar maxpower; ///< max power output
 	btScalar redline; ///< the redline in RPMs (used only for the redline graphics)
 	btScalar rpm_limit; ///< peak engine RPMs after which limiting occurs
 	btScalar idle; ///< idle throttle percentage; this is calculated algorithmically
@@ -78,6 +79,11 @@ public:
 	CarEngine();
 
 	void Init(const CarEngineInfo & info);
+
+	btScalar GetMaxPower() const
+	{
+		return info.maxpower;
+	}
 
 	btScalar GetRPMLimit() const
 	{

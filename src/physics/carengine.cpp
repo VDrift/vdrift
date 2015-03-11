@@ -22,6 +22,7 @@
 #include "linearinterp.h"
 
 CarEngineInfo::CarEngineInfo():
+	maxpower(184000),
 	redline(7800),
 	rpm_limit(9000),
 	idle(0.02),
@@ -41,6 +42,7 @@ CarEngineInfo::CarEngineInfo():
 bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 {
 	std::vector<btScalar> pos(3);
+	if (!cfg.get("max-power", maxpower, error_output)) return false;
 	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false;
 	if (!cfg.get("rpm-limit", rpm_limit, error_output)) return false;
 	if (!cfg.get("inertia", inertia, error_output)) return false;

@@ -1816,25 +1816,30 @@ btScalar CarDynamics::DownshiftRPM(int gear) const
 
 btScalar CarDynamics::CalculateMaxSpeed() const
 {
-	btScalar maxspeed = 0;
+	// speed limit due to engine and transmission
 	btScalar ratio = transmission.GetGearRatio(transmission.GetForwardGears());
+	btScalar drive_speed = engine.GetRPMLimit() * M_PI / 30;
 	if (drive == RWD)
 	{
 		ratio *= differential_rear.GetFinalDrive();
-		maxspeed = wheel[REAR_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+		drive_speed *= wheel[REAR_LEFT].GetRadius() / ratio;
 	}
 	else if (drive == FWD)
 	{
 		ratio *= differential_front.GetFinalDrive();
-		maxspeed = wheel[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+		drive_speed *= wheel[FRONT_LEFT].GetRadius() / ratio;
 	}
 	else if (drive == AWD)
 	{
 		ratio *= differential_front.GetFinalDrive();
 		ratio *= differential_center.GetFinalDrive();
-		maxspeed = wheel[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+		drive_speed *= wheel[FRONT_LEFT].GetRadius() / ratio;
 	}
-	return maxspeed;
+
+	// speed limit due to drag
+	btScalar aero_speed = btPow(engine.GetMaxPower() / GetAeordynamicDragCoefficient(), 1 / 3.0f);
+
+	return btMin(drive_speed, aero_speed);
 }
 
 void CarDynamics::SetSteering(const btScalar value)
