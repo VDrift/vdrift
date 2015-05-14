@@ -217,15 +217,6 @@ void Game::Start(std::list <std::string> & args)
 		return;
 	}
 
-	// Initialize profiling text.
-	if (profilingmode)
-	{
-		float screenhwratio = (float)window.GetH()/window.GetW();
-		float profilingtextsize = 0.02;
-		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*profilingtextsize, profilingtextsize);
-		profiling_text.SetDrawOrder(debugnode, 150);
-	}
-
 	// Load particle system.
 	Vec3 smokedir(0.4, 0.2, 1.0);
 	tire_smoke.Load(pathmanager.GetEffectsTextureDir(), "smoke.png", settings.GetAnisotropy(), content);
@@ -695,8 +686,8 @@ void Game::Draw(float dt)
 	PROFILER.beginBlock("scenegraph");
 
 	std::vector<SceneNode*> nodes;
-	nodes.reserve(6);
-	nodes.push_back(&debugnode);
+	nodes.reserve(5);
+
 	nodes.push_back(&dynamicsdraw.getNode());
 	nodes.push_back(&trackmap.GetNode());
 	nodes.push_back(&tire_smoke.GetNode());
@@ -710,7 +701,6 @@ void Game::Draw(float dt)
 	graphics->BindDynamicVertexData(nodes);
 
 	graphics->ClearDynamicDrawables();
-	graphics->AddDynamicNode(debugnode);
 	graphics->AddDynamicNode(dynamicsdraw.getNode());
 	graphics->AddDynamicNode(track.GetBodyNode());
 	graphics->AddDynamicNode(track.GetRacinglineNode());
@@ -1395,16 +1385,27 @@ void Game::UpdateHUD(const int carid, const std::vector<float> & carinputs)
 
 	if (settings.GetDebugInfo())
 	{
-		std::ostringstream debug_info[4];
-		car.DebugPrint(debug_info[0], true, false, false, false);
-		car.DebugPrint(debug_info[1], false, true, false, false);
-		car.DebugPrint(debug_info[2], false, false, true, false);
-		car.DebugPrint(debug_info[3], false, false, false, true);
+		if (!profilingmode)
+		{
+			std::ostringstream debug_info[4];
+			car.DebugPrint(debug_info[0], true, false, false, false);
+			car.DebugPrint(debug_info[1], false, true, false, false);
+			car.DebugPrint(debug_info[2], false, false, true, false);
+			car.DebugPrint(debug_info[3], false, false, false, true);
 
-		signal_debug_info[0](debug_info[0].str());
-		signal_debug_info[1](debug_info[1].str());
-		signal_debug_info[2](debug_info[2].str());
-		signal_debug_info[3](debug_info[3].str());
+			signal_debug_info[0](debug_info[0].str());
+			signal_debug_info[1](debug_info[1].str());
+			signal_debug_info[2](debug_info[2].str());
+			signal_debug_info[3](debug_info[3].str());
+		}
+		else if (frame % 10 == 0)
+		{
+			std::ostringstream gpu_profile;
+			graphics->printProfilingInfo(gpu_profile);
+
+			signal_debug_info[0](PROFILER.getAvgSummary(quickprof::MICROSECONDS));
+			signal_debug_info[1](gpu_profile.str());
+		}
 	}
 
 	if (settings.GetInputGraph())
@@ -1967,15 +1968,6 @@ void Game::CalculateFPS()
 		std::ostringstream fpsstr;
 		fpsstr << (int)fps_avg;
 		signal_fps(fpsstr.str());
-	}
-
-	if (profilingmode && frame % 10 == 0)
-	{
-		std::string cpuProfile = PROFILER.getAvgSummary(quickprof::MICROSECONDS);
-		std::ostringstream summary;
-		summary << "CPU:\n" << cpuProfile << "\n\nGPU:\n";
-		graphics->printProfilingInfo(summary);
-		profiling_text.Revise(summary.str());
 	}
 }
 

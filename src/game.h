@@ -315,9 +315,6 @@ private:
 	std::map <std::string, Font> fonts;
 	std::string renderconfigfile;
 
-	SceneNode debugnode;
-	TextDrawable profiling_text;
-
 	std::vector <float> fps_track;
 	int fps_position;
 	float fps_min;
