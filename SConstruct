@@ -37,7 +37,7 @@ default_bindir = "bin"
 #---------------#
 # FreeBSD build #
 #---------------#
-if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
+if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9']:
     if 'LOCALBASE' in os.environ:
         LOCALBASE = os.environ['LOCALBASE']
     else:
@@ -117,13 +117,13 @@ elif sys.platform == 'darwin':
 #---------------#
 # Windows build #
 #---------------#
-elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+elif sys.platform in ['win32', 'msys', 'cygwin']:
     env = Environment(ENV = os.environ, tools = ['mingw'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters', '-mwindows', '-mno-cygwin'],
-        CPPPATH = ['#vdrift-win/include', '#vdrift-win/bullet'],
+        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-mwindows'],
+        CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
-		LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
-        CPPDEFINES = ['_REENTRANT'],
+        #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
+        #CPPDEFINES = ['_REENTRANT'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = []
@@ -378,7 +378,7 @@ env = conf.Finish()
 env['data_directory'] = env['destdir'] + env['prefix'] + '/' + env['datadir']
 env['locale_directory'] = env['destdir'] + env['prefix'] + '/' + env['localedir']
 cppdefines.append(("SETTINGS_DIR", '"%s"' % env['settings']))
-if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+if sys.platform in ['win32', 'msys', 'cygwin']:
     env['use_binreloc'] = False
     env['use_apbuild'] = False
     env['data_directory'] = "./data"

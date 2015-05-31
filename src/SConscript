@@ -163,7 +163,7 @@ appdir = ""
 vdrift_install = None
 common_libs = ['SDL2_image', 'vorbisfile', 'curl']
 
-if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
+if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9']:
     common_libs.append('libLinearMath')
     common_libs.append('libBulletCollision')
     local_env.ParseConfig('sdl2-config --cflags --libs')
@@ -211,9 +211,9 @@ elif ( 'darwin' == sys.platform ):
     libs_link = ['objc']
     local_env.Append( FRAMEWORKS = [ common_libs, 'Foundation', 'AppKit'] )
     src.append(['../tools/osx/SDL2Main.m', '../tools/osx/config_mac.mm'])
-elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
-	local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
-	libs_link = ['opengl32', 'mingw32', 'SDL2main', 'SDL2', 'ws2_32', 'intl', 'iconv', common_libs ]
+elif sys.platform in ['win32', 'msys', 'cygwin']:
+    #local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
+    libs_link = ['opengl32', 'mingw32', 'SDL2main', 'SDL2', 'ws2_32', 'intl', common_libs ]
 else:
     local_env.ParseConfig('sdl2-config --cflags --libs')
     #local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
@@ -244,7 +244,7 @@ env.Alias("install", install)
 # Python Export #
 #---------------#
 
-if not ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+if not sys.platform in ['win32', 'msys', 'cygwin']:
     #for now this seems to break windows build so disabling for win
     wrapper_build_env = local_env.Clone()
 
