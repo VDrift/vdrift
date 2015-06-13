@@ -165,9 +165,9 @@ inline btScalar CarTire::getMz() const
 	return mz;
 }
 
-inline bool CarTire::Serialize(joeserialize::Serializer & s)
+inline bool CarTire::Serialize(joeserialize::Serializer & /*s*/)
 {
-	//_SERIALIZE_(s, mz);
+	//_SERIALIZE_(s, mz); FIXME?
 	return true;
 }
 

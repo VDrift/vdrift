@@ -141,7 +141,7 @@ void Http::SetTemporaryFolder(const std::string & temporary_folder)
     folder = temporary_folder;
 }
 
-int ProgressCallback(void * ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
+int ProgressCallback(void * ptr, double TotalToDownload, double NowDownloaded, double /*TotalToUpload*/, double /*NowUploaded*/)
 {
 	ProgressInfo * info = static_cast<ProgressInfo*>(ptr);
 	assert(info->http && info->easyhandle);

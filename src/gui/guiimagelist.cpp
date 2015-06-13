@@ -60,7 +60,7 @@ void GuiImageList::SetImage(const std::string & value)
 	}
 }
 
-void GuiImageList::UpdateElements(SceneNode & scene)
+void GuiImageList::UpdateElements(SceneNode & /*scene*/)
 {
 	assert(m_values.size() <= m_elements.size());
 	for (size_t i = 0; i < m_values.size(); ++i)

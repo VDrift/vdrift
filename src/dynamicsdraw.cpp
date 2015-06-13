@@ -42,7 +42,7 @@ DynamicsDraw::~DynamicsDraw()
 void DynamicsDraw::drawLine(
 	const btVector3& from,
 	const btVector3& to,
-	const btVector3& color)
+	const btVector3& /*color*/)
 {
 	float verts[6] = {from.x(), from.y(), from.z(), to.x(), to.y(), to.z()};
 	m_shapes.Add(0, 0, verts, 6);
@@ -51,9 +51,9 @@ void DynamicsDraw::drawLine(
 void DynamicsDraw::drawContactPoint(
 	const btVector3& pointOnB,
 	const btVector3& normalOnB,
-	btScalar distance,
-	int lifeTime,
-	const btVector3& color)
+	btScalar /*distance*/,
+	int /*lifeTime*/,
+	const btVector3& /*color*/)
 {
 	btVector3 from = pointOnB;
 	btVector3 to = pointOnB + normalOnB;
@@ -62,12 +62,12 @@ void DynamicsDraw::drawContactPoint(
 	m_contacts.Add(0, 0, verts, 6);
 }
 
-void DynamicsDraw::reportErrorWarning(const char* warningString)
+void DynamicsDraw::reportErrorWarning(const char* /*warningString*/)
 {
 	// not implemented
 }
 
-void DynamicsDraw::draw3dText(const btVector3& location, const char* textString)
+void DynamicsDraw::draw3dText(const btVector3& /*location*/, const char* /*textString*/)
 {
 	// not implemented
 }

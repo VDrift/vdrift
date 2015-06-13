@@ -95,7 +95,7 @@ private:
 
 	void SetTextures(const Drawable & d, GraphicsState & glstate);
 
-	void SetTransform(const Drawable & d, GraphicsState & glstate);
+	void SetTransform(const Drawable & d);
 };
 
 #endif // _RENDER_INPUT_SCENE_H

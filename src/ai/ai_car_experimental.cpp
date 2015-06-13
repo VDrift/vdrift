@@ -509,7 +509,7 @@ float AiCarExperimental::RayCastDistance(Vec3 direction, float max_length)
 	return dist;
 }
 
-const Bezier * AiCarExperimental::GetNearestPatch(const Bezier * helper)
+const Bezier * AiCarExperimental::GetNearestPatch(const Bezier * /*helper*/)
 {
 	// At the moment this is very slow!
 	// TODO: Implement backward chaining for BEZIER, to just look around the helper if passed.
@@ -535,7 +535,7 @@ const Bezier * AiCarExperimental::GetNearestPatch(const Bezier * helper)
 	return b_nearest;
 }
 
-bool AiCarExperimental::Recover(const Bezier * patch)
+bool AiCarExperimental::Recover(const Bezier * /*patch*/)
 {
 	// Recover mode will basically detect walls on the front
 	// of the car, then go reverse if needed for 3 secs,

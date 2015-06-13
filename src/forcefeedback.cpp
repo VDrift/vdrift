@@ -101,7 +101,7 @@ ForceFeedback::~ForceFeedback()
 
 void ForceFeedback::update(
 	float force,
-	float dt,
+	float /*dt*/,
 	std::ostream & error_output)
 {
 	if (!enabled || !haptic || (effect_id == -1))

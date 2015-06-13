@@ -752,7 +752,7 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // mg_wheelEdge
-void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
+void mg_rim(VertexArray & rim, float sectionWidth_mm, float /*aspectRatio*/, float rimDiameter_in, float flangeDisplacement_mm)
 {
     unsigned int segmentsAround = 32;
 

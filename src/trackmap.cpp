@@ -55,7 +55,7 @@ bool TrackMap::BuildMap(
 	const std::string & trackname,
 	const std::string & texturepath,
 	ContentManager & content,
-	std::ostream & error_output)
+	std::ostream & /*error_output*/)
 {
 	Unload();
 

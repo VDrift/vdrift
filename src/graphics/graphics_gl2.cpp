@@ -280,8 +280,8 @@ GraphicsGL2::~GraphicsGL2()
 
 bool GraphicsGL2::Init(
 	const std::string & newshaderpath,
-	unsigned resx, unsigned resy, unsigned depthbpp,
-	bool fullscreen, unsigned antialiasing,
+	unsigned resx, unsigned resy,
+	unsigned antialiasing,
 	bool enableshadows, int new_shadow_distance,
 	int new_shadow_quality, int reflection_type,
 	const std::string & static_reflectionmap_file,

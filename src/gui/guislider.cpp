@@ -52,7 +52,7 @@ void GuiSlider::SetupDrawable(
 	std::tr1::shared_ptr<Texture> texture,
 	float centerx, float centery,
 	float w, float h, float z, bool fill,
-	std::ostream & error_output)
+	std::ostream & /*error_output*/)
 {
 	m_value = 0;
 	m_x = centerx - w * 0.5;

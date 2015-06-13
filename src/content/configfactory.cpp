@@ -73,7 +73,7 @@ void Factory<PTree>::init(
 template <>
 bool Factory<PTree>::create(
 	std::tr1::shared_ptr<PTree> & sptr,
-	std::ostream & error,
+	std::ostream & /*error*/,
 	const std::string & basepath,
 	const std::string & path,
 	const std::string & name,
@@ -105,10 +105,10 @@ bool Factory<PTree>::create(
 template <>
 bool Factory<PTree>::create(
 	std::tr1::shared_ptr<PTree> & sptr,
-	std::ostream & error,
-	const std::string & basepath,
-	const std::string & path,
-	const std::string & name,
+	std::ostream & /*error*/,
+	const std::string & /*basepath*/,
+	const std::string & /*path*/,
+	const std::string & /*name*/,
 	const std::string& file)
 {
 	std::istringstream s(file);

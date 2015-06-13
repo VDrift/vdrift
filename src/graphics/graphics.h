@@ -37,8 +37,8 @@ public:
 	/// returns true on success
 	virtual bool Init(
 		const std::string & shaderpath,
-		unsigned resx, unsigned resy, unsigned depthbpp,
-		bool fullscreen, unsigned antialiasing,
+		unsigned resx, unsigned resy,
+		unsigned antialiasing,
 		bool enableshadows, int shadow_distance,
 		int shadow_quality, int reflection_type,
 		const std::string & static_reflectionmap_file,
@@ -74,7 +74,7 @@ public:
 
 	/// optional (atm) scene animation update function
 	/// to be called after SetupScene and before DrawScene
-	virtual void UpdateScene(float dt) {};
+	virtual void UpdateScene(float /*dt*/) {};
 
 	virtual void DrawScene(std::ostream & error_output) = 0;
 
@@ -97,10 +97,10 @@ public:
 
 	/// optional advanced lighting simulation interface, should be factored out eventually
 	/// set scene local time in hours 0 - 23
-	virtual void SetLocalTime(float hours) {};
+	virtual void SetLocalTime(float /*hours*/) {};
 
 	/// set scene local time speedup relative to real time: 0, 1, ..., 32
-	virtual void SetLocalTimeSpeed(float value) {};
+	virtual void SetLocalTimeSpeed(float /*value*/) {};
 
 	virtual void printProfilingInfo(std::ostream & /*out*/) const { }
 

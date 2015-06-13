@@ -98,7 +98,7 @@ bool Shader::Load(
 	const std::vector<std::string> & defines,
 	const std::vector<std::string> & uniforms,
 	const std::vector<std::string> & attributes,
-	std::ostream & info_output,
+	std::ostream & /*info_output*/,
 	std::ostream & error_output)
 {
 	Unload();

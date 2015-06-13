@@ -28,7 +28,7 @@ static bool LoadOptions(
 	const Config & cfg,
 	const GuiLanguage & lang,
 	Gui::OptionMap & options,
-	std::ostream & error_output)
+	std::ostream & /*error_output*/)
 {
 	for (Config::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
 	{
@@ -443,7 +443,7 @@ void Gui::ActivatePage(
 
 bool Gui::ActivatePage(
 	const std::string & pagename,
-	float activation_time)
+	float /*activation_time*/)
 {
 	// check whether page is already active
 	if (active_page != pages.end() && active_page->first == pagename)

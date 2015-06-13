@@ -51,15 +51,21 @@ GraphicsGL3::~GraphicsGL3()
 
 bool GraphicsGL3::Init(
 	const std::string & shader_path,
-	unsigned resx, unsigned resy, unsigned depthbpp,
-	bool fullscreen, unsigned antialiasing,
-	bool shadows, int shadow_distance,
-	int shadow_quality, int reflection_type,
+	unsigned resx,
+	unsigned resy,
+	unsigned antialiasing,
+	bool shadows,
+	int /*shadow_distance*/,
+	int /*shadow_quality*/,
+	int reflection_type,
 	const std::string & static_reflectionmap_file,
-	const std::string & static_ambientmap_file,
-	int anisotropy, int texturesize,
-	int lighting_quality, bool bloom,
-	bool normalmaps, bool /*dynamicsky*/,
+	const std::string & /*static_ambientmap_file*/,
+	int anisotropy,
+	int texturesize,
+	int /*lighting_quality*/,
+	bool bloom,
+	bool normalmaps,
+	bool /*dynamicsky*/,
 	const std::string & render_config,
 	std::ostream & info_output,
 	std::ostream & error_output)
@@ -227,7 +233,7 @@ void GraphicsGL3::SetupScene(
 	float fov, float new_view_distance,
 	const Vec3 cam_position,
 	const Quat & cam_rotation,
-	const Vec3 & dynamic_reflection_sample_pos,
+	const Vec3 & /*dynamic_reflection_sample_pos*/,
 	std::ostream & error_output)
 {
 	lastCameraPosition = cam_position;
@@ -512,7 +518,7 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 	}
 }
 
-void GraphicsGL3::AssembleDrawMap(std::ostream & error_output)
+void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 {
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
@@ -745,7 +751,7 @@ void GraphicsGL3::SetSunDirection(const Vec3 & value)
 	light_direction = value;
 }
 
-void GraphicsGL3::SetContrast ( float value )
+void GraphicsGL3::SetContrast(float /*value*/)
 {
 
 }

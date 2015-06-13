@@ -159,7 +159,7 @@ void RenderInputScene::SetDrawList(const std::vector <Drawable*> & drawlist)
 	drawlist_ptr = &drawlist;
 }
 
-void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_output)
+void RenderInputScene::Render(GraphicsState & glstate, std::ostream & /*error_output*/)
 {
 	assert(shader && "RenderInputScene::Render No shader set.");
 
@@ -198,7 +198,7 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 		const Drawable & d = **ptr;
 		SetFlags(d, glstate);
 		SetTextures(d, glstate);
-		SetTransform(d, glstate);
+		SetTransform(d);
 		vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
 	}
 }
@@ -221,7 +221,7 @@ void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 	glstate.BindTexture(2, GL_TEXTURE_2D, d.GetTexture2());
 }
 
-void RenderInputScene::SetTransform(const Drawable & d, GraphicsState & glstate)
+void RenderInputScene::SetTransform(const Drawable & d)
 {
 	if (!drawable_transform.Equals(d.GetTransform()))
 	{

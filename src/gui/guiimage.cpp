@@ -33,7 +33,7 @@ GuiImage::~GuiImage()
 	// dtor
 }
 
-void GuiImage::Update(SceneNode & scene, float dt)
+void GuiImage::Update(SceneNode & scene, float /*dt*/)
 {
 	if (m_update)
 	{

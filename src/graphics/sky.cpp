@@ -101,7 +101,7 @@ Sky::~Sky()
 	// dtor
 }
 
-bool Sky::Load(const std::string & path)
+bool Sky::Load(const std::string & /*path*/)
 {
 /*
 	std::string cpath = path + "/sky.txt";

@@ -241,7 +241,7 @@ public:
 		return INTERSECT;
 	}
 
-	IntersectionEnum Intersect(IntersectAlways always) const
+	IntersectionEnum Intersect(IntersectAlways /*always*/) const
 	{
 		return IN;
 	}

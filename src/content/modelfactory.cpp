@@ -58,8 +58,8 @@ template <>
 bool Factory<Model>::create(
 	std::tr1::shared_ptr<Model>& sptr,
 	std::ostream& error,
-	const std::string& basepath,
-	const std::string& path,
+	const std::string& /*basepath*/,
+	const std::string& /*path*/,
 	const std::string& name,
 	const JoePack& pack)
 {
@@ -76,9 +76,9 @@ template <>
 bool Factory<Model>::create(
 	std::tr1::shared_ptr<Model>& sptr,
 	std::ostream& error,
-	const std::string& basepath,
-	const std::string& path,
-	const std::string& name,
+	const std::string& /*basepath*/,
+	const std::string& /*path*/,
+	const std::string& /*name*/,
 	const VertexArray& varray)
 {
 	std::tr1::shared_ptr<Model> temp(new Model());

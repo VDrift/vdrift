@@ -347,10 +347,10 @@ bool Game::InitCoreSubsystems()
 		bool success = graphics->Init(
 			pathmanager.GetShaderPath() + "/" + render_ver,
 			settings.GetResolutionX(), settings.GetResolutionY(),
-			settings.GetDepthBpp(), settings.GetFullscreen(),
 			settings.GetAntialiasing(), settings.GetShadows(),
-			settings.GetShadowDistance(), settings.GetShadowQuality(), settings.GetReflections(),
-			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),
+			settings.GetShadowDistance(), settings.GetShadowQuality(),
+			settings.GetReflections(),pathmanager.GetStaticReflectionMap(),
+			pathmanager.GetStaticAmbientMap(),
 			settings.GetAnisotropic(), texture_size,
 			settings.GetLighting(), settings.GetBloom(),
 			settings.GetNormalMaps(), settings.GetSkyDynamic(),
@@ -2081,7 +2081,7 @@ void Game::PopulateCarPaintList(const std::string & carname, GuiOption::List & p
 	}
 }
 
-void Game::PopulateCarTireList(const std::string & carname, GuiOption::List & tirelist)
+void Game::PopulateCarTireList(const std::string & /*carname*/, GuiOption::List & tirelist)
 {
 	tirelist.clear();
 	tirelist.push_back(std::make_pair("default", "default"));
@@ -2097,7 +2097,7 @@ void Game::PopulateCarTireList(const std::string & carname, GuiOption::List & ti
 	}
 }
 
-void Game::PopulateCarWheelList(const std::string & carname, GuiOption::List & wheellist)
+void Game::PopulateCarWheelList(const std::string & /*carname*/, GuiOption::List & wheellist)
 {
 	wheellist.clear();
 	wheellist.push_back(std::make_pair("default", "default"));

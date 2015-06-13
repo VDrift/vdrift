@@ -89,8 +89,10 @@ void ParticleSystem::Update(float dt)
 void ParticleSystem::UpdateGraphics(
 	const Quat & camdir,
 	const Vec3 & campos,
-	float znear, float zfar,
-	float fovy, float fovz)
+	float znear,
+	float zfar,
+	float /*fovy*/,
+	float /*fovz*/)
 {
 	if (max_particles == 0)
 		return;

@@ -68,7 +68,7 @@ void Replay::Reset()
 void Replay::StartRecording(
 	const std::vector<CarInfo> & ncarinfo,
 	const std::string & trackname,
-	std::ostream & error_log)
+	std::ostream & /*error_log*/)
 {
 	Reset();
 
@@ -417,13 +417,15 @@ bool Replay::CarState::Serialize(joeserialize::Serializer & s)
 	return true;
 }
 
+/* FIXME
 QT_TEST(replay_test)
 {
-	/*//basic version validity check
+	// basic version validity check
 	{
 		REPLAY replay(0.004);
 		std::ostringstream teststream;
 		replay.Save(teststream);
 		QT_CHECK(replay.Load(teststream, std::cerr));
-	}*/
+	}
 }
+*/

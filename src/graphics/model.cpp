@@ -51,17 +51,17 @@ bool Model::CanSave() const
 	return false;
 }
 
-bool Model::Save(const std::string & strFileName, std::ostream & error_output) const
+bool Model::Save(const std::string & /*strFileName*/, std::ostream & /*error_output*/) const
 {
 	return false;
 }
 
-bool Model::Load(const std::string & strFileName, std::ostream & error_output)
+bool Model::Load(const std::string & /*strFileName*/, std::ostream & /*error_output*/)
 {
 	return false;
 }
 
-bool Model::Load(const VertexArray & nvarray, std::ostream & error_output)
+bool Model::Load(const VertexArray & nvarray, std::ostream & /*error_output*/)
 {
 	Clear();
 

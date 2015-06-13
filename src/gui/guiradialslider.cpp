@@ -50,7 +50,7 @@ void GuiRadialSlider::SetupDrawable(
 	const std::tr1::shared_ptr<Texture> & texture,
 	float x, float y, float w, float h, float z,
 	float start_angle, float end_angle, float radius,
-	float dar, bool fill, std::ostream & error_output)
+	float dar, bool fill, std::ostream & /*error_output*/)
 {
 	m_texture = texture;
 	m_x = x - w * 0.5;

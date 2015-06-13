@@ -339,7 +339,7 @@ struct AeroDeviceFracture : public FractureCallback
 		// dtor
 	}
 
-	void operator()(FractureBody::Connection & connection)
+	void operator()(FractureBody::Connection & /*connection*/)
 	{
 		int last = aerodevice.size() - 1;
 		if (id < last)
@@ -373,7 +373,7 @@ struct BodyLoader
 	// load a body instance, return false on error
 	bool operator() (
 		const PTree & cfg,
-		std::ostream & error,
+		std::ostream & /*error*/,
 		btCollisionShape * shape = 0,
 		btScalar mass = 0,
 		bool link = false)
@@ -1184,7 +1184,7 @@ void CarDynamics::ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torqu
 }
 
 ///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
-void CarDynamics::DoTCS ( int i, btScalar suspension_force )
+void CarDynamics::DoTCS ( int i, btScalar /*suspension_force*/ )
 {
 	btScalar sense = 1.0;
 	if ( transmission.GetGear() < 0 )
@@ -1242,7 +1242,7 @@ void CarDynamics::DoTCS ( int i, btScalar suspension_force )
 }
 
 ///do anti-lock brake system calculations and modify the brake force if necessary
-void CarDynamics::DoABS ( int i, btScalar suspension_force )
+void CarDynamics::DoABS ( int i, btScalar /*suspension_force*/ )
 {
 	//an ideal ABS algorithm
 
@@ -1281,7 +1281,7 @@ void CarDynamics::DoABS ( int i, btScalar suspension_force )
 		brake[i].SetBrakeFactor ( 0.0 );
 }
 
-void CarDynamics::ComputeSuspensionDisplacement ( int i, btScalar dt )
+void CarDynamics::ComputeSuspensionDisplacement ( int i, btScalar /*dt*/ )
 {
 	//compute bump effect
 	const TrackSurface & surface = wheel_contact[i].GetSurface();
@@ -1353,8 +1353,10 @@ btVector3 CarDynamics::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	return suspension_force;
 }
 
-btVector3 CarDynamics::ComputeTireFrictionForce (int i, btScalar dt, btScalar normal_force,
-        btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation)
+btVector3 CarDynamics::ComputeTireFrictionForce (
+	int i, btScalar /*dt*/, btScalar normal_force,
+	btScalar rotvel, const btVector3 & linvel,
+	const btQuaternion & wheel_orientation)
 {
 	btMatrix3x3 wheel_mat(wheel_orientation);
 	btVector3 xw = wheel_mat.getColumn(0);
@@ -1516,7 +1518,7 @@ void CarDynamics::Tick(btScalar dt, const btVector3 & force, const btVector3 & t
 }
 
 // executed as last function(after integration) in bullet singlestepsimulation
-void CarDynamics::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
+void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar dt)
 {
 	// reset transform, before processing tire/suspension constraints
 	// will break bullets collision clamping, tunneling prevention
@@ -2007,11 +2009,11 @@ void CarDynamics::Init()
 bool CarDynamics::WheelContactCallback(
 	btManifoldPoint& cp,
 	const btCollisionObjectWrapper* col0,
-	int partId0,
-	int index0,
-	const btCollisionObjectWrapper* col1,
-	int partId1,
-	int index1)
+	int /*partId0*/,
+	int /*index0*/,
+	const btCollisionObjectWrapper* /*col1*/,
+	int /*partId1*/,
+	int /*index1*/)
 {
 	// invalidate wheel shape contact with ground as we are handling it separately
 #if (BT_BULLET_VERSION < 281)

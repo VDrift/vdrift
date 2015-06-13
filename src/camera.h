@@ -44,16 +44,16 @@ public:
 	virtual const Quat & GetOrientation() const { return rotation; }
 
 	// reset position, orientation
-	virtual void Reset(const Vec3 & newpos, const Quat & newquat) {};
+	virtual void Reset(const Vec3 & /*newpos*/, const Quat & /*newquat*/) {};
 
 	// update position, orientation
-	virtual void Update(const Vec3 & newpos, const Quat & newquat, float dt) {};
+	virtual void Update(const Vec3 & /*newpos*/, const Quat & /*newquat*/, float /*dt*/) {};
 
 	// move relative to current position, orientation
-	virtual void Move(float dx, float dy, float dz) {};
+	virtual void Move(float /*dx*/, float /*dy*/, float /*dz*/) {};
 
 	// rotate relative to current position, orientation
-	virtual void Rotate(float up, float left) {};
+	virtual void Rotate(float /*up*/, float /*left*/) {};
 
 protected:
 	const std::string name;

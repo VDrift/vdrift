@@ -36,7 +36,7 @@ GuiWidget::GuiWidget() :
 	set_val.call.bind<GuiWidget, &GuiWidget::SetVal>(this);
 }
 
-void GuiWidget::Update(SceneNode & scene, float dt)
+void GuiWidget::Update(SceneNode & scene, float /*dt*/)
 {
 	if (m_update)
 	{

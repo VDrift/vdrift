@@ -214,7 +214,7 @@ CarGraphics::~CarGraphics()
 bool CarGraphics::Load(
 	const PTree & cfg,
 	const std::string & carpath,
-	const std::string & carname,
+	const std::string & /*carname*/,
 	const std::string & carwheel,
 	const std::string & carpaint,
 	const Vec3 & carcolor,

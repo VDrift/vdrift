@@ -131,7 +131,7 @@ void GuiWidgetList::SetVal(int n, const std::string & value)
 	}
 }
 
-void GuiWidgetList::ScrollList(int n, const std::string & value)
+void GuiWidgetList::ScrollList(int /*n*/, const std::string & value)
 {
 	if (value == "fwd")
 	{
