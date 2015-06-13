@@ -25,7 +25,6 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <algorithm>
 
 class PTree;
 
@@ -345,19 +344,19 @@ inline void PTree::_get<const PTree *>(const PTree & p, const PTree * & value) c
 template <>
 inline PTree & PTree::set(const std::string & key, const PTree & value)
 {
-	std::string::const_iterator next = std::find(key.begin(), key.end(), '.');
-	std::pair<iterator, bool> pi = _children.insert(std::make_pair(std::string(key.begin(), next), value));
+	std::string::size_type n = key.find('.');
+	std::pair<iterator, bool> pi = _children.insert(std::make_pair(key.substr(0, n), value));
 	PTree & p = pi.first->second;
 	if (pi.second && p._value.empty())
 	{
 		p._value = pi.first->first;
 		p._parent = this;
 	}
-	if (next == key.end())
+	if (n == std::string::npos)
 	{
 		return p;
 	}
-	return p.set(std::string(next+1, key.end()), PTree());
+	return p.set(key.substr(n + 1), PTree());
 }
 
 #endif //_PTREE_H
