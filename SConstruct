@@ -120,6 +120,7 @@ elif sys.platform == 'darwin':
 elif sys.platform in ['win32', 'msys', 'cygwin']:
     env = Environment(ENV = os.environ, tools = ['mingw'],
         CCFLAGS = ['-Wall', '-Wextra', '-mwindows','-std=c++11'],
+		CXXFLAGS= ['-std=c++11'],
         CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
         #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
@@ -136,6 +137,7 @@ else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src'],
         CCFLAGS = ['-Wall', '-Wextra','-std=c++11'],#, '-pthread'],
+		CXXFLAGS= ['-std=c++11'],
         LIBPATH = ['.', '#lib'],
         #LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
