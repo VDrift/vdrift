@@ -36,8 +36,8 @@ public:
 	const std::string & getEnum(GLenum value) const;
 
 private:
-	std::tr1::unordered_map <std::string, GLenum> strToEnum;
-	std::tr1::unordered_map <GLenum, std::string> enumToStr;
+	std::unordered_map <std::string, GLenum> strToEnum;
+	std::unordered_map <GLenum, std::string> enumToStr;
 };
 
 #undef ADD_GL_ENUM

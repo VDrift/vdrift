@@ -47,7 +47,7 @@ void GuiRadialSlider::Update(SceneNode & scene, float dt)
 
 void GuiRadialSlider::SetupDrawable(
 	SceneNode & node,
-	const std::tr1::shared_ptr<Texture> & texture,
+	const std::shared_ptr<Texture> & texture,
 	float x, float y, float w, float h, float z,
 	float start_angle, float end_angle, float radius,
 	float dar, bool fill, std::ostream & /*error_output*/)

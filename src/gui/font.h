@@ -50,7 +50,7 @@ public:
 		std::ostream & error_output,
 		bool mipmap = false);
 
-	const std::tr1::shared_ptr<Texture> & GetFontTexture() const
+	const std::shared_ptr<Texture> & GetFontTexture() const
 	{
 		return font_texture;
 	}
@@ -72,7 +72,7 @@ public:
 	float GetInvSize() const {return inv_size;}
 
 private:
-	std::tr1::shared_ptr<Texture> font_texture;	// font texture
+	std::shared_ptr<Texture> font_texture;	// font texture
 	std::vector <CharInfo> charinfo;			// font metrics in texture space
 	float inv_size;								// inverse font size in texture space
 	static const unsigned int charnum = 256;	// character count

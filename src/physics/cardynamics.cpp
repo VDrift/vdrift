@@ -32,7 +32,7 @@
 #include "BulletCollision/CollisionShapes/btCylinderShape.h"
 
 template<class T>
-static inline bool isnan(const T & x)
+static inline bool Isnan(const T & x)
 {
 	return x != x;
 }
@@ -532,7 +532,7 @@ bool CarDynamics::Load(
 		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
 
 		std::string tirestr(cartire);
-		std::tr1::shared_ptr<PTree> cfg_tire;
+		std::shared_ptr<PTree> cfg_tire;
 		if ((cartire.empty() || cartire == "default") &&
 			!cfg_wheel.get("tire.type", tirestr, error)) return false;
 		#ifdef VDRIFTN
@@ -1161,7 +1161,7 @@ void CarDynamics::UpdateWheelTransform()
 void CarDynamics::ApplyEngineTorqueToBody ( btVector3 & torque )
 {
 	btVector3 engine_torque ( -engine.GetTorque(), 0, 0 );
-	assert ( !isnan ( engine_torque[0] ) );
+	assert ( !Isnan ( engine_torque[0] ) );
 	torque = body->getCenterOfMassTransform().getBasis() * engine_torque;
 }
 
@@ -1293,9 +1293,9 @@ void CarDynamics::ComputeSuspensionDisplacement ( int i, btScalar /*dt*/ )
 	btScalar bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( M_PI_2*phase ) - 2.0 );
 
 	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius() - bumpoffset;
-	assert ( !isnan ( relative_displacement ) );
+	assert ( !Isnan ( relative_displacement ) );
 	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement );
-	assert ( !isnan ( suspension[i]->GetDisplacement() ) );
+	assert ( !Isnan ( suspension[i]->GetDisplacement() ) );
 }
 
 ///returns the suspension force (so it can be applied to the tires)
@@ -1303,7 +1303,7 @@ btVector3 CarDynamics::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 {
 	//compute suspension force
 	btScalar springdampforce = suspension[i]->GetForce ( dt );
-	assert ( !isnan ( springdampforce ) );
+	assert ( !Isnan ( springdampforce ) );
 
 	//do anti-roll
 	int otheri = i;
@@ -1311,7 +1311,7 @@ btVector3 CarDynamics::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	else otheri--;
 	btScalar antirollforce = suspension[i]->GetAntiRoll() *
 		( suspension[i]->GetDisplacement() - suspension[WheelPosition ( otheri ) ]->GetDisplacement() );
-	assert ( !isnan ( antirollforce ) );
+	assert ( !Isnan ( antirollforce ) );
 
 	//find the vector direction to apply the suspension force
 #ifdef SUSPENSION_FORCE_DIRECTION
@@ -1347,8 +1347,8 @@ btVector3 CarDynamics::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	force = force + suspension_force;
 	torque = torque + suspension_force_application_point.cross(suspension_force);
 
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( force[n] ) );
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( torque[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !Isnan ( force[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !Isnan ( torque[n] ) );
 
 	return suspension_force;
 }
@@ -1379,7 +1379,7 @@ btVector3 CarDynamics::ComputeTireFrictionForce (
 	btVector3 friction_force = tire[i].getForce(
 		normal_force, friction_coeff, camber, rotvel, lonvel, latvel);
 
-	for (int n = 0; n < 3; ++n) assert(!isnan(friction_force[n]));
+	for (int n = 0; n < 3; ++n) assert(!Isnan(friction_force[n]));
 
 	return friction_force;
 }
@@ -1393,7 +1393,7 @@ void CarDynamics::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	//calculate friction torque
 	btVector3 tire_force = Direction::forward * friction_force[0] - Direction::right * friction_force[1];
 	btScalar tire_friction_torque = friction_force[0] * wheel[i].GetRadius();
-	assert ( !isnan ( tire_friction_torque ) );
+	assert ( !Isnan ( tire_friction_torque ) );
 
 	//calculate brake torque
 	btScalar wheel_lock_torque = -wheel[i].GetAngularVelocity() / dt * wheel[i].GetInertia();
@@ -1406,7 +1406,7 @@ void CarDynamics::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	{
 		wheel_brake_torque = -brake[i].GetTorque();
 	}
-	assert ( !isnan ( wheel_brake_torque ) );
+	assert ( !Isnan ( wheel_brake_torque ) );
 
 	//limit the reaction torque to the applied drive and braking torque
 	btScalar reaction_torque = tire_friction_torque;
@@ -1496,8 +1496,8 @@ void CarDynamics::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 		ApplyWheelForces ( dt, wheel_drive_torque[i], i, suspension_force[i], force, torque );
 	}
 
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( force[n] ) );
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( torque[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !Isnan ( force[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !Isnan ( torque[n] ) );
 	body->applyCentralForce( force );
 	body->applyTorque( torque );
 }
@@ -1601,7 +1601,7 @@ void CarDynamics::UpdateDriveline(btScalar drive_torque[], btScalar dt)
 void CarDynamics::CalculateDriveTorque(btScalar wheel_drive_torque[], btScalar clutch_torque)
 {
 	btScalar driveshaft_torque = transmission.GetTorque(clutch_torque);
-	assert(!isnan(driveshaft_torque));
+	assert(!Isnan(driveshaft_torque));
 
 	for ( int i = 0; i < WHEEL_POSITION_SIZE; ++i )
 		wheel_drive_torque[i] = 0;
@@ -1630,7 +1630,7 @@ void CarDynamics::CalculateDriveTorque(btScalar wheel_drive_torque[], btScalar c
 	}
 
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-		assert(!isnan(wheel_drive_torque[WheelPosition(i)]));
+		assert(!Isnan(wheel_drive_torque[WheelPosition(i)]));
 }
 
 btScalar CarDynamics::CalculateDriveshaftSpeed()
@@ -1642,7 +1642,7 @@ btScalar CarDynamics::CalculateDriveshaftSpeed()
 	btScalar right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
 
 	for ( int i = 0; i < 4; ++i )
-		assert ( !isnan ( wheel[i].GetAngularVelocity() ) );
+		assert ( !Isnan ( wheel[i].GetAngularVelocity() ) );
 
 	if (drive == RWD)
 	{

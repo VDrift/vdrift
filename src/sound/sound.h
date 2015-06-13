@@ -57,7 +57,7 @@ public:
 	// attenuation: y = a * (x - b)^c + d
 	void SetAttenuation(const float attenuation[4]);
 
-	size_t AddSource(std::tr1::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop);
+	size_t AddSource(std::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop);
 
 	void RemoveSource(size_t id);
 
@@ -105,7 +105,7 @@ private:
 
 	struct Source
 	{
-		std::tr1::shared_ptr<SoundBuffer> buffer;
+		std::shared_ptr<SoundBuffer> buffer;
 		Vec3 position;
 		Vec3 velocity;
 		float offset;

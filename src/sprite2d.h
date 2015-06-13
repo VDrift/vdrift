@@ -44,7 +44,7 @@ public:
 
 	bool Load(
 		SceneNode & parent,
-		std::tr1::shared_ptr<Texture> & texture2d,
+		std::shared_ptr<Texture> & texture2d,
 		float draworder);
 
 	void Unload(SceneNode & parent);
@@ -89,7 +89,7 @@ public:
 private:
 	SceneNode::Handle node;
 	SceneNode::DrawableHandle draw;
-	std::tr1::shared_ptr<Texture> texture;
+	std::shared_ptr<Texture> texture;
 	VertexArray varray;
 	float r, g, b, a;
 

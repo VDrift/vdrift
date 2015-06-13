@@ -38,7 +38,7 @@ public:
 
 	void operator()(PTree & node, std::string & value)
 	{
-		std::tr1::shared_ptr<PTree> sptr;
+		std::shared_ptr<PTree> sptr;
 		if (content.load(sptr, path, value))
 		{
 			node.set(*sptr);
@@ -72,7 +72,7 @@ void Factory<PTree>::init(
 
 template <>
 bool Factory<PTree>::create(
-	std::tr1::shared_ptr<PTree> & sptr,
+	std::shared_ptr<PTree> & sptr,
 	std::ostream & /*error*/,
 	const std::string & basepath,
 	const std::string & path,
@@ -83,7 +83,7 @@ bool Factory<PTree>::create(
 	std::ifstream file(abspath.c_str());
 	if (file.good())
 	{
-		std::tr1::shared_ptr<PTree> temp(new PTree());
+		std::shared_ptr<PTree> temp(new PTree());
 		if (m_content)
 		{
 			// include support
@@ -104,7 +104,7 @@ bool Factory<PTree>::create(
 // replace file string with stream
 template <>
 bool Factory<PTree>::create(
-	std::tr1::shared_ptr<PTree> & sptr,
+	std::shared_ptr<PTree> & sptr,
 	std::ostream & /*error*/,
 	const std::string & /*basepath*/,
 	const std::string & /*path*/,
@@ -114,7 +114,7 @@ bool Factory<PTree>::create(
 	std::istringstream s(file);
 	if (s.good())
 	{
-		std::tr1::shared_ptr<PTree> temp(new PTree());
+		std::shared_ptr<PTree> temp(new PTree());
 		m_read(s, *temp, 0);
 		sptr = temp;
 		return true;
@@ -123,7 +123,7 @@ bool Factory<PTree>::create(
 	return false;
 }
 
-const std::tr1::shared_ptr<PTree> & Factory<PTree>::getDefault() const
+const std::shared_ptr<PTree> & Factory<PTree>::getDefault() const
 {
 	return m_default;
 }

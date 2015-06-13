@@ -36,7 +36,7 @@ public:
 
 	struct hash
 	{
-		std::size_t operator()(const StringId toHash) const {return std::tr1::hash<unsigned int>()(toHash.id);}
+		std::size_t operator()(const StringId toHash) const {return std::hash<unsigned int>()(toHash.id);}
 	};
 
 private:
@@ -59,8 +59,8 @@ public:
 	std::string getString(StringId id) const;
 
 private:
-	std::tr1::unordered_map <std::string, StringId> idmap;
-	std::tr1::unordered_map <StringId, std::string, StringId::hash> stringmap;
+	std::unordered_map <std::string, StringId> idmap;
+	std::unordered_map <StringId, std::string, StringId::hash> stringmap;
 
 	StringId makeStringId(unsigned int id) const;
 };

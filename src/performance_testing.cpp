@@ -90,7 +90,7 @@ void PerformanceTesting::Test(
 	world.addCollisionObject(track);
 
 	//load the car dynamics
-	std::tr1::shared_ptr<PTree> cfg;
+	std::shared_ptr<PTree> cfg;
 	content.load(cfg, cardir, carname + ".car");
 	if (!cfg->size())
 	{

@@ -198,7 +198,7 @@ private:
 	CameraMap cameras;
 
 	Vec3 light_direction;
-	std::tr1::shared_ptr<Sky> sky;
+	std::shared_ptr<Sky> sky;
 	bool sky_dynamic;
 	bool fixed_skybox;
 

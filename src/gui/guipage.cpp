@@ -521,7 +521,7 @@ bool GuiPage::Load(
 				texinfo.mipmap = false;
 				texinfo.repeatu = false;
 				texinfo.repeatv = false;
-				std::tr1::shared_ptr<Texture> tex;
+				std::shared_ptr<Texture> tex;
 				content.load(tex, texpath, value, texinfo);
 
 				float radius = 0.0;

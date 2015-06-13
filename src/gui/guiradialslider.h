@@ -38,7 +38,7 @@ public:
 
 	void SetupDrawable(
 		SceneNode & node,
-		const std::tr1::shared_ptr<Texture> & texture,
+		const std::shared_ptr<Texture> & texture,
 		float x, float y, float w, float h, float z,
 		float start_angle, float end_angle, float radius,
 		float dar, bool fill, std::ostream & error_output);
@@ -46,7 +46,7 @@ public:
 	Slot1<const std::string &> set_value;
 
 private:
-	std::tr1::shared_ptr<Texture> m_texture;
+	std::shared_ptr<Texture> m_texture;
 	SceneNode::DrawableHandle m_draw;
 	VertexArray m_varray;
 	float m_x, m_y, m_w, m_h;

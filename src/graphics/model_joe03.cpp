@@ -107,7 +107,7 @@ struct VertHash
 	{
 		const size_t h1 = (size_t(v.vi) << 16) | size_t(v.ti);
 		const size_t h2 = (size_t(v.ti) << 16) | size_t(v.ni);
-		return std::tr1::hash<size_t>()(h1) ^ std::tr1::hash<size_t>()(h2);
+		return std::hash<size_t>()(h1) ^ std::hash<size_t>()(h2);
 	}
 };
 
@@ -393,7 +393,7 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	assert(!object.frames.empty());
 	const JoeFrame & frame = object.frames[0];
 
-	typedef std::tr1::unordered_map<Vert, unsigned int, VertHash> VertMap;
+	typedef std::unordered_map<Vert, unsigned int, VertHash> VertMap;
 	VertMap vmap(object.info.num_faces * 3);
 
 	vector <unsigned int> v_faces(object.info.num_faces * 3);

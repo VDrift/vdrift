@@ -346,7 +346,7 @@ class Serializer
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename U, typename T, typename H>
-		bool Serialize(const std::string & name, std::tr1::unordered_map <U, T, H> & t)
+		bool Serialize(const std::string & name, std::unordered_map <U, T, H> & t)
 		{
 			ComplexTypeStart(name);
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
@@ -355,7 +355,7 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::tr1::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (typename std::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::ostringstream countstr;
 					countstr << count;
@@ -395,7 +395,7 @@ class Serializer
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T, typename H>
-		bool Serialize(const std::string & name, std::tr1::unordered_set <T, H> & t)
+		bool Serialize(const std::string & name, std::unordered_set <T, H> & t)
 		{
 			ComplexTypeStart(name);
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
@@ -404,7 +404,7 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::tr1::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (typename std::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;

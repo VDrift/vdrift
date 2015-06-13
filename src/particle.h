@@ -105,7 +105,7 @@ private:
 	Vec3 direction;
 
 	SceneNode::DrawableHandle draw;
-	std::tr1::shared_ptr<Texture> texture;
+	std::shared_ptr<Texture> texture;
 	VertexArray varray;
 	SceneNode node;
 

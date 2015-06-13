@@ -48,16 +48,16 @@ struct LoadDrawable
 	const std::string & path;
 	const int anisotropy;
 	ContentManager & content;
-	std::set<std::tr1::shared_ptr<Model> > & models;
-	std::set<std::tr1::shared_ptr<Texture> > & textures;
+	std::set<std::shared_ptr<Model> > & models;
+	std::set<std::shared_ptr<Texture> > & textures;
 	std::ostream & error;
 
 	LoadDrawable(
 		const std::string & path,
 		const int anisotropy,
 		ContentManager & content,
-		std::set<std::tr1::shared_ptr<Model> > & models,
-		std::set<std::tr1::shared_ptr<Texture> > & textures,
+		std::set<std::shared_ptr<Model> > & models,
+		std::set<std::shared_ptr<Texture> > & textures,
 		std::ostream & error);
 
 	bool operator()(
