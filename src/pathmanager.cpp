@@ -48,7 +48,7 @@ static bool has_extension(const std::string & str, const std::string & ext)
 	return true;
 }
 
-void PathManager::Init(std::ostream & info_output, std::ostream & /*error_output*/)
+void PathManager::Init(std::ostream & info_output, std::ostream & error_output)
 {
 	// Figure out the user's home directory.
 	const char * homedir;
