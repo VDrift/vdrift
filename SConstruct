@@ -130,8 +130,8 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
         #CPPDEFINES = ['_REENTRANT'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
-	#Add -std=c++11
-	env.Append(CCFLAGS = ['-std=c++11'])
+    #Add -std=c++11
+    env.Append(CCFLAGS = ['-std=c++11'])
     check_headers = []
     check_libs = []
 
