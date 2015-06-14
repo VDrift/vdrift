@@ -59,6 +59,8 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         env.Replace(CC = "g++")
     if 'CXXFLAGS' in os.environ:
         env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
+	#Add -std=c++11
+	env.Append(CCFLAGS = ['-std=c++11']
 
 #------------#
 # OS X build #
@@ -71,7 +73,7 @@ elif sys.platform == 'darwin':
 
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src', '#tools/osx/Frameworks', '#tools/osx/Frameworks/SDL.framework/Headers'],
-        CCFLAGS = ['-Wall', '-Wextra','-std=c++11'],
+        CCFLAGS = ['-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
         FRAMEWORKPATH = ['tools/osx/Frameworks/'],
@@ -104,6 +106,8 @@ elif sys.platform == 'darwin':
         env.Append( CCFLAGS = ['-isysroot', sdk_path], 
             LINKFLAGS = ['-Wl,-syslibroot,%s' % sdk_path] )
 
+	#Add -std=c++11
+	env.Append(CCFLAGS = ['-std=c++11']
     # Configure reasonable defaults
     default_settingsdir = 'Library/Preferences/VDrift'
     default_prefix = "/Applications/VDrift"
@@ -119,14 +123,15 @@ elif sys.platform == 'darwin':
 #---------------#
 elif sys.platform in ['win32', 'msys', 'cygwin']:
     env = Environment(ENV = os.environ, tools = ['mingw'],
-        CCFLAGS = ['-Wall', '-Wextra', '-mwindows','-std=c++11'],
-		CXXFLAGS= ['-std=c++11'],
+        CCFLAGS = ['-Wall', '-Wextra', '-mwindows'],
         CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
         #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
         #CPPDEFINES = ['_REENTRANT'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
+	#Add -std=c++11
+	env.Append(CCFLAGS = ['-std=c++11']
     check_headers = []
     check_libs = []
 
@@ -136,8 +141,7 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
 else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src'],
-        CCFLAGS = ['-Wall', '-Wextra','-std=c++11'],#, '-pthread'],
-		CXXFLAGS= ['-std=c++11'],
+        CCFLAGS = ['-Wall', '-Wextra'],#, '-pthread'],
         LIBPATH = ['.', '#lib'],
         #LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
@@ -149,6 +153,8 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if os.environ.has_key('LDFLAGS'):
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
+	#Add -std=c++11
+	env.Append(CCFLAGS = ['-std=c++11']
     check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
 
@@ -401,7 +407,7 @@ version = strftime("%Y-%m-%d")
 build_dir = 'build'
 if env['release']:
     # release build, debugging off, optimizations on
-    env.Append(CCFLAGS = ['-O3', '-pipe'])
+    env.Append(CCFLAGS = ['-O3', '-pipe',])
     build_dir = env['builddir_release']
 else:
     # debug build, lots of debugging, no optimizations
