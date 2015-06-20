@@ -32,8 +32,8 @@
 #include <fstream>
 
 #ifdef USE_TR1
-#include <tr1/unordered_map>
-#include <tr1/unordered_set>
+#include <unordered_map>
+#include <unordered_set>
 #endif
 
 namespace joeserialize
