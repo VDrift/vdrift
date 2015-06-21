@@ -90,6 +90,8 @@ public:
 	/// displacement fraction: 0.0 fully extended, 1.0 fully compressed
 	btScalar GetDisplacementFraction() const {return displacement / info.travel;}
 
+	btScalar GetDisplacement(btScalar force) const;
+
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
 	virtual void SetSteering(const btScalar & value);
 

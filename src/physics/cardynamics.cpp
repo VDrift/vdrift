@@ -589,14 +589,34 @@ bool CarDynamics::Load(
 	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(2);
 	btVector3 fwd_offset = fwd * (2.0 - bmax.y());
 	btVector3 up_offset = -up * (0.5 + bmin.z());
+
+	// adjust for suspension rest position
+	// a bit hacky here, should use updated aabb
+	btScalar dr = GetCenterOfMassOffset()[1];
+	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
+	btScalar r2 = suspension[3]->GetWheelPosition()[1] + dr;
+	btScalar m = 1 / body->getInvMass();
+	btScalar m1 = m * r2 / (r2 - r1);
+	btScalar m2 = m - m1;
+	btScalar d1 = suspension[0]->GetDisplacement(m1 * 9.81 * 0.5);
+	btScalar d2 = suspension[3]->GetDisplacement(m2 * 9.81 * 0.5);
+	suspension[0]->SetDisplacement(d1);
+	suspension[1]->SetDisplacement(d1);
+	suspension[2]->SetDisplacement(d2);
+	suspension[3]->SetDisplacement(d2);
+	up_offset -= up * btMax(d1, d2);
+
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
+	UpdateWheelTransform();
+
+	// update motion state
+	body->getMotionState()->setWorldTransform(body->getWorldTransform());
 
 	// init cached state
 	linear_velocity = body->getLinearVelocity();
 	angular_velocity = body->getAngularVelocity();
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
 		wheel_velocity[i].setZero();
 		suspension_force[i].setZero();
 	}
