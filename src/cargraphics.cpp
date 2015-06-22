@@ -292,6 +292,7 @@ bool CarGraphics::Load(
 		steer_angle_max = steer_angle_max / 180.0 * M_PI;
 		SceneNode & steernoderef = bodynoderef.GetNode(steernode);
 		steer_orientation = steernoderef.GetTransform().GetRotation();
+		steer_rotation = steer_orientation;
 	}
 
 	// load brake/reverse light point light sources (optional)

@@ -1890,8 +1890,6 @@ void Game::SetGarageCar()
 	Quat car_rot = track.GetStart(0).second;
 	if (LoadCar(car_info[car_edit_id], car_pos, car_rot, false))
 	{
-		// update car position
-		dynamics.update(timestep);
 		car_graphics.back().Update(car_dynamics[car_dynamics.size() - 1]);
 		nodes.push_back(&car_graphics.back().GetNode());
 	}
@@ -1899,7 +1897,7 @@ void Game::SetGarageCar()
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
-	Vec3 offset(1.5, 3.0, 0.5);
+	Vec3 offset(0.5, -3.0, 0.5);
 	Vec3 pos = car_pos + offset;
 	Quat rot = LookAt(pos, car_pos, Direction::Up);
 	garage_camera.SetOffset(offset);

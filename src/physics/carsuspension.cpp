@@ -72,6 +72,12 @@ void CarSuspension::Init(const CarSuspensionInfo & info)
 	SetSteering(0.0);
 }
 
+btScalar CarSuspension::GetDisplacement(btScalar force) const
+{
+	// ignoring spring factors here, duh
+	return force / info.spring_constant;
+}
+
 void CarSuspension::SetSteering(const btScalar & value)
 {
 	btScalar alpha = -value * info.steering_angle * M_PI / 180.0;
