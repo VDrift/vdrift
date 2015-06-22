@@ -59,8 +59,8 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         env.Replace(CC = "g++")
     if 'CXXFLAGS' in os.environ:
         env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
-	#Add -std=c++11
-	env.Append(CXXFLAGS = ['-std=c++11'])
+    #Add -std=c++11
+    env.Append(CXXFLAGS = ['-std=c++11'])
 
 #------------#
 # OS X build #
@@ -106,8 +106,8 @@ elif sys.platform == 'darwin':
         env.Append( CCFLAGS = ['-isysroot', sdk_path], 
             LINKFLAGS = ['-Wl,-syslibroot,%s' % sdk_path] )
 
-	#Add -std=c++11
-	env.Append(CXXFLAGS = ['-std=c++11'])
+    #Add -std=c++11
+    env.Append(CXXFLAGS = ['-std=c++11'])
     # Configure reasonable defaults
     default_settingsdir = 'Library/Preferences/VDrift'
     default_prefix = "/Applications/VDrift"
@@ -153,8 +153,8 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if os.environ.has_key('LDFLAGS'):
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-	#Add -std=c++11
-	env.Append(CXXFLAGS = ['-std=c++11'])
+    #Add -std=c++11
+    env.Append(CXXFLAGS = ['-std=c++11'])
     check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
 
