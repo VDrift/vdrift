@@ -47,7 +47,7 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
-    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
+    check_headers = ['SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
     check_libs = []
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
@@ -114,7 +114,7 @@ elif sys.platform == 'darwin':
     default_datadir = "data"
     default_bindir = ""
 
-    check_headers = ['OpenGL/gl.h', 'SDL2/sdl.h']
+    check_headers = ['SDL2/sdl.h']
     check_libs = []
     cppdefines.append(("_DEFINE_OSX_HELPERS"))
 
@@ -155,7 +155,7 @@ else:
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
     #Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
     env.Append(CXXFLAGS = ['-std=c++11'])
-    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
+    check_headers = ['SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
 
 if ARGUMENTS.get('verbose') != "1":
