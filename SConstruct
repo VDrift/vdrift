@@ -59,8 +59,8 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         env.Replace(CC = "g++")
     if 'CXXFLAGS' in os.environ:
         env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
-	#Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
-	env.Append(CXXFLAGS = ['-std=c++11'])
+    #Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
+    env.Append(CXXFLAGS = ['-std=c++11'])
 
 #------------#
 # OS X build #
@@ -106,8 +106,8 @@ elif sys.platform == 'darwin':
         env.Append( CCFLAGS = ['-isysroot', sdk_path], 
             LINKFLAGS = ['-Wl,-syslibroot,%s' % sdk_path] )
 
-	#Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
-	env.Append(CXXFLAGS = ['-std=c++11'])
+    #Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
+    env.Append(CXXFLAGS = ['-std=c++11'])
     # Configure reasonable defaults
     default_settingsdir = 'Library/Preferences/VDrift'
     default_prefix = "/Applications/VDrift"
@@ -130,7 +130,7 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
         #CPPDEFINES = ['_REENTRANT'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
-	#Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
+    #Add -std=c++11 , only in CXXFLAGS because is for c++ compiler
     env.Append(CXXFLAGS = ['-std=c++11'])
     check_headers = []
     check_libs = []
