@@ -37,7 +37,7 @@ default_bindir = "bin"
 #---------------#
 # FreeBSD build #
 #---------------#
-if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9']:
+if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']:
     if 'LOCALBASE' in os.environ:
         LOCALBASE = os.environ['LOCALBASE']
     else:
