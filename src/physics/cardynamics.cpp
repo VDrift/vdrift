@@ -31,11 +31,8 @@
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/CollisionShapes/btCylinderShape.h"
 
-template<class T>
-static inline bool isnan(const T & x)
-{
-	return x != x;
-}
+#include <cmath>
+using std::isnan;
 
 static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
