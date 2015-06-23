@@ -90,8 +90,6 @@ private:
 
 	Bezier RevisePatch(const Bezier * origpatch, bool use_racingline);
 
-	template <class T> static bool isnan(const T & x);
-
 	static float clamp(float val, float min, float max);
 
 	static float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg);

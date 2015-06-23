@@ -65,12 +65,6 @@ AiCarExperimental::~AiCarExperimental()
 #endif
 }
 
-template <class T>
-bool AiCarExperimental::isnan(const T & x)
-{
-	return x != x;
-}
-
 #define GRAVITY 9.8
 
 //used to calculate brake value
@@ -357,7 +351,7 @@ void AiCarExperimental::UpdateGasBrake()
 		}
 		gas_value = 0.0;
 	}
-	else if (isnan(speed_diff) || speed_diff > MAX_SPEED_DIFF)
+	else if (std::isnan(speed_diff) || speed_diff > MAX_SPEED_DIFF)
 	{
 		gas_value = 1.0;
 		brake_value = 0.0;
@@ -434,8 +428,8 @@ void AiCarExperimental::CalcMu()
 	}
 	float long_mu = FRICTION_FACTOR_LONG * long_friction * car->GetInvMass() / GRAVITY;
 	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * car->GetInvMass() / GRAVITY;
-	if (!isnan(long_mu)) longitude_mu = long_mu;
-	if (!isnan(lat_mu)) lateral_mu = lat_mu;
+	if (!std::isnan(long_mu)) longitude_mu = long_mu;
+	if (!std::isnan(lat_mu)) lateral_mu = lat_mu;
 }
 
 float AiCarExperimental::CalcSpeedLimit(const Bezier  * patch, const Bezier * nextpatch, float friction, float extraradius=0)
@@ -689,7 +683,7 @@ void AiCarExperimental::UpdateSteer()
 	if (steer_value > 1.0) steer_value = 1.0;
 	else if (steer_value < -1.0) steer_value = -1.0;
 
-	assert(!isnan(steer_value));
+	assert(!std::isnan(steer_value));
 	if(isRecovering){
 		// If we are driving backwards, we need to invert steer direction.
 		steer_value = steer_value > 0.0 ? -1.0 : 1.0;
