@@ -153,8 +153,13 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if os.environ.has_key('LDFLAGS'):
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-    #Add -std=c++11
-    env.Append(CXXFLAGS = ['-std=c++11'])
+    if env['CXX'] == 'g++':
+        #if gcc use -std=c++0x
+        env.Append(CXXFLAGS = ['-std=c++0x'])
+    else:
+        #Add -std=c++11
+        env.Append(CXXFLAGS = ['-std=c++11'])
+
     check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
 
