@@ -60,7 +60,7 @@ void Factory<Texture>::init(int max_size, bool use_srgb, bool compress)
 
 template <>
 bool Factory<Texture>::create(
-	std::tr1::shared_ptr<Texture> & sptr,
+	std::shared_ptr<Texture> & sptr,
 	std::ostream & error,
 	const std::string & basepath,
 	const std::string & path,
@@ -74,7 +74,7 @@ bool Factory<Texture>::create(
 		info_temp.srgb = info.compress && m_srgb; 			// non compressible means non color data
 		info_temp.compress = info.compress && m_compress;	// allow to disable compression
 		info_temp.maxsize = TextureInfo::Size(m_size);
-		std::tr1::shared_ptr<Texture> temp(new Texture());
+		std::shared_ptr<Texture> temp(new Texture());
 		if (temp->Load(abspath, info_temp, error))
 		{
 			sptr = temp;
@@ -84,12 +84,12 @@ bool Factory<Texture>::create(
 	return false;
 }
 
-const std::tr1::shared_ptr<Texture> & Factory<Texture>::getDefault() const
+const std::shared_ptr<Texture> & Factory<Texture>::getDefault() const
 {
 	return m_default;
 }
 
-const std::tr1::shared_ptr<Texture> & Factory<Texture>::getZero() const
+const std::shared_ptr<Texture> & Factory<Texture>::getZero() const
 {
 	return m_zero;
 }

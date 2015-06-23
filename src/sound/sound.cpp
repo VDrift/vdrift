@@ -268,7 +268,7 @@ void Sound::SetAttenuation(const float nattenuation[4])
 	attenuation[3] = nattenuation[3];
 }
 
-size_t Sound::AddSource(std::tr1::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop)
+size_t Sound::AddSource(std::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop)
 {
 	Source src;
 	src.buffer = buffer;

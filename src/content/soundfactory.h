@@ -38,17 +38,17 @@ public:
 
 	template <class P>
 	bool create(
-		std::tr1::shared_ptr<SoundBuffer> & sptr,
+		std::shared_ptr<SoundBuffer> & sptr,
 		std::ostream & error,
 		const std::string & basepath,
 		const std::string & path,
 		const std::string & name,
 		const P & param);
 
-	const std::tr1::shared_ptr<SoundBuffer> & getDefault() const;
+	const std::shared_ptr<SoundBuffer> & getDefault() const;
 
 private:
-	std::tr1::shared_ptr<SoundBuffer> m_default;
+	std::shared_ptr<SoundBuffer> m_default;
 	SoundInfo m_info;
 };
 

@@ -34,7 +34,7 @@ Factory<Model>::Factory() :
 
 template <>
 bool Factory<Model>::create(
-	std::tr1::shared_ptr<Model>& sptr,
+	std::shared_ptr<Model>& sptr,
 	std::ostream& error,
 	const std::string& basepath,
 	const std::string& path,
@@ -44,7 +44,7 @@ bool Factory<Model>::create(
 	const std::string abspath = basepath + "/" + path + "/" + name;
 	if (std::ifstream(abspath.c_str()))
 	{
-		std::tr1::shared_ptr<ModelJoe03> temp(new ModelJoe03());
+		std::shared_ptr<ModelJoe03> temp(new ModelJoe03());
 		if (temp->Load(abspath, error))
 		{
 			sptr = temp;
@@ -56,14 +56,14 @@ bool Factory<Model>::create(
 
 template <>
 bool Factory<Model>::create(
-	std::tr1::shared_ptr<Model>& sptr,
+	std::shared_ptr<Model>& sptr,
 	std::ostream& error,
 	const std::string& /*basepath*/,
 	const std::string& /*path*/,
 	const std::string& name,
 	const JoePack& pack)
 {
-	std::tr1::shared_ptr<ModelJoe03> temp(new ModelJoe03());
+	std::shared_ptr<ModelJoe03> temp(new ModelJoe03());
 	if (temp->Load(name, error, &pack))
 	{
 		sptr = temp;
@@ -74,14 +74,14 @@ bool Factory<Model>::create(
 
 template <>
 bool Factory<Model>::create(
-	std::tr1::shared_ptr<Model>& sptr,
+	std::shared_ptr<Model>& sptr,
 	std::ostream& error,
 	const std::string& /*basepath*/,
 	const std::string& /*path*/,
 	const std::string& /*name*/,
 	const VertexArray& varray)
 {
-	std::tr1::shared_ptr<Model> temp(new Model());
+	std::shared_ptr<Model> temp(new Model());
 	if (temp->Load(varray, error))
 	{
 		sptr = temp;
@@ -90,7 +90,7 @@ bool Factory<Model>::create(
 	return false;
 }
 
-const std::tr1::shared_ptr<Model> & Factory<Model>::getDefault() const
+const std::shared_ptr<Model> & Factory<Model>::getDefault() const
 {
 	return m_default;
 }

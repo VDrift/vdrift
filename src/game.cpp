@@ -1612,7 +1612,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 				const size_t n1 = info.name.length();
 				const std::string carname = info.name.substr(n0 + 1, n1 - n0 - 1);
 				const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n0);
-				std::tr1::shared_ptr<PTree> carcfg;
+				std::shared_ptr<PTree> carcfg;
 				content.load(carcfg, cardir, carname + ".car");
 
 				std::ostringstream carstream;
@@ -1667,7 +1667,7 @@ bool Game::LoadCar(
 	const std::string carname = info.name.substr(n0 + 1, n1 - n0 - 1);
 	const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n0);
 
-	std::tr1::shared_ptr<PTree> carconf;
+	std::shared_ptr<PTree> carconf;
 	if (info.config.empty())
 	{
 		content.load(carconf, cardir, carname + ".car");

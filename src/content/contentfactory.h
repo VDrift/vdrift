@@ -20,8 +20,7 @@
 #ifndef _CONTENTFACTORY_H
 #define _CONTENTFACTORY_H
 
-#include "memory.h"
-
+#include <memory>
 #include <iosfwd>
 #include <string>
 
@@ -31,14 +30,14 @@ class Factory
 public:
 	template <class P>
 	bool create(
-		std::tr1::shared_ptr<Content> & sptr,
+		std::shared_ptr<Content> & sptr,
 		std::ostream & error,
 		const std::string & basepath,
 		const std::string & path,
 		const std::string & name,
 		const P & param);
 
-	const std::tr1::shared_ptr<Content> & getDefault() const;
+	const std::shared_ptr<Content> & getDefault() const;
 };
 
 #endif // _CONTENTFACTORY_H

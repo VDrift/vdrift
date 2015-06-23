@@ -85,7 +85,7 @@ bool CarSound::Load(
 			const PTree & audi = i->second;
 
 			std::string filename;
-			std::tr1::shared_ptr<SoundBuffer> soundptr;
+			std::shared_ptr<SoundBuffer> soundptr;
 			if (!audi.get("filename", filename, error_output)) return false;
 
 			enginesounds.push_back(EngineSoundInfo());
@@ -164,7 +164,7 @@ bool CarSound::Load(
 	}
 	else
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "engine");
 		enginesounds.push_back(EngineSoundInfo());
 		enginesounds.back().sound_source = sound.AddSource(soundptr, 0, true, true);
@@ -173,7 +173,7 @@ bool CarSound::Load(
 	//set up tire squeal sounds
 	for (int i = 0; i < 4; ++i)
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "tire_squeal");
 		tiresqueal[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
@@ -181,7 +181,7 @@ bool CarSound::Load(
 	//set up tire gravel sounds
 	for (int i = 0; i < 4; ++i)
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "gravel");
 		gravelsound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
@@ -189,7 +189,7 @@ bool CarSound::Load(
 	//set up tire grass sounds
 	for (int i = 0; i < 4; ++i)
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "grass");
 		grasssound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
@@ -197,7 +197,7 @@ bool CarSound::Load(
 	//set up bump sounds
 	for (int i = 0; i < 4; ++i)
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		if (i >= 2)
 		{
 			content.load(soundptr, carpath, "bump_rear");
@@ -211,34 +211,34 @@ bool CarSound::Load(
 
 	//set up crash sound
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "crash");
 		crashsound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up gear sound
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "gear");
 		gearsound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up brake sound
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "brake");
 		brakesound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up handbrake sound
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "handbrake");
 		handbrakesound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	{
-		std::tr1::shared_ptr<SoundBuffer> soundptr;
+		std::shared_ptr<SoundBuffer> soundptr;
 		content.load(soundptr, carpath, "wind");
 		roadnoise = sound.AddSource(soundptr, 0, true, true);
 	}

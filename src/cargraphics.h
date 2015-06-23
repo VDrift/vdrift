@@ -23,8 +23,8 @@
 #include "graphics/scenenode.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <list>
@@ -93,8 +93,8 @@ private:
 	std::list<Light> lights;
 
 	// models and textures used by this car instance
-	std::set<std::tr1::shared_ptr<Model> > models;
-	std::set<std::tr1::shared_ptr<Texture> > textures;
+	std::set<std::shared_ptr<Model> > models;
+	std::set<std::shared_ptr<Texture> > textures;
 
 	// steering wheel
 	Quat steer_orientation;

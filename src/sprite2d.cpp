@@ -60,7 +60,7 @@ bool Sprite2D::Load(
 
 bool Sprite2D::Load(
 	SceneNode & parent,
-	std::tr1::shared_ptr<Texture> & texture2d,
+	std::shared_ptr<Texture> & texture2d,
 	float draworder)
 {
 	Unload(parent);

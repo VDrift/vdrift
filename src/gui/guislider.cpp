@@ -49,7 +49,7 @@ void GuiSlider::Update(SceneNode & scene, float dt)
 
 void GuiSlider::SetupDrawable(
 	SceneNode & scene,
-	std::tr1::shared_ptr<Texture> texture,
+	std::shared_ptr<Texture> texture,
 	float centerx, float centery,
 	float w, float h, float z, bool fill,
 	std::ostream & /*error_output*/)

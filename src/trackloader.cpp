@@ -83,7 +83,7 @@ static btIndexedMesh GetIndexedMesh(const Model & model)
 
 struct Track::Loader::Object
 {
-	std::tr1::shared_ptr<Model> model;
+	std::shared_ptr<Model> model;
 	std::string texture;
 	int transparent_blend;
 	int clamptexture;
@@ -415,7 +415,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 		return bodies.end();
 	}
 
-	std::tr1::shared_ptr<Model> model;
+	std::shared_ptr<Model> model;
 	if ((packload && content.load(model, objectdir, model_name, pack)) ||
 		content.load(model, objectdir, model_name))
 	{
@@ -434,7 +434,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	}
 
 	// load textures
-	std::tr1::shared_ptr<Texture> tex[3];
+	std::shared_ptr<Texture> tex[3];
 	TextureInfo texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
@@ -687,7 +687,7 @@ bool Track::Loader::AddObject(const Object & object)
 	texinfo.repeatu = object.clamptexture != 1 && object.clamptexture != 2;
 	texinfo.repeatv = object.clamptexture != 1 && object.clamptexture != 3;
 
-	std::tr1::shared_ptr<Texture> texture0, texture1, texture2;
+	std::shared_ptr<Texture> texture0, texture1, texture2;
 	{
 		content.load(texture0, objectdir, object.texture, texinfo);
 		data.textures.insert(texture0);
@@ -973,7 +973,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 		return;
 
 	// get texture
-	std::tr1::shared_ptr<Texture> texture;
+	std::shared_ptr<Texture> texture;
 	content.load(texture, texturedir, "racingline.png", TextureInfo());
 	data.textures.insert(texture);
 
@@ -1014,7 +1014,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 			&texcoords[0], texcoords.size());
 
 		// create model
-		std::tr1::shared_ptr<Model> model(new Model());
+		std::shared_ptr<Model> model(new Model());
 		model->Load(vertex_array, error_output);
 		data.models.insert(model);
 

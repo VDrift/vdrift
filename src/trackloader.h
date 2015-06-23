@@ -134,7 +134,7 @@ private:
 	btCompoundShape * track_shape;
 
 	// track config
-	std::tr1::shared_ptr<PTree> track_config;
+	std::shared_ptr<PTree> track_config;
 	const PTree * nodes;
 	PTree::const_iterator node_it;
 

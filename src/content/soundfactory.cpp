@@ -35,7 +35,7 @@ void Factory<SoundBuffer>::init(const SoundInfo& value)
 
 template <>
 bool Factory<SoundBuffer>::create(
-	std::tr1::shared_ptr<SoundBuffer> & sptr,
+	std::shared_ptr<SoundBuffer> & sptr,
 	std::ostream & error,
 	const std::string & basepath,
 	const std::string & path,
@@ -50,7 +50,7 @@ bool Factory<SoundBuffer>::create(
 	}
 	if (std::ifstream(filepath.c_str()))
 	{
-		std::tr1::shared_ptr<SoundBuffer> temp(new SoundBuffer());
+		std::shared_ptr<SoundBuffer> temp(new SoundBuffer());
 		if (temp->Load(filepath, m_info, error))
 		{
 			sptr = temp;
@@ -60,7 +60,7 @@ bool Factory<SoundBuffer>::create(
 	return false;
 }
 
-const std::tr1::shared_ptr<SoundBuffer> & Factory<SoundBuffer>::getDefault() const
+const std::shared_ptr<SoundBuffer> & Factory<SoundBuffer>::getDefault() const
 {
 	return m_default;
 }

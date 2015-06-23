@@ -40,7 +40,7 @@ public:
 
 	template <class P>
 	bool create(
-		std::tr1::shared_ptr<Texture> & sptr,
+		std::shared_ptr<Texture> & sptr,
 		std::ostream & error,
 		const std::string & basepath,
 		const std::string & path,
@@ -48,14 +48,14 @@ public:
 		const P & param);
 
 	/// default texture is white: rgba (1, 1, 1, 1)
-	const std::tr1::shared_ptr<Texture> & getDefault() const;
+	const std::shared_ptr<Texture> & getDefault() const;
 
 	/// zero texture is black: rgba (0, 0, 0, 0)
-	const std::tr1::shared_ptr<Texture> & getZero() const;
+	const std::shared_ptr<Texture> & getZero() const;
 
 private:
-	std::tr1::shared_ptr<Texture> m_default;
-	std::tr1::shared_ptr<Texture> m_zero;
+	std::shared_ptr<Texture> m_default;
+	std::shared_ptr<Texture> m_zero;
 	int m_size;
 	bool m_compress;
 	bool m_srgb;
