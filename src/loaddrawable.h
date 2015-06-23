@@ -21,8 +21,8 @@
 #define _LOADDRAWABLE_H
 
 #include "graphics/scenenode.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <set>

@@ -30,11 +30,8 @@
 #include <vector>
 #include <iomanip>
 #include <fstream>
-
-#ifdef USE_TR1
 #include <unordered_map>
 #include <unordered_set>
-#endif
 
 namespace joeserialize
 {
@@ -342,7 +339,6 @@ class Serializer
 			return true;
 		}
 
-#ifdef USE_TR1
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename U, typename T, typename H>
@@ -432,7 +428,6 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-#endif
 
 		enum Direction
 		{
@@ -1113,8 +1108,8 @@ class BinaryOutputSerializer : public SerializerOutput
 
 		void ByteSwap(unsigned char * b, int n) const
 		{
-			register int i = 0;
-			register int j = n-1;
+			int i = 0;
+			int j = n-1;
 			while (i<j)
 			{
 				std::swap(b[i], b[j]);
@@ -1194,8 +1189,8 @@ class BinaryInputSerializer : public SerializerInput
 
 		void ByteSwap(unsigned char * b, int n) const
 		{
-			register int i = 0;
-			register int j = n-1;
+			int i = 0;
+			int j = n-1;
 			while (i<j)
 			{
 				std::swap(b[i], b[j]);

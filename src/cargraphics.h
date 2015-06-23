@@ -23,8 +23,8 @@
 #include "graphics/scenenode.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <list>

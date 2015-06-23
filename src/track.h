@@ -26,8 +26,8 @@
 #include "graphics/scenenode.h"
 #include "physics/motionstate.h"
 #include "physics/tracksurface.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <list>

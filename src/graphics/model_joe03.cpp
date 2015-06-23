@@ -23,7 +23,9 @@
 #include "endian_utility.h"
 
 #include <unordered_map>
+#include <functional>
 #include <vector>
+
 using std::vector;
 
 const unsigned int ModelJoe03::JOE_MAX_FACES = 32000;

@@ -24,8 +24,8 @@
 #include "graphics/vertexarray.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "memory.h"
 
+#include <memory>
 #include <string>
 #include <utility> // std::pair
 #include <vector>

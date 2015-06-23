@@ -31,7 +31,8 @@
 #include "render_output.h"
 #include "vertexarray.h"
 #include "vertexbuffer.h"
-#include "memory.h"
+
+#include <memory>
 
 struct GraphicsCamera;
 class Shader;

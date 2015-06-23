@@ -20,8 +20,7 @@
 #ifndef _CONTENTFACTORY_H
 #define _CONTENTFACTORY_H
 
-#include "memory.h"
-
+#include <memory>
 #include <iosfwd>
 #include <string>
 

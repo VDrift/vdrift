@@ -25,8 +25,8 @@
 #include "graphics/vertexarray.h"
 #include "mathvector.h"
 #include "roadstrip.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <list>

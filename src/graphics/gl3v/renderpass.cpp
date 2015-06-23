@@ -17,10 +17,9 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifdef USE_TR1
-#include <tr1/unordered_set>
-#endif
+#include <unordered_set>
 #include <cassert>
+
 #include "utils.h"
 #include "renderpass.h"
 #include "glenums.h"

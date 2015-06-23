@@ -22,8 +22,8 @@
 
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
-#include "memory.h"
 
+#include <memory>
 #include <string>
 
 class ContentManager;

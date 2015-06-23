@@ -20,8 +20,7 @@
 #ifndef _FONT_H
 #define _FONT_H
 
-#include "memory.h"
-
+#include <memory>
 #include <vector>
 #include <iosfwd>
 #include <string>

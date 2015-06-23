@@ -25,8 +25,8 @@
 #include "tripplebuffer.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <vector>
 

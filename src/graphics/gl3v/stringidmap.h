@@ -21,6 +21,7 @@
 #define _STRINGIDMAP
 
 #include <unordered_map>
+#include <functional>
 #include <string>
 
 class StringId
