@@ -24,7 +24,8 @@
 #include "rendertexture.h"
 #include "keyed_container.h"
 #include "rendermodelentry.h"
-#include "unordered_map.h"
+
+#include <unordered_map>
 
 /// The bare minimum required to draw geometry.
 struct RenderModel
@@ -41,8 +42,8 @@ struct RenderModel
 	keyed_container <RenderUniform> uniformOverrides;
 
 	// these are used when updating values and allow us to quickly look up existing overrides.
-	typedef std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle, StringId::hash> UniformMap;
-	typedef std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle, StringId::hash> TextureMap;
+	typedef std::unordered_map <StringId, keyed_container <RenderUniform>::handle, StringId::hash> UniformMap;
+	typedef std::unordered_map <StringId, keyed_container <RenderUniform>::handle, StringId::hash> TextureMap;
 	UniformMap variableNameToUniformOverride;
 	TextureMap textureNameToTextureOverride;
 };

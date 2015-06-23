@@ -150,7 +150,7 @@ private:
 	NameIdMap passIndexMap;
 
 	/// Map of draw group string id to a list of pass indices that use the draw group.
-	typedef std::tr1::unordered_map <StringId, std::vector <unsigned int>, StringId::hash> NameIdVecMap;
+	typedef std::unordered_map <StringId, std::vector <unsigned int>, StringId::hash> NameIdVecMap;
 	NameIdVecMap drawGroupToPasses;
 
 	/// Internally shared resources: map of shader name to shader handle.
