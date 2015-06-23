@@ -26,8 +26,8 @@
 #include "graphics/scenenode.h"
 #include "physics/motionstate.h"
 #include "physics/tracksurface.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <list>
@@ -162,8 +162,8 @@ private:
 		DynamicsWorld* world;
 
 		// content used by track
-		std::set<std::tr1::shared_ptr<Model> > models;
-		std::set<std::tr1::shared_ptr<Texture> > textures;
+		std::set<std::shared_ptr<Model> > models;
+		std::set<std::shared_ptr<Texture> > textures;
 
 		// static track objects
 		SceneNode static_node;

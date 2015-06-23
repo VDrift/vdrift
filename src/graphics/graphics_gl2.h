@@ -31,7 +31,8 @@
 #include "render_output.h"
 #include "vertexarray.h"
 #include "vertexbuffer.h"
-#include "memory.h"
+
+#include <memory>
 
 struct GraphicsCamera;
 class Shader;
@@ -198,7 +199,7 @@ private:
 	CameraMap cameras;
 
 	Vec3 light_direction;
-	std::tr1::shared_ptr<Sky> sky;
+	std::shared_ptr<Sky> sky;
 	bool sky_dynamic;
 	bool fixed_skybox;
 

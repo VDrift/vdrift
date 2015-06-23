@@ -532,7 +532,7 @@ bool CarDynamics::Load(
 		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
 
 		std::string tirestr(cartire);
-		std::tr1::shared_ptr<PTree> cfg_tire;
+		std::shared_ptr<PTree> cfg_tire;
 		if ((cartire.empty() || cartire == "default") &&
 			!cfg_wheel.get("tire.type", tirestr, error)) return false;
 		#ifdef VDRIFTN

@@ -34,17 +34,17 @@ public:
 
 	template <class P>
 	bool create(
-		std::tr1::shared_ptr<Model> & sptr,
+		std::shared_ptr<Model> & sptr,
 		std::ostream & error,
 		const std::string & basepath,
 		const std::string & path,
 		const std::string & name,
 		const P & param);
 
-	const std::tr1::shared_ptr<Model> & getDefault() const;
+	const std::shared_ptr<Model> & getDefault() const;
 
 private:
-	std::tr1::shared_ptr<Model> m_default;
+	std::shared_ptr<Model> m_default;
 };
 
 #endif // _MODELFACTORY_H

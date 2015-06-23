@@ -36,16 +36,16 @@
 #include "renderuniformentry.h"
 #include "renderstatusverbosity.h"
 #include "rendermodelext.h"
-#include "unordered_map.h"
 
+#include <unordered_map>
 #include <vector>
 #include <iosfwd>
 #include <string>
 #include <map>
 #include <set>
 
-typedef std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> NameTexMap;
-typedef std::tr1::unordered_map <StringId, unsigned int, StringId::hash> NameIdMap;
+typedef std::unordered_map <StringId, RenderTextureEntry, StringId::hash> NameTexMap;
+typedef std::unordered_map <StringId, unsigned int, StringId::hash> NameIdMap;
 
 class RenderPass
 {
@@ -58,7 +58,7 @@ public:
 	/// The provided GLWrapper will be used for OpenGL context.
 	/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
 	/// w and h are the width and height of the application's window and will be used to initialize FBOs.
-	bool initialize(int passCount, const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl, RenderShader & vertexShader, RenderShader & fragmentShader, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, unsigned int w, unsigned int h, std::ostream & errorOutput);
+	bool initialize(int passCount, const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl, RenderShader & vertexShader, RenderShader & fragmentShader, const std::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, unsigned int w, unsigned int h, std::ostream & errorOutput);
 
 	/// Prepare for destruction by cleaning up any resources that we are using.
 	void clear(GLWrapper & gl);
@@ -67,7 +67,7 @@ public:
 	/// w and h are the width and height of the application's window.
 	/// Returns true if the framebuffer dimensions have changed, which is a signal that the render targets have been recreated.
 	/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel.
-	bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExt*>*> & externalModels, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
+	bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExt*>*> & externalModels, const std::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
 
 	// These functions handle modifications to the models container.
 	void addModel(const RenderModelEntry & entry, RenderModelHandle handle);
@@ -126,7 +126,7 @@ private:
 	// All of the models we'll be rendering in this pass.
 	// We keep two data structures, one for fast iteration during rendering which holds the actual RenderModel data, and another that is used to speed up updates and which simply holds handles to the keyed_container.
 	keyed_container <RenderModel> models;
-	typedef std::tr1::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> ModelHandleMap;
+	typedef std::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> ModelHandleMap;
 	ModelHandleMap modelHandles;
 
 	// Theese fields are used to remember mappings so we can look them up when we get an update.

@@ -30,8 +30,8 @@ LoadDrawable::LoadDrawable(
 	const std::string & path,
 	const int anisotropy,
 	ContentManager & content,
-	std::set<std::tr1::shared_ptr<Model> > & models,
-	std::set<std::tr1::shared_ptr<Texture> > & textures,
+	std::set<std::shared_ptr<Model> > & models,
+	std::set<std::shared_ptr<Texture> > & textures,
 	std::ostream & error) :
 	path(path),
 	anisotropy(anisotropy),
@@ -69,7 +69,7 @@ bool LoadDrawable::operator()(
 	Drawable drawable;
 
 	// set textures
-	std::tr1::shared_ptr<Texture> tex[3];
+	std::shared_ptr<Texture> tex[3];
 	TextureInfo texinfo;
 	texinfo.mipmap = true;
 	texinfo.anisotropy = anisotropy;
@@ -106,7 +106,7 @@ bool LoadDrawable::operator()(
 	drawable.SetTextures(tex[0]->GetId(), tex[1]->GetId(), tex[2]->GetId());
 
 	// set mesh
-	std::tr1::shared_ptr<Model> mesh;
+	std::shared_ptr<Model> mesh;
 	content.load(mesh, path, meshname);
 
 	std::string scalestr;

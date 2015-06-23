@@ -82,7 +82,7 @@ static bool LoadWheel(
 
 	std::string meshname;
 	std::vector<std::string> texname;
-	std::tr1::shared_ptr<Model> mesh;
+	std::shared_ptr<Model> mesh;
 	const PTree * cfg_tire;
 	Vec3 size(0);
 	std::string sizestr;
@@ -242,7 +242,7 @@ bool CarGraphics::Load(
 	const PTree * cfg_wheels;
 	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
 
-	std::tr1::shared_ptr<PTree> sel_wheel;
+	std::shared_ptr<PTree> sel_wheel;
 	if (carwheel != "default" && !content.load(sel_wheel, carpath, carwheel)) return false;
 
 	for (PTree::const_iterator i = cfg_wheels->begin(); i != cfg_wheels->end(); ++i)
@@ -466,7 +466,7 @@ bool CarGraphics::LoadLight(
 	SceneNode & node = bodynoderef.GetNode(lights.back().node);
 	node.GetTransform().SetTranslation(Vec3(pos[0], pos[1], pos[2]));
 
-	std::tr1::shared_ptr<Model> mesh;
+	std::shared_ptr<Model> mesh;
 	if (!content.get(mesh, "", "cube" + radiusstr))
 	{
 		VertexArray varray;

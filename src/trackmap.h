@@ -25,8 +25,8 @@
 #include "graphics/vertexarray.h"
 #include "mathvector.h"
 #include "roadstrip.h"
-#include "memory.h"
 
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <list>
@@ -93,18 +93,18 @@ private:
 	SceneNode::DrawableHandle mapdraw;
 	VertexArray mapverts;
 
-	std::tr1::shared_ptr<Texture> track_map;
-	std::tr1::shared_ptr<Texture> cardot0;
-	std::tr1::shared_ptr<Texture> cardot1;
-	std::tr1::shared_ptr<Texture> cardot0_focused;
-	std::tr1::shared_ptr<Texture> cardot1_focused;
+	std::shared_ptr<Texture> track_map;
+	std::shared_ptr<Texture> cardot0;
+	std::shared_ptr<Texture> cardot1;
+	std::shared_ptr<Texture> cardot0_focused;
+	std::shared_ptr<Texture> cardot1_focused;
 
 	class CarDot
 	{
 		public:
 			void Init(
 				SceneNode & topnode,
-				std::tr1::shared_ptr<Texture> & tex,
+				std::shared_ptr<Texture> & tex,
 				const Vec2 & corner1,
 				const Vec2 & corner2)
 			{
@@ -117,7 +117,7 @@ private:
 				Retexture(topnode, tex);
 				Reposition(corner1, corner2);
 			}
-			void Retexture(SceneNode & topnode, std::tr1::shared_ptr<Texture> & newtex)
+			void Retexture(SceneNode & topnode, std::shared_ptr<Texture> & newtex)
 			{
 				assert(newtex.get());
 				texture = newtex;
@@ -143,7 +143,7 @@ private:
 
 		private:
 			SceneNode::DrawableHandle dotdraw;
-			std::tr1::shared_ptr<Texture> texture;
+			std::shared_ptr<Texture> texture;
 			VertexArray dotverts;
 
 			Drawable & GetDrawable(SceneNode & topnode)

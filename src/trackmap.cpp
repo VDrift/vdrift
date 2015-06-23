@@ -259,7 +259,7 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 		while (car != carpositions.end())
 		{
 			//determine which texture to use
-			std::tr1::shared_ptr<Texture> tex = cardot0_focused;
+			std::shared_ptr<Texture> tex = cardot0_focused;
 			if (!car->second)
 				tex = cardot1;
 

@@ -23,7 +23,8 @@
 #include "guiwidget.h"
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
-#include "memory.h"
+
+#include <memory>
 
 class ContentManager;
 class Texture;
@@ -54,7 +55,7 @@ private:
 	ContentManager * m_content;
 	std::string m_path, m_name, m_ext;
 	SceneNode::DrawableHandle m_draw;
-	std::tr1::shared_ptr<Texture> m_texture;
+	std::shared_ptr<Texture> m_texture;
 	VertexArray m_varray;
 	bool m_load;
 
