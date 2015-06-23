@@ -123,7 +123,7 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
         CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
         #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
-        #CPPDEFINES = ['_REENTRANT'],
+        CPPDEFINES = ['_USE_MATH_DEFINES'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = []
