@@ -81,8 +81,8 @@ Libraries
 - [sdl](http://www.libsdl.org) - Simple DirectMedia Layer Library (minimum version 2.0.0).
 - [sdl-image](https://www.libsdl.org/projects/SDL_image) - Image file loading library (minimum version 2.0.0).
 
-Platform specific compiling instructions are available at
---------
+Platform specific compiling instructions
+----------------------------------------
 
 - [Compiling](http://wiki.vdrift.net/index.php?title=Compiling)
 
