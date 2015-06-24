@@ -34,14 +34,10 @@
 #include "collision_contact.h"
 #include "motionstate.h"
 #include "joeserialize.h"
+
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
-#if (BT_BULLET_VERSION < 281)
-#define btCollisionObjectWrapper btCollisionObject
-#else
 struct btCollisionObjectWrapper;
-#endif
-
 class btCollisionWorld;
 class btManifoldPoint;
 class btIDebugDraw;

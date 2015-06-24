@@ -2032,15 +2032,9 @@ bool CarDynamics::WheelContactCallback(
 	int /*index1*/)
 {
 	// invalidate wheel shape contact with ground as we are handling it separately
-#if (BT_BULLET_VERSION < 281)
-	const btCollisionObject* obj = col0;
-	const btCollisionShape* shape = obj->getCollisionShape();
-	const btCollisionShape* rootshape = obj->getRootCollisionShape();
-#else
 	const btCollisionObject* obj = col0->getCollisionObject();
 	const btCollisionShape* shape = col0->getCollisionShape();
 	const btCollisionShape* rootshape = obj->getCollisionShape();
-#endif
 	if ((obj->getInternalType() & CO_FRACTURE_TYPE) &&
 		(shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE))
 	{
