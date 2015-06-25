@@ -107,9 +107,8 @@ struct VertHash
 {
 	size_t operator ()(const Vert & v) const
 	{
-		const size_t h1 = (size_t(v.vi) << 16) | size_t(v.ti);
-		const size_t h2 = (size_t(v.ti) << 16) | size_t(v.ni);
-		return std::hash<size_t>()(h1) ^ std::hash<size_t>()(h2);
+		long long h = (long long)v.vi << 32 | (long long)v.ti << 16 | (long long)v.ni;
+		return std::hash<long long>()(h);
 	}
 };
 
