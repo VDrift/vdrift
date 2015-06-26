@@ -25,11 +25,15 @@
 #include <unordered_map>
 #include <functional>
 #include <vector>
+#include <cassert>
 
 using std::vector;
 
 const unsigned int ModelJoe03::JOE_MAX_FACES = 32000;
 const unsigned int ModelJoe03::JOE_VERSION = 3;
+
+static_assert(sizeof(int) == 4, "Code relies on int being exactly 4 bytes");
+static_assert(sizeof(short) == 2, "Code relies on short being exactly 2 bytes");
 
 // This holds the header information that is read in at the beginning of the file
 struct JoeHeader
