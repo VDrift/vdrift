@@ -30,10 +30,6 @@ using std::vector;
 
 const unsigned int ModelJoe03::JOE_MAX_FACES = 32000;
 const unsigned int ModelJoe03::JOE_VERSION = 3;
-const float ModelJoe03::MODEL_SCALE = 1.0;
-
-// 3 verts per face results in JOE_MAX_FACES * 3 verts limit
-const unsigned int JOE_MAX_VERTS = ModelJoe03::JOE_MAX_FACES * 3;
 
 // This holds the header information that is read in at the beginning of the file
 struct JoeHeader
@@ -323,21 +319,6 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	}
 
 	//cout << "!!! loading " << modelpath << endl;
-
-	//go do scaling
-	for (unsigned int i = 0; i < num_frames; i++)
-	{
-		for ( unsigned int v = 0; v < object.frames[i].num_verts; v++ )
-		{
-			Vec3 temp;
-
-			temp.Set ( object.frames[i].verts[v].vertex );
-			temp = temp * MODEL_SCALE;
-
-			for (int n = 0; n < 3; n++)
-				object.frames[i].verts[v].vertex[n] = temp[n];
-		}
-	}
 
 	if (NeedsNormalSwap(object))
 	{
