@@ -21,75 +21,80 @@ The goals of the VDrift project are:
 - to provide a platform for creative experimentation to a community of
   developers and artists.
 
-Saying More Than a Thousand Words
----------------------------------
-
 ![](vdrift/raw/2f19c79de4fac0c326fa099dba7d9f19362552d0/miura_vdrift_899.jpg)
+
+- [Official website](http://vdrift.net)
+- [Bug tracker](https://github.com/VDrift/vdrift/issues)
 
 Getting Started
 ---------------
 
-- [Official website] (http://vdrift.net)
-- [Wiki](http://wiki.vdrift.net/index.php?title=Main_Page)
-- [Bug tracker](https://github.com/VDrift/vdrift/issues)
-- [Hardware Requirements](http://wiki.vdrift.net/index.php?title=Requirements)
+**General**
 
-Downloading
-===========
+-   [About the project](docs/About_the_project "wikilink")
+-   [Authors and contributors](docs/Authors_and_contributors "wikilink")
+-   [License](docs/License "wikilink")
+-   [Reporting problems](docs/Reporting_problems "wikilink")
+-   [Useful links](docs/Useful_links "wikilink")
 
-VDrift consists of two essential parts; source code and data.
+**Installation**
 
-Download the source code from the repository
+-   [Requirements](docs/Requirements "wikilink")
+-   [Downloading](docs/Downloading "wikilink")
+-   [Installing](docs/Installing "wikilink")
 
-    git clone https://github.com/VDrift/vdrift.git VDrift
+**Configuration**
 
-VDrift data is expected to reside in a folder called *data* in the root of
-VDrift, so change your directory to the root of the sources:
+-   [Configuring the display](docs/Configuring_the_display "wikilink")
+-   [Configuring the sound](docs/Configuring_the_sound "wikilink")
+-   [Configuring the controls](docs/Configuring_the_controls "wikilink")
+-   [Logitech G25 support](docs/Logitech_G25_support "wikilink")
+-   [Setting up force feedback](docs/Setting_up_force_feedback "wikilink")
 
-    cd VDrift
+**Playing**
 
-VDrift Data is still hosted at Sourceforge, so to getting it
-requires checking out the repository with subversion:
+-   [Replays](docs/Replays "wikilink")
+-   [Drifting techniques](docs/Drifting_techniques "wikilink")
+-   [Drift scoring](docs/Drift_scoring "wikilink")
 
-    svn checkout svn://svn.code.sf.net/p/vdrift/code/vdrift-data data
+**Files**
 
-See also
---------
+-   [User settings directory](docs/User_settings_directory "wikilink")
+-   [Data directory](docs/Data_directory "wikilink")
+-   [VDrift.config](docs/VDrift_config "wikilink")
+-   [Adding video modes](docs/Adding_video_modes "wikilink")
+-   [options.config](docs/Options_config "wikilink")
+-   [Sound and graphics formats](docs/Sound_and_graphics_formats "wikilink")
+-   [JOE format](docs/JOE_format "wikilink")
+-   [JOEPack format](docs/JOEPack_format "wikilink")
+-   [Configfile format](docs/Config_file_format "wikilink")
+-   [Menu file format](docs/Menu_system "wikilink")
 
-- [Getting the development version](http://wiki.vdrift.net/index.php?title=Getting_the_development_version)
+**Development**
 
-Compiling
-=========
+-   [Getting the development version](docs/Getting_the_development_version "wikilink")
+-   [Working with the development version](docs/Working_with_the_development_version "wikilink")
+-   [Compiling](docs/Compiling "wikilink")
+-   [Packaging](docs/Packaging "wikilink")
+-   [Testing](docs/Testing "wikilink")
+-   [Debugging](docs/Debugging "wikilink")
+-   [Coding guidelines](docs/Coding_guidelines "wikilink")
+-   [Source code documentation](docs/Source_code_documentation "wikilink")
+-   [Numerical Integration](docs/Numerical_integration "wikilink")
 
-VDrift requires several tools and libraries at build time. Make sure you have
-installed all required libraries, each correspondent development files and all build
-tools, as listed below.
+**Cars**
 
-Build Tools
------------
+-   [Getting cars](docs/Getting_cars "wikilink")
+-   [Car files and formats](docs/Car_files_and_formats "wikilink")
+-   [Creating cars](docs/Creating_cars "wikilink")
+-   [Car parameters](docs/Car_parameters "wikilink")
+-   [Car graphics](docs/Car_graphics "wikilink")
+-   [Car sounds](docs/Car_sounds "wikilink")
+-   [3D modeling](docs/3D_modeling "wikilink")
 
-- g++ 4.8 or clang 3.4 - C++11 compiler: 
-- [SCons](http://www.scons.org) - Build system.
-- gettext - GNU libraries and utilities for producing multi-lingual messages
+**Tracks**
 
-Libraries
----------
-
-- [bullet](http://bulletphysics.org/wordpress) - Open Source Physics Library (minimum version 2.83).
-- [libcurl](http://curl.haxx.se) - Multiprotocol file transfer library (minimum version 7.21.6).
-- [libvorbis](http://xiph.org/vorbis) - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0).
-- [sdl](http://www.libsdl.org) - Simple DirectMedia Layer Library (minimum version 2.0.0).
-- [sdl-image](https://www.libsdl.org/projects/SDL_image) - Image file loading library (minimum version 2.0.0).
-
-Platform specific compiling instructions
-----------------------------------------
-
-- [Compiling](http://wiki.vdrift.net/index.php?title=Compiling)
-
-Everything further
-==================
-
-For configuring, running and extending the game, for playing, contributing and
-developing please search the wiki for an article on your topic:
-
-- [VDrift wiki](http://wiki.vdrift.net/index.php?title=Main_Page)
+-   [Getting tracks](docs/Getting_tracks "wikilink")
+-   [Track files and formats](docs/Track_files_and_formats "wikilink")
+-   [Creating tracks](docs/Creating_tracks "wikilink")
+-   [Importing Racer tracks](docs/Importing_Racer_tracks "wikilink")
