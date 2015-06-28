@@ -23,7 +23,7 @@ In the Linux console, copy *everything* below:
 Directions for creating tracks
 ------------------------------
 
--   Model the scene. See [3D modeling](3D_modeling "wikilink") for resources to help with this step.
+-   Model the scene. See [3D modeling](3D_modeling.md) for resources to help with this step.
 -   If you use a 3D editor other than blender, import the track into blender.
 -   Use the **export-all-joe-0.3.py** blender export script to export all objects. This script can be found in the VDrift art repository under the tools folder. The export script creates a number of **.joe** files and a **list.txt** file. The **list.txt** file may be named **somename-list.txt**, in which case you should rename it to **list.txt**. At least one **.joe** file should get created for the curve track. Also verify that **list.txt** is mentioning all the **.joe** files. An empty **list.txt** will not load anything in the editor.
 -   Create new folder for track in track editor folder *TRACKEDITOR\_TP* (if your track is called parkinglot, the path could be **/home/joe/trackeditor/data/tracks/parkinglot**).

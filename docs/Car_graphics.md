@@ -1,4 +1,4 @@
-Cars in VDrift are composed of multiple components. Their graphical representation consists of geometry(mesh), textures and a draw flag which denotes whether the object is to be handled as opaque, transparent or emissive. The setup is done in [car parameters](car_parameters "wikilink") files <CARNAME>.car.
+Cars in VDrift are composed of multiple components. Their graphical representation consists of geometry(mesh), textures and a draw flag which denotes whether the object is to be handled as opaque, transparent or emissive. The setup is done in [car parameters](car_parameters.md) files <CARNAME>.car.
 
 Geometry(meshes) can share textures. The number of meshes and textures should be kept low for performance reasons.
 
@@ -16,7 +16,7 @@ Example of a graphical component setup:
 Geometry
 --------
 
-Car geometry is stored in VDrift native [JOE format](JOE_format "wikilink"). Import/export scripts for [Blender](http://www.blender.org) are available here: <https://github.com/VDrift/blender-scripts>
+Car geometry is stored in VDrift native [JOE format](JOE_format.md). Import/export scripts for [Blender](http://www.blender.org) are available here: <https://github.com/VDrift/blender-scripts>
 
 #### Shared Geometry
 

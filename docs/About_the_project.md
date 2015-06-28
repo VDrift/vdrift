@@ -39,6 +39,6 @@ VDrift was created by [Joe Venzon](http://vdrift.net/users.php?mode=profile&uid=
 
 So far, every release has been a testing/development quality release. For this and other reasons, dates are used instead of version numbers.
 
-For a more detailed history look at the [Release Changelogs](Release_Changelogs "wikilink").
+For a more detailed history look at the [Release Changelogs](Release_Changelogs.md).
 
 <Category:General>

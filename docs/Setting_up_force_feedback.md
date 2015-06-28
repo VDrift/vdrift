@@ -11,7 +11,7 @@ Prerequisites
 -   write permission to **/dev/input/eventX**
 -   VDrift SVN r1547 or later
 
-If you need to recompile your kernel to enable force feedback, you can have a look here [Enabling force feedback in kernel](Enabling_force_feedback_in_kernel "wikilink")
+If you need to recompile your kernel to enable force feedback, you can have a look here [Enabling force feedback in kernel](Enabling_force_feedback_in_kernel.md)
 
 Enabling force feedback in VDrift
 ---------------------------------
@@ -20,7 +20,7 @@ Once you've met the prerequisites, recompile vdrift like this:
 
 `scons force_feedback=1`
 
-Now open your [VDrift.config](VDrift_config "wikilink"). Find the section `[ joystick ]` and add the following line to the joystick section somewhere:
+Now open your [VDrift.config](VDrift_config.md). Find the section `[ joystick ]` and add the following line to the joystick section somewhere:
 
 `ff_device = /dev/input/event0`
 

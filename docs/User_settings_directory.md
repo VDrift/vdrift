@@ -1,4 +1,4 @@
-VDrift stores user settings (mostly in [VDrift.config](VDrift_config "wikilink")) and other information in a special directory on the computer's drive. Usually it is located within the user's personal assigned file space, to ensure that the user will have easy access to the files (for backup or other purposes), and that VDrift will be allowed write privileges to the directory.
+VDrift stores user settings (mostly in [VDrift.config](VDrift_config.md)) and other information in a special directory on the computer's drive. Usually it is located within the user's personal assigned file space, to ensure that the user will have easy access to the files (for backup or other purposes), and that VDrift will be allowed write privileges to the directory.
 
 Location
 --------

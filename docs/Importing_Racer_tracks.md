@@ -33,7 +33,7 @@ If there are thousands of .dof files, you may have to do this in steps to avoid 
 
 This can be scripted to speed things up of course.
 
--   Set the correct object properties using the **trackeditor/listedit** [Listedit tool](Listedit_tool "wikilink").
+-   Set the correct object properties using the **trackeditor/listedit** [Listedit tool](Listedit_tool.md).
 -   Done!
 
 <Category:Tracks>

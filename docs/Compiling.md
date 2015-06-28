@@ -1,4 +1,4 @@
-This page shows how to compile VDrift from source. It assumes you have downloaded the source code either by getting the source package from the [latest release](Downloading "wikilink"), or by [getting the development version](Getting_the_development_version "wikilink"). \_\_TOC\_\_
+This page shows how to compile VDrift from source. It assumes you have downloaded the source code either by getting the source package from the [latest release](Downloading.md), or by [getting the development version](Getting_the_development_version.md). \_\_TOC\_\_
 
 <div class="mw-collapsible mw-collapsed">
 Windows

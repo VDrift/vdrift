@@ -11,7 +11,7 @@ Features
 Control options
 ---------------
 
-Control options are defined in the text configuration file [options.config](Options_config "wikilink"), set in the Options -&gt; Controls menu and its submenus, and stored in the text configuration file [VDrift.config](VDrift_config "wikilink").
+Control options are defined in the text configuration file [options.config](Options_config.md), set in the Options -&gt; Controls menu and its submenus, and stored in the text configuration file [VDrift.config](VDrift_config.md).
 
 ### AutoClutch
 
@@ -59,7 +59,7 @@ Change the type of joystick device.
 -   setting: joystick.ff\_device
 -   values: something like "/dev/input/eventX"
 
-Device file for force feedback events. For more detail, see [Setting up force feedback](Setting_up_force_feedback "wikilink").
+Device file for force feedback events. For more detail, see [Setting up force feedback](Setting_up_force_feedback.md).
 
 ### Force Feedback Gain
 
@@ -88,7 +88,7 @@ Limit steering range to 200 degrees, gives a realistic feel to limited range whe
 Assigning controls
 ------------------
 
-Control assignments can be configured through the submenus of the Options -&gt; Controls -&gt; Assign Controls menu, and stored in the text configuration file [controls](controls "wikilink"). Control assignments can be edited after they are set.
+Control assignments can be configured through the submenus of the Options -&gt; Controls -&gt; Assign Controls menu, and stored in the text configuration file [controls](controls.md). Control assignments can be edited after they are set.
 
 There are two basic types of control, analog and digital. Analog controls include joystick axes and mouse motion, while digital controls are keys, mouse buttons and joystick buttons. Any type of input can be assigned to any type of control.
 
@@ -270,7 +270,7 @@ The loose chase camera control moves the camera to follow the car like a helicop
 
 -   control name: view\_orbit
 
-The orbit camera control swings around the car [as the camera moves](Configuring_the_controls#Camera_Movement "wikilink").
+The orbit camera control swings around the car [as the camera moves](Configuring_the_controls#Camera_Movement.md).
 
 ##### Free
 

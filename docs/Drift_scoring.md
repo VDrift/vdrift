@@ -1,4 +1,4 @@
-To find out more about what drifting is and how to do it read [Drifting Techniques](Drifting_techniques "wikilink").
+To find out more about what drifting is and how to do it read [Drifting Techniques](Drifting_techniques.md).
 
 Overview
 --------

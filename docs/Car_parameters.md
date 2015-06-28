@@ -1,5 +1,5 @@
--   [Car parameters for vdrift-2010-06-30](Car_parameters_for_vdrift-2010-06-30 "wikilink")
--   [Car parameters for vdrift-2009-06-15 and older](Car_parameters_for_vdrift-2009-06-15_and_older "wikilink")
+-   [Car parameters for vdrift-2010-06-30](Car_parameters_for_vdrift-2010-06-30.md)
+-   [Car parameters for vdrift-2009-06-15 and older](Car_parameters_for_vdrift-2009-06-15_and_older.md)
 
 The units are all in [MKS](http://scienceworld.wolfram.com/physics/MKS.html) (meters, kilograms, seconds). It might also help to read [*The Physics of Racing*](http://www.miata.net/sport/Physics/) by Brian Beckman. For unit conversion you can go to: [*This Site*](http://www.sonar-equipment.com/useful_conversion_factors_table1_p00.htm).
 
@@ -232,7 +232,7 @@ Tire size determines tire dimensions:
 
 Each wheel has a tire section. Tire size is used to calculate wheel weight and inertia. The tire mesh is optional and has to be centered at origin and fit into a unit box. It will be scaled according to tire dimensions. If omitted a default mesh is generated/used.
 
-Tire type is a tire subsection \[wheel.fl.tire.type\], here a reference. This means car loader will look for a \[tire/touring\] section and alternatively for a file tire/touring relative to car and carparts directory. The first found section definition is used. More info about tire type definition can be found here: [Tire parameters](Tire_parameters "wikilink")
+Tire type is a tire subsection \[wheel.fl.tire.type\], here a reference. This means car loader will look for a \[tire/touring\] section and alternatively for a file tire/touring relative to car and carparts directory. The first found section definition is used. More info about tire type definition can be found here: [Tire parameters](Tire_parameters.md)
 
 Brake
 -----

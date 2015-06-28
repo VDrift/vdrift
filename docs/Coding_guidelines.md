@@ -39,7 +39,7 @@ Commenting
 
 Do not overuse comments. Only comment code which has side effects, is not clear at first glance, or includes complex operations. It is OK to comment a section of code with a description of what that section does.
 
-It is a good idea to comment most non-trivial classes, methods, and instance variables. When commenting code, keep in mind that using [Doxygen](http://doxygen.org/) style comments will help to generate better documenation. See [Source code documentation](Source_code_documentation "wikilink") for more information.
+It is a good idea to comment most non-trivial classes, methods, and instance variables. When commenting code, keep in mind that using [Doxygen](http://doxygen.org/) style comments will help to generate better documenation. See [Source code documentation](Source_code_documentation.md) for more information.
 
 Inheritance
 -----------

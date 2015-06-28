@@ -72,6 +72,6 @@ You can update tracks from within VDrift itself. Go to Updates -&gt; Check for u
 See also
 --------
 
--   [Getting cars](Getting_cars "wikilink")
+-   [Getting cars](Getting_cars.md)
 
 <Category:Tracks>

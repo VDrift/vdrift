@@ -1,4 +1,4 @@
-This page describes how to install the latest VDrift package. It assumes you have [downloaded the latest release](Downloading "wikilink").
+This page describes how to install the latest VDrift package. It assumes you have [downloaded the latest release](Downloading.md).
 
 Windows
 -------

@@ -1,4 +1,4 @@
-This page describes some of the most common commands used when working with VDrift's source code. It assumes you have followed the instructions in the [Cloning/Checking out](Getting_the_development_version#Cloning/Checking_out "wikilink") section of [Getting the development version](Getting_the_development_version "wikilink").
+This page describes some of the most common commands used when working with VDrift's source code. It assumes you have followed the instructions in the [Cloning/Checking out](Getting_the_development_version#Cloning/Checking_out.md) section of [Getting the development version](Getting_the_development_version.md).
 
 See this documentation for more up to date and complete information: <http://help.github.com/>
 

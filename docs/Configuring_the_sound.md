@@ -3,7 +3,7 @@ Currently VDrift has 3D sound using OpenAL. In-game sounds include engine RPM so
 Sound settings
 --------------
 
-Configuring the sound is done by editing [VDrift.config](VDrift_config "wikilink") manually, or by changing the settings in the Options -&gt; Sounds menu. As there is no game music yet, the only option is the volume of game sounds:
+Configuring the sound is done by editing [VDrift.config](VDrift_config.md) manually, or by changing the settings in the Options -&gt; Sounds menu. As there is no game music yet, the only option is the volume of game sounds:
 
 `[sound]`
 `volume = 1`
@@ -36,6 +36,6 @@ To accomodate users of the old version of OpenAL with ALUT included, there is a 
 
 `scons old_openal=1`
 
-For more information on the build system see [Using SCons](Using_SCons "wikilink").
+For more information on the build system see [Using SCons](Using_SCons.md).
 
 <Category:Configuration>

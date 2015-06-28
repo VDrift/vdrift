@@ -1,4 +1,4 @@
-<small>[English](Getting_cars "wikilink") - [Italiano](Getting_cars/it "wikilink")</small>
+<small>[English](Getting_cars.md) - [Italiano](Getting_cars/it.md)</small>
 
 A small selection of cars are distributed in the release VDrift packages. This page describes how to get some more.
 
@@ -75,6 +75,6 @@ You can update cars from within VDrift itself. Go to Updates -&gt; Check for upd
 See also
 --------
 
--   [Getting tracks](Getting_tracks "wikilink")
+-   [Getting tracks](Getting_tracks.md)
 
 <Category:Cars>

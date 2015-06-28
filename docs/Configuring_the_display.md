@@ -1,4 +1,4 @@
-Configuring the display is done by editing [VDrift.config](VDrift_config "wikilink") manually, or by changing the settings in the Options -&gt; Display and Options -&gt; Display -&gt; Advanced menus.
+Configuring the display is done by editing [VDrift.config](VDrift_config.md) manually, or by changing the settings in the Options -&gt; Display and Options -&gt; Display -&gt; Advanced menus.
 
 Display Options
 ---------------
@@ -11,7 +11,7 @@ Display Options
 
 Change the resolution of the game display.
 
-See [Adding video modes](Adding_video_modes "wikilink") for how to make new video modes available to choose from.
+See [Adding video modes](Adding_video_modes.md) for how to make new video modes available to choose from.
 
 ### Fullscreen
 

@@ -9,7 +9,7 @@ Features
 Settings
 --------
 
-The current number of replays and the selected replay are stored in the file [VDrift.config](VDrift_config "wikilink"), and are defined in [options.config](Options_config "wikilink"). Their option names are **game.num\_replays** and **game.selected\_replay**, respectively.
+The current number of replays and the selected replay are stored in the file [VDrift.config](VDrift_config.md), and are defined in [options.config](Options_config.md). Their option names are **game.num\_replays** and **game.selected\_replay**, respectively.
 
 Recording
 ---------

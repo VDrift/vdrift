@@ -6,7 +6,7 @@ The G25 should be fully supported in Windows without any special steps.
 Linux
 -----
 
-When initially plugged in, the G25 will be in compatibility mode, which restricts the steering range and disables the clutch pedal and some of the gears on the H-shifter. VDrift includes two tools that can be used to change G25 modes. Either tool can be used; use whichever tool works the best for you. If you want to use force feedback, you'll need to patch your kernel because when set to native mode, the G25 change its product id, and this product id is not known yet by the kernel ( have a look here [Enabling force feedback in kernel](Enabling_force_feedback_in_kernel "wikilink"))
+When initially plugged in, the G25 will be in compatibility mode, which restricts the steering range and disables the clutch pedal and some of the gears on the H-shifter. VDrift includes two tools that can be used to change G25 modes. Either tool can be used; use whichever tool works the best for you. If you want to use force feedback, you'll need to patch your kernel because when set to native mode, the G25 change its product id, and this product id is not known yet by the kernel ( have a look here [Enabling force feedback in kernel](Enabling_force_feedback_in_kernel.md))
 
 ### usbtool
 

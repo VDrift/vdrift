@@ -1,4 +1,4 @@
-Doxygen documentation is available for VDrift. Currently only the Subversion trunk is available. It is generated daily from the latest version of the [Development version](Getting_the_development_version "wikilink").
+Doxygen documentation is available for VDrift. Currently only the Subversion trunk is available. It is generated daily from the latest version of the [Development version](Getting_the_development_version.md).
 
 Other versions
 --------------

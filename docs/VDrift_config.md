@@ -1,9 +1,9 @@
-**VDrift.config** is the main user settings file for VDrift. It is in the [configfile format](Config_file_format "wikilink"). It is not the only file which VDrift uses for storing user settings (see also [configuring the controls](configuring_the_controls "wikilink")); however, it is the one which contains most of the settings important to users. VDrift does not use any kind of registry or configuration database. The options available to this configuration file are the ones defined in [options.config](Options_config "wikilink").
+**VDrift.config** is the main user settings file for VDrift. It is in the [configfile format](Config_file_format.md). It is not the only file which VDrift uses for storing user settings (see also [configuring the controls](configuring_the_controls.md)); however, it is the one which contains most of the settings important to users. VDrift does not use any kind of registry or configuration database. The options available to this configuration file are the ones defined in [options.config](Options_config.md).
 
 Location and Defaults
 ---------------------
 
-**VDrift.config** is located inside the [user settings directory](user_settings_directory "wikilink"). The default **VDrift.config** is located in **data/settings/VDrift.config**. If VDrift fails to start, the next time it runs, it will move the user's current **VDrift.config** to **VDrift.config.backup** and make a new **VDrift.config** from the default one.
+**VDrift.config** is located inside the [user settings directory](user_settings_directory.md). The default **VDrift.config** is located in **data/settings/VDrift.config**. If VDrift fails to start, the next time it runs, it will move the user's current **VDrift.config** to **VDrift.config.backup** and make a new **VDrift.config** from the default one.
 
 Example
 -------
@@ -81,22 +81,22 @@ Options
 
 ### Control section
 
-For information on the Control settings, see [Configuring the controls](Configuring_the_controls "wikilink").
+For information on the Control settings, see [Configuring the controls](Configuring_the_controls.md).
 
 ### Display section
 
-See [Configuring the display](Configuring_the_display "wikilink") for detailed descriptions of each option.
+See [Configuring the display](Configuring_the_display.md) for detailed descriptions of each option.
 
 ### Game section
 
-See [Starting the game](Starting_the_game "wikilink") for detailed descriptions of each option.
+See [Starting the game](Starting_the_game.md) for detailed descriptions of each option.
 
 ### Joystick section
 
-For information on the Joystick settings, see [Configuring the controls](Configuring_the_controls "wikilink").
+For information on the Joystick settings, see [Configuring the controls](Configuring_the_controls.md).
 
 ### Sound section
 
-See [Configuring the sound](Configuring_the_sound "wikilink") for more information.
+See [Configuring the sound](Configuring_the_sound.md) for more information.
 
 <Category:Files> <Category:Configuration>

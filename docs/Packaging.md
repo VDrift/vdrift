@@ -1,4 +1,4 @@
-This page documents how to package VDrift for releasing. It assumes you have [compiled](Compiling "wikilink") VDrift already.
+This page documents how to package VDrift for releasing. It assumes you have [compiled](Compiling.md) VDrift already.
 
 Common
 ------
@@ -68,7 +68,7 @@ There are some things you need before you can build an autopackage.
 
 First and most importantly, the autopackage development tools are needed. As of this writing, only the version in autopackage svn will correctly build the VDrift packages. The next release of the autopackage tools should have all the patches needed to build proper packages. BinReloc is used by VDrift but the code has been imported and you do not need to download this to build a package. You do however need apbuild.
 
-Second, you must have two different compilers installed on your machine. This is to do the double-compiling so the vdrift binary will work on Linux no matter what version of glibc was used to build the distribution. Currently, the VDrift package setup uses g++-3.3 and g++-4.1, with gcc-4.1. Another known working setup is g++-3.3, g++-3.4, and gcc-3.4. The compiler versions are set in the **tools/autopackage/vdrift.apspec** file in [VDrift Git](Getting_the_development_version "wikilink").
+Second, you must have two different compilers installed on your machine. This is to do the double-compiling so the vdrift binary will work on Linux no matter what version of glibc was used to build the distribution. Currently, the VDrift package setup uses g++-3.3 and g++-4.1, with gcc-4.1. Another known working setup is g++-3.3, g++-3.4, and gcc-3.4. The compiler versions are set in the **tools/autopackage/vdrift.apspec** file in [VDrift Git](Getting_the_development_version.md).
 
 #### Building
 
@@ -119,7 +119,7 @@ FreeBSD
 -------
 
 <div class="mw-collapsible-content">
-[Todo](Project:Todo "wikilink")
+[Todo](Project:Todo.md)
 
 </div>
 </div>

@@ -31,70 +31,70 @@ Getting Started
 
 **General**
 
--   [About the project](docs/About_the_project "wikilink")
--   [Authors and contributors](docs/Authors_and_contributors "wikilink")
--   [License](docs/License "wikilink")
--   [Reporting problems](docs/Reporting_problems "wikilink")
--   [Useful links](docs/Useful_links "wikilink")
+-   [About the project](docs/About_the_project.md)
+-   [Authors and contributors](docs/Authors_and_contributors.md)
+-   [License](docs/License.md)
+-   [Reporting problems](docs/Reporting_problems.md)
+-   [Useful links](docs/Useful_links.md)
 
 **Installation**
 
--   [Requirements](docs/Requirements "wikilink")
--   [Downloading](docs/Downloading "wikilink")
--   [Installing](docs/Installing "wikilink")
+-   [Requirements](docs/Requirements.md)
+-   [Downloading](docs/Downloading.md)
+-   [Installing](docs/Installing.md)
 
 **Configuration**
 
--   [Configuring the display](docs/Configuring_the_display "wikilink")
--   [Configuring the sound](docs/Configuring_the_sound "wikilink")
--   [Configuring the controls](docs/Configuring_the_controls "wikilink")
--   [Logitech G25 support](docs/Logitech_G25_support "wikilink")
--   [Setting up force feedback](docs/Setting_up_force_feedback "wikilink")
+-   [Configuring the display](docs/Configuring_the_display.md)
+-   [Configuring the sound](docs/Configuring_the_sound.md)
+-   [Configuring the controls](docs/Configuring_the_controls.md)
+-   [Logitech G25 support](docs/Logitech_G25_support.md)
+-   [Setting up force feedback](docs/Setting_up_force_feedback.md)
 
 **Playing**
 
--   [Replays](docs/Replays "wikilink")
--   [Drifting techniques](docs/Drifting_techniques "wikilink")
--   [Drift scoring](docs/Drift_scoring "wikilink")
+-   [Replays](docs/Replays.md)
+-   [Drifting techniques](docs/Drifting_techniques.md)
+-   [Drift scoring](docs/Drift_scoring.md)
 
 **Files**
 
--   [User settings directory](docs/User_settings_directory "wikilink")
--   [Data directory](docs/Data_directory "wikilink")
--   [VDrift.config](docs/VDrift_config "wikilink")
--   [Adding video modes](docs/Adding_video_modes "wikilink")
--   [options.config](docs/Options_config "wikilink")
--   [Sound and graphics formats](docs/Sound_and_graphics_formats "wikilink")
--   [JOE format](docs/JOE_format "wikilink")
--   [JOEPack format](docs/JOEPack_format "wikilink")
--   [Configfile format](docs/Config_file_format "wikilink")
--   [Menu file format](docs/Menu_system "wikilink")
+-   [User settings directory](docs/User_settings_directory.md)
+-   [Data directory](docs/Data_directory.md)
+-   [VDrift.config](docs/VDrift_config.md)
+-   [Adding video modes](docs/Adding_video_modes.md)
+-   [options.config](docs/Options_config.md)
+-   [Sound and graphics formats](docs/Sound_and_graphics_formats.md)
+-   [JOE format](docs/JOE_format.md)
+-   [JOEPack format](docs/JOEPack_format.md)
+-   [Configfile format](docs/Config_file_format.md)
+-   [Menu file format](docs/Menu_system.md)
 
 **Development**
 
--   [Getting the development version](docs/Getting_the_development_version "wikilink")
--   [Working with the development version](docs/Working_with_the_development_version "wikilink")
--   [Compiling](docs/Compiling "wikilink")
--   [Packaging](docs/Packaging "wikilink")
--   [Testing](docs/Testing "wikilink")
--   [Debugging](docs/Debugging "wikilink")
--   [Coding guidelines](docs/Coding_guidelines "wikilink")
--   [Source code documentation](docs/Source_code_documentation "wikilink")
--   [Numerical Integration](docs/Numerical_integration "wikilink")
+-   [Getting the development version](docs/Getting_the_development_version.md)
+-   [Working with the development version](docs/Working_with_the_development_version.md)
+-   [Compiling](docs/Compiling.md)
+-   [Packaging](docs/Packaging.md)
+-   [Testing](docs/Testing.md)
+-   [Debugging](docs/Debugging.md)
+-   [Coding guidelines](docs/Coding_guidelines.md)
+-   [Source code documentation](docs/Source_code_documentation.md)
+-   [Numerical Integration](docs/Numerical_integration.md)
 
 **Cars**
 
--   [Getting cars](docs/Getting_cars "wikilink")
--   [Car files and formats](docs/Car_files_and_formats "wikilink")
--   [Creating cars](docs/Creating_cars "wikilink")
--   [Car parameters](docs/Car_parameters "wikilink")
--   [Car graphics](docs/Car_graphics "wikilink")
--   [Car sounds](docs/Car_sounds "wikilink")
--   [3D modeling](docs/3D_modeling "wikilink")
+-   [Getting cars](docs/Getting_cars.md)
+-   [Car files and formats](docs/Car_files_and_formats.md)
+-   [Creating cars](docs/Creating_cars.md)
+-   [Car parameters](docs/Car_parameters.md)
+-   [Car graphics](docs/Car_graphics.md)
+-   [Car sounds](docs/Car_sounds.md)
+-   [3D modeling](docs/3D_modeling.md)
 
 **Tracks**
 
--   [Getting tracks](docs/Getting_tracks "wikilink")
--   [Track files and formats](docs/Track_files_and_formats "wikilink")
--   [Creating tracks](docs/Creating_tracks "wikilink")
--   [Importing Racer tracks](docs/Importing_Racer_tracks "wikilink")
+-   [Getting tracks](docs/Getting_tracks.md)
+-   [Track files and formats](docs/Track_files_and_formats.md)
+-   [Creating tracks](docs/Creating_tracks.md)
+-   [Importing Racer tracks](docs/Importing_Racer_tracks.md)

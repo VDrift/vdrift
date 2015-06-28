@@ -3,7 +3,7 @@ This article gives a rough idea of what it takes to create a car for VDrift.
 Get the Art Tools
 -----------------
 
-Download the [Blender export scripts](https://github.com/VDrift/blender-scripts) from [GitHub](Getting_the_development_version "wikilink").
+Download the [Blender export scripts](https://github.com/VDrift/blender-scripts) from [GitHub](Getting_the_development_version.md).
 
 Create Models
 -------------
@@ -12,7 +12,7 @@ You will need to create 3D models using Blender for the car's body, the glass pi
 
 ### Coordinate Systems
 
-See [Coordinate systems](Coordinate_systems "wikilink")
+See [Coordinate systems](Coordinate_systems.md)
 
 ### Shading and Smoothing
 
@@ -52,7 +52,7 @@ Write a short text file about your car. This goes in the about.txt file. This in
 Car Definition File
 -------------------
 
-Finally you must write car definition file, which contains all of the [car parameters](car_parameters "wikilink"). You can start by copying tools/cars/blank.car and entering values to fit your vehicle. Try to find accurate information regarding the specifications of the car and duplicate it as closely as possible. The units are all in [MKS](http://scienceworld.wolfram.com/physics/MKS.html) (meters, kilograms, seconds). It might also help to read [*The Physics of Racing*](http://www.miata.net/sport/Physics/) by Brian Beckman.
+Finally you must write car definition file, which contains all of the [car parameters](car_parameters.md). You can start by copying tools/cars/blank.car and entering values to fit your vehicle. Try to find accurate information regarding the specifications of the car and duplicate it as closely as possible. The units are all in [MKS](http://scienceworld.wolfram.com/physics/MKS.html) (meters, kilograms, seconds). It might also help to read [*The Physics of Racing*](http://www.miata.net/sport/Physics/) by Brian Beckman.
 
 Needless to say, it requires a lot of knowledge to create a car definition file from scratch so it is suggested that you try using values from other cars. Many of the [community-made cars for Racer](http://www.racer-xtreme.com/) have very similar values that can be used for VDrift.
 
@@ -64,7 +64,7 @@ All the files needed for a car go into the directory **data/cars/car\_name/**, w
 Need Help?
 ----------
 
-Try the related wiki articles on [car files and formats](car_files_and_formats "wikilink"), [car parameters](car_parameters "wikilink"), or the [car modeling tutorial](car_modeling_tutorial "wikilink"). If you get stuck, feel free to ask questions in our [VDrift.net Help forum](http://vdrift.net/Forum/viewforum.php?f=1) or on [VDrift IRC](http://vdrift.net/staticpages/index.php?page=irc-chat)
+Try the related wiki articles on [car files and formats](car_files_and_formats.md), [car parameters](car_parameters.md), or the [car modeling tutorial](car_modeling_tutorial.md). If you get stuck, feel free to ask questions in our [VDrift.net Help forum](http://vdrift.net/Forum/viewforum.php?f=1) or on [VDrift IRC](http://vdrift.net/staticpages/index.php?page=irc-chat)
 
 Contribute
 ----------

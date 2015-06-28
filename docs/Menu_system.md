@@ -1,4 +1,4 @@
-The menus are defined by text files in the **data/skins/*skin\_name*/menus/** directories, where *skin\_name* is the name of one of the skins [Skin system](Skin_system "wikilink"). The menus are defined in text files in the [Configfile format](Config_file_format "wikilink"). Each of the menu "pages" contains a number of menu "widgets", which have a variety of functions.
+The menus are defined by text files in the **data/skins/*skin\_name*/menus/** directories, where *skin\_name* is the name of one of the skins [Skin system](Skin_system.md). The menus are defined in text files in the [Configfile format](Config_file_format.md). Each of the menu "pages" contains a number of menu "widgets", which have a variety of functions.
 
 The menu system was designed to be used with any type of controller. Every action may be triggered by a simple button push, except things like text entry. Users should be able to choose if they wish to point and click with the mouse, use the keyboard's arrow keys, or joystick axes and buttons. Keep this in mind when designing or editing menu pages.
 
