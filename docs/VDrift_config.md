@@ -1,4 +1,4 @@
-**VDrift.config** is the main user settings file for VDrift. It is in the [configfile format](Config_file_format.md). It is not the only file which VDrift uses for storing user settings (see also [configuring the controls](configuring_the_controls.md)); however, it is the one which contains most of the settings important to users. VDrift does not use any kind of registry or configuration database. The options available to this configuration file are the ones defined in [options.config](Options_config.md).
+**VDrift.config** is the main user settings file for VDrift. It is in the [config file format](Config_file_format.md). It is not the only file which VDrift uses for storing user settings (see also [configuring the controls](configuring_the_controls.md)); however, it is the one which contains most of the settings important to users. VDrift does not use any kind of registry or configuration database. The options available to this configuration file are the ones defined in [options.config](Options_config.md).
 
 Location and Defaults
 ---------------------

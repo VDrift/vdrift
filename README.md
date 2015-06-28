@@ -67,7 +67,7 @@ Getting Started
 -   [Sound and graphics formats](docs/Sound_and_graphics_formats.md)
 -   [JOE format](docs/JOE_format.md)
 -   [JOEPack format](docs/JOEPack_format.md)
--   [Configfile format](docs/Config_file_format.md)
+-   [Config file format](docs/Config_file_format.md)
 -   [Menu file format](docs/Menu_system.md)
 
 **Development**

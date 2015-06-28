@@ -41,7 +41,7 @@ Welcome to the [VDrift Wiki](Project:About.md).
 -   [Sound and graphics formats](Sound_and_graphics_formats.md)
 -   [JOE format](JOE_format.md)
 -   [JOEPack format](JOEPack_format.md)
--   [Configfile format](Config_file_format.md)
+-   [Config file format](Config_file_format.md)
 -   [Menu file format](Menu_system.md)
 
 **[Development](:Category:Development.md)**

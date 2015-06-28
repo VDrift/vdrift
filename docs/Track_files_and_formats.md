@@ -36,7 +36,7 @@ This is a 512x512 PNG graphic file that is displayed in the menu when selecting 
 
 ### track.txt
 
-This file defines various track parameters. This file is in VDrift's [Configfile format](Config_file_format.md).
+This file defines various track parameters. This file is in VDrift's [Config file format](Config_file_format.md).
 
 ### objects/\*.png
 
