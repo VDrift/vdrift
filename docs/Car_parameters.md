@@ -1,5 +1,3 @@
--   [Car parameters for vdrift-2010-06-30](Car_parameters_for_vdrift-2010-06-30.md)
--   [Car parameters for vdrift-2009-06-15 and older](Car_parameters_for_vdrift-2009-06-15_and_older.md)
 
 The units are all in [MKS](http://scienceworld.wolfram.com/physics/MKS.html) (meters, kilograms, seconds). It might also help to read [*The Physics of Racing*](http://www.miata.net/sport/Physics/) by Brian Beckman. For unit conversion you can go to: [*This Site*](http://www.sonar-equipment.com/useful_conversion_factors_table1_p00.htm).
 
