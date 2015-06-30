@@ -1,6 +1,6 @@
 Files within a car's folder:
 
--   CARNAME.car: [Config file format](Config_file_format.md), list of [car parameters](car_parameters.md).
+-   CARNAME.car: [Config file format](Config_file_format.md), list of [car parameters](Car_parameters.md).
 -   about.txt: text format, first line contains the car name, other lines contain additional info.
 -   body.joe: [JOE format](JOE_format.md), car body geometry.
 -   body00.png: PNG format, the body.joe UV texture. Additional body textures and colors can be placed in the folder using names body01.png, body02.png, etc.
