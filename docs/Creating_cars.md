@@ -64,7 +64,7 @@ All the files needed for a car go into the directory **data/cars/car\_name/**, w
 Need Help?
 ----------
 
-Try the related wiki articles on [car files and formats](Car_files_and_formats.md), [car parameters](Car_parameters.md), or the [car modeling tutorial](Car_modeling_tutorial.md). If you get stuck, feel free to ask questions in our [VDrift.net Help forum](http://vdrift.net/Forum/viewforum.php?f=1) or on [VDrift IRC](http://vdrift.net/staticpages/index.php?page=irc-chat)
+Try the related wiki articles on [car files and formats](Car_files_and_formats.md), [car parameters](Car_parameters.md), or the [car modeling tutorial](3D_modeling.md). If you get stuck, feel free to ask questions in our [VDrift.net Help forum](http://vdrift.net/Forum/viewforum.php?f=1) or on [VDrift IRC](http://vdrift.net/staticpages/index.php?page=irc-chat)
 
 Contribute
 ----------
