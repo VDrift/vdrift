@@ -5,11 +5,9 @@ Common
 
 The **data/settings/updates.config** file should be updated to contain the cars that will be included in the release along with their SVN revision numbers.
 
-<div class="mw-collapsible mw-collapsed">
 Windows
 -------
 
-<div class="mw-collapsible-content">
 ### Preparation
 
 -   You will need [Nullsoft installer system](http://nsis.sourceforge.net/).
@@ -19,13 +17,9 @@ Windows
 
 Right click on the **vdrift/vdrift-win/vdrift.nsi** file and select "Compile script". The installer will be created.
 
-</div>
-</div>
-<div class="mw-collapsible mw-collapsed">
 OS X
 ----
 
-<div class="mw-collapsible-content">
 ### Preparation
 
 -   In Xcode, open the "Info" tab and change "Bundle versions string, short" (CFBundleShortVersionString) and "Bundle version" (CFBundleVersion) to the date of the release.
@@ -53,13 +47,9 @@ If you are a member of Apple's Mac Developer Program, you can use your Developer
 -   When the organiser appears, select the newly built archive and click "Distribute". Select "Export Developer ID-signed Application" and follow the instructions.
 -   Run **vdrift/vdrift-mac/DMG.app**, entering the date of the release and selecting the VDrift.app you just built when asked. The disk image will be created.
 
-</div>
-</div>
-<div class="mw-collapsible mw-collapsed">
 Linux
 -----
 
-<div class="mw-collapsible-content">
 ### Binary packages with autopackage
 
 #### Prerequisites
@@ -112,15 +102,9 @@ So, to make all this make sense, here are the commands to build a source package
 
 Thus you end up with the file **vdrift-yyyy-mm-dd-src.tar.bz2** as a finished source package.
 
-</div>
-</div>
-<div class="mw-collapsible mw-collapsed">
 FreeBSD
 -------
 
-<div class="mw-collapsible-content">
-[Todo](Project:Todo.md)
+Todo
 
-</div>
-</div>
 <Category:Development>

@@ -1,10 +1,8 @@
 This page shows how to compile VDrift from source. It assumes you have downloaded the source code either by getting the source package from the [latest release](Downloading.md), or by [getting the development version](Getting_the_development_version.md). \_\_TOC\_\_
 
-<div class="mw-collapsible mw-collapsed">
 Windows
 -------
 
-<div class="mw-collapsible-content">
 ### Building with MSYS2
 
 -   This is the recommended method to build VDrift. It does not require vdrift-win.
@@ -45,24 +43,16 @@ Windows
 
 `vdrift-win\premake4 vs2010`
 
-</div>
-</div>
-<div class="mw-collapsible mw-collapsed">
 OS X
 ----
 
-<div class="mw-collapsible-content">
 The VDrift OS X project requires [Xcode](http://developer.apple.com/xcode/) 3.2 or later. The latest version is free on the [Mac App Store](http://itunes.apple.com/us/app/xcode/id422352214?mt=12&ls=1).
 
 Open **vdrift/vdrift-mac/vdrift.xcodeproj** and in Xcode 4 or higher click Product -&gt; Build, otherwise hit Build -&gt; Build.
 
-</div>
-</div>
-<div class="mw-collapsible mw-collapsed">
 Linux
 -----
 
-<div class="mw-collapsible-content">
 ### Prerequisites
 
 The required build tools include:
@@ -148,13 +138,9 @@ To remove all additional temporary files run:
 
 `rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf`
 
-</div>
-</div>
-<div class="mw-collapsible mw-collapsed">
 FreeBSD
 -------
 
-<div class="mw-collapsible-content">
 To compile VDrift on FreeBSD, use the ports system.
 
 ### Latest Release
@@ -173,6 +159,4 @@ To compile, run `make` on the newly-created **vdrift-devel** port:
 
 ` cd /usr/ports/games/vdrift-devel && make install clean clean-depends`
 
-</div>
-</div>
 <Category:Development>
