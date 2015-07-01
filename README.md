@@ -2,10 +2,8 @@ VDrift - A Car Racing Simulator for Multiple Platforms
 ======================================================
 
 VDrift is a cross-platform, open source driving simulation made with drift
-racing in mind. The driving physics engine was recently re-written from scratch
-but was inspired and owes much to the Vamos physics engine. It is released under
-the GNU General Public License (GPL) v3. It is currently available for FreeBSD,
-Linux, Mac OS X and Windows.
+racing in mind. It is released under the [GNU General Public License (GPL) v3](http://www.gnu.org/licenses/gpl-3.0.en.html).
+It is currently available for FreeBSD, Linux, Mac OS X and Windows.
 
 [![Build Status](https://travis-ci.org/VDrift/vdrift.svg?branch=master)](https://travis-ci.org/VDrift/vdrift) [![Coverity Status](https://scan.coverity.com/projects/3734/badge.svg)](https://scan.coverity.com/projects/3734)
 
@@ -21,75 +19,78 @@ The goals of the VDrift project are:
 - to provide a platform for creative experimentation to a community of
   developers and artists.
 
-Saying More Than a Thousand Words
----------------------------------
-
 ![](vdrift/raw/2f19c79de4fac0c326fa099dba7d9f19362552d0/miura_vdrift_899.jpg)
 
 Getting Started
 ---------------
 
-- [Official website] (http://vdrift.net)
-- [Wiki](http://wiki.vdrift.net/index.php?title=Main_Page)
-- [Bug tracker](https://github.com/VDrift/vdrift/issues)
-- [Hardware Requirements](http://wiki.vdrift.net/index.php?title=Requirements)
+**General**
 
-Downloading
-===========
+-   [Official website](http://vdrift.net)
+-   [About the project](docs/About_the_project.md)
+-   [Authors and contributors](docs/Authors_and_contributors.md)
+-   [License](LICENSE)
+-   [Reporting problems](docs/Reporting_problems.md)
+-   [Useful links](docs/Useful_links.md)
 
-VDrift consists of two essential parts; source code and data.
+**Installation**
 
-Download the source code from the repository
+-   [Requirements](docs/Requirements.md)
+-   [Downloading](docs/Downloading.md)
+-   [Installing](docs/Installing.md)
 
-    git clone https://github.com/VDrift/vdrift.git VDrift
+**Configuration**
 
-VDrift data is expected to reside in a folder called *data* in the root of
-VDrift, so change your directory to the root of the sources:
+-   [Configuring the display](docs/Configuring_the_display.md)
+-   [Configuring the sound](docs/Configuring_the_sound.md)
+-   [Configuring the controls](docs/Configuring_the_controls.md)
+-   [Logitech G25 support](docs/Logitech_G25_support.md)
+-   [Setting up force feedback](docs/Setting_up_force_feedback.md)
 
-    cd VDrift
+**Playing**
 
-VDrift Data is still hosted at Sourceforge, so to getting it
-requires checking out the repository with subversion:
+-   [Replays](docs/Replays.md)
+-   [Drifting techniques](docs/Drifting_techniques.md)
+-   [Drift scoring](docs/Drift_scoring.md)
 
-    svn checkout svn://svn.code.sf.net/p/vdrift/code/vdrift-data data
+**Files**
 
-See also
---------
+-   [User settings directory](docs/User_settings_directory.md)
+-   [Data directory](docs/Data_directory.md)
+-   [VDrift.config](docs/VDrift_config.md)
+-   [Adding video modes](docs/Adding_video_modes.md)
+-   [options.config](docs/Options_config.md)
+-   [Sound and graphics formats](docs/Sound_and_graphics_formats.md)
+-   [JOE format](docs/JOE_format.md)
+-   [JOEPack format](docs/JOEPack_format.md)
+-   [Config file format](docs/Config_file_format.md)
+-   [Menu file format](docs/Menu_system.md)
 
-- [Getting the development version](http://wiki.vdrift.net/index.php?title=Getting_the_development_version)
+**Development**
 
-Compiling
-=========
+-   [Getting the development version](docs/Getting_the_development_version.md)
+-   [Working with the development version](docs/Working_with_the_development_version.md)
+-   [Compiling](docs/Compiling.md)
+-   [Packaging](docs/Packaging.md)
+-   [Testing](docs/Testing.md)
+-   [Debugging](docs/Debugging.md)
+-   [Coding guidelines](docs/Coding_guidelines.md)
+-   [Source code documentation](docs/Source_code_documentation.md)
+-   [Numerical Integration](docs/Numerical_integration.md)
 
-VDrift requires several tools and libraries at build time. Make sure you have
-installed all required libraries, each correspondent development files and all build
-tools, as listed below.
+**Cars**
 
-Build Tools
------------
+-   [Getting cars](docs/Getting_cars.md)
+-   [Car files and formats](docs/Car_files_and_formats.md)
+-   [Creating cars](docs/Creating_cars.md)
+-   [Car parameters](docs/Car_parameters.md)
+-   [Car graphics](docs/Car_graphics.md)
+-   [Car sounds](docs/Car_sounds.md)
+-   [3D modeling](docs/3D_modeling.md)
 
-- g++ 4.8 or clang 3.4 - C++11 compiler: 
-- [SCons](http://www.scons.org) - Build system.
-- gettext - GNU libraries and utilities for producing multi-lingual messages
+**Tracks**
 
-Libraries
----------
-
-- [bullet](http://bulletphysics.org/wordpress) - Open Source Physics Library (minimum version 2.83).
-- [libcurl](http://curl.haxx.se) - Multiprotocol file transfer library (minimum version 7.21.6).
-- [libvorbis](http://xiph.org/vorbis) - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0).
-- [sdl](http://www.libsdl.org) - Simple DirectMedia Layer Library (minimum version 2.0.0).
-- [sdl-image](https://www.libsdl.org/projects/SDL_image) - Image file loading library (minimum version 2.0.0).
-
-Platform specific compiling instructions
-----------------------------------------
-
-- [Compiling](http://wiki.vdrift.net/index.php?title=Compiling)
-
-Everything further
-==================
-
-For configuring, running and extending the game, for playing, contributing and
-developing please search the wiki for an article on your topic:
-
-- [VDrift wiki](http://wiki.vdrift.net/index.php?title=Main_Page)
+-   [Getting tracks](docs/Getting_tracks.md)
+-   [Track files and formats](docs/Track_files_and_formats.md)
+-   [Creating tracks](docs/Creating_tracks.md)
+-   [Importing Racer tracks](docs/Importing_Racer_tracks.md)
