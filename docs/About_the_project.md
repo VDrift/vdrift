@@ -1,7 +1,7 @@
 Description
 -----------
 
-VDrift is a cross-platform, open source driving simulation made with drift racing in mind. The driving physics engine was recently re-written from scratch but was inspired and owes much to the Vamos physics engine. It is released under the GNU General Public License (GPL) v3. It is currently available for Linux, FreeBSD, Mac OS X and Windows.
+VDrift is a cross-platform, open source driving simulation made with drift racing in mind. The driving physics engine was recently re-written from scratch but was inspired and owes much to the Vamos physics engine. It is released under the [GNU General Public License (GPL) v3](http://www.gnu.org/licenses/gpl-3.0.en.html). It is currently available for Linux, FreeBSD, Mac OS X and Windows.
 
 Features
 --------
@@ -35,10 +35,8 @@ The goals of the VDrift project are:
 History
 -------
 
-VDrift was created by [Joe Venzon](http://vdrift.net/users.php?mode=profile&uid=5) in early 2005. A fan of Gran Turismo, Joe had a lot of fun trying to drift in GT4, though he was disappointed with GT4's physics after loss of traction. Looking around online, the open source [Vamos Automotive Simulator](http://vamos.sf.net/) performed much better, although the graphics and features were minimal. Building around Vamos, using code adapted from his earlier 3D engine experiments, Joe created the first version of VDrift.
+VDrift was created by [Joe Venzon](http://vdrift.net/Forum/member.php?action=profile&uid=1) in early 2005. A fan of Gran Turismo, Joe had a lot of fun trying to drift in GT4, though he was disappointed with GT4's physics after loss of traction. Looking around online, the open source [Vamos Automotive Simulator](http://vamos.sf.net/) performed much better, although the graphics and features were minimal. Building around Vamos, using code adapted from his earlier 3D engine experiments, Joe created the first version of VDrift.
 
 So far, every release has been a testing/development quality release. For this and other reasons, dates are used instead of version numbers.
-
-For a more detailed history look at the [Release Changelogs](Release_Changelogs.md).
 
 <Category:General>

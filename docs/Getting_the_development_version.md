@@ -1,6 +1,6 @@
 This page describes how to get the source code of VDrift. It assumes your computer meets the [requirements](Requirements.md).
 
-\_\_TOC\_\_ VDrift's code is kept in a [Git](http://git-scm.com/) repository, hosted by [GitHub](https://github.com/VDrift/vdrift). Some operating system's dependencies are also hosted on GitHub, and the data is hosted on [Sourceforge](https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data) in a [Subversion](http://subversion.apache.org/) repository.
+VDrift's code is kept in a [Git](http://git-scm.com/) repository, hosted by [GitHub](https://github.com/VDrift/vdrift). Some operating system's dependencies are also hosted on GitHub, and the data is hosted on [Sourceforge](https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data) in a [Subversion](http://subversion.apache.org/) repository.
 
 Downloading a snapshot
 ----------------------

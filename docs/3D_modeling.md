@@ -5,8 +5,7 @@ Blender
 
 ### General Use
 
--   [Blender Wiki](http://wiki.blender.org/) - All the official Blender documentation, including the [User's Manual](http://wiki.blender.org/index.php/Doc:Manual).
--   [BlenderUnderground Blender Video Tutorials](http://blenderunderground.com/video-tutorials/) - The Blender Basics series seeks to provide a way for those new to Blender, or those new to 3D graphics in general, to begin to master this powerful and capable application.
+-   [Blender Wiki](http://wiki.blender.org/) - All the official Blender documentation, including the [User's Manual](http://www.blender.org/manual/).
 -   [BlenderArt Magazine](http://www.blenderart.org/issues/) - A magazine dedicated to Blender.
 
 ### Modeling Cars

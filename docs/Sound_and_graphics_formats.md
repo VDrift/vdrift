@@ -6,7 +6,7 @@ Textures are all in [Portable Network Graphic (PNG)](http://www.libpng.org/pub/p
 Models
 ------
 
-Models used in the game are all [JOE format](JOE_format.md), which is produced by a Python script for [Blender3D](http://www.blender3d.org/). Currently models are used for cars (glass, interiors, wheels, etc.) and track objects. Get the modeling tools from the **tools** directory of the [Art repository](Art_repository.md). There are two [JOE export scripts](JOE_export_scripts.md), **export-joe-0.3.py** and **export-all-joe-0.3.py**.
+Models used in the game are all [JOE format](JOE_format.md), which is produced by a [Python script](https://github.com/VDrift/blender-scripts) for [Blender3D](http://www.blender3d.org/). Currently models are used for cars (glass, interiors, wheels, etc.) and track objects.
 
 Sounds
 ------
