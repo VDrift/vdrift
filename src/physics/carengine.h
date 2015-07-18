@@ -33,6 +33,7 @@ class PTree;
 
 struct CarEngineInfo
 {
+	btScalar displacement; ///< used to calculate engine friction
 	btScalar maxpower; ///< max power output
 	btScalar redline; ///< the redline in RPMs (used only for the redline graphics)
 	btScalar rpm_limit; ///< peak engine RPMs after which limiting occurs
@@ -40,7 +41,7 @@ struct CarEngineInfo
 	btScalar start_rpm; ///< initial condition RPM
 	btScalar stall_rpm; ///< RPM at which the engine dies
 	btScalar fuel_rate; ///< fuel rate kg/Ws based on fuel heating value(4E7) and engine efficiency(0.35)
-	btScalar friction; ///< friction coefficient from the engine; this is calculated algorithmically
+	btScalar friction[3]; ///< friction torque coefficients
 	Spline<btScalar> torque_curve;
 	btVector3 position;
 	btScalar inertia;
@@ -62,14 +63,9 @@ struct CarEngineInfo
 		btScalar redline,
 		const std::vector<std::pair<btScalar, btScalar> > & torque);
 
-	btScalar GetTorque(
-		btScalar throttle,
-		btScalar rpm) const;
+	btScalar GetTorque(btScalar throttle, btScalar rpm) const;
 
-	btScalar GetFrictionTorque(
-		btScalar angvel,
-		btScalar friction_factor,
-		btScalar throttle_position) const;
+	btScalar GetFrictionTorque(btScalar throttle, btScalar rpm) const;
 };
 
 class CarEngine
