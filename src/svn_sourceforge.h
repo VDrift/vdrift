@@ -40,6 +40,6 @@ namespace SvnSourceForge
 		const std::string & folder_path,
 		GameDownloader & download,
 		std::ostream & error_output);
-};
+}
 
 #endif

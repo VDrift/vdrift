@@ -57,7 +57,7 @@ enum Enum
 	GUI_CANCEL,
 	INVALID
 };
-};
+}
 
 #endif // _GAMEINPUT_H
 
