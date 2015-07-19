@@ -24,8 +24,7 @@ FreeBSD
 
 To install the binary package, just use **pkg\_add**:
 
-`pkg_add -r vdrift`
-
-`cd /usr/ports/games/vdrift-data && make install clean clean-depends`
+    pkg_add -r vdrift
+    cd /usr/ports/games/vdrift-data && make install clean clean-depends
 
 <Category:Installation>

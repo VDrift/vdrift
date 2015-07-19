@@ -32,7 +32,7 @@ The following cars are in the [data repository](http://sourceforge.net/p/vdrift/
 -   LNG: Dacia Logan
 -   M3: BMW E30 M3
 -   M3D: BMW M3 SPEED World Challenge
--   M7: Mazda RX-7 FC
+-   M7: Mazda RX-7 FD
 -   M8: Mazda RX-8
 -   MC: Mini Cooper (new style)
 -   MI: Mini Cooper (old style)

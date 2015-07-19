@@ -9,7 +9,7 @@ The location of the settings directory is chosen based on the best location for 
 |----------------------|-----------------------------------------------------------------------|
 | **Operating System** | **Location**                                                          |
 | Windows XP           | `C:\Documents and Settings\''username''\My Documents\My Games\VDrift` |
-| Windows Vista/7      | `C:\Users\''username''\My Documents\My Games\VDrift`                  |
+| Windows Vista/7      | `C:\Users\''username''\AppData\Roaming\VDrift`                        |
 | OS X                 | `/Users/''username''/Library/Preferences/VDrift`                      |
 | Linux                | `/home/''username''/.vdrift`                                          |
 | FreeBSD              | `/home/''username''/.vdrift`                                          |

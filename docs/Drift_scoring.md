@@ -31,17 +31,10 @@ At the beginning of a drift, the game starts accumulating the score for this dri
 -   **Base score** - This is simply the length the car has travelled in this drift (in meters). A longer drift will earn higher base score.
 -   **Bonus score** - This contains 3 components:
     -   **drift length bonus** - same value as the base score, effectively giving double bonus to longer drifts.
-    -   **maximum drift speed bonus** - the value is
-
-`the maximum drift speed (in m/s) / 2`
-
-e.g. a maximum drift speed of 20 m/s will earn a bonus of 10.
-
--   -   **maximum drift angle bonus** - the value is
-
-`the maximum drift angle (in radian) * 40 / PI`
-
-e.g. a maximum drift angle of PI/4 (45 degrees) will earn a bonus of 10.
+    -   **maximum drift speed bonus** - the value is the maximum drift speed (in m/s) / 2
+        -   e.g. a maximum drift speed of 20 m/s will earn a bonus of 10.
+    -   **maximum drift angle bonus** - the value is the maximum drift angle (in radian) * 40 / PI
+        -   e.g. a maximum drift angle of PI/4 (45 degrees) will earn a bonus of 10.
 
 If the car goes off track or spins out during a drift, the accumulated drift score is not added to the total score. An accumulated drift score of less than 5 is not added to the total either.
 

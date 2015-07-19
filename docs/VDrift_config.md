@@ -10,71 +10,73 @@ Example
 
 This is an example **VDrift.config** file.
 
-`[control]`
-`autoclutch = true`
-`autotrans = true`
-`button_ramp = 5`
-`mousegrab = true`
-`speed_sens_steering = 1`
-`[display]`
-`FOV = 45`
-`anisotropic = 0`
-`antialiasing = 0`
-`bloom = true`
-`camerabounce = 1`
-`contrast = 1`
-`depth = 16`
-`fullscreen = true`
-`height = 1050`
-`input_graph = true`
-`language = English`
-`lighting = 0`
-`mph = true`
-`normalmaps = true`
-`racingline = true`
-`reflections = 1`
-`shaders = true`
-`shadow_distance = 1`
-`shadow_quality = 1`
-`shadows = true`
-`show_fps = true`
-`show_hud = true`
-`skin = simple`
-`texture_size = medium`
-`trackmap = true`
-`view_distance = 1000`
-`width = 1680`
-`zdepth = 16`
-`[game]`
-`ai_difficulty = 1`
-`antilock = true`
-`camera_mode = chase`
-`number_of_laps = 1`
-`opponent = XS`
-`opponent_color = 1,1,1`
-`opponent_color_blue = 1.000000`
-`opponent_color_green = 0.000000`
-`opponent_color_red = 0.000000`
-`opponent_paint = 00`
-`player = XS`
-`player_color = 1,1,1`
-`player_color_blue = 1.000000`
-`player_color_green = 0.000000`
-`player_color_red = 0.000000`
-`player_paint = 00`
-`record = false`
-`reverse = false`
-`selected_replay = 0`
-`track = paulricard88`
-`traction_control = true`
-`[joystick]`
-`calibrated = false`
-`ff_device = /dev/input/event0`
-`ff_gain = 2`
-`ff_invert = false`
-`hgateshifter = false`
-`two_hundred = false`
-`type = joystick`
+    [control]
+    autoclutch = true
+    autotrans = true
+    button_ramp = 5
+    mousegrab = true
+    speed_sens_steering = 1
+    
+    [display]
+    FOV = 45
+    anisotropic = 0
+    antialiasing = 0
+    bloom = true
+    camerabounce = 1
+    contrast = 1
+    depth = 16
+    fullscreen = true
+    height = 1050
+    input_graph = true
+    language = English
+    lighting = 0
+    mph = true
+    normalmaps = true
+    racingline = true
+    reflections = 1
+    shaders = true
+    shadow_distance = 1
+    shadow_quality = 1
+    shadows = true
+    show_fps = true
+    show_hud = true
+    skin = simple
+    texture_size = medium
+    trackmap = true
+    view_distance = 1000
+    width = 1680
+    zdepth = 16
+    
+    [game]
+    ai_difficulty = 1
+    antilock = true
+    camera_mode = chase
+    number_of_laps = 1
+    opponent = XS
+    opponent_color = 1,1,1
+    opponent_color_blue = 1.000000
+    opponent_color_green = 0.000000
+    opponent_color_red = 0.000000
+    opponent_paint = 00
+    player = XS
+    player_color = 1,1,1
+    player_color_blue = 1.000000
+    player_color_green = 0.000000
+    player_color_red = 0.000000
+    player_paint = 00
+    record = false
+    reverse = false
+    selected_replay = 0
+    track = paulricard88
+    traction_control = true
+    [joystick]
+    calibrated = false
+    ff_device = /dev/input/event0
+    ff_gain = 2
+    ff_invert = false
+    hgateshifter = false
+    two_hundred = false
+    type = joystick
 
 Options
 -------

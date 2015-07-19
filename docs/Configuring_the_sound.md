@@ -5,18 +5,18 @@ Sound settings
 
 Configuring the sound is done by editing [VDrift.config](VDrift_config.md) manually, or by changing the settings in the Options -&gt; Sounds menu. As there is no game music yet, the only option is the volume of game sounds:
 
-`[sound]`
-`volume = 1`
+    [sound]
+    volume = 1
 
 Troubleshooting sound
 ---------------------
 
 If the engine sound is very broken or choppy sounding, and you hear some noise or crackling, you need to tell OpenAL to try to use a different sound backend. If you don't have an ~/.openalrc file, create it with these contents, or modify your current one to look like this:
 
-`(define devices                 '(native alsa sdl arts esd null))`
-`(define alsa-device             "dsp0")`
-`(define speaker-num             2)`
-`;(define sampling-rate          22050)`
+    (define devices                 '(native alsa sdl arts esd null))
+    (define alsa-device             "dsp0")
+    (define speaker-num             2)
+    ;(define sampling-rate          22050)
 
 The important line here is the "define devices" line, OpenAL attempts to use each of those sound output methods in order. It uses the first one that works; in some cases native will work best, in other cases perhaps alsa. If Gnome is running its sound daemon, esd would be the best choice, while KDE usually uses artsd.
 
@@ -34,7 +34,7 @@ On older versions of OpenAL, ALUT was part of the OpenAL library. At some point 
 
 To accomodate users of the old version of OpenAL with ALUT included, there is a switch in the SCons build system used on Linux and FreeBSD. To compile VDrift with "old OpenAL" support, simply add the option to the scons compile command:
 
-`scons old_openal=1`
+    scons old_openal=1
 
 For more information on the build system see [Using SCons](Using_SCons.md).
 

@@ -27,17 +27,17 @@ Load, save, and quit are obvious. You can supply arguments to load and save to s
 
 The first argument to ls is the object property you want to search. For example, specify 1 if you want to search objects based on the texture filename. The second argument to ls is what you want to search for. You can use \* and ? wildcards. For example, to find all of the objects that use a texture called sky\*, you'd do:
 
-`ls 1 sky*`
+    ls 1 sky*
 
 To find all of the objects that have the skybox property set to true (1), do:
 
-`ls 4 1`
+    ls 4 1
 
 ### set
 
 The **set** command is similar to **ls**. It allows you to both search for objects and set their properties in one step. The first two arguments to set are exactly the same as ls. The second two arguments the property you want to set on the objects that match your search. For example, say want to set the skybox property to true for all objects that have a texture starting with "sky"... you'd do:
 
-`set 1 sky* 4 1`
+    set 1 sky* 4 1
 
 ### addparam
 

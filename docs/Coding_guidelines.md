@@ -8,24 +8,24 @@ Code
 
 VDrift code is formatted using all tabs and no spaces. The following example demonstrates VDrift's coding style.
 
-`class EXAMPLECLASS`
-`{`
-`private:`
-`        int data;`
-`public:`
-`        EXAMPLECLASS();`
-`        ~EXAMPLECLASS(); `
-`        void MemberFunction();`
-`};`
-`// Add the sum of the number 1 - 10 to data.`
-`void EXAMPLECLASS::MemberFunction()`
-`{`
-`        // loop and add i to data  <-- Useless comment, should be avoided.`
-`        for (int i = 1; i <= 10; i++)`
-`        {`
-`                data += i;`
-`        }`
-`}`
+    class EXAMPLECLASS
+    {
+    private:
+            int data;
+    public:
+            EXAMPLECLASS();
+            ~EXAMPLECLASS();
+            void MemberFunction();
+    };
+    // Add the sum of the number 1 - 10 to data.
+    void EXAMPLECLASS::MemberFunction()
+    {
+            // loop and add i to data  <-- Useless comment, should be avoided.
+            for (int i = 1; i <= 10; i++)
+            {
+                    data += i;
+            }
+    }
 
 Indentation and Naming
 ----------------------
