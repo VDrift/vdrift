@@ -1463,9 +1463,6 @@ void CarDynamics::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 	btVector3 force (ext_force);
 	btVector3 torque (ext_torque);
 
-	// call before UpdateDriveline, overrides clutch, throttle
-	UpdateTransmission(dt);
-
 	//do TCS first thing
 	if ( tcs )
 	{
@@ -1536,6 +1533,9 @@ void CarDynamics::Tick(btScalar dt, const btVector3 & force, const btVector3 & t
 // executed as last function(after integration) in bullet singlestepsimulation
 void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar dt)
 {
+	// shift/clutch logic
+	UpdateTransmission(dt);
+
 	// reset transform, before processing tire/suspension constraints
 	// will break bullets collision clamping, tunneling prevention
 	body->setCenterOfMassTransform(transform);
