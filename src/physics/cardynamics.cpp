@@ -1705,15 +1705,18 @@ void CarDynamics::UpdateTransmission(btScalar dt)
 		if (!engine.GetCombustion())
 		{
 			engine.StartEngine();
-			//std::cout << "start engine" << std::endl;
 		}
 
 		btScalar throttle = engine.GetThrottle();
 		throttle = ShiftAutoClutchThrottle(throttle, dt);
 		engine.SetThrottle(throttle);
 
-		clutch_value = AutoClutch(dt);
-		clutch.SetPosition(clutch_value);
+		// allow auto clutch override
+		if (clutch.GetPosition() >= clutch_value)
+		{
+			clutch_value = AutoClutch(dt);
+			clutch.SetPosition(clutch_value);
+		}
 	}
 }
 
