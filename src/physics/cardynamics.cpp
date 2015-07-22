@@ -1755,12 +1755,6 @@ btScalar CarDynamics::AutoClutch(btScalar dt) const
 		clutch_new *= (1.0f - remaining_shift_time / (shift_time * 0.5f));
 	}
 
-	// braking
-	if (brake_value > 0.01f)
-	{
-		clutch_new = 0.0f;
-	}
-
 	// rate limit the autoclutch
 	btScalar clutch_delta = clutch_new - clutch_old;
 	btClamp(clutch_delta, -clutch_engage_limit * 2.0f, clutch_engage_limit);
