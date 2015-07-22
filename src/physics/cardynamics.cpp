@@ -1711,8 +1711,8 @@ void CarDynamics::UpdateTransmission(btScalar dt)
 		throttle = ShiftAutoClutchThrottle(throttle, dt);
 		engine.SetThrottle(throttle);
 
-		btScalar new_clutch = AutoClutch(dt);
-		clutch.SetPosition(new_clutch);
+		clutch_value = AutoClutch(dt);
+		clutch.SetPosition(clutch_value);
 	}
 }
 
@@ -1721,7 +1721,7 @@ bool CarDynamics::WheelDriven(int i) const
 	return (1 << i) & drive;
 }
 
-btScalar CarDynamics::AutoClutch(btScalar dt)
+btScalar CarDynamics::AutoClutch(btScalar dt) const
 {
 	btScalar clutch_engage_limit = 10.0f * dt; // 0.1 seconds
 	btScalar clutch_old = clutch_value;
@@ -1760,9 +1760,9 @@ btScalar CarDynamics::AutoClutch(btScalar dt)
 	// rate limit the autoclutch
 	btScalar clutch_delta = clutch_new - clutch_old;
 	btClamp(clutch_delta, -clutch_engage_limit * 2.0f, clutch_engage_limit);
-	clutch_value = clutch_old + clutch_delta;
+	clutch_new = clutch_old + clutch_delta;
 
-	return clutch_value;
+	return clutch_new;
 }
 
 btScalar CarDynamics::ShiftAutoClutchThrottle(btScalar throttle, btScalar dt)

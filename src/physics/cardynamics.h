@@ -276,7 +276,7 @@ protected:
 
 	bool WheelDriven(int i) const;
 
-	btScalar AutoClutch(btScalar dt);
+	btScalar AutoClutch(btScalar dt) const;
 
 	btScalar ShiftAutoClutchThrottle(btScalar throttle, btScalar dt);
 
