@@ -237,26 +237,26 @@ protected:
 
 	void UpdateWheelTransform();
 
-	void ApplyEngineTorqueToBody ( btVector3 & torque );
+	void ApplyEngineTorqueToBody(btVector3 & torque);
 
-	void ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torque );
+	void ApplyAerodynamicsToBody(btVector3 & force, btVector3 & torque);
 
-	void ComputeSuspensionDisplacement ( int i, btScalar dt );
+	void ComputeSuspensionDisplacement(int i, btScalar dt);
 
-	void DoTCS ( int i, btScalar suspension_force );
+	void DoTCS(int i, btScalar suspension_force);
 
-	void DoABS ( int i, btScalar suspension_force );
+	void DoABS(int i, btScalar suspension_force);
 
-	btVector3 ApplySuspensionForceToBody ( int i, btScalar dt, btVector3 & force, btVector3 & torque );
+	btVector3 ApplySuspensionForceToBody(int i, btScalar dt, btVector3 & force, btVector3 & torque);
 
-	btVector3 ComputeTireFrictionForce ( int i, btScalar dt, btScalar normal_force,
-        btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation );
+	btVector3 ComputeTireFrictionForce(int i, btScalar dt, btScalar normal_force,
+		btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation);
 
-	void ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque );
+	void ApplyWheelForces(btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque);
 
-	void ApplyForces ( btScalar dt, const btVector3 & force, const btVector3 & torque);
+	void ApplyForces(btScalar dt, const btVector3 & force, const btVector3 & torque);
 
-	void Tick ( btScalar dt, const btVector3 & force, const btVector3 & torque);
+	void Tick(btScalar dt, const btVector3 & force, const btVector3 & torque);
 
 	void UpdateWheelContacts();
 
