@@ -1294,10 +1294,12 @@ void Game::UpdateCarInputs(const int carid)
 	if (timer.Staging())
 	{
 		carinputs[CarInput::BRAKE] = 1.0;
+		carinputs[CarInput::CLUTCH] = 1.0;
 	}
 	else if (race_laps > 0 && (int)timer.GetCurrentLap(carid) > race_laps)
 	{
 		carinputs[CarInput::BRAKE] = 1.0;
+		carinputs[CarInput::CLUTCH] = 1.0;
 		carinputs[CarInput::THROTTLE] = 0.0;
 	}
 
