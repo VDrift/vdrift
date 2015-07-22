@@ -1757,19 +1757,6 @@ btScalar CarDynamics::AutoClutch(btScalar dt)
 		clutch_new = 0.0f;
 	}
 
-	// coasting
-	if (clutch_new > 0.0f && rpm_clutch > rpm_engine)
-	{
-		// avoid rear wheel grip loss
-		if (drive != FWD)
-		{
-			btScalar ls = tire[REAR_LEFT].getSlip() / tire[REAR_LEFT].getIdealSlip();
-			btScalar rs = tire[REAR_RIGHT].getSlip() / tire[REAR_RIGHT].getIdealSlip();
-			btScalar s = btMin(ls, rs);
-			clutch_new = s < -0.4f ? (s > -0.9f ? 0.9f + s : 0.0f) : clutch_new;
-		}
-	}
-
 	// rate limit the autoclutch
 	btScalar clutch_delta = clutch_new - clutch_old;
 	btClamp(clutch_delta, -clutch_engage_limit * 2.0f, clutch_engage_limit);
