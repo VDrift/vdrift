@@ -1304,9 +1304,9 @@ void CarDynamics::ComputeSuspensionDisplacement(int i, btScalar /*dt*/)
 	btScalar posx = wheel_contact[i].GetPosition()[0];
 	btScalar posz = wheel_contact[i].GetPosition()[2];
 	btScalar phase = 2 * M_PI * (posx + posz) / surface.bumpWaveLength;
-	btScalar shift = 2 * sin(phase * M_PI_2);
+	btScalar shift = 2 * btSin(phase * M_PI_2);
 	btScalar amplitude = 0.25 * surface.bumpAmplitude;
-	btScalar bumpoffset = amplitude * (sin(phase + shift) + sin(M_PI_2 * phase) - 2.0);
+	btScalar bumpoffset = amplitude * (btSin(phase + shift) + btSin(M_PI_2 * phase) - 2.0);
 
 	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius() - bumpoffset;
 	assert(!std::isnan(relative_displacement));
