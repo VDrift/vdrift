@@ -93,31 +93,32 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 		error_output << "You must define at least 2 torque curve points." << std::endl;
 		return false;
 	}
-	SetTorqueCurve(redline, torque);
-	position.setValue(pos[0], pos[1], pos[2]);
 
-	return true;
-}
-
-void CarEngineInfo::SetTorqueCurve(
-	const btScalar redline,
-	const std::vector<std::pair<btScalar, btScalar> > & torque)
-{
+	// set torque curve
 	torque_curve.Clear();
+	if (torque[0].first > stall_rpm)
+	{
+		btScalar dx = torque[1].first - torque[0].first;
+		btScalar dy = torque[1].second - torque[0].second;
+		btScalar stall_torque = dy / dx * (stall_rpm - torque[0].first) + torque[0].second;
+		torque_curve.AddPoint(stall_rpm,  stall_torque);
 
-	assert(torque.size() > 1);
-
-	//ensure we have a smooth curve down to 0 RPM
-	if (torque[0].first != 0)
-		torque_curve.AddPoint(0,0);
-
+		error_output << "Torque curve begins above stall rpm.\n"
+			<< "Extrapolating to " << stall_rpm << ", " << stall_torque << std::endl;
+	}
 	for (std::vector<std::pair<btScalar, btScalar> >::const_iterator i = torque.begin(); i != torque.end(); ++i)
 	{
 		torque_curve.AddPoint(i->first, i->second);
 	}
+	if (torque[torque.size() - 1].first < rpm_limit)
+	{
+		btScalar r = torque[torque.size() - 1].first + 10000.0f;
+		btScalar t = 0.0f;
+		torque_curve.AddPoint(r , t);
 
-	//ensure we have a smooth curve for over-revs
-	torque_curve.AddPoint(torque[torque.size() - 1].first + 10000, 0);
+		error_output << "Torque curve ends below rpm limit.\n"
+			<< "Extrapolating to " << r << ", " << t << std::endl;
+	}
 
 	// calculate idle throttle position
 	for (idle_throttle = 0.0f; idle_throttle < 1.0f; idle_throttle += 0.01f)
@@ -134,6 +135,10 @@ void CarEngineInfo::SetTorqueCurve(
 			break;
 	}
 	idle_throttle_slope = 1.5f * (idle_throttle - stall_throttle) / (start_rpm - stall_rpm);
+
+	position.setValue(pos[0], pos[1], pos[2]);
+
+	return true;
 }
 
 btScalar CarEngineInfo::GetTorque(const btScalar throttle, const btScalar rpm) const

@@ -58,12 +58,6 @@ struct CarEngineInfo
 	/// load engine from config file
 	bool Load(const PTree & cfg, std::ostream & error_output);
 
-	/// Set the torque curve using a vector of (RPM, torque) pairs.
-	/// also recalculate engine friction
-	void SetTorqueCurve(
-		btScalar redline,
-		const std::vector<std::pair<btScalar, btScalar> > & torque);
-
 	btScalar GetTorque(btScalar throttle, btScalar rpm) const;
 
 	btScalar GetFrictionTorque(btScalar throttle, btScalar rpm) const;
