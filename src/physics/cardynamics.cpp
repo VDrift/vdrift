@@ -1730,18 +1730,18 @@ btScalar CarDynamics::AutoClutch(btScalar dt) const
 	btScalar clutch_engage_limit = 10.0f * dt; // 0.1 seconds
 	btScalar clutch_old = clutch_value;
 	btScalar clutch_new = 1.0f;
-	btScalar rpm_engine = engine.GetRPM();
-	btScalar rpm_clutch = driveshaft_rpm;
 
 	// antistall
-	btScalar rpm_min = engine.GetStartRPM();
-	if (rpm_clutch < rpm_min && rpm_engine < rpm_min * 1.25f)
+	btScalar rpm_clutch = driveshaft_rpm;
+	btScalar rpm_idle = engine.GetStartRPM();
+	if (rpm_clutch < rpm_idle)
 	{
-		btScalar rpm_stall = engine.GetStallRPM();
-		btScalar ramp = 0.8f * (rpm_engine - rpm_stall) / (rpm_min - rpm_stall);
-		btScalar torque_limit = engine.GetTorque() * ramp;
-		clutch_new = torque_limit / clutch.GetMaxTorque();
-		btClamp(clutch_new, 0.0f, 1.0f);
+		btScalar rpm_engine = engine.GetRPM();
+		btScalar rpm_min = 0.5f * (engine.GetStallRPM() + rpm_idle);
+		btScalar t = 1.5f - 0.5f * engine.GetThrottle();
+		btScalar c = rpm_engine / (rpm_min * (1 - t) + rpm_idle * t) - 1.0f;
+		btClamp(c, 0.0f, 1.0f);
+		clutch_new = c;
 	}
 
 	// shifting
