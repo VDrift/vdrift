@@ -26,7 +26,8 @@ CarEngineInfo::CarEngineInfo():
 	maxpower(184000),
 	redline(7800),
 	rpm_limit(9000),
-	idle(0.02),
+	idle_throttle(0.02),
+	idle_throttle_slope(0),
 	start_rpm(1000),
 	stall_rpm(350),
 	fuel_rate(4E7),
@@ -118,15 +119,21 @@ void CarEngineInfo::SetTorqueCurve(
 	//ensure we have a smooth curve for over-revs
 	torque_curve.AddPoint(torque[torque.size() - 1].first + 10000, 0);
 
-	//calculate idle throttle position
-	for (idle = 0; idle < 1.0; idle += 0.01)
+	// calculate idle throttle position
+	for (idle_throttle = 0.0f; idle_throttle < 1.0f; idle_throttle += 0.01f)
 	{
-		if (GetTorque(idle, start_rpm) > -GetFrictionTorque(idle, start_rpm))
-		{
-			//std::cout << "Found idle throttle: " << idle << ", " << GetTorqueCurve(idle, start_rpm) << ", " << friction_torque << std::endl;
+		if (GetTorque(idle_throttle, start_rpm) > -GetFrictionTorque(idle_throttle, start_rpm))
 			break;
-		}
 	}
+
+	// calculate idle throttle slope
+	btScalar stall_throttle;
+	for (stall_throttle = idle_throttle; stall_throttle < 1.0f; stall_throttle += 0.01f)
+	{
+		if (GetTorque(stall_throttle, stall_rpm) > -GetFrictionTorque(stall_throttle, stall_rpm))
+			break;
+	}
+	idle_throttle_slope = 1.5f * (idle_throttle - stall_throttle) / (start_rpm - stall_rpm);
 }
 
 btScalar CarEngineInfo::GetTorque(const btScalar throttle, const btScalar rpm) const
@@ -180,8 +187,9 @@ btScalar CarEngine::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btSc
 	stalled = (rpm < info.stall_rpm);
 
 	//make sure the throttle is at least idling
-	if (throttle_position < info.idle)
-		throttle_position = info.idle;
+	btScalar idle_position = info.idle_throttle + info.idle_throttle_slope * (rpm - info.start_rpm);
+	if (throttle_position < idle_position)
+		throttle_position = idle_position;
 
 	//engine drive torque
 	btScalar rev_limit = info.rpm_limit;

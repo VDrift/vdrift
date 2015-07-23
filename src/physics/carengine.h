@@ -37,7 +37,8 @@ struct CarEngineInfo
 	btScalar maxpower; ///< max power output
 	btScalar redline; ///< the redline in RPMs (used only for the redline graphics)
 	btScalar rpm_limit; ///< peak engine RPMs after which limiting occurs
-	btScalar idle; ///< idle throttle percentage; this is calculated algorithmically
+	btScalar idle_throttle; ///< idle throttle percentage; this is calculated algorithmically
+	btScalar idle_throttle_slope; ///< idle throttle rpm slope
 	btScalar start_rpm; ///< initial condition RPM
 	btScalar stall_rpm; ///< RPM at which the engine dies
 	btScalar fuel_rate; ///< fuel rate kg/Ws based on fuel heating value(4E7) and engine efficiency(0.35)
@@ -93,7 +94,7 @@ public:
 
 	btScalar GetIdle() const
 	{
-		return info.idle;
+		return info.idle_throttle;
 	}
 
 	btScalar GetStartRPM() const
