@@ -31,7 +31,7 @@ CarEngineInfo::CarEngineInfo():
 	start_rpm(1000),
 	stall_rpm(350),
 	fuel_rate(4E7),
-	friction{15.438, 2.387E-3, 7.958E-7},
+	friction{15.438, 2.387, 0.7958},
 	inertia(0.25),
 	mass(200),
 	nos_mass(0),
@@ -43,7 +43,7 @@ CarEngineInfo::CarEngineInfo():
 
 bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 {
-	std::vector<btScalar> pos(3);
+	std::vector<btScalar> pos(3, 0.0f);
 	if (!cfg.get("displacement", displacement, error_output)) return false;
 	if (!cfg.get("max-power", maxpower, error_output)) return false;
 	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false;
@@ -54,10 +54,7 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	if (!cfg.get("position", pos, error_output)) return false;
 	if (!cfg.get("mass", mass, error_output)) return false;
 
-	// friction (Heywood 1988 tfmep)
-	friction[0] = 97000 / (4 * M_PI) * displacement;
-	friction[1] = 15.00 / (4 * M_PI) * displacement;
-	friction[2] = 0.005 / (4 * M_PI) * displacement;
+	position.setValue(pos[0], pos[1], pos[2]);
 
 	// fuel consumption
 	btScalar fuel_heating_value = 4.5E7; // Ws/kg
@@ -70,6 +67,18 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	cfg.get("nos-mass", nos_mass);
 	cfg.get("nos-boost", nos_boost);
 	cfg.get("nos-ratio", nos_fuel_ratio);
+
+	// friction (Heywood 1988 tfmep)
+	friction[0] = 97000 / (4 * M_PI) * displacement;
+	friction[1] = 15000 / (4 * M_PI) * displacement;
+	friction[2] =  5000 / (4 * M_PI) * displacement;
+	std::vector<btScalar> f(3, 0.0f);
+	if (cfg.get("torque-friction", f))
+	{
+		friction[0] = f[0];
+		friction[1] = f[1];
+		friction[2] = f[2];
+	}
 
 	// torque
 	int curve_num = 0;
@@ -136,8 +145,6 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	}
 	idle_throttle_slope = 1.5f * (idle_throttle - stall_throttle) / (start_rpm - stall_rpm);
 
-	position.setValue(pos[0], pos[1], pos[2]);
-
 	return true;
 }
 
@@ -150,8 +157,8 @@ btScalar CarEngineInfo::GetTorque(const btScalar throttle, const btScalar rpm) c
 btScalar CarEngineInfo::GetFrictionTorque(btScalar throttle, btScalar rpm) const
 {
 	btScalar s = rpm < 0 ? -1 : 1;
-	rpm = s * rpm;
-	btScalar f = friction[0] + friction[1] * rpm + friction[2] * rpm * rpm;
+	btScalar r = s * rpm * 0.001;
+	btScalar f = friction[0] + friction[1] * r + friction[2] * r * r;
 	return -s * f * (1.0 - throttle);
 }
 
