@@ -30,6 +30,7 @@
 
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/CollisionShapes/btCylinderShape.h"
+#include "BulletCollision/CollisionShapes/btTriangleShape.h"
 
 #include <cmath>
 
@@ -952,7 +953,6 @@ static std::ostream & operator << (std::ostream & os, const CarTire & tire)
 	return os;
 }
 
-/// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 void CarDynamics::DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 {
 	out << std::fixed << std::setprecision(3);
@@ -2012,21 +2012,26 @@ bool CarDynamics::WheelContactCallback(
 	const btCollisionObjectWrapper* col0,
 	int /*partId0*/,
 	int /*index0*/,
-	const btCollisionObjectWrapper* /*col1*/,
+	const btCollisionObjectWrapper* col1,
 	int /*partId1*/,
 	int /*index1*/)
 {
+	// apply to cars only
+	const btCollisionObject * obj0 = col0->getCollisionObject();
+	if (!(obj0->getInternalType() & CO_FRACTURE_TYPE))
+		return false;
+
+	const btCollisionShape * shape1 = col1->getCollisionShape();
+	const btCollisionShape * shape0 = col0->getCollisionShape();
+
 	// invalidate wheel shape contact with ground as we are handling it separately
-	const btCollisionObject* obj = col0->getCollisionObject();
-	const btCollisionShape* shape = col0->getCollisionShape();
-	const btCollisionShape* rootshape = obj->getCollisionShape();
-	if ((obj->getInternalType() & CO_FRACTURE_TYPE) &&
-		(shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE))
+	if (shape0->getShapeType() == CYLINDER_SHAPE_PROXYTYPE)
 	{
-		const btCompoundShape* carshape = static_cast<const btCompoundShape*>(rootshape);
-		const btCylinderShapeX* wheelshape = static_cast<const btCylinderShapeX*>(shape);
-		btVector3 contactPoint = cp.m_localPointA - carshape->getChildTransform(cp.m_index0).getOrigin();
-		if (-Direction::up.dot(contactPoint) > 0.5 * wheelshape->getRadius())
+		const btCollisionShape * root_shape = obj0->getCollisionShape();
+		const btCompoundShape * car_shape = static_cast<const btCompoundShape *>(root_shape);
+		const btCylinderShapeX * wheel_shape = static_cast<const btCylinderShapeX *>(shape0);
+		btVector3 contact_point = cp.m_localPointA - car_shape->getChildTransform(cp.m_index0).getOrigin();
+		if (-Direction::up.dot(contact_point) > 0.5 * wheel_shape->getRadius())
 		{
 			cp.m_normalWorldOnB = btVector3(0, 0, 0);
 			cp.m_distance1 = 0;
@@ -2035,6 +2040,30 @@ bool CarDynamics::WheelContactCallback(
 			return true;
 		}
 	}
+
+#ifndef ENABLE_EDGE_COLLISIONS
+	// filter edge collisions
+	if (shape1->getShapeType() == TRIANGLE_SHAPE_PROXYTYPE)
+	{
+		const btTriangleShape * triangle = static_cast<const btTriangleShape *>(shape1);
+		const btVector3 * v = &triangle->getVertexPtr(0);
+		btVector3 n = (v[1] - v[0]).cross(v[2] - v[0]);
+		btScalar d = n.dot(cp.m_normalWorldOnB);
+		btScalar n2 = n.dot(n);
+		btScalar d2 = d * d;
+
+		// if angle below 80 deg fix up normal
+		if (d2 < n2 * 0.97)
+		{
+			btScalar rlen = 1 / btSqrt(n2);
+			if (d < 0) rlen = -rlen;
+
+			cp.m_normalWorldOnB =  n * rlen;
+			cp.m_distance1 *= d * rlen;
+		}
+	}
+#endif
+
 	return false;
 }
 
