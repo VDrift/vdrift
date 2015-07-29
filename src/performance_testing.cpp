@@ -108,11 +108,10 @@ void PerformanceTesting::Test(
 	}
 
 	btVector3 cm = -car.GetCenterOfMassOffset();
-	info_output << "Car dynamics loaded" << std::endl;
 	info_output << carname << " Summary:\n"
 		<< "Mass including driver and fuel: " << 1 / car.GetInvMass() << " kg\n"
-		<< "Center of mass: " << cm[0] << ", " << cm[1] << ", " << cm[2] << " m" << std::endl;
-	info_output << "Estimated maximum speed: " << ConvertToMPH(car.GetMaxSpeedMPS()) << " MPH" << std::endl;
+		<< "Center of mass: " << cm[0] << ", " << cm[1] << ", " << cm[2] << " m\n"
+		<< "Estimated top speed: " << ConvertToMPH(car.GetMaxSpeedMPS()) << " MPH" << std::endl;
 
 	std::ostringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
@@ -150,7 +149,7 @@ void PerformanceTesting::ResetCar()
 
 void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
 {
-	info_output << "Testing maximum speed" << std::endl;
+	info_output << "Testing top speed" << std::endl;
 
 	float maxtime = 300.0;
 	float t = 0.;
@@ -192,7 +191,7 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 			maxspeed.first = t;
 			maxspeed.second = car_speed;
 			maxlift = car.GetTotalAero()[2];
-			maxdrag = car.GetTotalAero()[0];
+			maxdrag = car.GetTotalAero()[1];
 		}
 
 		if (car_speed < timeto60startthreshold)
@@ -229,12 +228,14 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 		i++;
 	}
 	clock_t cpu_timer_stop = clock();
+	float sim_perf = t / float(cpu_timer_stop - cpu_timer_start) * CLOCKS_PER_SEC;
 
-	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << std::endl;
-	info_output << "Downforce at maximum speed: " << -maxlift << " N; L/D: " << -maxlift / maxdrag << std::endl;
-	info_output << "0-60 MPH time: " << timeto60 - timeto60start << " s" << std::endl;
-	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
-	info_output << "Simulation performance: " << t / float(cpu_timer_stop - cpu_timer_start) * CLOCKS_PER_SEC << std::endl;
+	info_output << "Top speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s\n";
+	info_output << "Downforce at top speed: " << -maxlift << " N\n";
+	info_output << "Drag at top speed: " << -maxdrag << " N\n";
+	info_output << "0-60 MPH time: " << timeto60 - timeto60start << " s\n";
+	info_output << "1/4 mile time: " << timetoquarter << " s at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
+	info_output << "Simulation performance: " << sim_perf << std::endl;
 }
 
 void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)
