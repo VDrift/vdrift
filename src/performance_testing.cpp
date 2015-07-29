@@ -164,8 +164,7 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 	float stopthreshold = 0.001; //if the accel (in m/s^2) is less than this value, discontinue the testing
 
 	float timeto60start = 0; //don't start the 0-60 clock until the car is moving at a threshold speed to account for the crappy launch that the autoclutch gives
-	float timeto60startthreshold = 2.23; //threshold speed to start 0-60 clock in m/s
-	//float timeto60startthreshold = 0.01; //threshold speed to start 0-60 clock in m/s
+	float timeto60startthreshold = 1; //threshold speed to start 0-60 clock in m/s
 	float timeto60 = maxtime;
 
 	float timetoquarter = maxtime;
