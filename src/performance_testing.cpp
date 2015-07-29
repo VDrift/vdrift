@@ -145,6 +145,7 @@ void PerformanceTesting::ResetCar()
 	carinput.resize(CarInput::INVALID, 0.0f);
 	carinput[CarInput::THROTTLE] = 1.0f;
 	carinput[CarInput::BRAKE] = 1.0f;
+	carinput[CarInput::CLUTCH] = 1.0f;
 }
 
 void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
@@ -179,6 +180,7 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 			car.GetEngine().GetRPM() > 0.8 * car.GetEngine().GetRedline())
 		{
 			carinput[CarInput::BRAKE] = 0.0f;
+			carinput[CarInput::CLUTCH] = 0.0f;
 		}
 
 		car.Update(carinput);
@@ -259,6 +261,13 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 
 	while (t < maxtime)
 	{
+		if (car.GetTransmission().GetGear() == 1 &&
+			car.GetEngine().GetRPM() > 0.8 * car.GetEngine().GetRedline())
+		{
+			carinput[CarInput::BRAKE] = 0.0f;
+			carinput[CarInput::CLUTCH] = 0.0f;
+		}
+
 		if (accelerating)
 		{
 			carinput[CarInput::THROTTLE] = 1.0f;
