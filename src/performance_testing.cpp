@@ -210,19 +210,17 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 
 		if (i % (int)(1.0/dt) == 0) //every second
 		{
-			if (1)
+			if (car_speed - lastsecondspeed < stopthreshold && car_speed > 26.0)
 			{
-				if (car_speed - lastsecondspeed < stopthreshold && car_speed > 26.0)
-				{
-					//info_output << "Maximum speed attained at " << maxspeed.first << " s" << std::endl;
-					break;
-				}
-				if (!car.GetEngine().GetCombustion())
-				{
-					error_output << "Car stalled during launch, t=" << t << std::endl;
-					break;
-				}
+				//info_output << "Maximum speed attained at " << maxspeed.first << " s" << std::endl;
+				break;
 			}
+
+			if (t > 0 && !car.GetEngine().GetCombustion())
+			{
+				error_output << "Car stalled during launch, t=" << t << std::endl;
+			}
+
 			lastsecondspeed = car_speed;
 			//std::cout << t << ", " << car_speed << ", " << car.GetGear() << ", " << car.GetEngineRPM() << std::endl;
 		}
@@ -296,10 +294,9 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 			break;
 		}
 
-		if (!car.GetEngine().GetCombustion())
+		if (t > 0 && !car.GetEngine().GetCombustion())
 		{
 			error_output << "Car stalled during launch, t=" << t << std::endl;
-			break;
 		}
 
 		if (i % (int)(1.0/dt) == 0) //every second
