@@ -259,22 +259,11 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 
 	while (t < maxtime)
 	{
-		if (car.GetTransmission().GetGear() == 1 &&
+		if (accelerating && car.GetTransmission().GetGear() == 1 &&
 			car.GetEngine().GetRPM() > 0.8 * car.GetEngine().GetRedline())
 		{
 			carinput[CarInput::BRAKE] = 0.0f;
 			carinput[CarInput::CLUTCH] = 0.0f;
-		}
-
-		if (accelerating)
-		{
-			carinput[CarInput::THROTTLE] = 1.0f;
-			carinput[CarInput::BRAKE] = 0.0f;
-		}
-		else
-		{
-			carinput[CarInput::THROTTLE] = 0.0f;
-			carinput[CarInput::BRAKE] = 1.0f;
 		}
 
 		car.Update(carinput);
@@ -285,9 +274,13 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 
 		if (car_speed >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
 		{
-			accelerating = false;
 			stopstart = car.GetWheelPosition(WheelPosition(0));
-			//std::cout << "hitting the brakes at " << t << ", " << car_speed << std::endl;
+
+			carinput[CarInput::THROTTLE] = 0.0f;
+			carinput[CarInput::BRAKE] = 1.0f;
+			accelerating = false;
+
+			//info_output << "hitting the brakes at " << t << ", " << car_speed << std::endl;
 		}
 
 		if (!accelerating && car_speed < stopthreshold)
@@ -302,7 +295,11 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 
 		if (i % (int)(1.0/dt) == 0) //every second
 		{
-			//std::cout << t << ", " << car.dynamics.GetSpeed() << ", " << car.GetGear() << ", " << car.GetEngineRPM() << std::endl;
+			//info_output << t
+			//	<< ", " << car_speed
+			//	<< ", " << car.GetWheel(WheelPosition(0)).GetAngularVelocity()
+			//	<< ", " << car.GetBrake(WheelPosition(0)).GetBrakeFactor()
+			//	<< std::endl;
 		}
 
 		t += dt;
