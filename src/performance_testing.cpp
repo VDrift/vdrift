@@ -251,6 +251,10 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 	btVector3 stopstart; //where the stopping starts
 	float brakestartspeed = 26.82; //speed at which to start braking, in m/s (26.82 m/s is 60 mph)
 
+	// wheel lockup speeds during braking
+	float front_lockup_speed = 0.0f;
+	float rear_lockup_speed = 0.0f;
+
 	bool accelerating = true; //switches to false once 60 mph is reached
 
 	ResetCar();
@@ -288,6 +292,18 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 			break;
 		}
 
+		if (!accelerating)
+		{
+			if (!(front_lockup_speed > 0.0) && car.GetWheel(WheelPosition(0)).GetRPM() < 0.001f)
+			{
+				front_lockup_speed = car_speed;
+			}
+			if (!(rear_lockup_speed > 0.0) && car.GetWheel(WheelPosition(3)).GetRPM() < 0.001f)
+			{
+				rear_lockup_speed = car_speed;
+			}
+		}
+
 		if (t > 0 && !car.GetEngine().GetCombustion())
 		{
 			error_output << "Car stalled during launch, t=" << t << std::endl;
@@ -313,5 +329,7 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 		info_output << "(ABS)";
 	else
 		info_output << "(no ABS)";
-	info_output << ": " << ConvertToFeet((stopend-stopstart).length()) << " ft" << std::endl;
+	info_output << ": " << ConvertToFeet((stopend-stopstart).length()) << " ft\n"
+		<< "Wheel lockup speed " << ConvertToMPH(front_lockup_speed)
+		<< ", " << ConvertToMPH(rear_lockup_speed) << std::endl;
 }
