@@ -226,11 +226,22 @@ void Game::Start(std::list <std::string> & args)
 	forcefeedback.reset(new ForceFeedback(settings.GetFFDevice(), error_output, info_output));
 	ff_update_time = 0;
 
-	LoadGarage();
-
-	if (benchmode && !NewGame(true))
+	if (benchmode)
 	{
-		error_output << "Error loading benchmark" << std::endl;
+		assert(!car_info.empty());
+
+		player_car_id = 0;
+		car_info[player_car_id].driver = Ai::default_type;
+
+		if (!NewGame(false, false, 1))
+		{
+			error_output << "Error loading benchmark" << std::endl;
+			return;
+		}
+	}
+	else
+	{
+		LoadGarage();
 	}
 
 	DoneStartingUp();
@@ -763,7 +774,7 @@ void Game::Draw(float dt)
 /* The main game loop... */
 void Game::MainLoop()
 {
-	while (!eventsystem.GetQuit() && (!benchmode || replay.GetPlaying()))
+	while (!eventsystem.GetQuit())
 	{
 		CalculateFPS();
 
@@ -1232,9 +1243,8 @@ void Game::UpdateCars(float dt)
 	}
 }
 
-void Game::UpdateCarInputs(const int carid)
+void Game::UpdateCarInputs(const size_t carid)
 {
-	assert(carid >= 0 && carid < car_dynamics.size());
 	CarDynamics & car = car_dynamics[carid];
 	CarGraphics & car_gfx = car_graphics[carid];
 	CarSound & car_snd = car_sounds[carid];
@@ -1301,6 +1311,9 @@ void Game::UpdateCarInputs(const int carid)
 		carinputs[CarInput::BRAKE] = 1.0;
 		carinputs[CarInput::CLUTCH] = 1.0;
 		carinputs[CarInput::THROTTLE] = 0.0;
+
+		if (benchmode)
+			eventsystem.Quit();
 	}
 
 	car.Update(carinputs);
@@ -1310,8 +1323,7 @@ void Game::UpdateCarInputs(const int carid)
 	if (replay.GetRecording())
 		replay.RecordFrame(carid, carinputs, car);
 
-	// Local player input processing starts here.
-	if (carcontrols_local.first != &car)
+	if (carid != player_car_id)
 		return;
 
 	// Update player HUD
@@ -1319,8 +1331,8 @@ void Game::UpdateCarInputs(const int carid)
 		UpdateHUD(carid, carinputs);
 
 	// Handle camera mode change inputs.
-	Camera * old_camera = active_camera;
 	CarControlMap & carcontrol = carcontrols_local.second;
+	Camera * old_camera = active_camera;
 	unsigned int camera_id = settings.GetCamera();
 	if (carcontrol.GetInput(GameInput::VIEW_HOOD))
 		camera_id = 0;
@@ -1379,9 +1391,8 @@ void Game::UpdateCarInputs(const int carid)
 	graphics->SetCloseShadow(incar ? 1.0 : 5.0);
 }
 
-void Game::UpdateHUD(const int carid, const std::vector<float> & carinputs)
+void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 {
-	assert(carid >= 0 && carid < car_dynamics.size());
 	const CarDynamics & car = car_dynamics[carid];
 	const GuiLanguage & lang = gui.GetLanguageDict();
 
@@ -1533,13 +1544,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	if (playreplay)
 	{
-		// Load replay.
-		std::string replayfilename = pathmanager.GetReplayPath();
-		if (benchmode)
-			replayfilename += "/benchmark.vdr";
-		else
-			replayfilename += "/" + settings.GetSelectedReplay();
-
+		std::string replayfilename = pathmanager.GetReplayPath() + "/" + settings.GetSelectedReplay();
 		info_output << "Loading replay file: " << replayfilename << std::endl;
 
 		if (!replay.StartPlaying(replayfilename, error_output))
