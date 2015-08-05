@@ -466,6 +466,52 @@ void VertexArray::SetToUnitCube()
 	BuildFromFaces(cubesides);
 }
 
+void VertexArray::SetTo2DRing(float r0, float r1, float a0, float a1, unsigned n)
+{
+	assert(n > 0);
+
+	format = VertexFormat::PT32;
+	texcoords.resize((n + 1) * 4);
+	vertices.resize((n + 1) * 6);
+	faces.resize(n * 6);
+
+	float du = 1.0f / n;
+	float da = (a1 - a0) * du;
+
+	float u = 0.0f;
+	float a = a0;
+	for (unsigned i = 0, t = 0; i <= n * 6; i += 6, t += 4)
+	{
+		float cosa = cosf(a);
+		float sina = sinf(a);
+
+		vertices[i + 0] = cosa * r0;
+		vertices[i + 1] = sina * r0;
+		vertices[i + 2] = 0;
+		vertices[i + 3] = cosa * r1;
+		vertices[i + 4] = sina * r1;
+		vertices[i + 5] = 0;
+
+		texcoords[t + 0] = u;
+		texcoords[t + 1] = 0;
+		texcoords[t + 2] = u;
+		texcoords[t + 3] = 1;
+
+		a += da;
+		u += du;
+	}
+
+	for (unsigned i = 0, f = 0; i < n * 6; i += 6, f += 2)
+	{
+		faces[i + 0] = f + 0;
+		faces[i + 1] = f + 1;
+		faces[i + 2] = f + 2;
+		faces[i + 3] = f + 1;
+		faces[i + 4] = f + 3;
+		faces[i + 5] = f + 2;
+	}
+}
+
 void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 {
 	Clear();

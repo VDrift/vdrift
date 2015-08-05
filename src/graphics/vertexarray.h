@@ -76,6 +76,8 @@ public:
 
 	void SetToUnitCube();
 
+	void SetTo2DRing(float r0, float r1, float a0, float a1, unsigned n);
+
 	/// build the vertex array given the faces defined by the verts, normals, and texcoords passed in
 
 	struct Float3
