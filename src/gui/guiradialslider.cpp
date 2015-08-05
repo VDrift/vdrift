@@ -99,28 +99,32 @@ void GuiRadialSlider::InitDrawable(SceneNode & node, float draworder)
 
 void GuiRadialSlider::UpdateVertexArray()
 {
+	const float deg = M_PI / 180.0f;
 	float anchor[2] = {m_x + m_w * 0.5f, m_y + m_h * 0.5f + m_radius};
 	float angle = m_end_angle * m_value + m_start_angle * (1.0f - m_value);
-	//if (!m_fill)
+	if (!m_fill)
 	{
 		// billboard relative to anchor twelve o'clock position
 		float x1 = -m_w * 0.5f;
 		float y1 = -m_radius - m_h * 0.5f;
 		float x2 = +m_w * 0.5f;
 		float y2 = -m_radius + m_h * 0.5f;
+
 		m_varray.SetToBillboard(x1, y1, x2, y2);
-
-		// rotate clockwise
-		m_varray.Rotate(angle * (M_PI / 180.0f), 0.0f, 0.0f, 1.0f);
-
-		// scale to display aspect ratio
+		m_varray.Rotate(angle * deg, 0.0f, 0.0f, 1.0f);
 		m_varray.Scale(m_dar, 1.0f, 1.0f);
-
-		// translate to anchor position
 		m_varray.Translate(anchor[0], anchor[1], 0.0f);
-	}/*
+	}
 	else
 	{
-		// todo: gen ring poly
-	}*/
+		float r0 = m_radius - m_h * 0.5f;
+		float r1 = m_radius + m_h * 0.5f;
+		float a0 = (m_start_angle - 90) * deg;
+		float a1 = (angle - 90) * deg;
+		unsigned s = fabs(m_radius * (angle - m_start_angle)) + 1;
+
+		m_varray.SetTo2DRing(r0, r1, a0, a1, s);
+		m_varray.Scale(m_dar, 1.0f, 1.0f);
+		m_varray.Translate(anchor[0], anchor[1], 0.0f);
+	}
 }
