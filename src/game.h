@@ -286,6 +286,7 @@ private:
 	Signal1<const std::string &> signal_speed;
 	Signal1<const std::string &> signal_tachometer;
 	Signal1<const std::string &> signal_rpm_norm;
+	Signal1<const std::string &> signal_rpm_red;
 	Signal1<const std::string &> signal_rpm;
 	Signal1<const std::string &> signal_abs;
 	Signal1<const std::string &> signal_tcs;

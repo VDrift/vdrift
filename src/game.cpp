@@ -1479,6 +1479,7 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	speedometer = std::min(320.0f, std::max(120.0f, std::ceil(speedometer / 40.0f) * 40.0f));
 
 	float rpm = car.GetTachoRPM();
+	float rpmred = car.GetEngine().GetRedline();
 	float tachometer = car.GetEngine().GetRPMLimit();
 	tachometer = std::min(20000.0f, std::max(8000.0f, std::ceil(tachometer / 2000.0f) * 2000.0f));
 
@@ -1487,10 +1488,11 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	speednstr << speed / speedometer;
 	speedstr << std::setfill('0') << std::setw(3) << int(speed);
 
-	std::ostringstream shiftstr, tachostr, rpmnstr, rpmstr;
-	shiftstr << int(rpm >= car.GetEngine().GetRedline());
+	std::ostringstream shiftstr, tachostr, rpmnstr, rpmrstr, rpmstr;
+	shiftstr << int(rpm >= rpmred);
 	tachostr << int(tachometer);
 	rpmnstr << rpm / tachometer;
+	rpmrstr << rpmred / tachometer;
 	rpmstr << int(rpm);
 
 	std::ostringstream absstr, tcsstr, gasstr, nosstr;
@@ -1517,6 +1519,7 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 
 	signal_tachometer(tachostr.str());
 	signal_rpm_norm(rpmnstr.str());
+	signal_rpm_red(rpmrstr.str());
 	signal_rpm(rpmstr.str());
 
 	signal_abs(absstr.str());
@@ -3207,6 +3210,7 @@ void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & 
 	signalmap["car.speed"] = &signal_speed;
 	signalmap["car.tachometer"] = &signal_tachometer;
 	signalmap["car.rpm.norm"] = &signal_rpm_norm;
+	signalmap["car.rpm.red"] = &signal_rpm_red;
 	signalmap["car.rpm"] = &signal_rpm;
 	signalmap["car.abs"] = &signal_abs;
 	signalmap["car.tcs"] = &signal_tcs;
