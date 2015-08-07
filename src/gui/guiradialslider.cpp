@@ -26,7 +26,7 @@ GuiRadialSlider::GuiRadialSlider() :
 	m_radius(0),
 	m_value(0),
 	m_dar(1),
-	m_fill(false)
+	m_fill(0)
 {
 	set_value.call.bind<GuiRadialSlider, &GuiRadialSlider::SetValue>(this);
 }
@@ -50,7 +50,7 @@ void GuiRadialSlider::SetupDrawable(
 	const std::shared_ptr<Texture> & texture,
 	float x, float y, float w, float h, float z,
 	float start_angle, float end_angle, float radius,
-	float dar, bool fill, std::ostream & /*error_output*/)
+	float dar, int fill, std::ostream & /*error_output*/)
 {
 	m_texture = texture;
 	m_x = x - w * 0.5;
@@ -102,7 +102,7 @@ void GuiRadialSlider::UpdateVertexArray()
 	const float deg = M_PI / 180.0f;
 	float anchor[2] = {m_x + m_w * 0.5f, m_y + m_h * 0.5f + m_radius};
 	float angle = m_end_angle * m_value + m_start_angle * (1.0f - m_value);
-	if (!m_fill)
+	if (m_fill == 0)
 	{
 		// billboard relative to anchor twelve o'clock position
 		float x1 = -m_w * 0.5f;
@@ -117,13 +117,24 @@ void GuiRadialSlider::UpdateVertexArray()
 	}
 	else
 	{
+		float a0, a1, ad;
+		if (m_fill > 0)
+		{
+			a0 = (m_start_angle - 90) * deg;
+			a1 = (angle - 90) * deg;
+			ad = angle - m_start_angle;
+		}
+		else // m_fill < 0
+		{
+			a0 = (angle - 90) * deg;
+			a1 = (m_end_angle - 90) * deg;;
+			ad =  m_end_angle - angle;
+		}
 		float r0 = m_radius - m_h * 0.5f;
 		float r1 = m_radius + m_h * 0.5f;
-		float a0 = (m_start_angle - 90) * deg;
-		float a1 = (angle - 90) * deg;
-		unsigned s = fabs(m_radius * (angle - m_start_angle)) + 1;
+		unsigned n = fabs(m_radius * ad) + 1;
 
-		m_varray.SetTo2DRing(r0, r1, a0, a1, s);
+		m_varray.SetTo2DRing(r0, r1, a0, a1, n);
 		m_varray.Scale(m_dar, 1.0f, 1.0f);
 		m_varray.Translate(anchor[0], anchor[1], 0.0f);
 	}

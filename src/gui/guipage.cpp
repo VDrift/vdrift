@@ -514,8 +514,13 @@ bool GuiPage::Load(
 			}
 			else if (pagefile.get(section, "slider", slider))
 			{
-				bool fill = false;
-				pagefile.get(section, "fill", fill);
+				int fill = 0;
+				std::string fillstr;
+				pagefile.get(section, "fill", fillstr);
+				if (fillstr == "lower")
+					fill = 1;
+				else if (fillstr == "upper")
+					fill = -1;
 
 				TextureInfo texinfo;
 				texinfo.mipmap = false;

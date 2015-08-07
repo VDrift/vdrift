@@ -36,7 +36,7 @@ public:
 		SceneNode & scene,
 		std::shared_ptr<Texture> texture,
 		float centerx, float centery,
-		float w, float h, float z, bool fill,
+		float w, float h, float z, int fill,
   		std::ostream & error_output);
 
 	Slot1<const std::string &> set_value;
@@ -44,7 +44,7 @@ public:
 private:
 	Sprite2D m_slider;
 	float m_value, m_x, m_y, m_w, m_h;
-	bool m_fill;
+	int m_fill;
 
 	void SetValue(const std::string & value);
 	Drawable & GetDrawable(SceneNode & scene);

@@ -20,7 +20,7 @@
 #include "guislider.h"
 
 GuiSlider::GuiSlider() :
-	m_value(0), m_x(0), m_y(0), m_w(0), m_h(0), m_fill(false)
+	m_value(0), m_x(0), m_y(0), m_w(0), m_h(0), m_fill(0)
 {
 	set_value.call.bind<GuiSlider, &GuiSlider::SetValue>(this);
 }
@@ -34,11 +34,20 @@ void GuiSlider::Update(SceneNode & scene, float dt)
 {
 	if (m_update)
 	{
-		float x = m_x;
-		float w = m_w * m_value;
-		if (!m_fill)
+		float x, w;
+		if (m_fill > 0)
 		{
-			x = x + w - m_h * 0.1;
+			x = m_x;
+			w = m_w * m_value;
+		}
+		else if (m_fill < 0)
+		{
+			x = m_x + m_w * m_value;
+			w = m_w * (1 - m_value);
+		}
+		else
+		{
+			x = m_x + m_w * m_value - m_h * 0.1;
 			w = m_h * 0.2;
 		}
 		m_slider.SetToBillboard(x, m_y, w, m_h);
@@ -51,7 +60,7 @@ void GuiSlider::SetupDrawable(
 	SceneNode & scene,
 	std::shared_ptr<Texture> texture,
 	float centerx, float centery,
-	float w, float h, float z, bool fill,
+	float w, float h, float z, int fill,
 	std::ostream & /*error_output*/)
 {
 	m_value = 0;

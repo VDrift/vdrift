@@ -42,7 +42,7 @@ public:
 		const std::shared_ptr<Texture> & texture,
 		float x, float y, float w, float h, float z,
 		float start_angle, float end_angle, float radius,
-		float dar, bool fill, std::ostream & error_output);
+		float dar, int fill, std::ostream & error_output);
 
 	Slot1<const std::string &> set_value;
 
@@ -56,7 +56,7 @@ private:
 	float m_radius;
 	float m_value;
 	float m_dar;
-	bool m_fill;
+	int m_fill;
 
 	GuiRadialSlider(const GuiRadialSlider & other);
 
