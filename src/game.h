@@ -366,7 +366,7 @@ private:
 	Ai ai;
 	Http http;
 
-	std::auto_ptr <ForceFeedback> forcefeedback;
+	std::unique_ptr <ForceFeedback> forcefeedback;
 	double ff_update_time;
 };
 

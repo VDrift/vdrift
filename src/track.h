@@ -199,7 +199,7 @@ private:
 
 	// temporary loading data
 	class Loader;
-	std::auto_ptr<Loader> loader;
+	std::unique_ptr<Loader> loader;
 };
 
 #endif
