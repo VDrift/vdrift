@@ -101,7 +101,9 @@ private:
 
 	void UpdateCars(float dt);
 
-	void UpdateCarInputs(const size_t carid);
+	void ProcessCarInputs(const size_t carid);
+
+	void ProcessCameraInputs();
 
 	void UpdateHUD(const size_t carid, const std::vector<float> & carinputs);
 

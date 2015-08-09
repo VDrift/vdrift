@@ -1231,7 +1231,7 @@ void Game::UpdateCars(float dt)
 {
 	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
-		UpdateCarInputs(i);
+		ProcessCarInputs(i);
 
 		car_graphics[i].Update(car_dynamics[i]);
 
@@ -1243,11 +1243,10 @@ void Game::UpdateCars(float dt)
 	}
 }
 
-void Game::UpdateCarInputs(const size_t carid)
+void Game::ProcessCarInputs(const size_t carid)
 {
 	CarDynamics & car = car_dynamics[carid];
 	CarGraphics & car_gfx = car_graphics[carid];
-	CarSound & car_snd = car_sounds[carid];
 
 	std::vector <float> carinputs(CarInput::INVALID, 0.0f);
 	if (replay.GetPlaying())
@@ -1323,12 +1322,21 @@ void Game::UpdateCarInputs(const size_t carid)
 	if (replay.GetRecording())
 		replay.RecordFrame(carid, carinputs, car);
 
-	if (carid != player_car_id)
-		return;
+	if (carid == player_car_id)
+	{
+		if (settings.GetHUD() != "NoHud")
+			UpdateHUD(carid, carinputs);
 
-	// Update player HUD
-	if (settings.GetHUD() != "NoHud")
-		UpdateHUD(carid, carinputs);
+		ProcessCameraInputs();
+	}
+}
+
+void Game::ProcessCameraInputs()
+{
+	const size_t carid = player_car_id;
+	CarDynamics & car = car_dynamics[carid];
+	CarGraphics & car_gfx = car_graphics[carid];
+	CarSound & car_snd = car_sounds[carid];
 
 	// Handle camera mode change inputs.
 	CarControlMap & carcontrol = carcontrols_local.second;
@@ -1358,7 +1366,7 @@ void Game::UpdateCarInputs(const size_t carid)
 	else if (camera_id == camera_count)
 		camera_id = 0;
 
-	// set active camear
+	// set active camera
 	active_camera = car_gfx.GetCameras()[camera_id];
 	settings.SetCamera(camera_id);
 
