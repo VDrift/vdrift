@@ -877,11 +877,17 @@ void Game::AdvanceGameLogic()
 		ai.Update(timestep, &car_dynamics[0], car_dynamics.size());
 		PROFILER.endBlock("ai");
 
+		//PROFILER.beginBlock("input");
+		for (int i = 0; i < car_dynamics.size(); ++i)
+			ProcessCarInputs(i);
+		//PROFILER.endBlock("input");
+
 		PROFILER.beginBlock("physics");
 		dynamics.update(timestep);
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
+		ProcessCameraInputs();
 		UpdateCars(timestep);
 		PROFILER.endBlock("car");
 
@@ -1231,8 +1237,6 @@ void Game::UpdateCars(float dt)
 {
 	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
-		ProcessCarInputs(i);
-
 		car_graphics[i].Update(car_dynamics[i]);
 
 		car_sounds[i].Update(car_dynamics[i], dt);
@@ -1326,8 +1330,6 @@ void Game::ProcessCarInputs(const size_t carid)
 	{
 		if (settings.GetHUD() != "NoHud")
 			UpdateHUD(carid, carinputs);
-
-		ProcessCameraInputs();
 	}
 }
 

@@ -103,6 +103,7 @@ private:
 
 	void ProcessCarInputs(const size_t carid);
 
+	/// Updates camera, call after physics update
 	void ProcessCameraInputs();
 
 	void UpdateHUD(const size_t carid, const std::vector<float> & carinputs);
