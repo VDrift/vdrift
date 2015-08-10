@@ -343,7 +343,9 @@ void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 
 	if (s.icount != 0)
 	{
-		glDrawElements(GL_TRIANGLES, s.icount, GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset);
+		glDrawRangeElements(
+			GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1, s.icount,
+			GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset);
 	}
 	else
 	{
