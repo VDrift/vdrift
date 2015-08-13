@@ -43,7 +43,9 @@ public:
 		ContentManager & content,
 		const std::string & path,
 		const std::string & ext,
-		float x, float y, float w, float h, float z);
+		const float xywh[4],
+		const float uv[4],
+		const float z);
 
 	bool GetProperty(const std::string & name, Slot1<const std::string &> *& slot);
 

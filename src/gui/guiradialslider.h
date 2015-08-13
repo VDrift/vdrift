@@ -40,7 +40,7 @@ public:
 	void SetupDrawable(
 		SceneNode & node,
 		const std::shared_ptr<Texture> & texture,
-		float x, float y, float w, float h, float z,
+		float xywh[4], float z,
 		float start_angle, float end_angle, float radius,
 		float dar, int fill, std::ostream & error_output);
 

@@ -36,8 +36,7 @@
 
 struct Rect
 {
-	float x; float y;
-	float w; float h;
+	float xywh[4];
 	float z;
 };
 
@@ -102,9 +101,12 @@ static Rect LoadRect(
 	z = z + 100;
 
 	Rect re;
-	re.x = x; re.y = y;
-	re.w = w; re.h = h;
+	re.xywh[0] = x;
+	re.xywh[1] = y;
+	re.xywh[2] = w;
+	re.xywh[3] = h;
 	re.z = z;
+
 	return re;
 }
 
@@ -413,10 +415,10 @@ bool GuiPage::Load(
 		if (section->first.empty()) continue;
 
 		Rect r = LoadRect(pagefile, section, hwratio);
-		float x0 = r.x - r.w * 0.5;
-		float y0 = r.y - r.h * 0.5;
-		float x1 = r.x + r.w * 0.5;
-		float y1 = r.y + r.h * 0.5;
+		float x0 = r.xywh[0] - r.xywh[2] * 0.5f;
+		float y0 = r.xywh[1] - r.xywh[3] * 0.5f;
+		float x1 = r.xywh[0] + r.xywh[2] * 0.5f;
+		float y1 = r.xywh[1] + r.xywh[3] * 0.5f;
 
 		GuiWidget * widget = 0;
 
@@ -467,8 +469,7 @@ bool GuiPage::Load(
 
 				GuiLabel * new_widget = new GuiLabel();
 				new_widget->SetupDrawable(
-					node, font, align, scalex, scaley,
-					r.x, r.y, r.w, r.h, r.z);
+					node, font, align, scalex, scaley, r.xywh, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_value);
 
@@ -486,11 +487,15 @@ bool GuiPage::Load(
 			pagefile.get(section, "path", path);
 			pagefile.get(section, "ext", ext);
 
+			float uv[4] = {0, 0, 1, 1};
+			Slice<float*> slice(uv, uv + 4);
+			pagefile.get(section, "image-rect", slice);
+
 			GuiImageList * widget_list = 0;
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// init drawable
-				widget_list->SetupDrawable(node, content, path, ext, r.z);
+				widget_list->SetupDrawable(node, content, path, ext, uv, r.z);
 
 				// connect with the value list
 				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
@@ -538,9 +543,7 @@ bool GuiPage::Load(
 
 					GuiRadialSlider * new_widget = new GuiRadialSlider();
 					new_widget->SetupDrawable(
-						node, tex,
-						r.x, r.y, r.w, r.h, r.z,
-						start_angle, end_angle, radius,
+						node, tex, r.xywh, r.z, start_angle, end_angle, radius,
 						hwratio, fill, error_output);
 
 					ConnectAction(slider, vsignalmap, new_widget->set_value);
@@ -550,9 +553,7 @@ bool GuiPage::Load(
 				{
 					GuiSlider * new_widget = new GuiSlider();
 					new_widget->SetupDrawable(
-						node, tex,
-						r.x, r.y, r.w, r.h, r.z,
-						fill, error_output);
+						node, tex, r.xywh, r.z, fill, error_output);
 
 					ConnectAction(slider, vsignalmap, new_widget->set_value);
 					widget = new_widget;
@@ -565,7 +566,7 @@ bool GuiPage::Load(
 				GuiImage * new_widget = new GuiImage();
 				new_widget->SetupDrawable(
 					node, content, path, ext,
-					r.x, r.y, r.w, r.h, r.z);
+					r.xywh, uv, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_image);
 

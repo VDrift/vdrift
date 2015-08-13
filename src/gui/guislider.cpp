@@ -59,15 +59,14 @@ void GuiSlider::Update(SceneNode & scene, float dt)
 void GuiSlider::SetupDrawable(
 	SceneNode & scene,
 	std::shared_ptr<Texture> texture,
-	float centerx, float centery,
-	float w, float h, float z, int fill,
+	float xywh[4], float z, int fill,
 	std::ostream & /*error_output*/)
 {
 	m_value = 0;
-	m_x = centerx - w * 0.5;
-	m_y = centery - h * 0.5;
-	m_w = w;
-	m_h = h;
+	m_x = xywh[0] - xywh[2] * 0.5f;
+	m_y = xywh[1] - xywh[3] * 0.5f;
+	m_w = xywh[2];
+	m_h = xywh[3];
 	m_fill = fill;
 	m_slider.Load(scene, texture, z);
 }

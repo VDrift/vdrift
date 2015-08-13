@@ -42,14 +42,13 @@ void GuiLabel::SetupDrawable(
 	SceneNode & scene,
 	const Font & font, int align,
 	float scalex, float scaley,
-	float x, float y,
-	float w, float h, float z)
+	float xywh[4], float z)
 {
 	m_font = &font;
-	m_x = x;
-	m_y = y;
-	m_w = w;
-	m_h = h;
+	m_x = xywh[0];
+	m_y = xywh[1];
+	m_w = xywh[2];
+	m_h = xywh[3];
 	m_scalex = scalex;
 	m_scaley = scaley;
 	m_align = align;
@@ -58,11 +57,7 @@ void GuiLabel::SetupDrawable(
 	Drawable & drawref = GetDrawable(scene);
 	drawref.SetDrawOrder(z);
 
-	float textw = 0;
-	if (align == -1) x -= w * 0.5;
-	else if (align == 0) x -= textw * 0.5;
-	else if (align == 1) x -= (textw - w * 0.5);
-	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_rgb[0], m_rgb[1], m_rgb[2]);
+	m_text_draw.Set(drawref, font, m_text, m_x, m_y, scalex, scaley, m_rgb[0], m_rgb[1], m_rgb[2]);
 }
 
 bool GuiLabel::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)

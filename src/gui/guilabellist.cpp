@@ -40,11 +40,10 @@ void GuiLabelList::SetupDrawable(
 		float x, y;
 		GetElemPos(i, x, y);
 
-		GuiLabel * element = new GuiLabel();
-		element->SetupDrawable(
-			scene, font, align, scalex, scaley,
-			x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh, z);
+		float xywh[4] = {x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh};
 
+		GuiLabel * element = new GuiLabel();
+		element->SetupDrawable(scene, font, align, scalex, scaley, xywh, z);
 		m_elements[i] = element;
 	}
 }

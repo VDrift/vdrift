@@ -61,12 +61,19 @@ void GuiImage::SetupDrawable(
 	ContentManager & content,
 	const std::string & path,
 	const std::string & ext,
-	float x, float y, float w, float h, float z)
+	const float xywh[4],
+	const float uv[4],
+	const float z)
 {
 	m_content = &content;
 	m_path = path;
 	m_ext = ext;
-	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
+
+	float x1 = xywh[0] - xywh[2] * 0.5f;
+	float y1 = xywh[1] - xywh[3] * 0.5f;
+	float x2 = xywh[0] + xywh[2] * 0.5f;
+	float y2 = xywh[1] + xywh[3] * 0.5f;
+	m_varray.SetTo2DQuad(x1, y1, x2, y2, uv[0], uv[1], uv[2], uv[3]);
 	m_draw = scene.GetDrawList().twodim.insert(Drawable());
 
 	Drawable & d = GetDrawable(scene);

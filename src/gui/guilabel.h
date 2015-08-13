@@ -38,8 +38,7 @@ public:
 		SceneNode & scene,
 		const Font & font, int align,
 		float scalex, float scaley,
-		float centerx, float centery,
-		float w, float h, float z);
+		float xywh[4], float z);
 
 	bool GetProperty(const std::string & name, Slot1<const std::string &> *& slot);
 

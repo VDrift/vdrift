@@ -35,8 +35,7 @@ public:
 	void SetupDrawable(
 		SceneNode & scene,
 		std::shared_ptr<Texture> texture,
-		float centerx, float centery,
-		float w, float h, float z, int fill,
+		float xywh[4], float z, int fill,
   		std::ostream & error_output);
 
 	Slot1<const std::string &> set_value;
