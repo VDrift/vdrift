@@ -28,6 +28,28 @@
 #include <iostream>
 #include <cassert>
 
+/// container slice wrapper
+
+template <typename Iter>
+struct Slice
+{
+	Slice(Iter abegin, Iter aend) : begin(abegin), end(aend) { }
+	Iter begin, end;
+};
+
+template <typename Iter>
+inline std::istream & operator>>(std::istream & stream, Slice<Iter> & out)
+{
+	for (Iter i = out.begin; i != out.end && !stream.eof(); ++i)
+	{
+		std::string str;
+		std::getline(stream, str, ',');
+		std::istringstream s(str);
+		s >> *i;
+	}
+	return stream;
+}
+
 /// see the user's guide at the bottom of the file
 class Config
 {
