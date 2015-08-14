@@ -2369,8 +2369,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 			return false;
 		}
 
-		bool userCancel = false;
-		while (http.Tick() && !userCancel)
+		while (http.Tick())
 		{
 			eventsystem.ProcessEvents();
 			if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down || eventsystem.GetQuit())
