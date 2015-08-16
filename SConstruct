@@ -6,6 +6,7 @@ from time import gmtime, strftime
 #---------------#
 opts = Variables('vdrift.conf', ARGUMENTS)
 opts.Add('arch', 'Target architecture to compile vdrift for (x86, 686, p4, axp, a64, prescott, nocona, core2)', 'x86')
+opts.Add('pkg_config', 'Executable for pkg-config', 'pkg-config')
 opts.Add('destdir', 'Staging area to install VDrift to.  Useful for packagers. ', '')
 opts.Add('builddir_release', 'Release build directory.', 'build')
 opts.Add('builddir_debug', 'Debug build directory.', 'build')
@@ -358,7 +359,7 @@ Note: The options you enter will be saved in the file vdrift.conf and they will 
 #--------------------------#
 # Check for Libs & Headers #
 #--------------------------#
-env.ParseConfig('pkg-config bullet --libs --cflags')
+env.ParseConfig(env['pkg_config'] + ' bullet --libs --cflags')
 conf = Configure(env)
 for header in check_headers:
     if not conf.CheckCXXHeader(header):
