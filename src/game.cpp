@@ -1205,7 +1205,7 @@ void Game::UpdateStartList()
 {
 	GuiOption::List startlist;
 	PopulateStartList(startlist);
-	gui.SetOptionValues("game.startlist", cast(car_edit_id), startlist, error_output);
+	gui.SetOptionValues("game.startlist", cast(car_edit_id + 1), startlist, error_output);
 }
 
 void Game::UpdateCarPosList()
@@ -2150,7 +2150,7 @@ void Game::PopulateStartList(GuiOption::List & startlist)
 		const size_t n0 = car_info[i].name.find("/") + 1;
 		const size_t n1 = car_info[i].name.length();
 		const std::string carname = car_info[i].name.substr(n0, n1 - n0);
-		startlist.push_back(std::make_pair(cast(i), carname + " / " + car_info[i].driver));
+		startlist.push_back(std::make_pair(cast(i + 1), carname + " / " + car_info[i].driver));
 	}
 }
 
@@ -2863,14 +2863,15 @@ void Game::SyncSettings()
 
 void Game::SelectPlayerCar()
 {
-	SetCarToEdit(cast(player_car_id));
+	SetCarToEdit(cast(player_car_id + 1));
 }
 
 void Game::SetCarToEdit(const std::string & value)
 {
 	// set current car as active car
 	size_t prev_edit_id = car_edit_id;
-	car_edit_id = cast<size_t>(value);
+	car_edit_id = cast<size_t>(value) - 1;
+	assert(car_edit_id < car_info.size());
 
 	if (car_edit_id == prev_edit_id)
 		return;
