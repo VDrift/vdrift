@@ -39,15 +39,16 @@ Engine
     [engine]
     position = 0.86, 0.0, -0.21
     mass = 140.0
+    inertia = 0.25
+    displacement = 2E-3
     max-power = 1.79e5
     peak-engine-rpm = 7800.0
     rpm-limit = 9000.0
-    inertia = 0.25
-    idle = 0.02
     start-rpm = 1000
     stall-rpm = 350
-    fuel-consumption = 1e-9
-    torque-friction = 0.0003
+    #efficiency = 0.35                 # optional, engine efficiency used to calculate fuel consumption
+    #fuel-heating-value = 4.5E7        # optional, Ws/kg used to calculate fuel consumption
+    #torque-friction = 15.4, 2.4, 0.8  # optional, overrides friction calculated from displacement
     torque-curve-00 = 1000, 140.0
     torque-curve-01 = 2000, 149.14
     torque-curve-02 = 2200, 145.07
@@ -71,7 +72,7 @@ Engine
     torque-curve-20 = 8300, 146.43
     torque-curve-21 = 9500, 146.43
 
-The position and mass parameters affect the weight distribution of the car. The torque curve is calculated from max-power and peak-engine-rpm using a polynomial expression given in Motor Vehicle Dynamics, Genta (1997), where peak-engine-rpm is the engine speed at which the maximum power output (max-power) is achieved. Alternatively, the torque curve can be explicitly defined, as in the example above. A rev limit can be set with rpm-limit. The rotational inertia of the moving parts is inertia. Idle is the throttle position at idle. Starting the engine initially sets the engine speed to start-rpm. Letting the engine speed drop below stall-rpm makes the engine stall. The rate of fuel consumption is set with fuel-consumption. The actual fuel consumed each second (in units of liters) is the fuel-consumption parameter times RPM times throttle (throttle is from 0.0 to 1.0, where 1.0 is full throttle).
+The position and mass parameters affect the weight distribution of the car. The rotational inertia of the moving parts is inertia. Displacement is used to calculate engine friction (Heywood 1988). Engine friction can be overriden by the optional torque-friction parameter. Starting the engine sets the engine speed to start-rpm, which is also used to calculate idle throttle. Letting the engine speed drop below stall-rpm makes the engine stall. The torque curve should include stall-rpm and rpm-limit. Fuel consumption is proportional to engine power output.
 
 Clutch
 ------
@@ -220,7 +221,7 @@ Tire
     texture = tire/touring.png # optional, enables auto-generated tire mesh
     #mesh = tire.joe           # optional, overrides auto-generated tire mesh
     size = 215, 45, 17
-    type = &tire/touring
+    type = tire/touring.tire
 
 Tire size determines tire dimensions:
 
@@ -230,7 +231,7 @@ Tire size determines tire dimensions:
 
 Each wheel has a tire section. Tire size is used to calculate wheel weight and inertia. The tire mesh is optional and has to be centered at origin and fit into a unit box. It will be scaled according to tire dimensions. If omitted a default mesh is generated/used.
 
-Tire type is a tire subsection \[wheel.fl.tire.type\], here a reference. This means car loader will look for a \[tire/touring\] section and alternatively for a file tire/touring relative to car and carparts directory. The first found section definition is used. More info about tire type definition can be found here: [Tire parameters](Tire_parameters.md)
+Tire type is stored in a separate file relative to the car or carparts directory. More info about tire type definition can be found here: [Tire parameters](Tire_parameters.md)
 
 Brake
 -----
@@ -268,20 +269,28 @@ Particle
 
 Mass particles used for weight distribution and rotational inertia. Most cars will use 6-10 particles.
 
-Light
------
+Collision shape
+---------------
 
-    [light-brake]
-    texture = brake.png
-    mesh = body.joe
-    draw = emissive
+    [body.hull]
+    00 = -0.50,  1.60, -0.20, 0.30
+    01 =  0.50,  1.60, -0.20, 0.30
+    02 = -0.50, -1.80, -0.20, 0.30
+    03 =  0.50, -1.80, -0.20, 0.30
+    04 = -0.40, -0.60,  0.15, 0.30
+    05 =  0.40, -0.60,  0.15, 0.30
+    
+    [front.capsule]
+    center = 0.0, 1.60, -0.35
+    size = 1.3, 0.2, 0.2
+    
+    [sides.box]
+    center = 0.0, 0.275, -0.3
+    size = 0.5, 4.0, 0.4
 
-    [light-reverse]
-    texture = reverse.png
-    mesh = body.joe
-    draw = emissive
+Collision shape is usually defined as a (swept sphere) hull. A sphere is defined by four values: position x, y, z and radius r. The number of hull spheres should be kept minimal for performance reasons.
 
-Car lights are treated as car shape models. light-brake is set emissive during braking, light-reverse if reverse gear is selected.
+Alternative shapes are capsule and box, defined by their position and size. A car can have multiple collision shapes (see F1-02).
 
 Car shape
 ---------
@@ -308,5 +317,20 @@ Car shape
 The car shape can consist of an arbitrary number of models with arbitrary names excluding the reserved ones: engine, clutch, ...
 
 Shape hierarchies \[body.foo\] are not supported.
+
+Light
+-----
+
+    [light-brake]
+    texture = brake.png
+    mesh = brake.joe
+    draw = emissive
+
+    [light-reverse]
+    texture = reverse.png
+    mesh = reverse.joe
+    draw = emissive
+
+Car lights are treated as car shape models. light-brake is set emissive during braking, light-reverse if reverse gear is selected.
 
 <Category:Cars> <Category:Files>
