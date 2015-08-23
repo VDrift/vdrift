@@ -246,7 +246,7 @@ void Game::Start(std::list <std::string> & args)
 
 	DoneStartingUp();
 
-	MainLoop();
+	Run();
 
 	End();
 }
@@ -771,28 +771,30 @@ void Game::Draw(float dt)
 	PROFILER.endBlock("render draw");
 }
 
-/* The main game loop... */
-void Game::MainLoop()
+void Game::Run()
 {
 	while (!eventsystem.GetQuit())
-	{
-		CalculateFPS();
+		Advance();
+}
 
-		clocktime += eventsystem.Get_dt();
+void Game::Advance()
+{
+	CalculateFPS();
 
-		eventsystem.BeginFrame();
+	clocktime += eventsystem.Get_dt();
 
-		// Do CPU intensive stuff in parallel with the GPU...
-		Tick(eventsystem.Get_dt());
+	eventsystem.BeginFrame();
 
-		Draw(eventsystem.Get_dt());
+	// Do CPU intensive stuff in parallel with the GPU...
+	Tick(eventsystem.Get_dt());
 
-		eventsystem.EndFrame();
+	Draw(eventsystem.Get_dt());
 
-		PROFILER.endCycle();
+	eventsystem.EndFrame();
 
-		displayframe++;
-	}
+	PROFILER.endCycle();
+
+	displayframe++;
 }
 
 /* Deltat is in seconds... */
@@ -3143,8 +3145,8 @@ void Game::RegisterActions()
 	actions[4].call.bind<Game, &Game::ContinueGame>(this);
 	actions[5].call.bind<Game, &Game::RestartGame>(this);
 	actions[6].call.bind<Game, &Game::StartReplay>(this);
-	actions[7].call.bind<Game, &Game::HandleOnlineClicked>(this);
-	actions[8].call.bind<Game, &Game::StartCheckForUpdates>(this);
+	actions[7].call.bind<Game, &Game::StartCheckForUpdates>(this);
+	actions[8].call.bind<Http, &Http::CancelAllRequests>(&http);
 	actions[9].call.bind<Game, &Game::StartCarManager>(this);
 	actions[10].call.bind<Game, &Game::CarManagerNext>(this);
 	actions[11].call.bind<Game, &Game::CarManagerPrev>(this);

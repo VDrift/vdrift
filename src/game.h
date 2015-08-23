@@ -77,7 +77,11 @@ public:
 private:
 	void End();
 
-	void MainLoop();
+	/// Main game loop
+	void Run();
+
+	/// Main loop body
+	void Advance();
 
 	bool ParseArguments(std::list <std::string> & args);
 
