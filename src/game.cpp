@@ -2661,19 +2661,6 @@ void Game::StartReplay()
 	}
 }
 
-void Game::HandleOnlineClicked()
-{
-	std::string motdUrl = "vdrift.net/online/motd.txt";
-	bool success = Download(motdUrl);
-	if (success)
-	{
-		gui.ActivatePage("Online", 0.25, error_output);
-		std::string motdFile = http.GetDownloadPath(motdUrl);
-		std::string motd = Utils::LoadFileIntoString(motdFile, error_output);
-		gui.SetLabelText("Online", "Motd", motd);
-	}
-}
-
 void Game::StartCheckForUpdates()
 {
 	carupdater.StartCheckForUpdates(GameDownloader(*this, http), gui);
@@ -3175,8 +3162,8 @@ void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 	actionmap["ContinueGame"] = &actions[4];
 	actionmap["RestartGame"] = &actions[5];
 	actionmap["StartReplay"] = &actions[6];
-	actionmap["HandleOnlineClicked"] = &actions[7];
-	actionmap["StartCheckForUpdates"] = &actions[8];
+	actionmap["StartCheckForUpdates"] = &actions[7];
+	actionmap["CancelDownload"] = &actions[8];
 	actionmap["StartCarManager"] = &actions[9];
 	actionmap["CarManagerNext"] = &actions[10];
 	actionmap["CarManagerPrev"] = &actions[11];

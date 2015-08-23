@@ -216,7 +216,6 @@ private:
 	void ContinueGame();
 	void RestartGame();
 	void StartReplay();
-	void HandleOnlineClicked();
 	void StartCheckForUpdates();
 	void StartCarManager();
 	void CarManagerNext();
