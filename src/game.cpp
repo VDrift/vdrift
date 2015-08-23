@@ -814,8 +814,6 @@ void Game::Tick(float deltat)
 
 	target_time += deltat;
 
-	http.Tick();
-
 	// Increment game logic by however many tick periods have passed since the last GAME::Tick...
 	while (target_time - timestep * frame > timestep && curticks < maxticks)
 	{
@@ -2357,9 +2355,6 @@ bool Game::Download(const std::vector <std::string> & urls)
 		return false;
 	}
 
-	const std::string gui_page = gui.GetActivePageName();
-	gui.ActivatePage("Loading", 0.5, error_output);
-
 	for (unsigned int i = 0; i < urls.size(); i++)
 	{
 		std::string url = urls[i];
@@ -2367,17 +2362,14 @@ bool Game::Download(const std::vector <std::string> & urls)
 		if (!requestSuccess)
 		{
 			http.CancelAllRequests();
-			gui.ActivatePage(gui_page, 0.5, error_output);
 			return false;
 		}
 
 		while (http.Tick())
 		{
-			eventsystem.ProcessEvents();
-			if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down || eventsystem.GetQuit())
+			if (eventsystem.GetQuit())
 			{
 				http.CancelAllRequests();
-				gui.ActivatePage(gui_page, 0.5, error_output);
 				return false;
 			}
 
@@ -2387,7 +2379,6 @@ bool Game::Download(const std::vector <std::string> & urls)
 			if (info.state == HttpInfo::FAILED)
 			{
 				http.CancelAllRequests();
-				gui.ActivatePage(gui_page, 0.5, error_output);
 				error_output << "Failed when downloading URL: " << url << std::endl;
 				return false;
 			}
@@ -2404,7 +2395,11 @@ bool Game::Download(const std::vector <std::string> & urls)
 			if (info.totalsize > 0)
 				total = info.totalsize;
 
-			ShowLoadingScreen(fmod(info.downloaded, total), total, text.str());
+			std::ostringstream loadstr;
+			loadstr << fmod(info.downloaded, total) / total;
+			signal_loading(loadstr.str());
+
+			Advance();
 		}
 
 		HttpInfo info;
@@ -2412,13 +2407,11 @@ bool Game::Download(const std::vector <std::string> & urls)
 		if (info.state == HttpInfo::FAILED)
 		{
 			http.CancelAllRequests();
-			gui.ActivatePage(gui_page, 0.5, error_output);
 			error_output << "Failed when downloading URL: " << url << std::endl;
 			return false;
 		}
 	}
 
-	gui.ActivatePage(gui_page, 0.5, error_output);
 	return true;
 }
 

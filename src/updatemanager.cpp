@@ -68,7 +68,6 @@ bool UpdateManager::Init(
 void UpdateManager::StartCheckForUpdates(GameDownloader downloader, Gui & gui)
 {
 	const bool verbose = true;
-	gui.ActivatePage("Downloading", 0.25, error_output);
 
 	// download svn folder view to a temporary folder
 	const std::string url = autoupdate.GetMetaUrl() + group + "/";
