@@ -372,7 +372,7 @@ void Tire::findSigmaHatAlphaHat(
 	}
 
 	btScalar Fymax = 0.0;
-	btScalar amax = 30.0 * SIMD_RADS_PER_DEG;
+	btScalar amax = 30.0 * (M_PI / 180.0);
 	for (btScalar a = -amax; a < amax; a += 2 * amax / iterations)
 	{
 		btScalar Fy = PacejkaFy(a, camber, Fz, dFz, mu, Dy, BCy, Shf);

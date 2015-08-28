@@ -81,10 +81,10 @@ btVector3 CarTire::getForce(
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
-	btScalar gamma = inclination * SIMD_DEGS_PER_RAD;
+	btScalar gamma = inclination * (180.0 / M_PI);
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) / denom;
-	btScalar alpha = -btAtan(lat_velocity / denom) * SIMD_DEGS_PER_RAD;
+	btScalar alpha = -btAtan(lat_velocity / denom) * (180.0 / M_PI);
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	// beckman method for pre-combining longitudinal and lateral forces
@@ -104,9 +104,9 @@ btVector3 CarTire::getForce(
 
 	camber = inclination;
 	slide = sigma;
-	slip = alpha * SIMD_RADS_PER_DEG;
+	slip = alpha * (M_PI / 180.0);
 	ideal_slide = sigma_hat;
-	ideal_slip = alpha_hat * SIMD_RADS_PER_DEG;
+	ideal_slip = alpha_hat * (M_PI / 180.0);
 	fx = Fx;
 	fy = Fy;
 	fz = Fz;

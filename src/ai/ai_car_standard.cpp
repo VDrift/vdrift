@@ -555,7 +555,7 @@ void AiCarStandard::UpdateSteer()
 	else if (angle > 180.0 && angle <= 360.0)
 		angle = 360.0 - angle;
 
-	float optimum_range = car->GetTire(FRONT_LEFT).getIdealSlipAngle() * SIMD_DEGS_PER_RAD;
+	float optimum_range = car->GetTire(FRONT_LEFT).getIdealSlipAngle() * (180.0 / M_PI);
 	angle = clamp(angle, -optimum_range, optimum_range);
 
 	float steer_value = angle / car->GetMaxSteeringAngle();

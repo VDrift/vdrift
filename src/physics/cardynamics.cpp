@@ -946,8 +946,8 @@ static std::ostream & operator << (std::ostream & os, const CarTire & tire)
 {
 	os << "Fx: " << tire.getFx() << "\n";
 	os << "Fy: " << tire.getFy() << "\n";
-	os << "Slip Ang: " << tire.getSlipAngle() * SIMD_DEGS_PER_RAD << " / ";
-	os << tire.getIdealSlipAngle() * SIMD_DEGS_PER_RAD << "\n";
+	os << "Slip Ang: " << tire.getSlipAngle() * (180.0 / M_PI) << " / ";
+	os << tire.getIdealSlipAngle() * (180.0 / M_PI) << "\n";
 	os << "Slip: " << tire.getSlip() << " / ";
 	os << tire.getIdealSlip() << "\n";
 	return os;
