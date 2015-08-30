@@ -1246,7 +1246,7 @@ void Game::UpdateCarSpecList(GuiOption::List & spec_list)
 	assert(car_dynamics.size() > 0);
 	std::vector<float> specs = car_dynamics[0].GetSpecs();
 
-	if (specs.size() < 8 || spec_list.size() < 8)
+	if (specs.size() < 7 || spec_list.size() < 8)
 		return;
 
 	bool imperial = settings.GetMPH();
