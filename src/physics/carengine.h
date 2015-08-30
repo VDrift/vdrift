@@ -58,6 +58,8 @@ struct CarEngineInfo
 	/// load engine from config file
 	bool Load(const PTree & cfg, std::ostream & error_output);
 
+	btScalar GetMaxTorque() const;
+
 	btScalar GetTorque(btScalar throttle, btScalar rpm) const;
 
 	btScalar GetFrictionTorque(btScalar throttle, btScalar rpm) const;
@@ -71,9 +73,19 @@ public:
 
 	void Init(const CarEngineInfo & info);
 
+	btScalar GetDisplacement() const
+	{
+		return info.displacement;
+	}
+
 	btScalar GetMaxPower() const
 	{
 		return info.maxpower;
+	}
+
+	btScalar GetMaxTorque() const
+	{
+		return info.GetMaxTorque();
 	}
 
 	btScalar GetRPMLimit() const

@@ -148,6 +148,11 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	return true;
 }
 
+btScalar CarEngineInfo::GetMaxTorque() const
+{
+	return torque_curve.GetMaxY().second;
+}
+
 btScalar CarEngineInfo::GetTorque(const btScalar throttle, const btScalar rpm) const
 {
 	if (rpm < 1) return 0.0;
