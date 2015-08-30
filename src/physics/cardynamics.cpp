@@ -589,11 +589,8 @@ bool CarDynamics::Load(
 
 	// adjust for suspension rest position
 	// a bit hacky here, should use updated aabb
-	btScalar dr = GetCenterOfMassOffset()[1];
-	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
-	btScalar r2 = suspension[3]->GetWheelPosition()[1] + dr;
 	btScalar m = 1 / body->getInvMass();
-	btScalar m1 = m * r2 / (r2 - r1);
+	btScalar m1 = m * CalculateFrontMassRatio();
 	btScalar m2 = m - m1;
 	btScalar d1 = suspension[0]->GetDisplacement(m1 * 9.81 * 0.5);
 	btScalar d2 = suspension[3]->GetDisplacement(m2 * 9.81 * 0.5);
@@ -934,6 +931,20 @@ btScalar CarDynamics::GetTireSquealAmount(WheelPosition i) const
 	btClamp(squeal, btScalar(0), btScalar(1));
 
 	return squeal;
+}
+
+std::vector<float> CarDynamics::GetSpecs() const
+{
+	std::vector<float> specs;
+	specs.reserve(7);
+	specs.push_back(maxspeed);
+    specs.push_back(float(int(drive)));
+    specs.push_back(engine.GetDisplacement());
+    specs.push_back(engine.GetMaxPower());
+    specs.push_back(engine.GetMaxTorque());
+    specs.push_back(1 / body->getInvMass());
+    specs.push_back(CalculateFrontMassRatio());
+    return specs;
 }
 
 static std::ostream & operator << (std::ostream & os, const btVector3 & v)
@@ -1843,6 +1854,14 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 	btScalar aero_speed = btPow(engine.GetMaxPower() / GetAeordynamicDragCoefficient(), 1 / 3.0f);
 
 	return btMin(drive_speed, aero_speed);
+}
+
+btScalar CarDynamics::CalculateFrontMassRatio() const
+{
+	btScalar dr = GetCenterOfMassOffset()[1];
+	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
+	btScalar r2 = suspension[3]->GetWheelPosition()[1] + dr;
+	return r2 / (r2 - r1);
 }
 
 void CarDynamics::SetSteering(const btScalar value)

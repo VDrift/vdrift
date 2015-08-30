@@ -161,6 +161,10 @@ public:
 
 	btVector3 LocalToWorld(const btVector3 & local) const;
 
+	// top speed, drivetrain, displacement, power, torque,
+	// weight, weight front fraction in metric units
+	std::vector<float> GetSpecs() const;
+
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
 
@@ -288,6 +292,9 @@ protected:
 
 	// max speed in m/s calculated from maxrpm, maxgear, finalgear ratios
 	btScalar CalculateMaxSpeed() const;
+
+	// car mass fraction at front wheels
+	btScalar CalculateFrontMassRatio() const;
 
 	// car controls
 
