@@ -120,6 +120,15 @@ public:
 		std::sort(points.begin(), points.end(), sorter);
 	}
 
+	std::pair<T, T> GetMaxY() const
+	{
+		std::pair<T, T> maxy(0, 0);
+		for (size_t i = 0, n = points.size(); i < n ; i++)
+			if (points[i].second > maxy.second)
+				maxy = points[i];
+		return maxy;
+	}
+
 	T Interpolate(T x) const
 	{
 		if ( points.size() == 1 )
