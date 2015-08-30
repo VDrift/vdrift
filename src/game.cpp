@@ -1233,6 +1233,57 @@ void Game::UpdateCarInfo()
 	gui.SetOptionValue("game.ai_level", cast(info.ailevel));
 }
 
+void Game::UpdateCarSpecs()
+{
+	GuiOption & spec_option = gui.GetOption("game.car_specs");
+	GuiOption::List spec_list = spec_option.GetValueList();
+	UpdateCarSpecList(spec_list);
+	spec_option.SetValues("", spec_list);
+}
+
+void Game::UpdateCarSpecList(GuiOption::List & spec_list)
+{
+	assert(car_dynamics.size() > 0);
+	std::vector<float> specs = car_dynamics[0].GetSpecs();
+
+	if (specs.size() < 8 || spec_list.size() < 8)
+		return;
+
+	bool imperial = settings.GetMPH();
+
+	std::ostringstream s;
+	s << std::fixed << std::setprecision(0);
+	s << round(specs[0] * (imperial ? 2.2369 : 3.6)) << (imperial ? " mph" : " km/h");
+	spec_list[0].first = s.str();
+
+	spec_list[1].first = (specs[1] == 1 ? "FWD" : (specs[1] == 2 ? "RWD" : "AWD"));
+
+	s.str("");
+	s << round(specs[2] * 1E6) << " cc";
+	spec_list[2].first = s.str();
+
+	s.str("");
+	s << round(specs[3] * 1.341E-3) << " hp";
+	spec_list[3].first = s.str();
+
+	s.str("");
+	s << round(specs[4] * (imperial ? 0.73756 : 1)) << (imperial ? " ft-lb" : " Nm");
+	spec_list[4].first = s.str();
+
+	s.str("");
+	s << round(specs[5] * (imperial ? 2.20462 : 1)) << (imperial ? " lb" : " kg");
+	spec_list[5].first = s.str();
+
+	s.str("");
+	s << round(specs[6] * 100) << " %";
+	spec_list[6].first = s.str();
+
+	s.str("");
+	s << std::setprecision(1);
+	s << specs[5] / specs[3] * (imperial ? 1644 : 745.7) << (imperial ? " lb/hp" : " kg/hp");
+	spec_list[7].first = s.str();
+}
+
 void Game::UpdateCars(float dt)
 {
 	for (int i = 0; i < car_dynamics.size(); ++i)
@@ -1923,6 +1974,8 @@ void Game::SetGarageCar()
 	garage_camera.SetOffset(offset);
 	garage_camera.Reset(pos, rot);
 	active_camera = &garage_camera;
+
+	UpdateCarSpecs();
 }
 
 void Game::SetCarColor()

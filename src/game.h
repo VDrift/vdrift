@@ -125,6 +125,10 @@ private:
 
 	void UpdateCarInfo();
 
+	void UpdateCarSpecs();
+
+	void UpdateCarSpecList(GuiOption::List & speclist);
+
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 
 	bool LoadCar(
@@ -156,6 +160,8 @@ private:
 	void PopulateCarTireList(const std::string & carname, GuiOption::List & tirelist);
 
 	void PopulateCarWheelList(const std::string & carname, GuiOption::List & wheellist);
+
+	void PopulateCarSpecList(GuiOption::List & speclist);
 
 	void PopulateDriverList(GuiOption::List & driverlist);
 
