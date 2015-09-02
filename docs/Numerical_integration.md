@@ -15,75 +15,75 @@ Euler Integration
 
 The Euler method is a first order numerical procedure for solving ordinary differential equations (ODEs) with a given initial value. It is the most basic explicit method for numerical integration for ordinary differential equations.
 
-    real a = system.GetAcceleration(state);
-    state.x += state.v * dt;
-    state.v += a * dt;
+    real a = system.GetAcceleration(state);
+    state.x += state.v * dt;
+    state.v += a * dt;
 
 SUVAT
 -----
 
 The "suvat" method takes its name from the variables in the equations of motion. This is a first order method that is very similar to the Euler method. The only difference is the addition of an acceleration term to the equation for the change in position.
 
-    real a = system.GetAcceleration(state);
-    state.x += state.v * dt + a*dt*dt*0.5;
-    state.v += a * dt;
+    real a = system.GetAcceleration(state);
+    state.x += state.v * dt + a*dt*dt*0.5;
+    state.v += a * dt;
 
 Newton-Stormer-Verlet (NSV) / Symplectic Euler
 ----------------------------------------------
 
 The Symplectic Euler method or Newton-Stormer-Verlet (NSV) method is a modification of the Euler method for solving Hamilton's equations, a system of ordinary differential equations that arises in classical mechanics. It is a symplectic integrator, which is a class of geometric integrators that is especially good at simulations of systems of undamped oscillators. Due to this property, it preserves energy better than the standard Euler method and so is often used in simulations of orbital mechanics. It is a first order integrator.
 
-    real a = system.GetAcceleration(state);
-    state.v += a * dt;
-    state.x += state.v * dt;
+    real a = system.GetAcceleration(state);
+    state.v += a * dt;
+    state.x += state.v * dt;
 
 Basic Verlet/Velocity Verlet
 ----------------------------
 
 Verlet integration is a numerical integration method originally designed for calculating the trajectories of particles in molecular dynamics simulations. The velocity verlet variant directly calculates velocity. It is a second order integrator. Unfortunately, this method is unsuitable for simulations where the acceleration is dependent on velocities, such as with a damper. The modified verlet variant below uses some tricks to try to get around this limitation, but this method will only provide first-order accuracy.
 
-    if (!have_oldaccel)
-        oldaccel = system.GetAcceleration(state);
+    if (!have_oldaccel)
+        oldaccel = system.GetAcceleration(state);
     
-    state.x += state.v*dt + 0.5*oldaccel*dt*dt;
-    state.v += 0.5*oldaccel*dt;
-    real a = system.GetAcceleration(state);
-    state.v += 0.5*a*dt;
+    state.x += state.v*dt + 0.5*oldaccel*dt*dt;
+    state.v += 0.5*oldaccel*dt;
+    real a = system.GetAcceleration(state);
+    state.v += 0.5*a*dt;
     
-    oldaccel = a;
-    have_oldaccel = true;
+    oldaccel = a;
+    have_oldaccel = true;
 
 Improved Euler/Trapezoidal/Bilinear/Predictor-Corrector/Heun
 ------------------------------------------------------------
 
 The so-call "Improved Euler" method, also known as the trapezoidal or bilinear or predictor/corrector or Heun Formula method, is a second order integrator.
 
-    STATE predictor(state);
-    predictor.x += state.v * dt;
-    predictor.v += system.GetAcceleration(state) * dt;
+    STATE predictor(state);
+    predictor.x += state.v * dt;
+    predictor.v += system.GetAcceleration(state) * dt;
     
-    STATE corrector(state);
-    corrector.x += predictor.v * dt;
-    corrector.v += system.GetAcceleration(predictor) * dt;
+    STATE corrector(state);
+    corrector.x += predictor.v * dt;
+    corrector.v += system.GetAcceleration(predictor) * dt;
     
-    state.x = (predictor.x + corrector.x)*0.5;
-    state.v = (predictor.v + corrector.v)*0.5;
+    state.x = (predictor.x + corrector.x)*0.5;
+    state.v = (predictor.v + corrector.v)*0.5;
 
 Runge Kutta 4
 -------------
 
 The Runge?utta methods are an important family of implicit and explicit iterative methods for the approximation of solutions of ordinary differential equations. The Runge Kutta 4 (or RK4) is a well-known fourth-order explicit Runge Kutta algorithm. The code snippet shown below is high level, and the actual implementation is a bit more complicated. Note that the evaluate() function calls the system's acceleration function.
 
-    DERIVATIVE a = evaluate(state, 0, DERIVATIVE(), system);
-    DERIVATIVE b = evaluate(state, dt*0.5, a, system);
-    DERIVATIVE c = evaluate(state, dt*0.5, b, system);
-    DERIVATIVE d = evaluate(state, dt, c, system);
+    DERIVATIVE a = evaluate(state, 0, DERIVATIVE(), system);
+    DERIVATIVE b = evaluate(state, dt*0.5, a, system);
+    DERIVATIVE c = evaluate(state, dt*0.5, b, system);
+    DERIVATIVE d = evaluate(state, dt, c, system);
 
-    const float dxdt = 1.0/6.0 * (a.dx + 2.0*(b.dx + c.dx) + d.dx);
-    const float dvdt = 1.0/6.0 * (a.dv + 2.0*(b.dv + c.dv) + d.dv);
+    const float dxdt = 1.0/6.0 * (a.dx + 2.0*(b.dx + c.dx) + d.dx);
+    const float dvdt = 1.0/6.0 * (a.dv + 2.0*(b.dv + c.dv) + d.dv);
 
-    state.x = state.x + dxdt*dt;
-    state.v = state.v + dvdt*dt;
+    state.x = state.x + dxdt*dt;
+    state.v = state.v + dvdt*dt;
 
 Performance Comparison
 ----------------------
@@ -106,10 +106,10 @@ Detailed comparison
 
 For comparing these algorithms I used a damped spring-mass system because it can be difficult to integrate when the spring is very stiff or the damping is high, but it can be analytically solved so I have something to compare the integrators to. The damping force is proportional to the velocity state, while the spring force is proportional to the position state. Zeta is the damping ratio. The analytic solution can be obtained with the following calculations:
 
-    real zeta = c / (2.0 * sqrt(k*m));
-    real w = sqrt(k/m);
+    real zeta = c / (2.0 * sqrt(k*m));
+    real w = sqrt(k/m);
     
-    if (zeta < 1.0) //underdamped
+    if (zeta < 1.0) //underdamped
     {
         real wd = w*sqrt(1.0-zeta*zeta);
     
@@ -118,22 +118,22 @@ For comparing these algorithms I used a damped spring-mass system because it can
         real out = (A*cos(wd*time)+B*sin(wd*time))*exp(-zeta*w*time);
         return out;
     }
-    else if (zeta > 1.0) //overdamped
+    else if (zeta > 1.0) //overdamped
     {
-        real beta = c/m;
-        real rminus = 0.5*(-beta-sqrt(beta*beta-4.0*w*w));
-        real rplus = 0.5*(-beta+sqrt(beta*beta-4.0*w*w));
-        real A = ic.x - (rminus*ic.x - ic.v)/(rminus-rplus);
-        real B = (rminus*ic.x-ic.v)/(rminus-rplus);
-        real out = A*exp(rminus*time)+B*exp(rplus*time);
-        return out;
+        real beta = c/m;
+        real rminus = 0.5*(-beta-sqrt(beta*beta-4.0*w*w));
+        real rplus = 0.5*(-beta+sqrt(beta*beta-4.0*w*w));
+        real A = ic.x - (rminus*ic.x - ic.v)/(rminus-rplus);
+        real B = (rminus*ic.x-ic.v)/(rminus-rplus);
+        real out = A*exp(rminus*time)+B*exp(rplus*time);
+        return out;
     }
-    else //critically damped
+    else //critically damped
     {
-        real A = ic.x;
-        real B = ic.v + w*ic.x;
-        
-        return (A + B*time)*exp(-w*time);
+        real A = ic.x;
+        real B = ic.v + w*ic.x;
+        
+        return (A + B*time)*exp(-w*time);
     }
 
 The spring constant (k) was fixed at 600,000. Mass was set to 168 kg. Initial conditions were X = 1 m and V = 0 m/s. The damping coefficient was calculated depending on the damping ratio (zeta). These values were chosen to be similar to what may be encountered in VDrift.

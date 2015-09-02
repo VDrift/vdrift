@@ -18,11 +18,11 @@ Enabling force feedback in VDrift
 
 Once you've met the prerequisites, recompile vdrift like this:
 
-    scons force_feedback=1
+    scons force_feedback=1
 
 Now open your [VDrift.config](VDrift_config.md). Find the section `[ joystick ]` and add the following line to the joystick section somewhere:
 
-    ff_device = /dev/input/event0
+    ff_device = /dev/input/event0
 
 Change event0 to whatever device you should use (the one that worked with ffcfstress).
 

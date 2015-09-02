@@ -34,14 +34,14 @@ Examples of reports
 
 Here's a bad example of a bug report:
 
-    Topic: HELP OH NO!!!!!!
-    when i start up the game it shows some stuff and then goes away what do i do how do u fix it
+    Topic: HELP OH NO!!!!!!
+    when i start up the game it shows some stuff and then goes away what do i do how do u fix it
 
 Here's a good example of a bug report:
 
-    Topic: Crash in latest Windows release
-    Hi, I downloaded the full version of VDrift for Windows (version 2007-03-23) and it crashes
-    whenever I try to start a new game. The menus all function correctly. My system is Windows XP
-    SP2, P4 2 GHz CPU, 1 GB RAM and GeForce 5600 video card with nVidia drivers 9.4.3.2.
+    Topic: Crash in latest Windows release
+    Hi, I downloaded the full version of VDrift for Windows (version 2007-03-23) and it crashes
+    whenever I try to start a new game. The menus all function correctly. My system is Windows XP
+    SP2, P4 2 GHz CPU, 1 GB RAM and GeForce 5600 video card with nVidia drivers 9.4.3.2.
 
 <Category:General>
