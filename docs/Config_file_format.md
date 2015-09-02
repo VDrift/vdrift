@@ -65,15 +65,15 @@ Example
 
 A file in this format might look like this.
 
-    name = Example
-    [ first ]
-    stuff = 567
-    blah = hello
-    radius = 0.555
-    [ 2nd ]
-    beans = on
-    now = 1
-    position = 5,6,7
+    name = Example
+    [ first ]
+    stuff = 567
+    blah = hello
+    radius = 0.555
+    [ 2nd ]
+    beans = on
+    now = 1
+    position = 5,6,7
 
 In the file, there are two categories, each with three data items. These items would be referenced by the following identifier strings, respectively:
 

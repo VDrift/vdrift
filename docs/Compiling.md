@@ -9,11 +9,11 @@ Windows
 -   Install [MSYS2](http://sourceforge.net/p/msys2/wiki/MSYS2%20installation/) and update local packages.
 -   Install build tools.
 
-        pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-pkgconf scons'
+        pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-pkgconf scons'
 
 -   Install VDrift dependencies.
 
-        pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis
+        pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis
 
 -   Build VDrift using MinGW-w64 Win64 Shell.
 
@@ -21,7 +21,7 @@ Windows
 
 -   For more build options run
 
-        scons --help
+        scons --help
 
 ### Building with Code::Blocks/MinGW (obsolete)
 
@@ -30,18 +30,18 @@ Windows
 -   Download [Code::Blocks nightly](http://forums.codeblocks.org/index.php/board,20.0.html)
 -   Run the following command from the **vdrift** folder to generate the build files.
 
-        vdrift-win\premake4 codeblocks
+        vdrift-win\premake4 codeblocks
 
 ### Building with MSVC (obsolete)
 
 -   Run the appropriate command from the **vdrift** folder to generate the project files.
     -   Microsoft Visual C++ 2008:
 
-            vdrift-win\premake4 vs2008
+            vdrift-win\premake4 vs2008
 
     -   Microsoft Visual C++ 2010:
 
-            vdrift-win\premake4 vs2010
+            vdrift-win\premake4 vs2010
 
 OS X
 ----
@@ -74,18 +74,18 @@ Make sure you have all the required libraries and build tools. Make sure you als
 
 All required packages can be installed using this command:
 
-    sudo yum install bullet-devel gcc-c++ libvorbis-devel scons SDL2-devel SDL2_image-devel curl-devel
+    sudo yum install bullet-devel gcc-c++ libvorbis-devel scons SDL2-devel SDL2_image-devel curl-devel
 
 #### Ubuntu
 
 Ubuntu 12.04 does not include libbullet and SDL2 packages. They are available in following ppas though:
 
-    sudo add-apt-repository ppa:roblib/ppa
-    sudo add-apt-repository ppa:zoogie/sdl2-snapshots
+    sudo add-apt-repository ppa:roblib/ppa
+    sudo add-apt-repository ppa:zoogie/sdl2-snapshots
 
 All required packages can be installed using this command:
 
-    sudo apt-get install g++ scons libsdl2-dev libsdl2-image-dev libbullet-dev libvorbis-dev libcurl4-gnutls-dev
+    sudo apt-get install g++ scons libsdl2-dev libsdl2-image-dev libbullet-dev libvorbis-dev libcurl4-gnutls-dev
 
 ### Compiling
 
@@ -97,19 +97,19 @@ To compile VDrift just run SCons in the root directory of the sources.
 
 You can use one or more compile options. To compile with optimization for a certain platform, you can use the arch flag:
 
-    scons arch=a64
+    scons arch=a64
 
 Compiling VDrift in release mode will turn off debugging options, and enable more compiler optimizations. VDrift runs much more quickly in release mode:
 
-    scons release=1
+    scons release=1
 
 To enable force feedback, use this flag:
 
-    scons force_feedback=1
+    scons force_feedback=1
 
 You can get a list of all compile time options with:
 
-    scons --help
+    scons --help
 
 These options are probably best left off the first time you compile. If you have problems compiling or running VDrift, it is easier to debug with them off. Once you verify that VDrift is compiling, then recompile with these optimizations to improve performance.
 
@@ -117,23 +117,23 @@ These options are probably best left off the first time you compile. If you have
 
 VDrift does not need to be installed to work and you can run it from the folder where you compiled it. If you do want to install, use the SCons build target install.
 
-    sudo scons install
+    sudo scons install
 
 #### Optional: Installation Location
 
 There are also some install options - to change where VDrift is installed, use the prefix flag:
 
-    scons install prefix=/usr/local
+    scons install prefix=/usr/local
 
 ### Cleaning
 
 Building the project creates several artefacts that do not need to be stored, because they can be regenerated on demand. Cleaning them up can be done with SCons, too:
 
-    scons --clean
+    scons --clean
 
 To remove all additional temporary files run:
 
-    rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf
+    rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf
 
 FreeBSD
 -------
@@ -144,16 +144,16 @@ To compile VDrift on FreeBSD, use the ports system.
 
 If you downloaded a release, simply run `make` on the **vdrift** port:
 
-    cd /usr/ports/games/vdrift && make install clean clean-depends
+    cd /usr/ports/games/vdrift && make install clean clean-depends
 
 ### Development Version
 
 If you downloaded the development version, copy the **vdrift** and **vdrift-data** ports to **vdrift-devel** and **vdrift-data-devel**:
 
-    cd /usr/ports/games && cp -rf vdrift vdrift-devel && cp -rf vdrift-data vdrift-data-devel
+    cd /usr/ports/games && cp -rf vdrift vdrift-devel && cp -rf vdrift-data vdrift-data-devel
 
 To compile, run `make` on the newly-created **vdrift-devel** port:
 
-    cd /usr/ports/games/vdrift-devel && make install clean clean-depends
+    cd /usr/ports/games/vdrift-devel && make install clean clean-depends
 
 <Category:Development>

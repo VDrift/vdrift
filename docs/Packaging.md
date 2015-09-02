@@ -66,20 +66,20 @@ The [autopackage](http://autopackage.org/) project is a very promising and usefu
 
 VDrift's autopackage creation is integrated into the SCons build system used to build the Linux version of VDrift. To build an autopackage, simply run
 
-    scons autopackage
+    scons autopackage
 
 Two options are important when running this command, **minimal** and **release**. For instance,
 
-    scons autopackage minimal=1
+    scons autopackage minimal=1
 
 will build a package with the minimal data set. This can be combined with the release option to make a release-optimized package with the minimal data set:
 
-    scons autopackage minimal=1 release=1
+    scons autopackage minimal=1 release=1
 
 Turning these options to 0 turns them off. This affects the package built as one might expect. The package name reflects how it was built. For example:
 
-    VDrift yyyy-mm-dd-dev-minimal.package
-    VDrift yyyy-mm-dd-full.package
+    VDrift yyyy-mm-dd-dev-minimal.package
+    VDrift yyyy-mm-dd-full.package
 
 Usually the file is renamed to replace the space with a '-' character, so that the URL to the package does not have to contain a "%20".
 
@@ -87,7 +87,7 @@ Usually the file is renamed to replace the space with a '-' character, so that t
 
 Source packages are made in a similar way as autopackages using SCons.
 
-    scons src-package
+    scons src-package
 
 builds a package named similarly. This package is put into the build/ directory. Currently the build system does tar the source package after compiling it in the build/ directory, but it includes the build directory as a parent in the archive itself. Since this function is not used that much, it has been a low priority to fix, and it is also pretty simple to just run tar manually and create the package.
 
@@ -95,10 +95,10 @@ Before doing this however, it is useful to warn the user that there is no data i
 
 So, to make all this make sense, here are the commands to build a source package correctly:
 
-    scons src-package
-    cd build
-    cp ../data/SConscript.no_data data/SConscript
-    tar -jcvf vdrift-yyyy-mm-dd-src.tar.bz2 vdrift-yyyy-mm-dd-src/
+    scons src-package
+    cd build
+    cp ../data/SConscript.no_data data/SConscript
+    tar -jcvf vdrift-yyyy-mm-dd-src.tar.bz2 vdrift-yyyy-mm-dd-src/
 
 Thus you end up with the file **vdrift-yyyy-mm-dd-src.tar.bz2** as a finished source package.
 

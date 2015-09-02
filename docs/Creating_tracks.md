@@ -18,7 +18,7 @@ Getting the level editor
 
 In the Linux console, copy *everything* below:
 
-    git clone https://github.com/VDrift/trackeditor vdrift-trackeditor
+    git clone https://github.com/VDrift/trackeditor vdrift-trackeditor
 
 Directions for creating tracks
 ------------------------------
@@ -43,11 +43,11 @@ Directions for creating tracks
 
 -   `cd` to the ***TRACKEDITOR\_TP*/objects** folder (this is important, the packfile stores relative paths) and run
 
-        /path/to/trackeditor/joepack/joepack -c objects.jpk *.joe
+        /path/to/trackeditor/joepack/joepack -c objects.jpk *.joe
 
 -   If you want, this command will show you the files in the joepack to allow you to verify the previous step worked correctly:
 
-        /path/to/VDrift-trackeditor/joepack/joepack -l objects.jpk
+        /path/to/VDrift-trackeditor/joepack/joepack -l objects.jpk
 
 -   Copy *TRACKEDITOR\_TP* into the main VDrift tracks folder *VDRIFT\_TP* (for example **/home/joe/vdrift/data/tracks/parkinglot**). Erase ***VDRIFT\_TP*/objects/\*.joe** since they are all in the pack file now.
 -   Add ***VDRIFT\_TP*/about.txt** and ensure that the first line is the name of the track. You should put information about the track author, where the track came from, etc in the second line and on.

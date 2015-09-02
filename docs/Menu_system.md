@@ -19,10 +19,10 @@ To add a new menu, simply create a new text file under **data/skins/*skin\_name*
 
 Now you need to define the new menu. Let's look at the Options menu. The game needs to know a little about the menu itself, so the first few lines of every menu look something like this:
 
-    name = Options
-    widgets = 5
-    background = gui/box.png
-    dialog = false
+    name = Options
+    widgets = 5
+    background = gui/box.png
+    dialog = false
 
 The `name` field should be the same as the filename. The `widgets` field tells the game how many widgets to load from this menu file (it starts at 0, and stops at `widgets - 1`). The `background` field tells the game which graphic to use as the menu background. The `dialog` tells the game if this is a dialog box or not, but right now this option has no effect (dialog boxes are drawn as full size menus).
 
@@ -32,18 +32,18 @@ Next, you will need to add some widget definitions to your menu.
 
 Here's the format for a label widget, this example taken from the Options menu:
 
-    [ widget-00 ]
-    type = label
-    name = OptionsLabel
-    text = Options
-    center = 0.5, 0.1
-    width = auto
-    height = auto
-    fontsize = 9
-    enabled = 0
-    selected = 0
-    default = 0
-    cancel = 0
+    [ widget-00 ]
+    type = label
+    name = OptionsLabel
+    text = Options
+    center = 0.5, 0.1
+    width = auto
+    height = auto
+    fontsize = 9
+    enabled = 0
+    selected = 0
+    default = 0
+    cancel = 0
 
 The first line is the widget ID. This is the identification number of this widget on this menu page. The number also dictates the order in which the menu will be traversed if you use the arrow keys to move through it. The `type` field tells VDrift what kind of widget it is. `name` is a non-numeric identifier. `text` is the text that will appear on the label. `center` is the relative position of the widget on the screen. `width` and `height` are the relative width and height of the label (here we tell VDrift to figure it out automatically, this is generally a good idea). `fontsize` is the size to draw the text, the value 9 is pretty big, which is good because this label is the menu title.
 
@@ -53,21 +53,21 @@ The next values, `enabled`, `selected`, `default`, and `cancel`, are boolean val
 
 Navigation through the menu system is done using buttons. Let's say for example you are creating a menu called GameOptions which will allow users to change certain aspects of the gameplay (perhaps such as difficulty level). This menu would be accessed from the existing Options menu. So you'll need to add a button for GameOptions to the Options menu. Here's an example button widget that could do this.
 
-    [ widget-01 ]
-    type = button
-    name = GameOptionsButton
-    text = Game
-    tip = Change game settings.
-    action = GameOptions
-    center = 0.5, 0.3
-    color = 0.0, 0.0, 0.8
-    width = auto
-    height = auto
-    fontsize = 7
-    enabled = 1
-    selected = 1
-    default = 0
-    cancel = 0
+    [ widget-01 ]
+    type = button
+    name = GameOptionsButton
+    text = Game
+    tip = Change game settings.
+    action = GameOptions
+    center = 0.5, 0.3
+    color = 0.0, 0.0, 0.8
+    width = auto
+    height = auto
+    fontsize = 7
+    enabled = 1
+    selected = 1
+    default = 0
+    cancel = 0
 
 The first thing you notice is all the properties it shares with the label widget. In this case let's say the button is now the first one on the Options menu. The `type` is now "button" appropriately. Some new options available to a button are: `tip`, which shows a description of the widget at the bottom of the screen; `action`, which dictates what happens when the button is pressed (in this case the name of the menu to go to, in other cases, a special function name that tells the game to do something); and finally `color`, which allows you to change the color of the text in %R, %G, %B format. This particular button has 80% blue text.
 

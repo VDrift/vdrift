@@ -9,7 +9,7 @@ To run unit tests, the test executable must first be built.
 
 In the VDrift source root, run:
 
-    scons test
+    scons test
 
 ### Executing
 
@@ -21,15 +21,15 @@ The executable is called **vdrift-test** and is compiled to the **build/** direc
 
 The results are written to STDOUT. An example:
 
-    [-------------- RUNNING UNIT TESTS --------------]
-    src/matrix4.cpp(26): 'matrix4_test' FAILED: value1 (1) should be close to value2 (0)
-    src/matrix4.cpp(27): 'matrix4_test' FAILED: value1 (10) should be close to value2 (20)
-    src/matrix4.cpp(28): 'matrix4_test' FAILED: value1 (-1.19209e-07) should be close to value2 (-1)
-    src/matrix4.cpp(33): 'matrix4_test' FAILED: value1 (1) should be close to value2 (0)
-    src/matrix4.cpp(34): 'matrix4_test' FAILED: value1 (10) should be close to value2 (0)
-    src/matrix4.cpp(35): 'matrix4_test' FAILED: value1 (-1.19209e-07) should be close to value2 (1)
-    Results: 29 succeeded, 1 failed
-    [-------------- UNIT TESTS FINISHED -------------]
+    [-------------- RUNNING UNIT TESTS --------------]
+    src/matrix4.cpp(26): 'matrix4_test' FAILED: value1 (1) should be close to value2 (0)
+    src/matrix4.cpp(27): 'matrix4_test' FAILED: value1 (10) should be close to value2 (20)
+    src/matrix4.cpp(28): 'matrix4_test' FAILED: value1 (-1.19209e-07) should be close to value2 (-1)
+    src/matrix4.cpp(33): 'matrix4_test' FAILED: value1 (1) should be close to value2 (0)
+    src/matrix4.cpp(34): 'matrix4_test' FAILED: value1 (10) should be close to value2 (0)
+    src/matrix4.cpp(35): 'matrix4_test' FAILED: value1 (-1.19209e-07) should be close to value2 (1)
+    Results: 29 succeeded, 1 failed
+    [-------------- UNIT TESTS FINISHED -------------]
 
 Writing New Tests
 -----------------

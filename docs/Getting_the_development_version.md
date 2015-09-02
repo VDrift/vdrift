@@ -28,11 +28,11 @@ To easily stay up to date with the latest changes, and to avoid re-downloading l
 
 The following command will clone the source code to a folder called **vdrift** in the current directory:
 
-    git clone git://github.com/VDrift/vdrift.git
+    git clone git://github.com/VDrift/vdrift.git
 
 Then navigate to the **vdrift** folder:
 
-    cd vdrift
+    cd vdrift
 
 ### Dependencies
 
@@ -40,17 +40,17 @@ Cloning the dependencies for Windows and OS X is similar to cloning the source c
 
 -   Windows:
 
-        git clone git://github.com/VDrift/vdrift-win.git
+        git clone git://github.com/VDrift/vdrift-win.git
 
 -   OS X:
 
-        git clone git://github.com/VDrift/vdrift-mac.git
+        git clone git://github.com/VDrift/vdrift-mac.git
 
 ### Data
 
 The data can be checked out into the **vdrift/data** folder with the following command. Make sure you are still in the **vdrift** folder.
 
-    svn co https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+    svn co https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
 
 This will take a while to complete as the data is quite big.
 
