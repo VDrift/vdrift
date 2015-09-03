@@ -19,7 +19,6 @@ opts.Add(BoolVariable('os_cc', 'Set this to 1 if you want to use the operating s
 opts.Add(BoolVariable('os_cxx', 'Set this to 1 if you want to use the operating system\'s C++ compiler environment variable.', 0))
 opts.Add(BoolVariable('os_cxxflags', 'Set this to 1 if you want to use the operating system\'s C++ compiler flags environment variable.', 0))
 opts.Add(BoolVariable('use_distcc', 'Set this to 1 to enable distributed compilation', 0))
-opts.Add(BoolVariable('force_feedback', 'Enable force-feedback support', 0))
 opts.Add(BoolVariable('profiling', 'Turn on profiling output', 0))
 opts.Add(BoolVariable('efficiency', 'Turn on compile-time efficiency warnings', 0))
 opts.Add(BoolVariable('verbose', 'Show verbose compiling output', 1)) 
@@ -440,12 +439,6 @@ if env['use_binreloc']:
 if env['use_distcc']:
     env['CXX'] = 'distcc '+env['CXX']
     env['CC'] = 'distcc '+env['CC']
-
-#------------------------#
-# Force Feedback support #
-#------------------------#
-if env['force_feedback']:
-    cppdefines.append('ENABLE_FORCE_FEEDBACK')
 
 #----------------------#
 # OS compiler settings #

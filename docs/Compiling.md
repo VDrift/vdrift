@@ -103,10 +103,6 @@ Compiling VDrift in release mode will turn off debugging options, and enable mor
 
     scons release=1
 
-To enable force feedback, use this flag:
-
-    scons force_feedback=1
-
 You can get a list of all compile time options with:
 
     scons --help

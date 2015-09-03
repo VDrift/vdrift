@@ -19,7 +19,7 @@ This game is in the early stages of development but is already very playable. Cu
 -   Joystick, mouse and keyboard input filtering
 -   Brake and reverse lights
 -   Driver aids: automatic shifting, traction control, anti-lock braking
--   Experimental force feedback
+-   Steering force feedback
 -   Race against up to 3 AI with variable difficultly
 -   Engine and road sounds
 
