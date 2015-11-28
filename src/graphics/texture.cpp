@@ -577,7 +577,7 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		}
 
 		// Create MipMapped Texture
-		GLenum targetparam;
+		GLenum targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
 		if (i == 0)
 			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
 		else if (i == 1)
