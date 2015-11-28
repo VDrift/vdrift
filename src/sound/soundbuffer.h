@@ -63,7 +63,6 @@ public:
 
 private:
 	SoundInfo info;
-	unsigned int size;
 	bool loaded;
 	char * sound_buffer;
 	std::string name;
