@@ -36,7 +36,6 @@ class CarBrake
 		btScalar radius; ///< effective radius of the rotor
 		btScalar area; ///< area of the brake pads
 		btScalar bias; ///< the fraction of the pressure to be applied to the brake
-		btScalar threshold; ///< brake locks when the linear brake velocity divided by the normal force is less than this value
 		btScalar handbrake; ///< the friction factor that is applied when the handbrake is pulled.  this is usually 1.0 for rear brakes and 0.0 for front brakes, but could be any number
 
 		//variables
@@ -54,7 +53,6 @@ class CarBrake
 			max_pressure(4e6),
 			radius(0.14),
 			area(0.015),
-			threshold(2e-4),
 			brake_factor(0),
 			handbrake_factor(0),
 			lasttorque(0)
