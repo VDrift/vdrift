@@ -306,16 +306,14 @@ static bool LoadDifferential(
 	CarDifferential & diff,
 	std::ostream & error_output)
 {
-	btScalar final_drive(1), anti_slip(0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
+	CarDifferentialInfo info;
+	if (!cfg.get("final-drive", info.final_drive, error_output)) return false;
+	if (!cfg.get("anti-slip", info.anti_slip, error_output)) return false;
+	cfg.get("anti-slip-torque", info.anti_slip_torque);
+	cfg.get("anti-slip-torque-deceleration-factor", info.anti_slip_torque_deceleration_factor);
+	cfg.get("torque-split", info.torque_split);
 
-	if (!cfg.get("final-drive", final_drive, error_output)) return false;
-	if (!cfg.get("anti-slip", anti_slip, error_output)) return false;
-	cfg.get("anti-slip-torque", anti_slip_torque);
-	cfg.get("anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
-
-	diff.SetFinalDrive(final_drive);
-	diff.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
-
+	diff.Init(info);
 	return true;
 }
 
