@@ -18,11 +18,16 @@
 /************************************************************************/
 
 #include "guislider.h"
+#include "graphics/texture.h"
+#include <sstream>
 
 GuiSlider::GuiSlider() :
-	m_value(0), m_x(0), m_y(0), m_w(0), m_h(0), m_fill(0)
+	m_x(0), m_y(0), m_w(0), m_h(0),
+	m_min_value(-0.02), m_max_value(0.02)
 {
 	set_value.call.bind<GuiSlider, &GuiSlider::SetValue>(this);
+	set_min_value.call.bind<GuiSlider, &GuiSlider::SetMinValue>(this);
+	set_max_value.call.bind<GuiSlider, &GuiSlider::SetMaxValue>(this);
 }
 
 GuiSlider::~GuiSlider()
@@ -30,60 +35,73 @@ GuiSlider::~GuiSlider()
 	// dtor
 }
 
-void GuiSlider::Update(SceneNode & scene, float dt)
-{
-	if (m_update)
-	{
-		float x, w;
-		if (m_fill > 0)
-		{
-			x = m_x;
-			w = m_w * m_value;
-		}
-		else if (m_fill < 0)
-		{
-			x = m_x + m_w * m_value;
-			w = m_w * (1 - m_value);
-		}
-		else
-		{
-			x = m_x + m_w * m_value - m_h * 0.1;
-			w = m_h * 0.2;
-		}
-		m_slider.SetToBillboard(x, m_y, w, m_h);
-
-		GuiWidget::Update(scene, dt);
-	}
-}
-
-void GuiSlider::SetupDrawable(
-	SceneNode & scene,
-	std::shared_ptr<Texture> texture,
-	float xywh[4], float z, int fill,
-	std::ostream & /*error_output*/)
-{
-	m_value = 0;
-	m_x = xywh[0] - xywh[2] * 0.5f;
-	m_y = xywh[1] - xywh[3] * 0.5f;
-	m_w = xywh[2];
-	m_h = xywh[3];
-	m_fill = fill;
-	m_slider.Load(scene, texture, z);
-}
-
 void GuiSlider::SetValue(const std::string & valuestr)
 {
 	float value;
 	std::istringstream s(valuestr);
 	s >> value;
-	if (value != m_value)
+
+	float half_width = (m_max_value - m_min_value) * 0.5f;
+	float center = m_min_value + half_width;
+	if (value > center || value < center)
 	{
-		m_value = value;
+		m_min_value = value - half_width;
+		m_max_value = value + half_width;
 		m_update = true;
 	}
 }
 
-Drawable & GuiSlider::GetDrawable(SceneNode & scene)
+void GuiSlider::SetMinValue(const std::string & valuestr)
 {
-	return m_slider.GetDrawable(scene);
+	float value;
+	std::istringstream s(valuestr);
+	s >> value;
+
+	if (value > m_min_value || value < m_min_value)
+	{
+		m_min_value = value;
+		m_update = true;
+	}
+}
+
+void GuiSlider::SetMaxValue(const std::string & valuestr)
+{
+	float value;
+	std::istringstream s(valuestr);
+	s >> value;
+
+	if (value > m_max_value || value < m_max_value)
+	{
+		m_max_value = value;
+		m_update = true;
+	}
+}
+
+Drawable & GuiSlider::GetDrawable(SceneNode & node)
+{
+	return node.GetDrawList().twodim.get(m_draw);
+}
+
+void GuiSlider::InitDrawable(
+	SceneNode & node,
+	const std::shared_ptr<Texture> & texture,
+	float xywh[4],
+	float z)
+{
+	m_x = xywh[0] - xywh[2] * 0.5f;
+	m_y = xywh[1] - xywh[3] * 0.5f;
+	m_w = xywh[2];
+	m_h = xywh[3];
+
+	m_texture = texture;
+
+	assert(!m_draw.valid());
+	m_draw = node.GetDrawList().twodim.insert(Drawable());
+
+	Drawable & drawable = GetDrawable(node);
+	drawable.SetTextures(m_texture->GetId());
+	drawable.SetVertArray(&m_varray);
+	drawable.SetDrawOrder(z);
+	drawable.SetCull(false);
+	drawable.SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha);
 }

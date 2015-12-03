@@ -18,22 +18,19 @@
 /************************************************************************/
 
 #include "guiradialslider.h"
-#include "graphics/texture.h"
 
 GuiRadialSlider::GuiRadialSlider() :
-	m_x(0), m_y(0), m_w(0), m_h(0),
-	m_start_angle(0), m_end_angle(0),
+	m_start_angle(0),
+	m_end_angle(0),
 	m_radius(0),
-	m_value(0),
-	m_dar(1),
-	m_fill(0)
+	m_dar(1)
 {
-	set_value.call.bind<GuiRadialSlider, &GuiRadialSlider::SetValue>(this);
+	// ctor
 }
 
 GuiRadialSlider::~GuiRadialSlider()
 {
-	//dtor
+	// dtor
 }
 
 void GuiRadialSlider::Update(SceneNode & scene, float dt)
@@ -49,93 +46,48 @@ void GuiRadialSlider::SetupDrawable(
 	SceneNode & node,
 	const std::shared_ptr<Texture> & texture,
 	float xywh[4], float z,
-	float start_angle, float end_angle, float radius,
-	float dar, int fill, std::ostream & /*error_output*/)
+	float start_angle, float end_angle,
+	float radius, float dar,
+	std::ostream & /*error_output*/)
 {
-	m_texture = texture;
-	m_x = xywh[0] - xywh[2] * 0.5f;
-	m_y = xywh[1] - xywh[3] * 0.5f;
-	m_w = xywh[2];
-	m_h = xywh[3];
 	m_start_angle = start_angle;
 	m_end_angle = end_angle;
 	m_radius = radius;
 	m_dar = dar;
-	m_fill = fill;
 
-	InitDrawable(node, z);
+	InitDrawable(node, texture, xywh, z);
 	UpdateVertexArray();
-}
-
-void GuiRadialSlider::SetValue(const std::string & valuestr)
-{
-	float value;
-	std::istringstream s(valuestr);
-	s >> value;
-	if (value != m_value)
-	{
-		m_value = value;
-		m_update = true;
-	}
-}
-
-Drawable & GuiRadialSlider::GetDrawable(SceneNode & node)
-{
-	return node.GetDrawList().twodim.get(m_draw);
-}
-
-void GuiRadialSlider::InitDrawable(SceneNode & node, float draworder)
-{
-	assert(!m_draw.valid());
-	m_draw = node.GetDrawList().twodim.insert(Drawable());
-
-	Drawable & drawable = GetDrawable(node);
-	drawable.SetTextures(m_texture->GetId());
-	drawable.SetVertArray(&m_varray);
-	drawable.SetDrawOrder(draworder);
-	drawable.SetCull(false);
-	drawable.SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha);
 }
 
 void GuiRadialSlider::UpdateVertexArray()
 {
-	const float deg = M_PI / 180.0f;
-	float anchor[2] = {m_x + m_w * 0.5f, m_y + m_h * 0.5f + m_radius};
-	float angle = m_end_angle * m_value + m_start_angle * (1.0f - m_value);
-	if (m_fill == 0)
-	{
-		// billboard relative to anchor twelve o'clock position
-		float x1 = -m_w * 0.5f;
-		float y1 = -m_radius - m_h * 0.5f;
-		float x2 = +m_w * 0.5f;
-		float y2 = -m_radius + m_h * 0.5f;
+	float deg2rad = M_PI / 180.0f;
+	float anchor[2] = {m_x + m_w * 0.5f, m_y + m_h * 0.5f};
+	float r1 = m_radius * 2.0f - m_h * 0.5f;
+	float r2 = m_h * 0.5f;
 
-		m_varray.SetToBillboard(x1, y1, x2, y2);
-		m_varray.Rotate(angle * deg, 0.0f, 0.0f, 1.0f);
-		m_varray.Scale(m_dar, 1.0f, 1.0f);
-		m_varray.Translate(anchor[0], anchor[1], 0.0f);
+	if (set_value.connected()) // fixme: this is kinda sketchy
+	{
+		float half_width = (m_max_value - m_min_value) * 0.5f;
+		float x1 = -m_h * half_width;
+		float x2 = m_h * half_width;
+		float value = (m_min_value + m_max_value) * 0.5f;
+		float angle = m_start_angle * (1.0f - value) + m_end_angle * value;
+
+		m_varray.SetToBillboard(x1, -r2, x2, -r1);
+		m_varray.Rotate(angle * deg2rad, 0.0f, 0.0f, 1.0f);
 	}
 	else
 	{
-		float a0, a1, ad;
-		if (m_fill > 0)
-		{
-			a0 = (m_start_angle - 90) * deg;
-			a1 = (angle - 90) * deg;
-			ad = angle - m_start_angle;
-		}
-		else // m_fill < 0
-		{
-			a0 = (angle - 90) * deg;
-			a1 = (m_end_angle - 90) * deg;;
-			ad =  m_end_angle - angle;
-		}
-		float r0 = m_radius - m_h * 0.5f;
-		float r1 = m_radius + m_h * 0.5f;
-		unsigned n = fabs(m_radius * ad) + 1;
+		float angle_range = m_end_angle - m_start_angle;
+		float slider_range = m_max_value - m_min_value;
+		float a1 = m_start_angle + angle_range * m_min_value - 90;
+		float a2 = m_start_angle + angle_range * m_max_value - 90;
+		unsigned n = fabs(m_radius * angle_range * slider_range) + 1;
 
-		m_varray.SetTo2DRing(r0, r1, a0, a1, n);
-		m_varray.Scale(m_dar, 1.0f, 1.0f);
-		m_varray.Translate(anchor[0], anchor[1], 0.0f);
+		m_varray.SetTo2DRing(r1, r2, a1 * deg2rad, a2 * deg2rad, n);
 	}
+
+	m_varray.Scale(m_dar, 1.0f, 1.0f);
+	m_varray.Translate(anchor[0], anchor[1], 0.0f);
 }

@@ -17,51 +17,32 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _GUI_SLIDER_H
-#define _GUI_SLIDER_H
+#ifndef _GUI_LINEAR_SLIDER_H
+#define _GUI_LINEAR_SLIDER_H
 
-#include "guiwidget.h"
-#include "graphics/scenenode.h"
-#include "graphics/vertexarray.h"
-#include <memory>
+#include "guislider.h"
 
-// gui slider base class
-
-class Texture;
-
-class GuiSlider : public GuiWidget
+class GuiLinearSlider : public GuiSlider
 {
 public:
-	GuiSlider();
+	GuiLinearSlider();
 
-	~GuiSlider();
+	~GuiLinearSlider();
 
-	Slot1<const std::string &> set_value;
-	Slot1<const std::string &> set_min_value;
-	Slot1<const std::string &> set_max_value;
+	virtual void Update(SceneNode & scene, float dt);
 
-protected:
-	std::shared_ptr<Texture> m_texture;
-	SceneNode::DrawableHandle m_draw;
-	VertexArray m_varray;
-	float m_x, m_y, m_w, m_h;
-	float m_min_value, m_max_value;  // relative slider element extents
-
-	void SetValue(const std::string & value);
-
-	void SetMinValue(const std::string & value);
-
-	void SetMaxValue(const std::string & value);
-
-	GuiSlider(const GuiSlider & other);
-
-	Drawable & GetDrawable(SceneNode & node);
-
-	void InitDrawable(
+	void SetupDrawable(
 		SceneNode & node,
 		const std::shared_ptr<Texture> & texture,
-		float xywh[4],
-		float z);
+		float xywh[4], float z, bool vertical,
+  		std::ostream & error_output);
+
+private:
+	bool m_vertical;
+
+	GuiLinearSlider(const GuiLinearSlider & other);
+
+	void UpdateVertexArray();
 };
 
-#endif
+#endif // _GUI_LINEAR_SLIDER_H

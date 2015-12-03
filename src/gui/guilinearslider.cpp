@@ -17,51 +17,55 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _GUI_SLIDER_H
-#define _GUI_SLIDER_H
+#include "guilinearslider.h"
 
-#include "guiwidget.h"
-#include "graphics/scenenode.h"
-#include "graphics/vertexarray.h"
-#include <memory>
-
-// gui slider base class
-
-class Texture;
-
-class GuiSlider : public GuiWidget
+GuiLinearSlider::GuiLinearSlider() :
+	m_vertical(false)
 {
-public:
-	GuiSlider();
+	// ctor
+}
 
-	~GuiSlider();
+GuiLinearSlider::~GuiLinearSlider()
+{
+	// dtor
+}
 
-	Slot1<const std::string &> set_value;
-	Slot1<const std::string &> set_min_value;
-	Slot1<const std::string &> set_max_value;
+void GuiLinearSlider::Update(SceneNode & scene, float dt)
+{
+	if (m_update)
+	{
+		UpdateVertexArray();
+		GuiWidget::Update(scene, dt);
+	}
+}
 
-protected:
-	std::shared_ptr<Texture> m_texture;
-	SceneNode::DrawableHandle m_draw;
-	VertexArray m_varray;
-	float m_x, m_y, m_w, m_h;
-	float m_min_value, m_max_value;  // relative slider element extents
+void GuiLinearSlider::SetupDrawable(
+	SceneNode & node,
+	const std::shared_ptr<Texture> & texture,
+	float xywh[4], float z, bool vertical,
+	std::ostream & /*error_output*/)
+{
+	m_vertical = vertical;
 
-	void SetValue(const std::string & value);
+	InitDrawable(node, texture, xywh, z);
+}
 
-	void SetMinValue(const std::string & value);
-
-	void SetMaxValue(const std::string & value);
-
-	GuiSlider(const GuiSlider & other);
-
-	Drawable & GetDrawable(SceneNode & node);
-
-	void InitDrawable(
-		SceneNode & node,
-		const std::shared_ptr<Texture> & texture,
-		float xywh[4],
-		float z);
-};
-
-#endif
+void GuiLinearSlider::UpdateVertexArray()
+{
+	float x1, y1, x2, y2;
+	if (m_vertical)
+	{
+		x1 = m_x;
+		y1 = m_y + m_h * m_min_value;
+		x2 = m_x + m_w;
+		y2 = m_y + m_h * m_max_value;
+	}
+	else
+	{
+		x1 = m_x + m_w * m_min_value;
+		y1 = m_y;
+		x2 = m_x + m_w * m_max_value;
+		y2 = m_y + m_h;
+	}
+	m_varray.SetToBillboard(x1, y1, x2, y2);
+}

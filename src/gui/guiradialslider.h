@@ -20,15 +20,9 @@
 #ifndef _GUI_RADIAL_SLIDER_H
 #define _GUI_RADIAL_SLIDER_H
 
-#include "guiwidget.h"
-#include "graphics/scenenode.h"
-#include "graphics/vertexarray.h"
+#include "guislider.h"
 
-#include <memory>
-
-class Texture;
-
-class GuiRadialSlider : public GuiWidget
+class GuiRadialSlider : public GuiSlider
 {
 public:
 	GuiRadialSlider();
@@ -41,30 +35,17 @@ public:
 		SceneNode & node,
 		const std::shared_ptr<Texture> & texture,
 		float xywh[4], float z,
-		float start_angle, float end_angle, float radius,
-		float dar, int fill, std::ostream & error_output);
-
-	Slot1<const std::string &> set_value;
+		float start_angle, float end_angle,
+		float radius, float dar,
+		std::ostream & error_output);
 
 private:
-	std::shared_ptr<Texture> m_texture;
-	SceneNode::DrawableHandle m_draw;
-	VertexArray m_varray;
-	float m_x, m_y, m_w, m_h;
 	float m_start_angle;
 	float m_end_angle;
 	float m_radius;
-	float m_value;
 	float m_dar;
-	int m_fill;
 
 	GuiRadialSlider(const GuiRadialSlider & other);
-
-	void SetValue(const std::string & value);
-
-	Drawable & GetDrawable(SceneNode & node);
-
-	void InitDrawable(SceneNode & node, float draworder);
 
 	void UpdateVertexArray();
 };

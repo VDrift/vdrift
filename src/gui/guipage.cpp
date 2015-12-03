@@ -23,7 +23,7 @@
 #include "guicontrol.h"
 #include "guiimage.h"
 #include "guilabel.h"
-#include "guislider.h"
+#include "guilinearslider.h"
 #include "guiradialslider.h"
 #include "guicontrollist.h"
 #include "guiimagelist.h"
@@ -483,7 +483,7 @@ bool GuiPage::Load(
 		}
 		else if (pagefile.get(section, "image", value))
 		{
-			std::string slider, ext, path = texpath;
+			std::string ext, path = texpath;
 			pagefile.get(section, "path", path);
 			pagefile.get(section, "ext", ext);
 
@@ -492,6 +492,7 @@ bool GuiPage::Load(
 			pagefile.get(section, "image-rect", slice);
 
 			GuiImageList * widget_list = 0;
+			std::string slider_val, slider_min, slider_max;
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// init drawable
@@ -517,16 +518,11 @@ bool GuiPage::Load(
 				widgetlistmap[section->first] = widget_list;
 				widget = widget_list;
 			}
-			else if (pagefile.get(section, "slider", slider))
+			else if (
+				pagefile.get(section, "slider", slider_val) |
+				pagefile.get(section, "slider-min", slider_min)	|
+				pagefile.get(section, "slider-max", slider_max))
 			{
-				int fill = 0;
-				std::string fillstr;
-				pagefile.get(section, "fill", fillstr);
-				if (fillstr == "lower")
-					fill = 1;
-				else if (fillstr == "upper")
-					fill = -1;
-
 				TextureInfo texinfo;
 				texinfo.mipmap = false;
 				texinfo.repeatu = false;
@@ -534,6 +530,7 @@ bool GuiPage::Load(
 				std::shared_ptr<Texture> tex;
 				content.load(tex, texpath, value, texinfo);
 
+				GuiSlider * slider = 0;
 				float radius = 0.0;
 				if (pagefile.get(section, "radius", radius))
 				{
@@ -541,32 +538,40 @@ bool GuiPage::Load(
 					pagefile.get(section, "start-angle", start_angle);
 					pagefile.get(section, "end-angle", end_angle);
 
-					GuiRadialSlider * new_widget = new GuiRadialSlider();
-					new_widget->SetupDrawable(
+					GuiRadialSlider * rslider = new GuiRadialSlider();
+					rslider->SetupDrawable(
 						node, tex, r.xywh, r.z, start_angle, end_angle, radius,
-						hwratio, fill, error_output);
-
-					ConnectAction(slider, vsignalmap, new_widget->set_value);
-					widget = new_widget;
+						hwratio, error_output);
+					slider = rslider;
 				}
 				else
 				{
-					GuiSlider * new_widget = new GuiSlider();
-					new_widget->SetupDrawable(
-						node, tex, r.xywh, r.z, fill, error_output);
+					bool vertical = false;
+					pagefile.get(section, "vertical", vertical);
 
-					ConnectAction(slider, vsignalmap, new_widget->set_value);
-					widget = new_widget;
+					GuiLinearSlider * lslider = new GuiLinearSlider();
+					lslider->SetupDrawable(
+						node, tex, r.xywh, r.z, vertical, error_output);
+					slider = lslider;
 				}
 
-				widgetmap[section->first] = widget;
+				if (!slider_val.empty())
+					ConnectAction(slider_val, vsignalmap, slider->set_value);
+
+				if (!slider_min.empty())
+					ConnectAction(slider_min, vsignalmap, slider->set_min_value);
+
+				if (!slider_max.empty())
+					ConnectAction(slider_max, vsignalmap, slider->set_max_value);
+
+				widgetmap[section->first] = slider;
+				widget = slider;
 			}
 			else
 			{
 				GuiImage * new_widget = new GuiImage();
 				new_widget->SetupDrawable(
-					node, content, path, ext,
-					r.xywh, uv, r.z);
+					node, content, path, ext, r.xywh, uv, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_image);
 
