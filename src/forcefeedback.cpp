@@ -28,7 +28,6 @@ ForceFeedback::ForceFeedback(
 	std::ostream & info_output) :
 	device_name(device),
 	enabled(true),
-	stop_and_play(false),
 	lastforce(0),
 	haptic(0),
 	effect_id(-1)

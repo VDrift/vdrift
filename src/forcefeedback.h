@@ -44,11 +44,6 @@ public:
 private:
 	std::string device_name;
 	bool enabled;
-	bool stop_and_play;
-	int device_handle;
-	int axis_code;
-	int axis_min;
-	int axis_max;
 	float lastforce;
 
 	SDL_Haptic * haptic;
