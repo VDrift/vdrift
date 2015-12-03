@@ -57,6 +57,7 @@ public:
 	Slot & operator=(const Slot & other);
 	void connect(Signal<Delegate> & signal);
 	void disconnect(void);
+	bool connected(void) const;
 	Delegate call;
 
 protected:
@@ -174,6 +175,12 @@ inline void Slot<Delegate>::disconnect(void)
 		signal.m_connections.pop_back();
 	}
 	m_connections.resize(0);
+}
+
+template <class Delegate>
+inline bool Slot<Delegate>::connected(void) const
+{
+	return m_connections.size();
 }
 
 template <class Delegate>
