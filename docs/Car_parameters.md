@@ -108,10 +108,10 @@ For **FWD** cars \[differential.front\] has to be defined. **AWD** cars require 
 
     [differential.rear]
     final-drive = 4.100
-    anti-slip = 600.0                         # optional
-    anti-slip-torque = 1                      # optional
-    anti-slip-torque-deceleration-factor = 0  # optional
-    torque-split = 0.5                        # optional
+    anti-slip = 600.0
+    anti-slip-torque = 1
+    anti-slip-torque-deceleration-factor = 0
+    torque-split = 0.5
 
 The final drive provides an additional gear reduction. The anti-slip parameter defines the maximum anti-slip torque. For speed-sensitive differentials, it also defines the anti-slip torque per radian per second of speed difference between the wheels. If the differential is speed-sensitive, the anti-slip-torque and anti-slip-torque-deceleration-factor parameters must be omitted or set to zero. If the differential is torque-sensitive, then anti-slip-torque defines the amount of anti-slip torque per input torque. The anti-slip-torque-deceleration-factor defines the amount of anti-slip torque per negative input torque. For a 1-way torque-sensitive LSD, set anti-slip-torque-deceleration-factor to zero, for a 2-way torque-sensitive LSD, set anti-slip-torque-deceleration-factor to 1.0, for 1.5-way, set it between 0.0 and 1.0. Torque split parameter determines the torque split ratio 0.0 to 1.0 between driven axes front and rear (left and right), 0.0 means all torque is applied to front (left). 
 
