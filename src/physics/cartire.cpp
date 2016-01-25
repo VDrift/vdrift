@@ -173,7 +173,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
 
 	// horizontal shift
-	btScalar Sh = 0;//breaks beckman//b[9] * Fz + b[10];
+	btScalar Sh = b[9] * Fz + b[10];
 
 	// composite
 	btScalar S = 100 * sigma + Sh;
@@ -208,7 +208,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar E = a[6] * Fz + a[7];
 
 	// horizontal shift
-	btScalar Sh = 0;//breaks beckman//a[8] * gamma + a[9] * Fz + a[10];
+	btScalar Sh = a[8] * gamma + a[9] * Fz + a[10];
 
 	// vertical shift
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
