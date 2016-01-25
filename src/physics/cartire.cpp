@@ -120,8 +120,7 @@ btScalar CarTire::getRollingResistance(const btScalar velocity, const btScalar r
 	rolling_resistance += velocity * velocity * rolling_resistance_quad;
 
 	// rolling resistance direction
-	btScalar resistance = -rolling_resistance;
-	if (velocity < 0) resistance = -resistance;
+	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
 
 	return resistance;
 }
