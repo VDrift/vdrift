@@ -117,7 +117,7 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 
 	controls.clear();
 	controls.resize(GameInput::INVALID);
-	for (Config::const_iterator i = controls_config.begin(); i != controls_config.end(); ++i)
+	for (auto i = controls_config.begin(); i != controls_config.end(); ++i)
 	{
 		std::string type, name;
 		if (!controls_config.get(i, "type", type)) continue;
@@ -296,30 +296,29 @@ void CarControlMap::Save(Config & controls_config)
 	int id = 0;
 	for (size_t n = 0; n < controls.size(); ++n)
 	{
-		std::string ctrl_name = GetStringFromInput(CarInput::Enum(n));
-		if (ctrl_name.empty())
+		std::string control_name = GetStringFromInput(CarInput::Enum(n));
+		if (control_name.empty())
 			continue;
 
-		for (size_t i = 0; i < controls[n].size(); ++i)
+		for (auto & control : controls[n])
 		{
 			std::ostringstream s;
 			s << "control mapping " << std::setfill('0') << std::setw(2) << id;
 
 			Config::iterator section;
 			controls_config.get(s.str(), section);
-			controls_config.set(section, "name", ctrl_name);
+			controls_config.set(section, "name", control_name);
 
-			Control & curctrl = controls[n][i];
-			if (curctrl.type == Control::JOY)
+			if (control.type == Control::JOY)
 			{
 				controls_config.set(section, "type", "joy");
-				controls_config.set(section, "joy_index", curctrl.joynum);
+				controls_config.set(section, "joy_index", control.joynum);
 
-				if (curctrl.joytype == Control::JOYAXIS)
+				if (control.joytype == Control::JOYAXIS)
 				{
 					controls_config.set(section, "joy_type", "axis");
-					controls_config.set(section, "joy_axis", curctrl.joyaxis );
-					switch (curctrl.joyaxistype) {
+					controls_config.set(section, "joy_axis", control.joyaxis );
+					switch (control.joyaxistype) {
 						case Control::POSITIVE:
 							controls_config.set(section, "joy_axis_type", "positive");
 							break;
@@ -327,40 +326,40 @@ void CarControlMap::Save(Config & controls_config)
 							controls_config.set(section, "joy_axis_type", "negative");
 							break;
 					}
-					controls_config.set(section, "deadzone", curctrl.deadzone);
-					controls_config.set(section, "exponent", curctrl.exponent);
-					controls_config.set(section, "gain", curctrl.gain);
+					controls_config.set(section, "deadzone", control.deadzone);
+					controls_config.set(section, "exponent", control.exponent);
+					controls_config.set(section, "gain", control.gain);
 				}
-				else if (curctrl.joytype == Control::JOYBUTTON)
+				else if (control.joytype == Control::JOYBUTTON)
 				{
 					controls_config.set(section, "joy_type", "button");
-					controls_config.set(section, "joy_button", curctrl.keycode);
-					controls_config.set(section, "once", curctrl.onetime);
-					controls_config.set(section, "down", curctrl.pushdown);
+					controls_config.set(section, "joy_button", control.keycode);
+					controls_config.set(section, "once", control.onetime);
+					controls_config.set(section, "down", control.pushdown);
 				}
 			}
-			else if (curctrl.type == Control::KEY)
+			else if (control.type == Control::KEY)
 			{
 				controls_config.set(section, "type", "key");
-				std::string keyname = GetStringFromKeycode(curctrl.keycode);
+				std::string keyname = GetStringFromKeycode(control.keycode);
 				controls_config.set(section, "key", keyname);
-				controls_config.set(section, "once", curctrl.onetime);
-				controls_config.set(section, "down", curctrl.pushdown);
+				controls_config.set(section, "once", control.onetime);
+				controls_config.set(section, "down", control.pushdown);
 			}
-			else if (curctrl.type == Control::MOUSE)
+			else if (control.type == Control::MOUSE)
 			{
 				controls_config.set(section, "type", "mouse");
-				if (curctrl.mousetype == Control::MOUSEBUTTON)
+				if (control.mousetype == Control::MOUSEBUTTON)
 				{
 					controls_config.set(section, "mouse_type", "button");
-					controls_config.set(section, "mouse_button", curctrl.keycode );
-					controls_config.set(section, "once", curctrl.onetime );
-					controls_config.set(section, "down", curctrl.pushdown );
+					controls_config.set(section, "mouse_button", control.keycode );
+					controls_config.set(section, "once", control.onetime );
+					controls_config.set(section, "down", control.pushdown );
 				}
-				else if (curctrl.mousetype == Control::MOUSEMOTION)
+				else if (control.mousetype == Control::MOUSEMOTION)
 				{
 					std::string direction = "invalid";
-					Control::MouseDirectionEnum mdir = curctrl.mdir;
+					Control::MouseDirectionEnum mdir = control.mdir;
 					if ( mdir == Control::UP )
 					{
 						direction = "up";
@@ -381,9 +380,9 @@ void CarControlMap::Save(Config & controls_config)
 					controls_config.set(section, "mouse_type", "motion");
 					controls_config.set(section, "mouse_motion", direction);
 
-					controls_config.set(section, "deadzone", curctrl.deadzone);
-					controls_config.set(section, "exponent", curctrl.exponent);
-					controls_config.set(section, "gain", curctrl.gain);
+					controls_config.set(section, "deadzone", control.deadzone);
+					controls_config.set(section, "exponent", control.exponent);
+					controls_config.set(section, "gain", control.gain);
 				}
 			}
 
@@ -405,22 +404,22 @@ const std::vector <float> & CarControlMap::ProcessInput(
 	{
 		float newval = 0.0;
 
-		for (std::vector <Control>::iterator i = controls[n].begin(); i != controls[n].end(); ++i)
+		for (const auto & control : controls[n])
 		{
 			bool handled = false;
 			float tempval = newval;
 
-			if (i->type == Control::JOY)
+			if (control.type == Control::JOY)
 			{
 				//cout << "type joy" << std::endl;
 
-				if (i->joytype == Control::JOYAXIS)
+				if (control.joytype == Control::JOYAXIS)
 				{
-					float val = eventsystem.GetJoyAxis(i->joynum, i->joyaxis);
-					if (i->joyaxistype == Control::NEGATIVE)
+					float val = eventsystem.GetJoyAxis(control.joynum, control.joyaxis);
+					if (control.joyaxistype == Control::NEGATIVE)
 						val = -val;
-					val = ApplyDeadzone(i->deadzone,val);
-					val = ApplyGain(i->gain,val);
+					val = ApplyDeadzone(control.deadzone,val);
+					val = ApplyGain(control.gain,val);
 
 					double absval = val;
 					bool neg = false;
@@ -429,22 +428,22 @@ const std::vector <float> & CarControlMap::ProcessInput(
 						absval = -val;
 						neg = true;
 					}
-					val = ApplyExponent(i->exponent,absval);
+					val = ApplyExponent(control.exponent,absval);
 					if (neg)
 						val = -val;
 
 					tempval = val;
 					handled = true;
 				}
-				else if (i->joytype == Control::JOYBUTTON)
+				else if (control.joytype == Control::JOYBUTTON)
 				{
-					Toggle button = eventsystem.GetJoyButton(i->joynum, i->keycode);
+					Toggle button = eventsystem.GetJoyButton(control.joynum, control.keycode);
 
-					if (i->onetime)
+					if (control.onetime)
 					{
-						if (i->pushdown && button.GetImpulseRising())
+						if (control.pushdown && button.GetImpulseRising())
 							tempval = 1.0;
-						else if (!i->pushdown && button.GetImpulseFalling())
+						else if (!control.pushdown && button.GetImpulseFalling())
 							tempval = 1.0;
 						else
 							tempval = 0.0;
@@ -454,7 +453,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					{
 						float downval = 1.0;
 						float upval = 0.0;
-						if (!i->pushdown)
+						if (!control.pushdown)
 						{
 							downval = 0.0;
 							upval = 1.0;
@@ -465,17 +464,17 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					}
 				}
 			}
-			else if (i->type == Control::KEY)
+			else if (control.type == Control::KEY)
 			{
 				//cout << "type key" << std::endl;
 
-				EventSystem::ButtonState keystate = eventsystem.GetKeyState(SDL_Keycode(i->keycode));
+				EventSystem::ButtonState keystate = eventsystem.GetKeyState(SDL_Keycode(control.keycode));
 
-				if (i->onetime)
+				if (control.onetime)
 				{
-					if (i->pushdown && keystate.just_down)
+					if (control.pushdown && keystate.just_down)
 						tempval = 1.0;
-					else if (!i->pushdown && keystate.just_up)
+					else if (!control.pushdown && keystate.just_up)
 						tempval = 1.0;
 					else
 						tempval = 0.0;
@@ -485,33 +484,33 @@ const std::vector <float> & CarControlMap::ProcessInput(
 				{
 					float downval = 1.0;
 					float upval = 0.0;
-					if (!i->pushdown)
+					if (!control.pushdown)
 					{
 						downval = 0.0;
 						upval = 1.0;
 					}
 
-					//if (inputs[n->first] != keystate.down ? downval : upval) std::cout << "Key ramp: " << i->keycode << ", " << n->first << std::endl;
+					//if (inputs[n->first] != keystate.down ? downval : upval) std::cout << "Key ramp: " << control.keycode << ", " << n->first << std::endl;
 					tempval = Ramp(lastinputs[n], keystate.down ? downval : upval, button_ramp, dt);
 
 					handled = true;
 				}
 			}
-			else if (i->type == Control::MOUSE)
+			else if (control.type == Control::MOUSE)
 			{
 				//cout << "type mouse" << std::endl;
 
-				if (i->mousetype == Control::MOUSEBUTTON)
+				if (control.mousetype == Control::MOUSEBUTTON)
 				{
 					//cout << "mousebutton" << std::endl;
 
-					EventSystem::ButtonState buttonstate = eventsystem.GetMouseButtonState(i->keycode);
+					EventSystem::ButtonState buttonstate = eventsystem.GetMouseButtonState(control.keycode);
 
-					if (i->onetime)
+					if (control.onetime)
 					{
-						if (i->pushdown && buttonstate.just_down)
+						if (control.pushdown && buttonstate.just_down)
 							tempval = 1.0;
-						else if (!i->pushdown && buttonstate.just_up)
+						else if (!control.pushdown && buttonstate.just_up)
 							tempval = 1.0;
 						else
 							tempval = 0.0;
@@ -521,7 +520,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					{
 						float downval = 1.0;
 						float upval = 0.0;
-						if (!i->pushdown)
+						if (!control.pushdown)
 						{
 							downval = 0.0;
 							upval = 1.0;
@@ -531,7 +530,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 						handled = true;
 					}
 				}
-				else if (i->mousetype == Control::MOUSEMOTION)
+				else if (control.mousetype == Control::MOUSEMOTION)
 				{
 					//cout << "mousemotion" << std::endl;
 
@@ -548,13 +547,13 @@ const std::vector <float> & CarControlMap::ProcessInput(
 
 					float val = 0;
 
-					if (i->mdir == Control::UP)
+					if (control.mdir == Control::UP)
 						val = -yval;
-					else if (i->mdir == Control::DOWN)
+					else if (control.mdir == Control::DOWN)
 						val = yval;
-					else if (i->mdir == Control::LEFT)
+					else if (control.mdir == Control::LEFT)
 						val = -xval;
-					else if (i->mdir == Control::RIGHT)
+					else if (control.mdir == Control::RIGHT)
 						val = xval;
 
 					if (val < 0)
@@ -562,8 +561,8 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					else if (val > 1)
 						val = 1;
 
-					val = ApplyDeadzone(i->deadzone,val);
-					val = ApplyGain(i->gain,val);
+					val = ApplyDeadzone(control.deadzone,val);
+					val = ApplyGain(control.gain,val);
 
 					if (val < 0)
 						val = 0;
@@ -577,7 +576,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 						absval = -val;
 						neg = true;
 					}
-					val = ApplyExponent(i->exponent,absval);
+					val = ApplyExponent(control.exponent,absval);
 					if (neg)
 						val = -val;
 
@@ -924,9 +923,9 @@ unsigned CarControlMap::GetInputFromString(const std::string & str)
 
 const std::string & CarControlMap::GetStringFromKeycode(const int code)
 {
-	for (std::map <std::string, int>::const_iterator i = keycode_stringmap.begin(); i != keycode_stringmap.end(); ++i)
-		if (i->second == code)
-			return i->first;
+	for (const auto & i : keycode_stringmap)
+		if (i.second == code)
+			return i.first;
 
 	return invalid;
 }

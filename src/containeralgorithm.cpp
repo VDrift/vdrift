@@ -41,9 +41,9 @@ bool starts_with_1(const std::string & s) {return (s[0] == '1');}
 
 std::ostream & operator << (std::ostream &os, const vector <string> & v)
 {
-	for (size_t i = 0; i < v.size()-1; i++)
+	for (const auto & s : v)
 	{
-		os << v[i] << ", ";
+		os << s << ", ";
 	}
 	os << v[v.size()-1];// << std::endl;
 	return os;

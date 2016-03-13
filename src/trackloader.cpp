@@ -851,14 +851,14 @@ bool Track::Loader::LoadSurfaces()
 
 	PTree param;
 	read_ini(file, param);
-	for (PTree::const_iterator is = param.begin(); is != param.end(); ++is)
+	for (const auto & node : param)
 	{
-		if (is->first.find("surface") != 0)
+		if (node.first.find("surface") != 0)
 		{
 			continue;
 		}
 
-		const PTree & surf_cfg = is->second;
+		const PTree & surf_cfg = node.second;
 		data.surfaces.push_back(TrackSurface());
 		TrackSurface & surface = data.surfaces.back();
 
@@ -921,13 +921,13 @@ bool Track::Loader::LoadRoads()
 bool Track::Loader::CreateRacingLines()
 {
 	K1999 k1999data;
-	for (std::list <RoadStrip>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
+	for (auto & road : data.roads)
 	{
-		if (k1999data.LoadData(*i))
+		if (k1999data.LoadData(road))
 		{
 			k1999data.CalcRaceLine();
-			k1999data.UpdateRoadStrip(*i);
-			CreateRacingLine(*i);
+			k1999data.UpdateRoadStrip(road);
+			CreateRacingLine(road);
 		}
 	}
 	return true;
@@ -1068,10 +1068,9 @@ bool Track::Loader::LoadStartPositions(const PTree & info)
 	if (data.reverse)
 	{
 		// flip start positions
-		for (std::vector <std::pair <Vec3, Quat > >::iterator i = data.start_positions.begin();
-			i != data.start_positions.end(); ++i)
+		for (auto & start_position : data.start_positions)
 		{
-			i->second.Rotate(M_PI, 0, 0, 1);
+			start_position.second.Rotate(M_PI, 0, 0, 1);
 		}
 
 		// reverse start positions
@@ -1097,20 +1096,21 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 			int patchid = lapraw[1];
 
 			int curroad = 0;
-			for (std::list<RoadStrip>::iterator i = data.roads.begin(); i != data.roads.end(); ++i, ++curroad)
+			for (const auto & road : data.roads)
 			{
 				if (curroad == roadid)
 				{
-					int num_patches = i->GetPatches().size();
+					int num_patches = road.GetPatches().size();
 					assert(patchid < num_patches);
 
 					// adjust id for reverse case
 					if (data.reverse)
 						patchid = num_patches - patchid;
 
-					data.lap.push_back(&i->GetPatches()[patchid].GetPatch());
+					data.lap.push_back(&road.GetPatches()[patchid].GetPatch());
 					break;
 				}
+				curroad++;
 			}
 		}
 	}
@@ -1142,17 +1142,17 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		data.start_positions[0].second.RotateVector(dir);
 		Vec3 bpos(pos[1], pos[2], pos[0]);
 		Vec3 bdir(dir[1], dir[2], dir[0]);
-		for (std::list<RoadStrip>::iterator r = data.roads.begin(); r != data.roads.end(); ++r)
+		for (const auto & road : data.roads)
 		{
-			for (std::vector<RoadPatch>::iterator p = r->GetPatches().begin(); p != r->GetPatches().end(); ++p)
+			for (const auto & p : road.GetPatches())
 			{
-				Vec3 vec = p->GetPatch().GetBL() - bpos;
+				Vec3 vec = p.GetPatch().GetBL() - bpos;
 				float len2 = vec.MagnitudeSquared();
 				bool fwd = vec.dot(bdir) > 0;
 				if (fwd && len2 < minlen2)
 				{
 					minlen2 = len2;
-					lap0 = &p->GetPatch();
+					lap0 = &p.GetPatch();
 				}
 			}
 		}

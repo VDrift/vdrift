@@ -300,12 +300,12 @@ bool K1999::LoadData(const RoadStrip & road)
 
 	int count = 0;
 
-	for (std::vector<RoadPatch>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
+	for (const auto & p : patchlist)
 	{
-		txLeft.push_back(i->GetPatch().GetPoint(3,0)[1]);
-		tyLeft.push_back(-i->GetPatch().GetPoint(3,0)[0]);
-		txRight.push_back(i->GetPatch().GetPoint(3,3)[1]);
-		tyRight.push_back(-i->GetPatch().GetPoint(3,3)[0]);
+		txLeft.push_back(p.GetPatch().GetPoint(3,0)[1]);
+		tyLeft.push_back(-p.GetPatch().GetPoint(3,0)[0]);
+		txRight.push_back(p.GetPatch().GetPoint(3,3)[1]);
+		tyRight.push_back(-p.GetPatch().GetPoint(3,3)[0]);
 		tLane.push_back(0.5);
 		tx.push_back(0.0);
 		ty.push_back(0.0);
@@ -326,11 +326,11 @@ void K1999::UpdateRoadStrip(RoadStrip & road)
 	std::vector<RoadPatch> & patchlist = road.GetPatches();
 	int count = 0;
 
-	for (std::vector<RoadPatch>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
+	for (auto & p : patchlist)
 	{
-		i->SetTrackCurvature(tRInverse[count]);
-		i->SetRacingLine(i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]));
-		//std::cout << i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]) << std::endl;
+		p.SetTrackCurvature(tRInverse[count]);
+		p.SetRacingLine(p.GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + p.GetPatch().GetPoint(3,3)*(tLane[count]));
+		//std::cout << p.GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + p.GetPatch().GetPoint(3,3)*(tLane[count]) << std::endl;
 
 		count++;
 	}

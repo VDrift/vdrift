@@ -29,15 +29,15 @@ void DownloadableManager::Initialize(const std::string & newfilename)
 std::vector <std::string> DownloadableManager::GetUpdatables(const std::map <std::string, int> & remote_downloadables) const
 {
 	std::vector <std::string> update;
-    
+
 	// Do a naive n*log(n) algorithm for now.
-	for (std::map <std::string, int>::const_iterator i = downloadables.begin(); i != downloadables.end(); i++)
+	for (const auto & d : downloadables)
 	{
-		std::map <std::string, int>::const_iterator r = remote_downloadables.find(i->first);
-		if (r != remote_downloadables.end() && r->second > i->second)
-			update.push_back(i->first);
+		std::map <std::string, int>::const_iterator r = remote_downloadables.find(d.first);
+		if (r != remote_downloadables.end() && r->second > d.second)
+			update.push_back(d.first);
 	}
-    
+
 	return update;
 }
 
@@ -67,8 +67,8 @@ void DownloadableManager::Load()
 void DownloadableManager::Save() const
 {
 	std::ofstream f(filename.c_str());
-	for (std::map <std::string, int>::const_iterator i = downloadables.begin(); i != downloadables.end(); i++)
-		f << i->first << " " << i->second << std::endl;
+	for (const auto & d : downloadables)
+		f << d.first << " " << d.second << std::endl;
 }
 
 

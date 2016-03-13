@@ -67,12 +67,11 @@ bool TrackMap::BuildMap(
 	track_min[1] = +1E6;
 	track_max[0] = -1E6;
 	track_max[1] = -1E6;
-	for (list <RoadStrip>::const_iterator road = roads.begin(); road != roads.end(); road++)
+	for (const auto & road : roads)
 	{
-		for (vector<RoadPatch>::const_iterator curp = road->GetPatches().begin();
-			curp != road->GetPatches().end(); curp++)
+		for (const auto & curp : road.GetPatches())
 		{
-			const Bezier & b = curp->GetPatch();
+			const Bezier & b = curp.GetPatch();
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
@@ -111,12 +110,11 @@ bool TrackMap::BuildMap(
 	const int stride = map_width * sizeof(unsigned);
 	const unsigned color = 0xffffffff;
 
-	for (list <RoadStrip>::const_iterator road = roads.begin(); road != roads.end(); road++)
+	for (const auto & road : roads)
 	{
-		for (vector<RoadPatch>::const_iterator curp = road->GetPatches().begin();
-			curp != road->GetPatches().end(); curp++)
+		for (const auto & p : road.GetPatches())
 		{
-			const Bezier & b = curp->GetPatch();
+			const Bezier & b = p.GetPatch();
 			const Vec3 & bl = b.GetBL();
 			const Vec3 & br = b.GetBR();
 			const Vec3 & fl = b.GetFL();
@@ -293,7 +291,7 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 			car++;
 			count++;
 		}
-		for (list <CarDot>::iterator i = dot; i != dotlist.end(); ++i)
+		for (auto i = dot; i != dotlist.end(); ++i)
 			mapnode.GetDrawList().twodim.erase(i->GetDrawableHandle());
 		dotlist.erase(dot,dotlist.end());
 	}
@@ -303,11 +301,11 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 		Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
 		mapdrawref.SetDrawEnable(mapvisible);
 	}
-	for (list <CarDot>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
-		i->SetVisible(mapnode, mapvisible);
+	for (auto & dot : dotlist)
+		dot.SetVisible(mapnode, mapvisible);
 
-	/*for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
-		i->DebugPrint(std::cout);*/
+	/*for (auto & dot : dotlist)
+		dot.DebugPrint(std::cout);*/
 }
 
 template <typename T>

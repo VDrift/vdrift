@@ -245,9 +245,9 @@ bool CarGraphics::Load(
 	std::shared_ptr<PTree> sel_wheel;
 	if (carwheel != "default" && !content.load(sel_wheel, carpath, carwheel)) return false;
 
-	for (PTree::const_iterator i = cfg_wheels->begin(); i != cfg_wheels->end(); ++i)
+	for (const auto & i : *cfg_wheels)
 	{
-		const PTree * cfg_wheel = &i->second;
+		const PTree * cfg_wheel = &i.second;
 
 		// override default wheel with selected, not very efficient, fixme
 		PTree opt_wheel;
@@ -267,14 +267,14 @@ bool CarGraphics::Load(
 
 	// load drawables
 	LoadBody loadBody(topnode, bodynode, loadDrawable);
-	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
+	for (const auto & i : cfg)
 	{
-		if (i->first != "body" &&
-			i->first != "steering" &&
-			i->first != "light-brake" &&
-			i->first != "light-reverse")
+		if (i.first != "body" &&
+			i.first != "steering" &&
+			i.first != "light-brake" &&
+			i.first != "light-reverse")
 		{
-			loadBody(i->second);
+			loadBody(i.second);
 		}
 	}
 
@@ -375,21 +375,21 @@ void CarGraphics::Update(const CarDynamics & dynamics)
 	assert(dynamics.GetNumBodies() == topnode.GetNodeList().size());
 
 	unsigned i = 0;
-	SceneNode::List & childlist = topnode.GetNodeList();
-	for (SceneNode::List::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
+	for (auto & node : topnode.GetNodeList())
 	{
 		Vec3 pos = ToMathVector<float>(dynamics.GetPosition(i));
 		Quat rot = ToQuaternion<float>(dynamics.GetOrientation(i));
-		ni->GetTransform().SetTranslation(pos);
-		ni->GetTransform().SetRotation(rot);
+		node.GetTransform().SetTranslation(pos);
+		node.GetTransform().SetRotation(rot);
+		i++;
 	}
 
 	// brake/reverse lights
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	for (std::list<Light>::iterator i = lights.begin(); i != lights.end(); i++)
+	for (auto & light : lights)
 	{
-		SceneNode & node = bodynoderef.GetNode(i->node);
-		Drawable & draw = node.GetDrawList().lights_omni.get(i->draw);
+		SceneNode & node = bodynoderef.GetNode(light.node);
+		Drawable & draw = node.GetDrawList().lights_omni.get(light.draw);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
 	if (brakelights.valid())
@@ -415,9 +415,9 @@ void CarGraphics::SetColor(float r, float g, float b)
 {
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
 	keyed_container<Drawable> & car_noblend = bodynoderef.GetDrawList().car_noblend;
-	for (keyed_container<Drawable>::iterator i = car_noblend.begin(); i != car_noblend.end(); ++i)
+	for (auto & drawable : car_noblend)
 	{
-		i->SetColor(r, g, b, 1);
+		drawable.SetColor(r, g, b, 1);
 	}
 }
 
@@ -429,9 +429,9 @@ void CarGraphics::EnableInteriorView(bool value)
 	interior_view = value;
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
 	keyed_container<Drawable> & normal_blend = bodynoderef.GetDrawList().normal_blend;
-	for (keyed_container<Drawable>::iterator i = normal_blend.begin(); i != normal_blend.end(); ++i)
+	for (auto & drawable : normal_blend)
 	{
-		i->SetDrawEnable(!interior_view);
+		drawable.SetDrawEnable(!interior_view);
 	}
 }
 
@@ -506,9 +506,9 @@ bool CarGraphics::LoadCameras(
 	}
 
 	cameras.reserve(cfg_cams->size());
-	for (PTree::const_iterator i = cfg_cams->begin(); i != cfg_cams->end(); ++i)
+	for (const auto & cfg_cam : *cfg_cams)
 	{
-		Camera * cam = LoadCamera(i->second, cambounce, error_output);
+		Camera * cam = LoadCamera(cfg_cam.second, cambounce, error_output);
 		if (!cam)
 		{
 			ClearCameras();
@@ -522,9 +522,9 @@ bool CarGraphics::LoadCameras(
 
 void CarGraphics::ClearCameras()
 {
-	for (size_t i = 0; i < cameras.size(); ++i)
+	for (auto & camera : cameras)
 	{
-		delete cameras[i];
+		delete camera;
 	}
 	cameras.clear();
 }

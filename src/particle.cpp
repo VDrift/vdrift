@@ -66,9 +66,9 @@ void ParticleSystem::Load(
 void ParticleSystem::Update(float dt)
 {
 	//  update particles
-	for (size_t i = 0; i < particles.size(); i++)
+	for (auto & p : particles)
 	{
-		particles[i].time += dt;
+		p.time += dt;
 	}
 
 	// remove expired particles
@@ -102,9 +102,8 @@ void ParticleSystem::UpdateGraphics(
 
 	// get particle position in camera space
 	distance_from_cam.clear();
-	for (unsigned i = 0; i < particles.size(); ++i)
+	for (auto & p : particles)
 	{
-		Particle & p = particles[i];
 		Vec3 pos = p.start_position;
 		pos = pos + p.direction * p.time * p.speed - campos;
 		camdir.RotateVector(pos);

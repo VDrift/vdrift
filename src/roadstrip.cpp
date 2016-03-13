@@ -65,9 +65,9 @@ bool RoadStrip::ReadFrom(
 	if (reverse)
 	{
 		std::reverse(patches.begin(), patches.end());
-		for (std::vector<RoadPatch>::iterator i = patches.begin(); i != patches.end(); ++i)
+		for (auto & patch : patches)
 		{
-			i->GetPatch().Reverse();
+			patch.GetPatch().Reverse();
 		}
 	}
 
@@ -77,10 +77,10 @@ bool RoadStrip::ReadFrom(
 		((patches.back().GetPatch().GetFR() - patches.front().GetPatch().GetBR()).Magnitude() < 0.1);
 
 	// Connect patches.
-	for (std::vector<RoadPatch>::iterator i = patches.begin(); i != patches.end() - 1; ++i)
+	for (auto p = patches.begin(); p != patches.end() - 1; ++p)
 	{
-		std::vector<RoadPatch>::iterator n = i + 1;
-		i->GetPatch().Attach(n->GetPatch());
+		auto n = p + 1;
+		p->GetPatch().Attach(n->GetPatch());
 	}
 	if (closed)
 	{
@@ -126,17 +126,17 @@ bool RoadStrip::Collide(
 	bool col = false;
 	std::vector<int> candidates;
 	aabb_part.Query(Aabb<float>::Ray(origin, direction, seglen), candidates);
-	for (std::vector<int>::iterator i = candidates.begin(); i != candidates.end(); ++i)
+	for (int candidate : candidates)
 	{
 		Vec3 coltri, colnorm;
-		if (patches[*i].Collide(origin, direction, seglen, coltri, colnorm))
+		if (patches[candidate].Collide(origin, direction, seglen, coltri, colnorm))
 		{
 			if (!col || (coltri-origin).MagnitudeSquared() < (outtri-origin).MagnitudeSquared())
 			{
 				outtri = coltri;
 				normal = colnorm;
-				colpatch = &patches[*i].GetPatch();
-				patch_id = *i;
+				colpatch = &patches[candidate].GetPatch();
+				patch_id = candidate;
 			}
 			col = true;
 		}

@@ -120,16 +120,15 @@ void UpdateManager::Show(Gui & gui)
 	std::set <std::string> allobjects;
 
 	// start off with the list we have on disk
-	for (std::vector<std::pair <std::string, std::string> >::const_iterator i = disklist.begin(); i != disklist.end(); i++)
+	for (const auto & obj : disklist)
 	{
-		allobjects.insert(i->first);
+		allobjects.insert(obj.first);
 	}
 
 	// now add in the cars/tracks in the remote repo
-	std::map <std::string, int> remote = autoupdate.GetAvailableUpdates(group);
-	for (std::map <std::string, int>::const_iterator i = remote.begin(); i != remote.end(); i++)
+	for (const auto & obj : autoupdate.GetAvailableUpdates(group))
 	{
-		allobjects.insert(i->first);
+		allobjects.insert(obj.first);
 	}
 
 	if (allobjects.empty())
@@ -150,7 +149,7 @@ void UpdateManager::Show(Gui & gui)
 	if (verbose)
 	{
 		info_output << "All " + group + ": ";
-		for (std::set <std::string>::const_iterator i = allobjects.begin(); i != allobjects.end(); i++)
+		for (auto i = allobjects.begin(); i != allobjects.end(); i++)
 		{
 			if (i != allobjects.begin())
 				info_output << ", ";

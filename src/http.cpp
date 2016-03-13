@@ -122,11 +122,11 @@ Http::Http(const std::string & temporary_folder) : folder(temporary_folder), dow
 
 Http::~Http()
 {
-	for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	for (const auto & hs : easyhandles)
 	{
-		FILE * file = i->second.file;
+		FILE * file = hs.second.file;
 		fclose(file);
-		curl_easy_cleanup(i->first);
+		curl_easy_cleanup(hs.first);
 	}
 	easyhandles.clear();
 	requests.clear();
@@ -277,9 +277,9 @@ bool Http::Tick()
 		}
 
 		// Update status.
-		for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+		for (const auto & hs : easyhandles)
 		{
-			CURL * easyhandle = i->first;
+			CURL * easyhandle = hs.first;
 			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in requestUrls map");
 			std::string url = u->second.url;
@@ -316,11 +316,11 @@ bool Http::GetRequestInfo(const std::string & url, HttpInfo & out)
 
 void Http::CancelAllRequests()
 {
-	for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	for (const auto & hs : easyhandles)
 	{
-		FILE * file = i->second.file;
+		FILE * file = hs.second.file;
 		fclose(file);
-		curl_easy_cleanup(i->first);
+		curl_easy_cleanup(hs.first);
 	}
 	easyhandles.clear();
 	requests.clear();
