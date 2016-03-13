@@ -30,7 +30,7 @@ static bool LoadOptions(
 	Gui::OptionMap & options,
 	std::ostream & /*error_output*/)
 {
-	for (Config::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
+	for (auto i = cfg.begin(); i != cfg.end(); ++i)
 	{
 		std::string type, desc;
 		if (i->first.empty() || !(cfg.get(i, "type", type) && cfg.get(i, "desc", desc)))
@@ -54,10 +54,10 @@ static bool LoadOptionValues(
 	Gui::OptionMap & options,
 	std::ostream & error_output)
 {
-	for (Gui::OptionMap::iterator op = options.begin(); op != options.end(); ++op)
+	for (auto & op : options)
 	{
-		const std::string & name = op->first;
-		GuiOption & option = op->second;
+		const std::string & name = op.first;
+		GuiOption & option = op.second;
 
 		Config::const_iterator ci;
 		if (!cfg.get(name, ci, error_output)) return false;
@@ -122,9 +122,9 @@ static bool LoadOptionValues(
 				error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
 				return false;
 			}
-			for (GuiOption::List::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
+			for (const auto & val : vlist->second)
 			{
-				opvals.push_back(std::make_pair(n->first, lang(n->second)));
+				opvals.push_back(std::make_pair(val.first, lang(val.second)));
 			}
 		}
 		option.SetValues(defaultval, opvals);
@@ -257,17 +257,17 @@ bool Gui::Load(
 
 	// init pages
 	size_t pagecount = 0;
-	for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
+	for (const auto & page : pagelist)
 	{
-		pages.insert(std::make_pair(*i, GuiPage()));
+		pages.insert(std::make_pair(page, GuiPage()));
 		pagecount++;
 	}
 
 	// load pages
-	for (PageMap::iterator i = pages.begin(); i != pages.end(); ++i)
+	for (auto & page : pages)
 	{
-		const std::string pagepath = menupath + "/" + i->first;
-		if (!i->second.Load(
+		const std::string pagepath = menupath + "/" + page.first;
+		if (!page.second.Load(
 			pagepath, texpath, screenhwratio, lang, font,
 			vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap,
 			content, error_output))
@@ -300,8 +300,8 @@ bool Gui::Load(
 
 void Gui::Deactivate()
 {
-	for (std::map<std::string, GuiPage>::iterator i = pages.begin(); i != pages.end(); ++i)
-		i->second.SetVisible(false);
+	for (auto & page : pages)
+		page.second.SetVisible(false);
 
 	last_active_page = pages.end();
 	active_page = pages.end();
@@ -399,21 +399,21 @@ void Gui::Update(float dt)
 
 void Gui::GetOptions(std::map <std::string, std::string> & options) const
 {
-	for (std::map <std::string, std::string>::iterator i = options.begin(); i != options.end(); ++i)
+	for (auto & op : options)
 	{
-		OptionMap::const_iterator option = this->options.find(i->first);
+		OptionMap::const_iterator option = this->options.find(op.first);
 		if (option != this->options.end())
-			i->second = option->second.GetCurrentStorageValue();
+			op.second = option->second.GetCurrentStorageValue();
 	}
 }
 
 void Gui::SetOptions(const std::map <std::string, std::string> & options)
 {
-	for (std::map <std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
+	for (const auto & op : options)
 	{
-		OptionMap::iterator option = this->options.find(i->first);
+		OptionMap::iterator option = this->options.find(op.first);
 		if (option != this->options.end())
-			option->second.SetCurrentValue(i->second);
+			option->second.SetCurrentValue(op.second);
 	}
 }
 
@@ -481,10 +481,10 @@ void Gui::RegisterOptions(
 	IntSlotMap & nactionmap,
 	SlotMap & actionmap)
 {
-	for (OptionMap::iterator i = options.begin(); i != options.end(); ++i)
+	for (auto & op : options)
 	{
-		const std::string & opname = i->first;
-		GuiOption & option = i->second;
+		const std::string & opname = op.first;
+		GuiOption & option = op.second;
 		if (option.IsFloat())
 		{
 			// option is a float
@@ -532,8 +532,8 @@ void Gui::SetLabelText(const std::string & pagename, const std::map<std::string,
 
 void Gui::SetLabelText(const std::map<std::string, std::string> & label_text)
 {
-	for (PageMap::iterator p = pages.begin(); p != pages.end(); ++p)
-		p->second.SetLabelText(label_text);
+	for (auto & page : pages)
+		page.second.SetLabelText(label_text);
 }
 
 const std::string & Gui::GetOptionValue(const std::string & name) const

@@ -56,16 +56,16 @@ float TextDraw::RenderText(
 	output_array.Clear();
 	float cursorx = x;
 	float cursory = y  + scaley / 4;
-	for (unsigned int i = 0; i < text.size(); ++i)
+	for (char c : text)
 	{
-		if (text[i] == '\n')
+		if (c == '\n')
 		{
 			cursorx = x;
 			cursory += scaley;
 		}
 		else
 		{
-			cursorx += RenderCharacter(font, text[i], cursorx, cursory, scalex, scaley, output_array);
+			cursorx += RenderCharacter(font, c, cursorx, cursory, scalex, scaley, output_array);
 		}
 	}
 	return cursorx;

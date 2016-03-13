@@ -330,17 +330,17 @@ static void RegisterActions(
 	ActionMap & actionmap)
 {
 	signalvs.reserve(actionvs.size());
-	for (typename ActionValSet::const_iterator i = actionvs.begin(); i != actionvs.end(); ++i)
+	for (const auto & av : actionvs)
 	{
 		signalvs.push_back(typename SignalValVec::value_type());
 
-		const std::string & action = i->first;
+		const std::string & action = av.first;
 		size_t n = action.find(':') + 1;
 		if (action[n] == '"')
 			signalvs.back().value = lang(action.substr(n + 1, action.size() - n - 2));
 		else
 			signalvs.back().value = action.substr(n);
-		i->second->connect(signalvs.back().signal);
+		av.second->connect(signalvs.back().signal);
 
 		actionmap[action] = &signalvs.back().action;
 	}
@@ -410,7 +410,7 @@ bool GuiPage::Load(
 	std::vector<Config::const_iterator> controlit;			// control iterator cache
 	std::vector<Config::const_iterator> controlnit;			// control list iterator cache
 	std::vector<GuiControlList*> controllists;				// control list cache
-	for (Config::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
+	for (auto section = pagefile.begin(); section != pagefile.end(); ++section)
 	{
 		if (section->first.empty()) continue;
 
@@ -653,20 +653,20 @@ bool GuiPage::Load(
 	std::set<ActionValn> action_valn_set;
 	std::set<ActionVal> action_val_set;
 	std::string actionstr;
-	for (size_t i = 0; i < controlit.size(); ++i)
+	for (const auto & ci : controlit)
 	{
-		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
+		for (const auto & signal_name : GuiControl::signal_names)
 		{
-			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
+			if (pagefile.get(ci, signal_name, actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
 					action_val_set, action_valn_set);
 		}
 	}
-	for (size_t i = 0; i < controlnit.size(); ++i)
+	for (const auto & ci : controlnit)
 	{
-		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
+		for (const auto & signal_name : GuiControl::signal_names)
 		{
-			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
+			if (pagefile.get(ci, signal_name, actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
 					action_val_set, action_valn_set);
 		}
@@ -754,8 +754,8 @@ void GuiPage::SetVisible(bool value)
 
 void GuiPage::SetAlpha(float value)
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		(*i)->SetAlpha(node, value);
+	for (auto widget : widgets)
+		widget->SetAlpha(node, value);
 }
 
 void GuiPage::ProcessInput(
@@ -775,11 +775,11 @@ void GuiPage::ProcessInput(
 	bool cursoraction = cursormoved || cursordown || cursorjustup;
 	if (cursoraction)
 	{
-		for (std::vector<GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
+		for (auto control : controls)
 		{
-			if ((**i).Focus(cursorx, cursory))
+			if ((*control).Focus(cursorx, cursory))
 			{
-				SetActiveControl(**i);
+				SetActiveControl(*control);
 				select |= cursorjustup;	// cursor select
 				break;
 			}
@@ -806,23 +806,23 @@ void GuiPage::ProcessInput(
 
 void GuiPage::Update(float dt)
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		(*i)->Update(node, dt);
+	for (auto widget : widgets)
+		widget->Update(node, dt);
 }
 
 void GuiPage::SetLabelText(const std::map<std::string, std::string> & label_text)
 {
-	for (std::map <std::string, GuiLabel*>::const_iterator i = labels.begin(); i != labels.end(); ++i)
+	for (const auto & label : labels)
 	{
-		const std::map<std::string, std::string>::const_iterator n = label_text.find(i->first);
+		const auto n = label_text.find(label.first);
 		if (n != label_text.end())
-			i->second->SetText(n->second);
+			label.second->SetText(n->second);
 	}
 }
 
 GuiLabel * GuiPage::GetLabel(const std::string & name)
 {
-	std::map <std::string, GuiLabel*>::const_iterator i = labels.find(name);
+	const auto i = labels.find(name);
 	if (i != labels.end())
 		return i->second;
 	return 0;
@@ -835,11 +835,11 @@ SceneNode & GuiPage::GetNode()
 
 void GuiPage::Clear()
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		delete *i;
+	for (auto widget : widgets)
+		delete widget;
 
-	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
-		delete *i;
+	for (auto control : controls)
+		delete control;
 
 	node.Clear();
 	labels.clear();
