@@ -217,9 +217,9 @@ inline bool ContentManager::_load(
 
 	// load from basepaths
 	Factory<T>& factory = getFactory<T>();
-	for (size_t i = 0; i < basepaths.size(); ++i)
+	for (const auto & basepath : basepaths)
 	{
-		if (factory.create(sptr, error, basepaths[i], relpath, name, param))
+		if (factory.create(sptr, error, basepath, relpath, name, param))
 		{
 			// cache loaded content
 			CacheShared<T> & cache = factory_cached;
