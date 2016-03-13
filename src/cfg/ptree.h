@@ -211,9 +211,9 @@ template <class T>
 inline void PTree::forEachRecursive(T & functor) const
 {
 	functor(*this);
-	for (const_iterator i = begin(); i != end(); ++i)
+	for (const auto & child : *this)
 	{
-		i->second.forEachRecursive(functor);
+		child.second.forEachRecursive(functor);
 	}
 }
 

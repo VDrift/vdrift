@@ -248,17 +248,17 @@ bool Config::processLine(Config::iterator & section, std::string & linestr)
 
 void Config::print(std::ostream & out, bool with_brackets) const
 {
-	for (const_iterator im = sections.begin(); im != sections.end(); ++im)
+	for (const auto & s : sections)
 	{
-		if (!im->first.empty())
+		if (!s.first.empty())
 		{
-			std::string sectionname = im->first;
+			std::string sectionname = s.first;
 			if (with_brackets) out << "[" << sectionname << "]" << std::endl;
 			else out << sectionname << std::endl;
 		}
-		for (Section::const_iterator is = im->second.begin(); is != im->second.end(); ++is)
+		for (const auto & p : s.second)
 		{
-			out << is->first << " = " << is->second << std::endl;
+			out << p.first << " = " << p.second << std::endl;
 		}
 		out << std::endl;
 	}
@@ -377,17 +377,17 @@ QT_TEST(config_include)
 	QT_CHECK(cfg_verify_file_loaded);
 	if (!(cfg_test_file_loaded && cfg_verify_file_loaded)) return;
 
-	for (Config::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
+	for (const auto & s : cfg_verify)
 	{
 		Config::const_iterator ts;
-		QT_CHECK(cfg_test.get(s->first, ts, error));
+		QT_CHECK(cfg_test.get(s.first, ts, error));
 		if (ts == cfg_test.end()) continue;
 
-		for (Config::Section::const_iterator p = s->second.begin(); p != s->second.end(); ++p)
+		for (const auto & p : s.second)
 		{
 			std::string value;
-			QT_CHECK(cfg_test.get(ts, p->first, value, error));
-			QT_CHECK(p->second == value);
+			QT_CHECK(cfg_test.get(ts, p.first, value, error));
+			QT_CHECK(p.second == value);
 		}
 	}
 }
