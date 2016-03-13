@@ -243,21 +243,20 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 	//check for revisions due to other cars
 	/*const float trim_falloff_distance = 100.0; //trim fallof distance in meters per (meters per second)
 	const Vec3 throttle_axis(-1,0,0); //positive is in front of the car
-	std::map <const Car *, PathRevision> & revmap = path_revisions;
-	for (std::map <const Car *, PathRevision>::iterator i = revmap.begin(); i != revmap.end(); i++)
+	for (const auto & path_rev : path_revisions)
 	{
-		if (i->first != car)
+		if (path_rev.first != car)
 		{
 			//compute relative info
 			Vec3 myvel = car->GetVelocity();
-			Vec3 othervel = i->first->GetVelocity();
+			Vec3 othervel = path_rev.first->GetVelocity();
 			(-car->GetOrientation()).RotateVector(myvel);
-			(-i->first->GetOrientation()).RotateVector(othervel);
+			(-path_rev.first->GetOrientation()).RotateVector(othervel);
 			float speed_diff = myvel.dot(throttle_axis) - othervel.dot(throttle_axis); //positive if other car is faster //actually positive if my car is faster, right?
 
-			float cardist_back = patch.dist_from_start - i->second.car_pos_along_track; //positive if patch is ahead of car
+			float cardist_back = patch.dist_from_start - path_rev.second.car_pos_along_track; //positive if patch is ahead of car
 			float patchlen = GetPatchDirection(patch).Magnitude();
-			float cardist_front = (patch.dist_from_start+patchlen) - i->second.car_pos_along_track;
+			float cardist_front = (patch.dist_from_start+patchlen) - path_rev.second.car_pos_along_track;
 
 			const float minfalloff = 10;
 			const float maxfalloff = 60;
@@ -280,10 +279,10 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 
 			std::cout << speed_diff << ", " << cur_trim_falloff_distance_fwd << ", " << cur_trim_falloff_distance_rear << ", " << cardist_front << ", " << cardist_back << ", " << scale_front << ", " << scale_back << std::endl;
 
-			float trimleft_front = i->second.trimleft_front*scale_front;
-			float trimright_front = i->second.trimright_front*scale_front;
-			float trimleft_back = i->second.trimleft_back*scale_back;
-			float trimright_back = i->second.trimright_back*scale_back;
+			float trimleft_front = path_rev.second.trimleft_front*scale_front;
+			float trimright_front = path_rev.second.trimright_front*scale_front;
+			float trimleft_back = path_rev.second.trimleft_back*scale_back;
+			float trimright_back = path_rev.second.trimright_back*scale_back;
 
 			TrimPatch(patch, trimleft_front, trimright_front, trimleft_back, trimright_back);
 		}
@@ -718,14 +717,14 @@ float AiCarExperimental::BrakeFromOthers(float speed_diff)
 	float mineta = 1000;
 	float mindistance = 1000;
 
-	for (std::map<const CarDynamics *, OtherCarInfo>::iterator i = othercars.begin(); i != othercars.end(); ++i)
+	for (const auto & car : othercars)
 	{
-		if (i->second.active && std::abs(i->second.horizontal_distance) < horizontal_care)
+		if (car.second.active && std::abs(car.second.horizontal_distance) < horizontal_care)
 		{
-			if (i->second.fore_distance < mindistance)
+			if (car.second.fore_distance < mindistance)
 			{
-				mindistance = i->second.fore_distance;
-				mineta = i->second.eta;
+				mindistance = car.second.fore_distance;
+				mineta = car.second.eta;
 			}
 		}
 	}
@@ -832,12 +831,12 @@ float AiCarExperimental::SteerAwayFromOthers()
 	float eta = 1000;
 	float min_horizontal_distance = 1000;
 
-	for (std::map <const CarDynamics *, OtherCarInfo>::iterator i = othercars.begin(); i != othercars.end(); ++i)
+	for (const auto & car : othercars)
 	{
-		if (i->second.active && std::abs(i->second.horizontal_distance) < std::abs(min_horizontal_distance))
+		if (car.second.active && std::abs(car.second.horizontal_distance) < std::abs(min_horizontal_distance))
 		{
-			min_horizontal_distance = i->second.horizontal_distance;
-			eta = i->second.eta;
+			min_horizontal_distance = car.second.horizontal_distance;
+			eta = car.second.eta;
 		}
 	}
 
@@ -911,9 +910,8 @@ void AiCarExperimental::Visualize()
 
 	brakedrawable.SetVertArray(&brakeshape);
 	brakeshape.Clear();
-	for (std::vector <Bezier>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
+	for (const auto & patch : brakelook)
 	{
-		Bezier & patch = *i;
 		AddLinePoint(brakeshape, patch.GetBL());
 		AddLinePoint(brakeshape, patch.GetFL());
 		AddLinePoint(brakeshape, patch.GetFR());
@@ -923,9 +921,8 @@ void AiCarExperimental::Visualize()
 
 	steerdrawable.SetVertArray(&steershape);
 	steershape.Clear();
-	for (std::vector <Bezier>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
+	for (const auto & patch : steerlook)
 	{
-		Bezier & patch = *i;
 		AddLinePoint(steershape, patch.GetBL());
 		AddLinePoint(steershape, patch.GetFL());
 		AddLinePoint(steershape, patch.GetBR());

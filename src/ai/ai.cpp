@@ -35,10 +35,9 @@ Ai::~Ai()
 {
 	Ai::ClearCars();
 
-	std::map <std::string, AiFactory*>::iterator it;
-	for (it = ai_factories.begin(); it != ai_factories.end(); it++)
+	for (auto & factory : ai_factories)
 	{
-		delete it->second;
+		delete factory.second;
 	}
 	ai_factories.clear();
 }
@@ -59,12 +58,12 @@ void Ai::RemoveCar(const CarDynamics * car)
 {
 	assert(car);
 
-	for (size_t i = 0; i < ai_cars.size(); i++)
+	for (auto i = ai_cars.begin(); i != ai_cars.end(); i++)
 	{
-		if(ai_cars[i]->GetCar() == car)
+		if((*i)->GetCar() == car)
 		{
-			delete ai_cars[i];
-			ai_cars.erase(ai_cars.begin() + i);
+			delete *i;
+			ai_cars.erase(i);
 			return;
 		}
 	}
@@ -72,31 +71,28 @@ void Ai::RemoveCar(const CarDynamics * car)
 
 void Ai::ClearCars()
 {
-	int size = ai_cars.size();
-	for (int i = 0; i < size; i++)
+	for (auto ai_car : ai_cars)
 	{
-		delete ai_cars[i];
+		delete ai_car;
 	}
 	ai_cars.clear();
 }
 
 void Ai::Update(float dt, const CarDynamics cars[], const int cars_num)
 {
-	int size = ai_cars.size();
-	for (int i = 0; i < size; i++)
+	for (auto ai_car : ai_cars)
 	{
-		ai_cars[i]->Update(dt, cars, cars_num);
+		ai_car->Update(dt, cars, cars_num);
 	}
 }
 
 const std::vector<float> & Ai::GetInputs(const CarDynamics * car) const
 {
-	int size = ai_cars.size();
-	for (int i = 0; i < size; i++)
+	for (const auto ai_car : ai_cars)
 	{
-		if (car == ai_cars[i]->GetCar())
+		if (car == ai_car->GetCar())
 		{
-			return ai_cars[i]->GetInputs();
+			return ai_car->GetInputs();
 		}
 	}
 	return empty_input;
@@ -110,10 +106,9 @@ void Ai::AddFactory(const std::string & type_name, AiFactory * factory)
 std::vector<std::string> Ai::ListFactoryTypes()
 {
 	std::vector<std::string> ret;
-	std::map<std::string, AiFactory*>::iterator it;
-	for (it = ai_factories.begin(); it != ai_factories.end(); it++)
+	for (const auto & factory : ai_factories)
 	{
-		ret.push_back(it->first);
+		ret.push_back(factory.first);
 	}
 	return ret;
 }
@@ -121,10 +116,9 @@ std::vector<std::string> Ai::ListFactoryTypes()
 void Ai::Visualize()
 {
 #ifdef VISUALIZE_AI_DEBUG
-	int size = ai_cars.size();
-	for (int i = 0; i < size; i++)
+	for (auto ai_car : ai_cars)
 	{
-		ai_cars[i]->Visualize();
+		ai_car->Visualize();
 	}
 #endif
 }
