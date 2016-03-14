@@ -597,9 +597,9 @@ void GraphicsGL2::SetupScene(
 
 	// do fast culling queries for static geometry per pass
 	ClearCulledDrawLists();
-	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	for (const auto & pass : config.passes)
 	{
-		CullScenePass(*i, error_output);
+		CullScenePass(pass, error_output);
 	}
 
 	renderscene.SetFSAA(fsaa);
@@ -626,13 +626,13 @@ void GraphicsGL2::DrawScene(std::ostream & error_output)
 	glstate.ResetVertexObject();
 
 	// draw the passes
-	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	for (const auto & pass : config.passes)
 	{
-		assert(!i->draw.empty());
-		if (i->draw.back() != "postprocess")
-			DrawScenePass(*i, error_output);
+		assert(!pass.draw.empty());
+		if (pass.draw.back() != "postprocess")
+			DrawScenePass(pass, error_output);
 		else
-			DrawScenePassPost(*i, error_output);
+			DrawScenePassPost(pass, error_output);
 	}
 
 	// reset texture and draw buffer
@@ -845,57 +845,56 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 
 	// setup frame buffer textures
 	const bool has_texture_float = GLC_ARB_texture_float && GLC_ARB_half_float_pixel;
-	for (std::vector <GraphicsConfigOutput>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
+	for (const auto & output : config.outputs)
 	{
-		if (!i->conditions.Satisfied(conditions))
+		if (!output.conditions.Satisfied(conditions))
 			continue;
 
-		if (texture_outputs.find(i->name) != texture_outputs.end())
+		if (texture_outputs.find(output.name) != texture_outputs.end())
 		{
-			error_output << "Ignore duplicate definiion of output: " << i->name << std::endl;
+			error_output << "Ignore duplicate definition of output: " << output.name << std::endl;
 			continue;
 		}
 
-		if (i->type == "framebuffer")
+		if (output.type == "framebuffer")
 		{
-			render_outputs[i->name].RenderToFramebuffer(w, h);
+			render_outputs[output.name].RenderToFramebuffer(w, h);
 		}
 		else
 		{
-			FrameBufferTexture::Target target = TextureTargetFromString(i->type);
-			FrameBufferTexture::Format format = TextureFormatFromString(i->format);
+			FrameBufferTexture::Target target = TextureTargetFromString(output.type);
+			FrameBufferTexture::Format format = TextureFormatFromString(output.format);
 			if (!has_texture_float && (format == FrameBufferTexture::RGBA16 || format == FrameBufferTexture::RGB16))
 			{
 				error_output << "Your video card doesn't support floating point textures." << std::endl;
-				error_output << "Failed to load render output: " << i->name << " " << i->type << std::endl;
+				error_output << "Failed to load render output: " << output.name << " " << output.type << std::endl;
 				return false;
 			}
 
 			// initialize fbtexture
-			int multisampling = (i->multisample < 0) ? fsaa : 0;
-			FrameBufferTexture & fbtex = texture_outputs[i->name];
+			int multisampling = (output.multisample < 0) ? fsaa : 0;
+			FrameBufferTexture & fbtex = texture_outputs[output.name];
 			fbtex.Init(
-				i->width.GetSize(w), i->height.GetSize(h),
-				target, format, (i->filter == "nearest"), i->mipmap,
-				error_output, multisampling, (i->format == "depthshadow"));
+				output.width.GetSize(w), output.height.GetSize(h),
+				target, format, (output.filter == "nearest"), output.mipmap,
+				error_output, multisampling, (output.format == "depthshadow"));
 
 			// register texture as input
-			texture_inputs[i->name] = fbtex;
+			texture_inputs[output.name] = fbtex;
 		}
 
-		info_output << "Initialized render output: " << i->name;
-		info_output << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
+		info_output << "Initialized render output: " << output.name;
+		info_output << (output.type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
 	}
 	render_outputs["framebuffer"].RenderToFramebuffer(w, h);
 
 	// gen graphics config shaders map
-	typedef std::map <std::string, const GraphicsConfigShader *> ConfigShaderMap;
-	ConfigShaderMap config_shaders;
-	for (std::vector <GraphicsConfigShader>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
+	std::map <std::string, const GraphicsConfigShader *> config_shaders;
+	for (const auto & shader : config.shaders)
 	{
-		std::pair <ConfigShaderMap::iterator, bool> result = config_shaders.insert(std::make_pair(s->name, &*s));
+		auto result = config_shaders.insert(std::make_pair(shader.name, &shader));
 		if (!result.second)
-			error_output << "Ignore duplicate definition of shader: " << s->name << std::endl;
+			error_output << "Ignore duplicate definition of shader: " << shader.name << std::endl;
 	}
 
 	// setup frame buffer objects and shaders
@@ -903,22 +902,22 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	const std::vector <std::string> uniforms(Uniforms::str, End(Uniforms::str));
 	std::vector <std::string> global_defines;
 	GetShaderDefines(global_defines);
-	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	for (const auto & pass : config.passes)
 	{
 		// check conditions
-		if (!i->conditions.Satisfied(conditions))
+		if (!pass.conditions.Satisfied(conditions))
 			continue;
 
 		// load pass output
-		const std::string & outname = i->output;
+		const std::string & outname = pass.output;
 		const std::vector <std::string> outputs = Tokenize(outname, " ");
 		if (render_outputs.find(outname) == render_outputs.end())
 		{
 			// collect a list of textures for the outputs
 			std::vector <FrameBufferTexture*> fbotex;
-			for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
+			for (const auto & output : outputs)
 			{
-				TextureOutputMap::iterator to = texture_outputs.find(*o);
+				TextureOutputMap::iterator to = texture_outputs.find(output);
 				if (to != texture_outputs.end())
 				{
 					fbotex.push_back(&to->second);
@@ -936,10 +935,10 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 		}
 
 		// load pass shader
-		const std::string & shadername = i->shader;
+		const std::string & shadername = pass.shader;
 		if (shaders.find(shadername) == shaders.end())
 		{
-			ConfigShaderMap::const_iterator csi = config_shaders.find(shadername);
+			auto csi = config_shaders.find(shadername);
 			if (csi == config_shaders.end())
 			{
 				error_output << "Shader not defined: " << shadername << std::endl;
@@ -969,10 +968,10 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 
 void GraphicsGL2::ClearCulledDrawLists()
 {
-	for(CulledDrawListMap::iterator i = culled_drawlists.begin(); i != culled_drawlists.end(); i++)
+	for (auto & drawlist : culled_drawlists)
 	{
-		i->second.drawables.clear();
-		i->second.valid = false;
+		drawlist.second.drawables.clear();
+		drawlist.second.valid = false;
 	}
 }
 
@@ -988,7 +987,7 @@ void GraphicsGL2::CullScenePass(
 	if (pass.draw.back() == "postprocess" || !pass.conditions.Satisfied(conditions))
 		return;
 
-	for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
+	for (const auto & draw_layer : pass.draw)
 	{
 		// determine if we're dealing with a cubemap
 		RenderOutputMap::iterator oi = render_outputs.find(pass.output);
@@ -1033,7 +1032,7 @@ void GraphicsGL2::CullScenePass(
 				cam.h = fbo.GetHeight();
 			}
 
-			const std::string drawlist_name = BuildKey(cameraname, *d);
+			const std::string drawlist_name = BuildKey(cameraname, draw_layer);
 			CulledDrawList & drawlist = culled_drawlists[drawlist_name];
 			if (drawlist.valid)
 				break;
@@ -1042,10 +1041,10 @@ void GraphicsGL2::CullScenePass(
 			if (pass.cull)
 			{
 				// cull static drawlist
-				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(*d);
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(draw_layer);
 				if (!container)
 				{
-					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + draw_layer + " couldn't be found", error_output);
 					return;
 				}
 
@@ -1063,34 +1062,34 @@ void GraphicsGL2::CullScenePass(
 				container->Query(frustum, drawlist.drawables);
 
 				// cull dynamic drawlist
-				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(*d);
+				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(draw_layer);
 				if (!container_dynamic)
 				{
-					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + draw_layer + " couldn't be found", error_output);
 					return;
 				}
-				for (size_t i = 0; i < container_dynamic->size(); ++i)
+				for (const auto & drawable : *container_dynamic)
 				{
-					if (!Cull(frustum, *(*container_dynamic)[i]))
-						drawlist.drawables.push_back((*container_dynamic)[i]);
+					if (!Cull(frustum, *drawable))
+						drawlist.drawables.push_back(drawable);
 				}
 			}
 			else
 			{
 				// copy static drawlist
-				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(*d);
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(draw_layer);
 				if (!container)
 				{
-					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + draw_layer + " couldn't be found", error_output);
 					return;
 				}
 				container->Query(Aabb<float>::IntersectAlways(), drawlist.drawables);
 
 				// copy dynamic drawlist
-				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(*d);
+				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(draw_layer);
 				if (!container_dynamic)
 				{
-					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + draw_layer + " couldn't be found", error_output);
 					return;
 				}
 				drawlist.drawables.insert(
@@ -1167,9 +1166,9 @@ void GraphicsGL2::DrawScenePass(
 		// render pass draw layers
 		output.Begin(glstate, error_output);
 		renderscene.ClearOutput(glstate, pass.clear_color, pass.clear_depth);
-		for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
+		for (const auto & draw_layer : pass.draw)
 		{
-			const std::string drawlist_name = BuildKey(cameraname, *d);
+			const std::string drawlist_name = BuildKey(cameraname, draw_layer);
 			CulledDrawListMap::const_iterator drawlist_it = culled_drawlists.find(drawlist_name);
 			if (drawlist_it == culled_drawlists.end())
 			{
@@ -1251,15 +1250,15 @@ void GraphicsGL2::GetScenePassInputTextures(
 	const GraphicsConfigInputs & inputs,
 	std::vector <TextureInterface*> & input_textures)
 {
-	for (std::map <unsigned int, std::string>::const_iterator t = inputs.tu.begin(); t != inputs.tu.end(); t++)
+	for (const auto & t : inputs.tu)
 	{
-		unsigned int tuid = t->first;
+		unsigned int tuid = t.first;
 
 		unsigned int cursize = input_textures.size();
 		for (unsigned int extra = cursize; extra < tuid; extra++)
 			input_textures.push_back(NULL);
 
-		const std::string & texname = t->second;
+		const std::string & texname = t.second;
 
 		// quietly ignore invalid names
 		// this allows us to specify outputs that are only present for certain conditions

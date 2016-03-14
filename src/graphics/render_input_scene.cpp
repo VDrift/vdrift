@@ -193,13 +193,12 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & /*error_ou
 
 void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist)
 {
-	for (std::vector <Drawable*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
+	for (auto d : drawlist)
 	{
-		const Drawable & d = **ptr;
-		SetFlags(d, glstate);
-		SetTextures(d, glstate);
-		SetTransform(d);
-		vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
+		SetFlags(*d, glstate);
+		SetTextures(*d, glstate);
+		SetTransform(*d);
+		vertex_buffer.Draw(glstate.VertexObject(), d->GetVertexBufferSegment());
 	}
 }
 

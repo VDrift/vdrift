@@ -258,9 +258,8 @@ void VertexBuffer::Clear()
 
 	for (unsigned int n = 0; n <= VertexFormat::LastFormat; ++n)
 	{
-		for (unsigned int i = 0; i < objects[n].size(); ++i)
+		for (const auto & ob : objects[n])
 		{
-			const Object & ob = objects[n][i];
 			if (ob.varray)
 				glDeleteVertexArrays(1, &ob.varray);
 			glDeleteBuffers(1, &ob.ibuffer);

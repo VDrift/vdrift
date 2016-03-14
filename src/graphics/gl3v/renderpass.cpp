@@ -60,8 +60,8 @@ bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config
 	clearStencil = config.clearStencilValue;
 
 	// Remember which draw groups we're interested in.
-	for (std::vector <std::string>::const_iterator i = config.drawGroups.begin(); i != config.drawGroups.end(); i++)
-		drawGroups.insert(stringMap.addStringId(*i));
+	for (const auto & dg : config.drawGroups)
+		drawGroups.insert(stringMap.addStringId(dg));
 
 	// The shader program.
 	if (!createShaderProgram(gl, config.shaderAttributeBindings, vertexShader, fragmentShader, config.renderTargets, errorOutput))
@@ -72,39 +72,39 @@ bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config
 
 	// Uniforms.
 	// TODO: Optimize.
-	for (std::map <std::string, RealtimeExportPassInfo::UniformData>::const_iterator i = config.uniforms.begin(); i != config.uniforms.end(); i++)
+	for (const auto & uniform : config.uniforms)
 	{
 		// Attempt to find a location for the uniform.
-		std::string uniformName = i->first;
+		std::string uniformName = uniform.first;
 		GLint uniformLocation = gl.GetUniformLocation(shaderProgram, uniformName);
 		if (uniformLocation != -1)
 		{
 			variableNameToUniformLocation[stringMap.addStringId(uniformName)] = uniformLocation;
 
 			// If the uniform data in the renderpassinfo isn't empty, then that means it has default data and we need to add it to our defaultUniformBindings.
-			const std::vector <float> & uniformData = i->second.data;
+			const std::vector <float> & uniformData = uniform.second.data;
 			if (!uniformData.empty())
 				defaultUniformBindings.push_back(RenderUniform(uniformLocation,uniformData));
 		}
 	}
 
 	// Render states.
-	for (unsigned int i = 0; i < config.stateEnable.size(); i++)
-		stateEnable.push_back(GLEnumHelper.getEnum(config.stateEnable[i]));
-	for (unsigned int i = 0; i < config.stateDisable.size(); i++)
-		stateDisable.push_back(GLEnumHelper.getEnum(config.stateDisable[i]));
-	for (unsigned int i = 0; i < config.stateEnablei.size(); i++)
-		stateEnablei.push_back(std::make_pair(GLEnumHelper.getEnum(config.stateEnablei[i].first),config.stateEnablei[i].second));
-	for (unsigned int i = 0; i < config.stateDisablei.size(); i++)
-		stateDisablei.push_back(std::make_pair(GLEnumHelper.getEnum(config.stateDisablei[i].first),config.stateDisablei[i].second));
-	for (std::map <std::string, RealtimeExportPassInfo::RenderState>::const_iterator i = config.stateEnum.begin(); i != config.stateEnum.end(); i++)
-		stateEnum.push_back(RenderState(GLEnumHelper.getEnum(i->first), i->second, GLEnumHelper));
+	for (const auto & s : config.stateEnable)
+		stateEnable.push_back(GLEnumHelper.getEnum(s));
+	for (const auto & s : config.stateDisable)
+		stateDisable.push_back(GLEnumHelper.getEnum(s));
+	for (const auto & s : config.stateEnablei)
+		stateEnablei.push_back(std::make_pair(GLEnumHelper.getEnum(s.first),s.second));
+	for (const auto & s : config.stateDisablei)
+		stateDisablei.push_back(std::make_pair(GLEnumHelper.getEnum(s.first),s.second));
+	for (const auto & s : config.stateEnum)
+		stateEnum.push_back(RenderState(GLEnumHelper.getEnum(s.first), s.second, GLEnumHelper));
 
 	// We must get the uniform location for the sampler name, then upload a uniform corresponding to the TU we want to use.
-	for (std::map <std::string, RealtimeExportPassInfo::Sampler>::const_iterator i = config.samplers.begin(); i != config.samplers.end(); i++)
+	for (const auto & s : config.samplers)
 	{
-		std::string samplerName = i->first;
-		std::string textureName = i->second.textureName;
+		std::string samplerName = s.first;
+		std::string textureName = s.second.textureName;
 		GLuint tu = samplers.size();
 
 		GLint maxTUs;
@@ -120,8 +120,8 @@ bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config
 
 		// Save the sampler state.
 		RenderSampler sampler(tu, gl.GenSampler());
-		for (std::map <std::string, RealtimeExportPassInfo::RenderState>::const_iterator s = i->second.state.begin(); s != i->second.state.end(); s++)
-			sampler.addState(RenderState(GLEnumHelper.getEnum(s->first), s->second, GLEnumHelper));
+		for (const auto & state : s.second.state)
+			sampler.addState(RenderState(GLEnumHelper.getEnum(state.first), state.second, GLEnumHelper));
 		samplers.push_back(sampler);
 
 		// Find the sampler's uniform location, then upload the TU.
@@ -195,8 +195,8 @@ void RenderPass::clear(GLWrapper & gl)
 	variableNameToUniformLocation.clear();
 
 	// Delete sampler objects.
-	for (GLuint tu = 0; tu < samplers.size(); tu++)
-		gl.DeleteSampler(samplers[tu].getHandle());
+	for (const auto & sampler : samplers)
+		gl.DeleteSampler(sampler.getHandle());
 	samplers.clear();
 
 	// Default bindings.
@@ -258,24 +258,24 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 	// Bind framebuffer.
 	gl.BindFramebuffer(framebufferObject);
-
 	// Set viewport.
+
 	gl.Viewport(width, height);
 
 	// Bind shader program.
 	gl.UseProgram(shaderProgram);
 
 	// Apply state (enable/disable/enablei/disablei/enum).
-	for (std::vector <GLenum>::const_iterator s = stateEnable.begin(); s != stateEnable.end(); s++)
-		gl.Enable(*s);
-	for (std::vector <GLenum>::const_iterator s = stateDisable.begin(); s != stateDisable.end(); s++)
-		gl.Disable(*s);
-	for (std::vector <std::pair <GLenum,unsigned int> >::const_iterator s = stateEnablei.begin(); s != stateEnablei.end(); s++)
-		gl.Enablei(s->first, s->second);
-	for (std::vector <std::pair <GLenum,unsigned int> >::const_iterator s = stateDisablei.begin(); s != stateDisablei.end(); s++)
-		gl.Disablei(s->first, s->second);
-	for (std::vector <RenderState>::const_iterator s = stateEnum.begin(); s != stateEnum.end(); s++)
-		s->apply(gl);
+	for (auto s : stateEnable)
+		gl.Enable(s);
+	for (auto s : stateDisable)
+		gl.Disable(s);
+	for (auto s : stateEnablei)
+		gl.Enablei(s.first, s.second);
+	for (auto s : stateDisablei)
+		gl.Disablei(s.first, s.second);
+	for (const auto & s : stateEnum)
+		s.apply(gl);
 
 	// Clear.
 	// We do this here so our write masks will have already been applied.
@@ -286,11 +286,11 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 	// Apply default uniforms.
 	std::vector <const RenderUniform*> defaultUniforms; // Indexed by location, either NULL or a pointer to the RenderUniform bound to the location.
-	for (std::vector <RenderUniform>::const_iterator u = defaultUniformBindings.begin(); u != defaultUniformBindings.end(); u++)
+	for (const auto & u : defaultUniformBindings)
 	{
-		defaultUniforms.resize(std::max(defaultUniforms.size(),(size_t)(u->location+1)),NULL);
-		defaultUniforms[u->location] = &*u;
-		gl.applyUniform(u->location, u->data);
+		defaultUniforms.resize(std::max(defaultUniforms.size(),(size_t)(u.location+1)),NULL);
+		defaultUniforms[u.location] = &u;
+		gl.applyUniform(u.location, u.data);
 	}
 
 	// Apply samplers.
@@ -305,11 +305,11 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 	// Apply default textures, keeping track of which textures are in which TUs.
 	std::vector <const RenderTexture*> defaultTextures; // Indexed by TU, either NULL or a pointer to the RenderTexture bound to the TU.
-	for (std::vector <RenderTexture>::const_iterator t = defaultTextureBindings.begin(); t != defaultTextureBindings.end(); t++)
+	for (const auto & t : defaultTextureBindings)
 	{
-		defaultTextures.resize(std::max(defaultTextures.size(),(size_t)(t->tu+1)),NULL);
-		defaultTextures[t->tu] = &*t;
-		applyTexture(gl, *t);
+		defaultTextures.resize(std::max(defaultTextures.size(),(size_t)(t.tu+1)),NULL);
+		defaultTextures[t.tu] = &t;
+		applyTexture(gl, t);
 	}
 
 	typedef std::vector <GLuint> override_tracking_type;
@@ -323,46 +323,46 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	override_tracking_type lastOverriddenUniforms;
 
 	// For each model.
-	for (keyed_container <RenderModel>::const_iterator m = models.begin(); m != models.end(); m++)
+	for (const auto & m : models)
 	{
 		// Apply texture overrides, keeping track of which TUs we've overridden.
 		overriddenTextures.clear();
-		for (std::vector <RenderTexture>::const_iterator t = m->textureBindingOverrides.begin(); t != m->textureBindingOverrides.end(); t++)
+		for (const auto & texture : m.textureBindingOverrides)
 		{
-			overriddenTextures.push_back(t->tu);
+			overriddenTextures.push_back(texture.tu);
 
-			applyTexture(gl, *t);
+			applyTexture(gl, texture);
 		}
 
 		// Apply uniform overrides, keeping track of which locations we've overridden.
 		overriddenUniforms.clear();
-		for (std::vector <RenderUniform>::const_iterator u = m->uniformOverrides.begin(); u != m->uniformOverrides.end(); u++)
+		for (const auto & uniform : m.uniformOverrides)
 		{
-			overriddenUniforms.push_back(u->location);
+			overriddenUniforms.push_back(uniform.location);
 
-			gl.applyUniform(u->location, u->data);
+			gl.applyUniform(uniform.location, uniform.data);
 		}
 
 		// Draw geometry.
-		gl.drawGeometry(m->vao, m->elementCount);
+		gl.drawGeometry(m.vao, m.elementCount);
 
 		// Restore overridden uniforms.
-		for (override_tracking_type::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
+		for (auto location : overriddenUniforms)
 		{
-			if (*location < defaultUniforms.size())
+			if (location < defaultUniforms.size())
 			{
-				const RenderUniform * u = defaultUniforms[*location];
+				const RenderUniform * u = defaultUniforms[location];
 				if (u)
 					gl.applyUniform(u->location, u->data);
 			}
 		}
 
 		// Restore overridden textures.
-		for (override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
+		for (auto tu : overriddenTextures)
 		{
-			if (*tu < defaultTextures.size()) // Sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures).
+			if (tu < defaultTextures.size()) // Sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures).
 			{
-				const RenderTexture * t = defaultTextures[*tu];
+				const RenderTexture * t = defaultTextures[tu];
 				if (t)
 					applyTexture(gl, *t);
 			}
@@ -370,22 +370,21 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	}
 
 	// For each external model.
-	for (std::vector <const std::vector <RenderModelExt*>*>::const_iterator i = externalModels.begin(); i != externalModels.end(); i++)
+	for (auto drawGroup : externalModels)
 	{
 		// Loop through all models in the draw group.
-		for (std::vector <RenderModelExt*>::const_iterator n = (*i)->begin(); n != (*i)->end(); n++)
+		for (auto m : *drawGroup)
 		{
-			RenderModelExt * m = *n;
 			assert(m);
 
 			if (m->drawEnabled())
 			{
 				// Restore textures that were overridden the by the previous model.
-				for (override_tracking_type::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
-					if (*tu < defaultTextures.size()) // Sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures).
-						textureState[*tu] = defaultTextures[*tu];
+				for (auto tu : lastOverriddenTextures)
+					if (tu < defaultTextures.size()) // Sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures).
+						textureState[tu] = defaultTextures[tu];
 					else
-						textureState[*tu] = NULL;
+						textureState[tu] = NULL;
 
 				// Apply texture overrides, keeping track of which TUs we've overridden.
 				overriddenTextures.clear();
@@ -394,61 +393,60 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 #ifdef USE_EXTERNAL_MODEL_CACHE
 				if (m->perPassTextureCache.size() > passIndex)
 				{
-					const std::vector <RenderTexture> & cache = m->perPassTextureCache[passIndex];
-					for (std::vector <RenderTexture>::const_iterator t = cache.begin(); t != cache.end(); t++)
+					for (const auto & t : m->perPassTextureCache[passIndex])
 					{
 						// Get the TU associated with this texture name id.
-						GLuint tu = t->tu;
+						GLuint tu = t.tu;
 						overriddenTextures.push_back(tu);
-						textureState[tu] = &*t;
+						textureState[tu] = &t;
 					}
 				}
 				else
 #endif
 				{
-					for (std::vector <RenderTextureEntry>::const_iterator t = m->textures.begin(); t != m->textures.end(); t++)
+					for (const auto & t : m->textures)
 					{
 						// Get the TU associated with this texture name id.
-						NameIdMap::iterator tui = textureNameToTextureUnit.find(t->name);
+						NameIdMap::iterator tui = textureNameToTextureUnit.find(t.name);
 						if (tui != textureNameToTextureUnit.end()) // if the texture isn't used in this pass, it might not be in textureNameToTextureUnit.
 						{
 							GLuint tu = tui->second;
 							overriddenTextures.push_back(tu);
-							textureState[tu] = &*t;
+							textureState[tu] = &t;
 #ifdef USE_EXTERNAL_MODEL_CACHE
-							m->perPassTextureCache[passIndex].push_back(RenderTexture(tu, *t)); // Make cache entry.
+							m->perPassTextureCache[passIndex].push_back(RenderTexture(tu, t)); // Make cache entry.
 #endif
 						}
 					}
 				}
 
 				// Go through and actually apply the textures to the GL.
-				for (override_tracking_type::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
+				for (auto tu : lastOverriddenTextures)
 				{
-					const RenderTextureBase * texture = textureState[*tu];
+					const RenderTextureBase * texture = textureState[tu];
 					if (texture)
-						applyTexture(gl, *tu, texture->target, texture->handle);
+						applyTexture(gl, tu, texture->target, texture->handle);
 					else
 					{
-						gl.ActiveTexture(*tu);
+						gl.ActiveTexture(tu);
 						gl.unbindTexture(GL_TEXTURE_2D); //TODO: Determine target from sampler.
 					}
 				}
-				for (override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
+				for (auto tu : overriddenTextures)
 				{
-					const RenderTextureBase * texture = textureState[*tu];
+					const RenderTextureBase * texture = textureState[tu];
 
 					// We shouldn't need to null-check texture.
-					applyTexture(gl, *tu, texture->target, texture->handle);
+					applyTexture(gl, tu, texture->target, texture->handle);
 				}
 
 				lastOverriddenTextures.swap(overriddenTextures);
 
 				// Restore uniforms that were overridden the by the previous model.
-				for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
-					if (*location < defaultUniforms.size())
+				for (auto location : lastOverriddenUniforms)
+					if (location < defaultUniforms.size())
 					{
-						const RenderUniform * u = defaultUniforms[*location];
+						const RenderUniform * u = defaultUniforms[location];
 						uniformState[u->location] = u;
 					}
 
@@ -459,44 +457,43 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 #ifdef USE_EXTERNAL_MODEL_CACHE
 				if (m->perPassUniformCache.size() > passIndex)
 				{
-					const std::vector <RenderUniform> & cache = m->perPassUniformCache[passIndex];
-					for (std::vector <RenderUniform>::const_iterator u = cache.begin(); u != cache.end(); u++)
+					for (const auto & u : m->perPassUniformCache[passIndex])
 					{
-						GLuint location = u->location;
+						GLuint location = u.location;
 						overriddenUniforms.push_back(location);
-						uniformState[location] = &*u;
+						uniformState[location] = &u;
 					}
 				}
 				else
 #endif
 				{
-					for (std::vector <RenderUniformEntry>::const_iterator u = m->uniforms.begin(); u != m->uniforms.end(); u++)
+					for (const auto & u : m->uniforms)
 					{
-						NameIdMap::const_iterator loci = variableNameToUniformLocation.find(u->name);
+						NameIdMap::const_iterator loci = variableNameToUniformLocation.find(u.name);
 						if (loci != variableNameToUniformLocation.end()) // If the texture isn't used in this pass, it might not be in variableNameToUniformLocation.
 						{
 							GLuint location = loci->second;
 							overriddenUniforms.push_back(location);
-							uniformState[location] = &*u;
+							uniformState[location] = &u;
 #ifdef USE_EXTERNAL_MODEL_CACHE
-							m->perPassUniformCache[passIndex].push_back(RenderUniform(location, *u)); // Make cache entry.
+							m->perPassUniformCache[passIndex].push_back(RenderUniform(location, u)); // Make cache entry.
 #endif
 						}
 					}
 				}
 
 				// Go through and actually apply the uniforms to the GL.
-				for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
+				for (auto location : lastOverriddenUniforms)
 				{
-					const RenderUniformBase * uniform = uniformState[*location];
+					const RenderUniformBase * uniform = uniformState[location];
 					if (uniform)
-						gl.applyUniform(*location, uniform->data);
+						gl.applyUniform(location, uniform->data);
 				}
-				for (override_tracking_type::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
+				for (auto location : overriddenUniforms)
 				{
-					const RenderUniformBase * uniform = uniformState[*location];
+					const RenderUniformBase * uniform = uniformState[location];
 					//if (uniform) // TODO: Review this...
-						gl.applyUniform(*location, uniform->data);
+						gl.applyUniform(location, uniform->data);
 				}
 
 				lastOverriddenUniforms.swap(overriddenUniforms);
@@ -512,8 +509,8 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 	// TODO: We only want to do this if the next pass is going to use these and not write to these.
 	// If autoMipmap then build mipmaps.
-	for (std::vector <RenderTexture>::const_iterator t = autoMipMapRenderTargets.begin(); t != autoMipMapRenderTargets.end(); t++)
-		gl.generateMipmaps(t->target, t->handle);
+	for (const auto & t : autoMipMapRenderTargets)
+		gl.generateMipmaps(t.target, t.handle);
 
 	// Unbind samplers.
 	for (unsigned int tu = 0; tu < samplers.size(); tu++)
@@ -659,11 +656,11 @@ void RenderPass::setDefaultTexture(StringId name, const RenderTextureEntry & tex
 		GLuint tu = tuIter->second;
 
 		// Scan defaultTextureBindings to see if there's an existing texture with a tu that corresponds to this name id.
-		for (std::vector <RenderTexture>::iterator i = defaultTextureBindings.begin(); i != defaultTextureBindings.end(); i++)
-			if (i->tu == tu)
+		for (auto & t : defaultTextureBindings)
+			if (t.tu == tu)
 			{
 				// Overwrite the existing entry, then return.
-				*i = RenderTexture(tu, texture);
+				t = RenderTexture(tu, texture);
 				return;
 			}
 
@@ -707,10 +704,10 @@ bool RenderPass::getDefaultUniform(StringId uniformName, RenderUniform & out)
 		GLuint location = locIter->second;
 
 		// Scan defaultUniformBindings to see if there's a uniform with a location that corresponds to this name id.
-		for (std::vector <RenderUniform>::iterator i = defaultUniformBindings.begin(); i != defaultUniformBindings.end(); i++)
-			if (i->location == location)
+		for (auto & u : defaultUniformBindings)
+			if (u.location == location)
 			{
-				out = *i;
+				out = u;
 				return true;
 			}
 	}
@@ -728,11 +725,11 @@ bool RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 		GLuint location = locIter->second;
 
 		// Scan defaultUniformBindings to see if there's an existing uniform with a location that corresponds to this name id.
-		for (std::vector <RenderUniform>::iterator i = defaultUniformBindings.begin(); i != defaultUniformBindings.end(); i++)
-			if (i->location == location)
+		for (auto & u : defaultUniformBindings)
+			if (u.location == location)
 			{
 				// Overwrite the existing entry, then return.
-				*i = RenderUniform(location, uniform);
+				u = RenderUniform(location, uniform);
 				return true;
 			}
 
@@ -804,7 +801,7 @@ const StringIdMap * printContextStringMap = NULL;
 template <typename T>
 std::ostream & operator<<(std::ostream & out, const std::vector <T> & vector)
 {
-	for (typename std::vector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
+	for (auto i = vector.begin(); i != vector.end(); i++)
 	{
 		if (i != vector.begin())
 			out << ", ";
@@ -816,7 +813,7 @@ std::ostream & operator<<(std::ostream & out, const std::vector <T> & vector)
 template <typename T>
 std::ostream & operator<<(std::ostream & out, const RenderUniformVector <T> & vector)
 {
-	for (typename RenderUniformVector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
+	for (auto i = vector.begin(); i != vector.end(); i++)
 	{
 		if (i != vector.begin())
 			out << ", ";
@@ -1014,11 +1011,11 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 	// Count attachments.
 	int drawAttachments = 0; // Non-depth attachments.
 	int depthAttachments = 0; // Depth attachments.
-	for (std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator i = config.renderTargets.begin(); i != config.renderTargets.end(); i++)
+	for (const auto & rt : config.renderTargets)
 	{
-		if (i->first == "GL_DEPTH_ATTACHMENT")
+		if (rt.first == "GL_DEPTH_ATTACHMENT")
 			depthAttachments++;
-		else if (i->first.substr(0,19) == "GL_COLOR_ATTACHMENT")
+		else if (rt.first.substr(0,19) == "GL_COLOR_ATTACHMENT")
 			drawAttachments++;
 	}
 
@@ -1070,15 +1067,15 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 	}
 
 	// Create and attach color and depth render targets.
-	for (std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator i = config.renderTargets.begin(); i != config.renderTargets.end(); i++)
+	for (const auto & rt : config.renderTargets)
 	{
 		// Find the render target attachment point.
-		GLenum attachmentPoint = GLEnumHelper.getEnum(i->first);
+		GLenum attachmentPoint = GLEnumHelper.getEnum(rt.first);
 
 		// Compute the width and height of the render target.
-		float rtWidthF = i->second.width;
-		float rtHeightF = i->second.width;
-		if (i->second.widthHeightAreMultiples)
+		float rtWidthF = rt.second.width;
+		float rtHeightF = rt.second.width;
+		if (rt.second.widthHeightAreMultiples)
 		{
 			rtWidthF *= w;
 			rtHeightF *= h;
@@ -1088,7 +1085,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 
 		// Determine the format for the texture.
 		// The internal format is the detailed format that is specified in the configuration, but we need to determine the more general format and the component type ourselves.
-		std::string formatstr = i->second.format;
+		std::string formatstr = rt.second.format;
 		GLenum internalFormat = GLEnumHelper.getEnum(formatstr);
 
 		// We make sure we find a match for our format or error out.
@@ -1134,7 +1131,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		// Only 2d render targets are supported.
 		GLenum target = GL_TEXTURE_2D;
 
-		StringId renderTargetNameId = stringMap.addStringId(i->second.name);
+		StringId renderTargetNameId = stringMap.addStringId(rt.second.name);
 
 		// Either use an existing render target texture or create a new one.
 		NameTexMap::const_iterator sharedRenderTarget = sharedTextures.find(renderTargetNameId);
@@ -1146,7 +1143,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 			// Store the dependency.
 			externalRenderTargets.insert(std::make_pair(renderTargetNameId,texture));
 
-			if (i->second.autoMipmap)
+			if (rt.second.autoMipmap)
 				autoMipMapRenderTargets.push_back(texture);
 
 			// Attach the render target to the framebuffer.
@@ -1173,7 +1170,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 
 			// Store the texture we created.
 			renderTargets.insert(std::make_pair(renderTargetNameId,texture));
-			if (i->second.autoMipmap)
+			if (rt.second.autoMipmap)
 				autoMipMapRenderTargets.push_back(texture);
 
 			// Attach the render target to the framebuffer.
@@ -1208,8 +1205,8 @@ void RenderPass::deleteFramebufferObject(GLWrapper & gl)
 	autoMipMapRenderTargets.clear();
 
 	// Delete render target textures.
-	for (std::map <StringId, RenderTexture>::iterator i = renderTargets.begin(); i != renderTargets.end(); i++)
-		gl.DeleteTexture(i->second.handle);
+	for (auto & rt : renderTargets)
+		gl.DeleteTexture(rt.second.handle);
 	renderTargets.clear();
 
 	externalRenderTargets.clear();
@@ -1225,17 +1222,17 @@ bool RenderPass::createShaderProgram(GLWrapper & gl, const std::vector <std::str
 
 	// Bind render target variable names to frag data locations.
 	std::map <GLuint, std::string> fragDataLocations;
-	for (std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator i = renderTargets.begin(); i != renderTargets.end(); i++)
+	for (const auto & rt : renderTargets)
 		// We only bind names for color attachments.
-		if (i->first.substr(0,19) == "GL_COLOR_ATTACHMENT")
+		if (rt.first.substr(0,19) == "GL_COLOR_ATTACHMENT")
 		{
 			// Find the render target attachment point.
-			GLenum attachmentPoint = GLEnumHelper.getEnum(i->first);
+			GLenum attachmentPoint = GLEnumHelper.getEnum(rt.first);
 
 			// Find the color attachment location.
 			int colorNumber = attachmentPoint - GL_COLOR_ATTACHMENT0;
 
-			fragDataLocations[colorNumber] = i->second.variable;
+			fragDataLocations[colorNumber] = rt.second.variable;
 		}
 
 	return gl.linkShaderProgram(shaderAttributeBindings, shaderHandles, shaderProgram, fragDataLocations, errorOutput);

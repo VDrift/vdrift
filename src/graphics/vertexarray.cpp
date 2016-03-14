@@ -58,9 +58,9 @@ VertexArray VertexArray::operator+ (const VertexArray & v) const
 	const int offset = vertices.size() / 3;
 	out.faces.reserve(faces.size() + v.faces.size());
 	out.faces.insert(out.faces.end(), faces.begin(), faces.end());
-	for (size_t i = 0; i < v.faces.size(); i++)
+	for (unsigned int face : v.faces)
 	{
-		out.faces.push_back(v.faces[i] + offset);
+		out.faces.push_back(face + offset);
 	}
 
 	assert(format == v.format);
@@ -517,11 +517,11 @@ void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 	Clear();
 
 	std::map <VertexData, unsigned int> indexmap;
-	for (std::vector <Face>::const_iterator i = newfaces.begin(); i != newfaces.end(); ++i) //loop through input triangles
+	for (const auto & face : newfaces) //loop through input triangles
 	{
 		for (int n = 0; n < 3; n++) //loop through vertices in triangle
 		{
-			const VertexData & curvertdata = i->v[n]; //grab vertex
+			const VertexData & curvertdata = face.v[n]; //grab vertex
 			std::map <VertexData, unsigned int>::iterator result = indexmap.find(curvertdata);
 			if (result == indexmap.end()) //new vertex
 			{
@@ -556,7 +556,7 @@ void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 void VertexArray::Translate(float x, float y, float z)
 {
 	assert(vertices.size() % 3 == 0);
-	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
+	for (auto i = vertices.begin(); i != vertices.end(); i += 3)
 	{
 		float * vert = &*i;
 		vert[0] += x;
@@ -571,14 +571,14 @@ void VertexArray::Rotate(float a, float x, float y, float z)
 	q.SetAxisAngle(a, x, y, z);
 
 	assert(vertices.size() % 3 == 0);
-	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
+	for (auto i = vertices.begin(); i != vertices.end(); i += 3)
 	{
 		float * vert = &*i;
 		q.RotateVector(vert);
 	}
 
 	assert(normals.size() % 3 == 0);
-	for (std::vector <float>::iterator i = normals.begin(); i != normals.end(); i += 3)
+	for (auto i = normals.begin(); i != normals.end(); i += 3)
 	{
 		float * n = &*i;
 		q.RotateVector(n);
@@ -588,7 +588,7 @@ void VertexArray::Rotate(float a, float x, float y, float z)
 void VertexArray::Scale(float x, float y, float z)
 {
 	assert(vertices.size() % 3 == 0);
-	for (std::vector <float>::iterator i = vertices.begin(), e = vertices.end(); i != e; i += 3)
+	for (auto i = vertices.begin(), e = vertices.end(); i != e; i += 3)
 	{
 		float * vert = &*i;
 		vert[0] *= x;
@@ -597,7 +597,7 @@ void VertexArray::Scale(float x, float y, float z)
 	}
 
 	assert(normals.size() % 3 == 0);
-	for (std::vector <float>::iterator i = normals.begin(), e = normals.end(); i != e; i += 3)
+	for (auto i = normals.begin(), e = normals.end(); i != e; i += 3)
 	{
 		float * n = &*i;
 		n[0] *= x;
@@ -622,16 +622,16 @@ void VertexArray::Scale(float x, float y, float z)
 void VertexArray::FlipNormals()
 {
 	assert(normals.size() % 3 == 0);
-	for (std::vector <float>::iterator i = normals.begin(); i != normals.end(); i++)
+	for (float & n : normals)
 	{
-		*i = -*i;
+		n = -n;
 	}
 }
 
 void VertexArray::FlipWindingOrder()
 {
 	assert(faces.size() % 3 == 0);
-	for (std::vector <unsigned int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	for (auto i = faces.begin(); i != faces.end(); i += 3)
 	{
 		const unsigned int i1 = i[1];
 		const unsigned int i2 = i[2];
@@ -643,7 +643,7 @@ void VertexArray::FlipWindingOrder()
 void VertexArray::FixWindingOrder()
 {
 	assert(faces.size() % 3 == 0);
-	for (std::vector <unsigned int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	for (auto i = faces.begin(); i != faces.end(); i += 3)
 	{
 		const float * n0 = &normals[i[0] * 3];
 		const float * v0 = &vertices[i[0] * 3];

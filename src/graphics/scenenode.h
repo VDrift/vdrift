@@ -77,9 +77,9 @@ public:
 		else
 			drawlist.AppendTo<T,false>(drawlist_output, this_transform);
 
-		for (List::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		for (auto & child : childlist)
 		{
-			i->Traverse(drawlist_output, this_transform);
+			child.Traverse(drawlist_output, this_transform);
 		}
 
 		cached_transform = this_transform;
@@ -92,9 +92,9 @@ public:
 	void ApplyDrawableContainerFunctor(T functor)
 	{
 		functor(drawlist);
-		for (List::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		for (auto & child : childlist)
 		{
-			i->ApplyDrawableContainerFunctor(functor);
+			child.ApplyDrawableContainerFunctor(functor);
 		}
 	}
 
@@ -105,9 +105,9 @@ public:
 	void ApplyDrawableFunctor(T functor)
 	{
 		drawlist.ForEachDrawable(functor);
-		for (List::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		for (auto & child : childlist)
 		{
-			i->ApplyDrawableFunctor(functor);
+			child.ApplyDrawableFunctor(functor);
 		}
 	}
 

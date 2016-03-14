@@ -30,8 +30,8 @@ template <typename T>
 static std::set <T> mergeSets(const std::set <T> & set1, const std::set <T> & set2)
 {
 	std::set <T> result = set1;
-	for (typename std::set <T>::const_iterator i = set2.begin(); i != set2.end(); i++)
-		result.insert(*i);
+	for (const auto & item : set2)
+		result.insert(item);
 	return result;
 }
 
@@ -42,42 +42,42 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 
 	// Add new passes.
 	int passCount = 0;
-	for (std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++, passCount++)
+	for (const auto & passInfo : config)
 	{
 		// Create unique names based on the path and define list.
-		std::string vertexShaderName = i->vertexShader;
-		if (!i->vertexShaderDefines.empty())
-			vertexShaderName += " "+Utils::implode(i->vertexShaderDefines," ");
-		std::string fragmentShaderName = i->fragmentShader;
-		if (!i->fragmentShaderDefines.empty())
-			fragmentShaderName += " "+Utils::implode(i->fragmentShaderDefines," ");
+		std::string vertexShaderName = passInfo.vertexShader;
+		if (!passInfo.vertexShaderDefines.empty())
+			vertexShaderName += " "+Utils::implode(passInfo.vertexShaderDefines," ");
+		std::string fragmentShaderName = passInfo.fragmentShader;
+		if (!passInfo.fragmentShaderDefines.empty())
+			fragmentShaderName += " "+Utils::implode(passInfo.fragmentShaderDefines," ");
 
 		// Load shaders from the pass if necessary.
-		if ((shaders.find(vertexShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, vertexShaderName, mergeSets(i->vertexShaderDefines, globalDefines), GL_VERTEX_SHADER, errorOutput)))
+		if ((shaders.find(vertexShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? passInfo.vertexShader : shaderPath+"/"+passInfo.vertexShader, vertexShaderName, mergeSets(passInfo.vertexShaderDefines, globalDefines), GL_VERTEX_SHADER, errorOutput)))
 			return false;
-		if ((shaders.find(fragmentShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->fragmentShader : shaderPath+"/"+i->fragmentShader, fragmentShaderName, mergeSets(i->fragmentShaderDefines, globalDefines), GL_FRAGMENT_SHADER, errorOutput)))
+		if ((shaders.find(fragmentShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? passInfo.fragmentShader : shaderPath+"/"+passInfo.fragmentShader, fragmentShaderName, mergeSets(passInfo.fragmentShaderDefines, globalDefines), GL_FRAGMENT_SHADER, errorOutput)))
 			return false;
 
 		// Note which draw groups the pass uses.
-		for (std::vector <std::string>::const_iterator g = i->drawGroups.begin(); g != i->drawGroups.end(); g++)
-			drawGroupToPasses[stringMap.addStringId(*g)].push_back(passes.size());
+		for (const auto & dg : passInfo.drawGroups)
+			drawGroupToPasses[stringMap.addStringId(dg)].push_back(passes.size());
 
 		// Initialize the pass.
 		int passIdx = passes.size();
 		passes.push_back(RenderPass());
-		if (!passes.back().initialize(passCount, *i, stringMap, gl, shaders.find(vertexShaderName)->second, shaders.find(fragmentShaderName)->second, sharedTextures, w, h, errorOutput))
+		if (!passes.back().initialize(passCount, passInfo, stringMap, gl, shaders.find(vertexShaderName)->second, shaders.find(fragmentShaderName)->second, sharedTextures, w, h, errorOutput))
 			return false;
 
 		// Put the pass's output render targets into a map so we can feed them to subsequent passes.
-		const std::map <StringId, RenderTexture> & passRTs = passes.back().getRenderTargets();
-		for (std::map <StringId, RenderTexture>::const_iterator rt = passRTs.begin(); rt != passRTs.end(); rt++)
+		for (const auto & rt : passes.back().getRenderTargets())
 		{
-			StringId nameId = rt->first;
-			sharedTextures.insert(std::make_pair(nameId, RenderTextureEntry(nameId, rt->second.handle, rt->second.target)));
+			StringId nameId = rt.first;
+			sharedTextures.insert(std::make_pair(nameId, RenderTextureEntry(nameId, rt.second.handle, rt.second.target)));
 		}
 
 		// Remember the pass index.
-		passIndexMap[stringMap.addStringId(i->name)] = passIdx;
+		passIndexMap[stringMap.addStringId(passInfo.name)] = passIdx;
+		passCount++;
 	}
 
 	return true;
@@ -86,13 +86,13 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 void Renderer::clear()
 {
 	// Destroy shaders.
-	for (std::map <std::string, RenderShader>::iterator i = shaders.begin(); i != shaders.end(); i++)
-		gl.DeleteShader(i->second.handle);
+	for (auto & shader : shaders)
+		gl.DeleteShader(shader.second.handle);
 	shaders.clear();
 
 	// Tell each pass to clean itself up.
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
-		i->clear(gl);
+	for (auto & pass : passes)
+		pass.clear(gl);
 
 	// Remove all passes.
 	passes.clear();
@@ -112,57 +112,55 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, s
 
 void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::vector <RenderModelExt*> > & externalModels, std::ostream & errorOutput)
 {
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
+	for (auto & pass : passes)
 	{
 		// Extract the appropriate map and generate a drawlist.
 		// A vector of pointers to vectors of RenderModelExternal pointers.
 		std::vector <const std::vector <RenderModelExt*>*> drawList;
 
 		// For each draw group that this pass uses, add its models to the draw list.
-		for (std::set <StringId>::const_iterator dg = i->getDrawGroups().begin(); dg != i->getDrawGroups().end(); dg++)
+		for (auto dg : pass.getDrawGroups())
 		{
-			std::map <StringId, std::vector <RenderModelExt*> >::const_iterator drawGroupIter = externalModels.find(*dg);
+			std::map <StringId, std::vector <RenderModelExt*> >::const_iterator drawGroupIter = externalModels.find(dg);
 			if (drawGroupIter != externalModels.end())
 				drawList.push_back(&drawGroupIter->second);
 		}
 
-		if (i->render(gl, w, h, stringMap, drawList, sharedTextures, errorOutput))
+		if (pass.render(gl, w, h, stringMap, drawList, sharedTextures, errorOutput))
 		{
 			// Render targets have been recreated due to display dimension change.
 			// Call setGlobalTexture to update sharedTextures and let downstream passes know.
-			const std::map <StringId, RenderTexture> & passRTs = passes.back().getRenderTargets();
-			for (std::map <StringId, RenderTexture>::const_iterator rt = passRTs.begin(); rt != passRTs.end(); rt++)
-				setGlobalTexture(rt->first, RenderTextureEntry(rt->first, rt->second.handle, rt->second.target));
+			for (const auto & rt : passes.back().getRenderTargets())
+				setGlobalTexture(rt.first, RenderTextureEntry(rt.first, rt.second.handle, rt.second.target));
 		}
 	}
 }
 
 void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > & externalModels, std::ostream & errorOutput)
 {
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
+	for (auto & pass : passes)
 	{
 		// Extract the appropriate map and generate a drawlist.
 		// A vector of pointers to vectors of RenderModelExternal pointers.
 		std::vector <const std::vector <RenderModelExt*>*> drawList;
 
 		// Find the map appropriate to this pass.
-		std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> >::const_iterator drawMapIter = externalModels.find(i->getNameId());
+		std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> >::const_iterator drawMapIter = externalModels.find(pass.getNameId());
 		if (drawMapIter != externalModels.end())
 			// For each draw group that this pass uses, add its models to the draw list.
-			for (std::set <StringId>::const_iterator dg = i->getDrawGroups().begin(); dg != i->getDrawGroups().end(); dg++)
+			for (auto dg : pass.getDrawGroups())
 			{
-				std::map <StringId, std::vector <RenderModelExt*> *>::const_iterator drawGroupIter = drawMapIter->second.find(*dg);
+				std::map <StringId, std::vector <RenderModelExt*> *>::const_iterator drawGroupIter = drawMapIter->second.find(dg);
 				if (drawGroupIter != drawMapIter->second.end())
 					drawList.push_back(drawGroupIter->second);
 			}
 
-		if (i->render(gl, w, h, stringMap, drawList, sharedTextures, errorOutput))
+		if (pass.render(gl, w, h, stringMap, drawList, sharedTextures, errorOutput))
 		{
 			// Render targets have been recreated due to display dimension change.
 			// Call setGlobalTexture to update sharedTextures and let downstream passes know.
-			const std::map <StringId, RenderTexture> & passRTs = passes.back().getRenderTargets();
-			for (std::map <StringId, RenderTexture>::const_iterator rt = passRTs.begin(); rt != passRTs.end(); rt++)
-				setGlobalTexture(rt->first, RenderTextureEntry(rt->first, rt->second.handle, rt->second.target));
+			for (const auto & rt : passes.back().getRenderTargets())
+				setGlobalTexture(rt.first, RenderTextureEntry(rt.first, rt.second.handle, rt.second.target));
 		}
 	}
 }
@@ -177,8 +175,8 @@ RenderModelHandle Renderer::addModel(const RenderModelEntry & entry)
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
 
-		for (std::vector <unsigned int>::const_iterator i = passesWithDrawGroup.begin(); i != passesWithDrawGroup.end(); i++)
-			passes[*i].addModel(entry, handle);
+		for (unsigned int i : passesWithDrawGroup)
+			passes[i].addModel(entry, handle);
 	}
 
 	return handle;
@@ -194,8 +192,8 @@ void Renderer::removeModel(RenderModelHandle handle)
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
 
-		for (std::vector <unsigned int>::const_iterator i = passesWithDrawGroup.begin(); i != passesWithDrawGroup.end(); i++)
-			passes[*i].removeModel(handle);
+		for (unsigned int i : passesWithDrawGroup)
+			passes[i].removeModel(handle);
 	}
 }
 
@@ -207,8 +205,8 @@ void Renderer::setModelTexture(RenderModelHandle handle, const RenderTextureEntr
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
 
-		for (std::vector <unsigned int>::const_iterator i = passesWithDrawGroup.begin(); i != passesWithDrawGroup.end(); i++)
-			passes[*i].setModelTexture(handle, texture);
+		for (unsigned int i : passesWithDrawGroup)
+			passes[i].setModelTexture(handle, texture);
 	}
 }
 
@@ -220,8 +218,8 @@ void Renderer::removeModelTexture(RenderModelHandle handle, StringId name)
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
 
-		for (std::vector <unsigned int>::const_iterator i = passesWithDrawGroup.begin(); i != passesWithDrawGroup.end(); i++)
-			passes[*i].removeModelTexture(handle, name);
+		for (unsigned int i : passesWithDrawGroup)
+			passes[i].removeModelTexture(handle, name);
 	}
 }
 
@@ -233,8 +231,8 @@ void Renderer::setModelUniform(RenderModelHandle handle, const RenderUniformEntr
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
 
-		for (std::vector <unsigned int>::const_iterator i = passesWithDrawGroup.begin(); i != passesWithDrawGroup.end(); i++)
-			passes[*i].setModelUniform(handle, uniform);
+		for (unsigned int i : passesWithDrawGroup)
+			passes[i].setModelUniform(handle, uniform);
 	}
 }
 
@@ -246,8 +244,8 @@ void Renderer::removeModelUniform(RenderModelHandle handle, StringId name)
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
 
-		for (std::vector <unsigned int>::const_iterator i = passesWithDrawGroup.begin(); i != passesWithDrawGroup.end(); i++)
-			passes[*i].removeModelUniform(handle, name);
+		for (unsigned int i : passesWithDrawGroup)
+			passes[i].removeModelUniform(handle, name);
 	}
 }
 
@@ -256,8 +254,8 @@ void Renderer::setGlobalTexture(StringId name, const RenderTextureEntry & textur
 	sharedTextures.insert(std::make_pair(name,texture));
 
 	// Inform the passes.
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
-		i->setDefaultTexture(name, texture);
+	for (auto & pass : passes)
+		pass.setDefaultTexture(name, texture);
 }
 
 void Renderer::removeGlobalTexture(StringId name)
@@ -265,8 +263,8 @@ void Renderer::removeGlobalTexture(StringId name)
 	sharedTextures.erase(name);
 
 	// Inform the passes.
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
-		i->removeDefaultTexture(name);
+	for (auto & pass : passes)
+		pass.removeDefaultTexture(name);
 }
 
 void Renderer::setPassTexture(StringId passName, StringId textureName, const RenderTextureEntry & texture)
@@ -294,8 +292,8 @@ int Renderer::setGlobalUniform(const RenderUniformEntry & uniform)
 	int passesAffected = 0;
 
 	// Inform the passes.
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
-		if (i->setDefaultUniform(uniform))
+	for (auto & pass : passes)
+		if (pass.setDefaultUniform(uniform))
 			passesAffected++;
 
 	return passesAffected;
@@ -304,8 +302,8 @@ int Renderer::setGlobalUniform(const RenderUniformEntry & uniform)
 void Renderer::removeGlobalUniform(StringId name)
 {
 	// Inform the passes.
-	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
-		i->removeDefaultUniform(name);
+	for (auto & pass : passes)
+		pass.removeDefaultUniform(name);
 }
 
 void Renderer::setPassUniform(StringId passName, const RenderUniformEntry & uniform)
@@ -390,8 +388,8 @@ std::vector <StringId> Renderer::getPassNames() const
 	std::vector <StringId> names;
 	names.reserve(passes.size());
 
-	for (std::vector <RenderPass>::const_iterator i = passes.begin(); i != passes.end(); i++)
-		names.push_back(i->getNameId());
+	for (const auto & pass : passes)
+		names.push_back(pass.getNameId());
 
 	return names;
 }
@@ -402,7 +400,7 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 	out << "---------------" << std::endl;
 	out << "Model count: " << models.size() << std::endl;
 	out << "Shaders: ";
-	for (std::map <std::string, RenderShader>::const_iterator i = shaders.begin(); i != shaders.end(); i++)
+	for (auto i = shaders.begin(); i != shaders.end(); i++)
 	{
 		if (i != shaders.begin())
 			out << ", ";
@@ -410,7 +408,7 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 		if (!i->second.defines.empty())
 		{
 			out << "(";
-			for (std::set <std::string>::const_iterator d = i->second.defines.begin(); d != i->second.defines.end(); d++)
+			for (auto d = i->second.defines.begin(); d != i->second.defines.end(); d++)
 			{
 				if (d != i->second.defines.begin())
 					out << "/";
@@ -427,36 +425,37 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 	if (verbosity >= VERBOSITY_MODELS_TEXTURES)
 	{
 		out << "Global textures: " << sharedTextures.size() << std::endl;
-		for (NameTexMap::const_iterator i = sharedTextures.begin(); i != sharedTextures.end(); i++)
-			out << passPrefix << stringMap.getString(i->first) << ", handle " << i->second.handle << std::endl;
+		for (const auto & st : sharedTextures)
+			out << passPrefix << stringMap.getString(st.first) << ", handle " << st.second.handle << std::endl;
 	}
 
 	out << "Passes: " << passes.size() << std::endl;
 	int passcount = 0;
-	for (std::vector <RenderPass>::const_iterator i = passes.begin(); i != passes.end(); i++,passcount++)
+	for (const auto & pass : passes)
 	{
-		out << "Pass \"" << i->getName() << "\"" << std::endl;
+		out << "Pass \"" << pass.getName() << "\"" << std::endl;
 
 		out << passPrefix << "Draw groups: ";
 		int dgcount = 0;
-		for (NameIdVecMap::const_iterator dg = drawGroupToPasses.begin(); dg != drawGroupToPasses.end(); dg++)
-			if (std::find(dg->second.begin(), dg->second.end(), passcount) != dg->second.end())
+		for (const auto & dg : drawGroupToPasses)
+			if (std::find(dg.second.begin(), dg.second.end(), passcount) != dg.second.end())
 			{
 				if (dgcount != 0)
 					out << ", ";
-				out << stringMap.getString(dg->first);
+				out << stringMap.getString(dg.first);
 				dgcount++;
 			}
 		out << std::endl;
 
-		i->printRendererStatus(verbosity, stringMap, out);
+		pass.printRendererStatus(verbosity, stringMap, out);
+		passcount++;
 	}
 }
 
 void Renderer::printProfilingInfo(std::ostream & out) const
 {
-	for (std::vector <RenderPass>::const_iterator i = passes.begin(); i != passes.end(); i++)
-		out << i->getName() << ": " << i->getLastTime()*1e6 << " us" << std::endl;
+	for (const auto & pass : passes)
+		out << pass.getName() << ": " << pass.getLastTime()*1e6 << " us" << std::endl;
 }
 
 bool Renderer::loadShader(const std::string & path, const std::string & name, const std::set <std::string> & defines, GLenum shaderType, std::ostream & errorOutput)
@@ -470,9 +469,9 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 
 	// Create a block of #defines.
 	std::ostringstream blockstream;
-	for (std::set <std::string>::const_iterator i = defines.begin(); i != defines.end(); i++)
-		if (!i->empty())
-			blockstream << "#define " << *i << std::endl;
+	for (const auto & define : defines)
+		if (!define.empty())
+			blockstream << "#define " << define << std::endl;
 
 	// Insert the define block at the top of the shader, but after the "#version" line, if it exists.
 	if ((shaderSource.substr(0,8) == "#version") && (shaderSource.find('\n') != std::string::npos && shaderSource.find('\n') + 1 < shaderSource.size()))

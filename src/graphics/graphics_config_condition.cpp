@@ -53,13 +53,13 @@ void GraphicsConfigCondition::Parse(const std::string & str)
 bool GraphicsConfigCondition::Satisfied(const std::set <std::string> & conditions) const
 {
 	// If we don't find all of our positive conditions in the conditions set, return false.
-	for (std::set <std::string>::const_iterator i = positive_conditions.begin(); i != positive_conditions.end(); i++)
-		if (conditions.find(*i) == conditions.end())
+	for (const auto & condition : positive_conditions)
+		if (conditions.find(condition) == conditions.end())
 			return false;
 
 	// If we find any of our negative conditions in the conditions set, return false.
-	for (std::set <std::string>::const_iterator i = negated_conditions.begin(); i != negated_conditions.end(); i++)
-		if (conditions.find(*i) != conditions.end())
+	for (const auto & condition : negated_conditions)
+		if (conditions.find(condition) != conditions.end())
 			return false;
 
 	return true;

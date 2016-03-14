@@ -33,9 +33,9 @@ struct SetVisibility
 	template <typename T>
 	void operator()(T & container)
 	{
-		for (typename T::iterator i = container.begin(); i != container.end(); i++)
+		for (auto & drawable : container)
 		{
-			i->SetDrawEnable(vis);
+			drawable.SetDrawEnable(vis);
 		}
 	}
 };
@@ -46,9 +46,9 @@ struct SetAlpha
 	template <typename T>
 	void operator()(T & container)
 	{
-		for (typename T::iterator i = container.begin(); i != container.end(); i++)
+		for (auto & drawable : container)
 		{
-			i->SetAlpha(a);
+			drawable.SetAlpha(a);
 		}
 	}
 };
@@ -78,9 +78,9 @@ struct ApplyFunctor
 	template <typename T>
 	void operator()(T & container)
 	{
-		for (typename T::iterator i = container.begin(); i != container.end(); i++)
+		for (auto & obj : container)
 		{
-			func(*i);
+			func(obj);
 		}
 	}
 };
@@ -98,9 +98,9 @@ void AddDrawableToContainer(DrawableType & drawable, ContainerType & container, 
 template <typename DrawableType, typename ContainerType, typename U, bool use_transform>
 void AddDrawablesToContainer(ContainerType & source, U & dest, const Mat4 & transform)
 {
-	for (typename ContainerType::iterator i = source.begin(); i != source.end(); i++)
+	for (auto & drawable : source)
 	{
-		AddDrawableToContainer<DrawableType, U, use_transform>(*i, dest, transform);
+		AddDrawableToContainer<DrawableType, U, use_transform>(drawable, dest, transform);
 	}
 }
 }

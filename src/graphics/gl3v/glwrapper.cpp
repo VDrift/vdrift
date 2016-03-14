@@ -214,8 +214,8 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 			GLLOG(glBindAttribLocation(handle, i, shaderAttributeBindings[i].c_str()));ERROR_CHECK;
 
 	// Make sure color outputs are bound to the proper names.
-	for (std::map <GLuint, std::string>::const_iterator i = fragDataLocations.begin(); i != fragDataLocations.end(); i++)
-		GLLOG(glBindFragDataLocation(handle, i->first, i->second.c_str()));ERROR_CHECK;
+	for (const auto & location : fragDataLocations)
+		GLLOG(glBindFragDataLocation(handle, location.first, location.second.c_str()));ERROR_CHECK;
 
 	// Attempt to link the program.
 	GLLOG(glLinkProgram(handle));ERROR_CHECK;
