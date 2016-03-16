@@ -184,7 +184,7 @@ template <typename T>
 inline bool Config::get(const const_iterator & section, const std::string & param, T & output) const
 {
 	assert(section != sections.end());
-	Section::const_iterator i = section->second.find(param);
+	auto i = section->second.find(param);
 	if (i != section->second.end())
 	{
 		std::istringstream s(i->second);
@@ -198,7 +198,7 @@ template <typename T>
 inline bool Config::get(const const_iterator & section, const std::string & param, std::vector<T> & out) const
 {
 	assert(section != sections.end());
-	Section::const_iterator i = section->second.find(param);
+	auto i = section->second.find(param);
 	if (i != section->second.end())
 	{
 		std::istringstream st(i->second);
@@ -274,7 +274,7 @@ inline void Config::set(iterator section, const std::string & param, const std::
 	if (section != sections.end())
 	{
 		std::ostringstream s;
-		typename std::vector<T>::const_iterator it = invar.begin();
+		auto it = invar.begin();
 		while (it < invar.end() - 1)
 		{
 			s << *it++ << ",";
@@ -298,7 +298,7 @@ template <>
 inline bool Config::get(const const_iterator & section, const std::string & param, std::string & output) const
 {
 	assert(section != sections.end());
-	Section::const_iterator i = section->second.find(param);
+	auto i = section->second.find(param);
 	if (i != section->second.end())
 	{
 		output = i->second;
@@ -311,7 +311,7 @@ template <>
 inline bool Config::get(const const_iterator & section, const std::string & param, bool & output) const
 {
 	assert(section != sections.end());
-	Section::const_iterator i = section->second.find(param);
+	auto i = section->second.find(param);
 	if (i != section->second.end())
 	{
 		output = false;

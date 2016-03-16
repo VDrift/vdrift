@@ -212,14 +212,14 @@ bool Config::processLine(Config::iterator & section, std::string & linestr)
 				std::string child = section_name.substr(n+1);
 
 				/*
-				SECTIONMAP::const_iterator parent_iter = sections.find(parent);
+				auto parent_iter = sections.find(parent);
 				if (!SUPPRESS_ERROR && (parent_iter == sections.end()))
 				{
 					std::cout << "warning: parent section " << parent << " doesn't exist. adding an empty one." << std::endl;
 					return false;
 				}
 
-				Section::const_iterator child_iter = parent_iter->second.find(child);
+				auto child_iter = parent_iter->second.find(child);
 				if (!SUPPRESS_ERROR && (child_iter != parent_iter->second.end()))
 				{
 					std::cout << "child already exists, this must be a duplicate section. error" << std::endl;
@@ -229,7 +229,7 @@ bool Config::processLine(Config::iterator & section, std::string & linestr)
 				sections[parent][child] = section_name;
 			}
 			/*
-			SECTIONMAP::const_iterator already_exists = sections.find(section_name);
+			auto already_exists = sections.find(section_name);
 			if (!SUPPRESS_ERROR && (already_exists != sections.end()))
 			{
 				std::cout << "section " << section_name << " already exists, duplicate section in the file, error" << std::endl;
@@ -324,7 +324,7 @@ QT_TEST(configfile_test)
 	//testconfig.Print(std::cout);
 
 	{
-		Config::const_iterator i = testconfig.begin();
+		auto i = testconfig.begin();
 		QT_CHECK_EQUAL(i->first, "");
 		i++;
 		QT_CHECK_EQUAL(i->first, "section    dos??");
