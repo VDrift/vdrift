@@ -521,9 +521,9 @@ bool CarDynamics::Load(
 	}
 
 	int i = 0;
-	for (PTree::const_iterator it = cfg_wheels->begin(); it != cfg_wheels->end(); ++it, ++i)
+	for (const auto & node : *cfg_wheels)
 	{
-		const PTree & cfg_wheel = it->second;
+		const PTree & cfg_wheel = node.second;
 		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
 
 		std::string tirestr(cartire);
@@ -550,12 +550,13 @@ bool CarDynamics::Load(
 		btVector3 size(width * 0.5f, radius, radius);
 		btCollisionShape * shape = new btCylinderShapeX(size);
 		loadBody(cfg_wheel, error, shape, mass, true);
+		i++;
 	}
 
 	// load children bodies
-	for (PTree::const_iterator it = cfg.begin(); it != cfg.end(); ++it)
+	for (const auto & node : cfg)
 	{
-		if (!loadBody(it->second, error)) return false;
+		if (!loadBody(node.second, error)) return false;
 	}
 
 	if (bodyinfo.m_shape->getNumChildShapes() == wheel_count)
