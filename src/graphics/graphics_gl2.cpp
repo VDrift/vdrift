@@ -58,7 +58,7 @@ static void ReportOnce(const void * id, const std::string & message, std::ostrea
 {
 	static std::map <const void*, std::string> prev_messages;
 
-	std::map <const void*, std::string>::iterator i = prev_messages.find(id);
+	auto i = prev_messages.find(id);
 	if (i == prev_messages.end() || i->second != message)
 	{
 		prev_messages[id] = message;
@@ -699,7 +699,7 @@ GraphicsState & GraphicsGL2::GetState()
 
 Shader * GraphicsGL2::GetShader(const std::string & name)
 {
-	ShaderMap::iterator it = shaders.find(name);
+	auto it = shaders.find(name);
 	if (it != shaders.end())
 		return &it->second;
 	else
@@ -917,7 +917,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			std::vector <FrameBufferTexture*> fbotex;
 			for (const auto & output : outputs)
 			{
-				TextureOutputMap::iterator to = texture_outputs.find(output);
+				auto to = texture_outputs.find(output);
 				if (to != texture_outputs.end())
 				{
 					fbotex.push_back(&to->second);
@@ -990,7 +990,7 @@ void GraphicsGL2::CullScenePass(
 	for (const auto & draw_layer : pass.draw)
 	{
 		// determine if we're dealing with a cubemap
-		RenderOutputMap::iterator oi = render_outputs.find(pass.output);
+		auto oi = render_outputs.find(pass.output);
 		if (oi == render_outputs.end())
 		{
 			ReportOnce(&pass, "Render output "+pass.output+" couldn't be found", error_output);
@@ -1012,7 +1012,7 @@ void GraphicsGL2::CullScenePass(
 				}
 
 				// get the base camera
-				CameraMap::iterator bci = cameras.find(pass.camera);
+				auto bci = cameras.find(pass.camera);
 				if (bci == cameras.end())
 				{
 					ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
@@ -1048,7 +1048,7 @@ void GraphicsGL2::CullScenePass(
 					return;
 				}
 
-				CameraMap::iterator ci = cameras.find(cameraname);
+				auto ci = cameras.find(cameraname);
 				if (ci == cameras.end())
 				{
 					ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);
@@ -1110,7 +1110,7 @@ void GraphicsGL2::DrawScenePass(
 		return;
 
 	// setup shader
-	ShaderMap::iterator si = shaders.find(pass.shader);
+	auto si = shaders.find(pass.shader);
 	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
@@ -1129,7 +1129,7 @@ void GraphicsGL2::DrawScenePass(
 	renderscene.SetBlendMode(glstate, BlendModeFromString(pass.blendmode));
 
 	// setup output
-	RenderOutputMap::iterator oi = render_outputs.find(pass.output);
+	auto oi = render_outputs.find(pass.output);
 	if (oi == render_outputs.end())
 	{
 		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
@@ -1155,7 +1155,7 @@ void GraphicsGL2::DrawScenePass(
 		}
 
 		// setup camera
-		CameraMap::iterator ci = cameras.find(cameraname);
+		auto ci = cameras.find(cameraname);
 		if (ci == cameras.end())
 		{
 			ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
@@ -1169,7 +1169,7 @@ void GraphicsGL2::DrawScenePass(
 		for (const auto & draw_layer : pass.draw)
 		{
 			const std::string drawlist_name = BuildKey(cameraname, draw_layer);
-			CulledDrawListMap::const_iterator drawlist_it = culled_drawlists.find(drawlist_name);
+			auto drawlist_it = culled_drawlists.find(drawlist_name);
 			if (drawlist_it == culled_drawlists.end())
 			{
 				ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_name, error_output);
@@ -1196,7 +1196,7 @@ void GraphicsGL2::DrawScenePassPost(
 	if (!pass.conditions.Satisfied(conditions))
 		return;
 
-	ShaderMap::iterator si = shaders.find(pass.shader);
+	auto si = shaders.find(pass.shader);
 	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
@@ -1212,7 +1212,7 @@ void GraphicsGL2::DrawScenePassPost(
 	postprocess.SetDepthMode(glstate, DepthModeFromString(pass.depthtest), pass.write_depth);
 	postprocess.SetBlendMode(glstate, BlendModeFromString(pass.blendmode));
 
-	RenderOutputMap::iterator oi = render_outputs.find(pass.output);
+	auto oi = render_outputs.find(pass.output);
 	if (oi == render_outputs.end())
 	{
 		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
@@ -1223,7 +1223,7 @@ void GraphicsGL2::DrawScenePassPost(
 	// setup camera, even though we don't use it directly for the post process
 	// we want to have some info available
 	std::string cameraname = pass.camera;
-	CameraMap::iterator ci = cameras.find(cameraname);
+	auto ci = cameras.find(cameraname);
 	if (ci == cameras.end())
 	{
 		ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);

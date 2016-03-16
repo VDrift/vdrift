@@ -522,7 +522,7 @@ void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 		for (int n = 0; n < 3; n++) //loop through vertices in triangle
 		{
 			const VertexData & curvertdata = face.v[n]; //grab vertex
-			std::map <VertexData, unsigned int>::iterator result = indexmap.find(curvertdata);
+			auto result = indexmap.find(curvertdata);
 			if (result == indexmap.end()) //new vertex
 			{
 				unsigned int newidx = indexmap.size();

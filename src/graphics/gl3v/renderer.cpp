@@ -121,7 +121,7 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, c
 		// For each draw group that this pass uses, add its models to the draw list.
 		for (auto dg : pass.getDrawGroups())
 		{
-			std::map <StringId, std::vector <RenderModelExt*> >::const_iterator drawGroupIter = externalModels.find(dg);
+			auto drawGroupIter = externalModels.find(dg);
 			if (drawGroupIter != externalModels.end())
 				drawList.push_back(&drawGroupIter->second);
 		}
@@ -145,12 +145,12 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, c
 		std::vector <const std::vector <RenderModelExt*>*> drawList;
 
 		// Find the map appropriate to this pass.
-		std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> >::const_iterator drawMapIter = externalModels.find(pass.getNameId());
+		auto drawMapIter = externalModels.find(pass.getNameId());
 		if (drawMapIter != externalModels.end())
 			// For each draw group that this pass uses, add its models to the draw list.
 			for (auto dg : pass.getDrawGroups())
 			{
-				std::map <StringId, std::vector <RenderModelExt*> *>::const_iterator drawGroupIter = drawMapIter->second.find(dg);
+				auto drawGroupIter = drawMapIter->second.find(dg);
 				if (drawGroupIter != drawMapIter->second.end())
 					drawList.push_back(drawGroupIter->second);
 			}
@@ -170,7 +170,7 @@ RenderModelHandle Renderer::addModel(const RenderModelEntry & entry)
 	RenderModelHandle handle = models.insert(entry);
 
 	// For all passes that use this draw group, send them the model.
-	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	auto iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -187,7 +187,7 @@ void Renderer::removeModel(RenderModelHandle handle)
 	models.erase(handle);
 
 	// For all passes that use this draw group, tell them to remove the model.
-	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	auto iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -200,7 +200,7 @@ void Renderer::removeModel(RenderModelHandle handle)
 void Renderer::setModelTexture(RenderModelHandle handle, const RenderTextureEntry & texture)
 {
 	// For all passes that use this draw group, pass on the message.
-	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	auto iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -213,7 +213,7 @@ void Renderer::setModelTexture(RenderModelHandle handle, const RenderTextureEntr
 void Renderer::removeModelTexture(RenderModelHandle handle, StringId name)
 {
 	// For all passes that use this draw group, pass on the message.
-	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	auto iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -226,7 +226,7 @@ void Renderer::removeModelTexture(RenderModelHandle handle, StringId name)
 void Renderer::setModelUniform(RenderModelHandle handle, const RenderUniformEntry & uniform)
 {
 	// For all passes that use this draw group, pass on the message.
-	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	auto iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -239,7 +239,7 @@ void Renderer::setModelUniform(RenderModelHandle handle, const RenderUniformEntr
 void Renderer::removeModelUniform(RenderModelHandle handle, StringId name)
 {
 	// For all passes that use this draw group, pass on the message.
-	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	auto iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -269,7 +269,7 @@ void Renderer::removeGlobalTexture(StringId name)
 
 void Renderer::setPassTexture(StringId passName, StringId textureName, const RenderTextureEntry & texture)
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -279,7 +279,7 @@ void Renderer::setPassTexture(StringId passName, StringId textureName, const Ren
 
 void Renderer::removePassTexture(StringId passName, StringId textureName)
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -308,7 +308,7 @@ void Renderer::removeGlobalUniform(StringId name)
 
 void Renderer::setPassUniform(StringId passName, const RenderUniformEntry & uniform)
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -318,7 +318,7 @@ void Renderer::setPassUniform(StringId passName, const RenderUniformEntry & unif
 
 void Renderer::removePassUniform(StringId passName, StringId uniformName)
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -328,7 +328,7 @@ void Renderer::removePassUniform(StringId passName, StringId uniformName)
 
 bool Renderer::getPassUniform(StringId passName, StringId uniformName, RenderUniform & out)
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -340,7 +340,7 @@ bool Renderer::getPassUniform(StringId passName, StringId uniformName, RenderUni
 
 void Renderer::setPassEnabled(StringId passName, bool enable)
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -350,7 +350,7 @@ void Renderer::setPassEnabled(StringId passName, bool enable)
 
 bool Renderer::getPassEnabled(StringId passName) const
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -362,7 +362,7 @@ bool Renderer::getPassEnabled(StringId passName) const
 static const std::map <std::string, std::string> emptyStringMap;
 const std::map <std::string, std::string> & Renderer::getUserDefinedFields(StringId passName) const
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());
@@ -374,7 +374,7 @@ const std::map <std::string, std::string> & Renderer::getUserDefinedFields(Strin
 static const std::set <StringId> emptySet;
 const std::set <StringId> & Renderer::getDrawGroups(StringId passName) const
 {
-	NameIdMap::const_iterator i = passIndexMap.find(passName);
+	auto i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert(i->second < passes.size());

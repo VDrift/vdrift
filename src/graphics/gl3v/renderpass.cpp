@@ -137,7 +137,7 @@ bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config
 
 		// Fill default textures from passed-in shared textures.
 		// Fexture bindings that can be overridden (or not) by specific models.
-		NameTexMap::const_iterator defaultTexIter = sharedTextures.find(stringMap.addStringId(textureName));
+		auto defaultTexIter = sharedTextures.find(stringMap.addStringId(textureName));
 		if (defaultTexIter != sharedTextures.end())
 			defaultTextureBindings.push_back(RenderTexture(tu, defaultTexIter->second));
 	}
@@ -146,7 +146,7 @@ bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config
 	framebufferDimensions = RenderDimensions(1,1,true);
 
 	// Look at the depth attachment or, failing that, the first color framebuffer attachment to find the render viewport.
-	std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator attachIter = config.renderTargets.find("GL_DEPTH_ATTACHMENT");
+	auto attachIter = config.renderTargets.find("GL_DEPTH_ATTACHMENT");
 	if (attachIter != config.renderTargets.end())
 	{
 		const RealtimeExportPassInfo::RenderTargetInfo & targetInfo = attachIter->second;
@@ -407,7 +407,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 					for (const auto & t : m->textures)
 					{
 						// Get the TU associated with this texture name id.
-						NameIdMap::iterator tui = textureNameToTextureUnit.find(t.name);
+						auto tui = textureNameToTextureUnit.find(t.name);
 						if (tui != textureNameToTextureUnit.end()) // if the texture isn't used in this pass, it might not be in textureNameToTextureUnit.
 						{
 							GLuint tu = tui->second;
@@ -469,7 +469,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 				{
 					for (const auto & u : m->uniforms)
 					{
-						NameIdMap::const_iterator loci = variableNameToUniformLocation.find(u.name);
+						auto loci = variableNameToUniformLocation.find(u.name);
 						if (loci != variableNameToUniformLocation.end()) // If the texture isn't used in this pass, it might not be in variableNameToUniformLocation.
 						{
 							GLuint location = loci->second;
@@ -531,7 +531,7 @@ void RenderPass::addModel(const RenderModelEntry & entry, RenderModelHandle hand
 void RenderPass::removeModel(RenderModelHandle handle)
 {
 	// Find the handle in our models container and erase it.
-	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
+	auto iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 		models.erase(iter->second);
 	else
@@ -541,13 +541,13 @@ void RenderPass::removeModel(RenderModelHandle handle)
 void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEntry & texture)
 {
 	// Find the model from the handle.
-	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
+	auto iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// First, see if there's an existing texture override with this name.
-		RenderModel::TextureMap::const_iterator existing = model.textureNameToTextureOverride.find(texture.name);
+		auto existing = model.textureNameToTextureOverride.find(texture.name);
 		if (existing != model.textureNameToTextureOverride.end())
 		{
 			// There is an existing override. Change it!
@@ -557,7 +557,7 @@ void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEn
 		else
 		{
 			// This is a new override.
-			NameIdMap::const_iterator tui = textureNameToTextureUnit.find(texture.name);
+			auto tui = textureNameToTextureUnit.find(texture.name);
 			assert(tui != textureNameToTextureUnit.end()); // textureNameToTextureUnit should have been populated when we loaded the sampler.
 			GLuint tu = tui->second;
 
@@ -572,13 +572,13 @@ void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEn
 void RenderPass::removeModelTexture(RenderModelHandle handle, StringId name)
 {
 	// Find the model from the handle.
-	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
+	auto iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// Find the existing texture override with this name.
-		RenderModel::TextureMap::const_iterator existing = model.textureNameToTextureOverride.find(name);
+		auto existing = model.textureNameToTextureOverride.find(name);
 		if (existing != model.textureNameToTextureOverride.end())
 		{
 			// There is an existing override. Remove it, then remove it from the mapping.
@@ -595,13 +595,13 @@ void RenderPass::removeModelTexture(RenderModelHandle handle, StringId name)
 void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEntry & uniform)
 {
 	// Find the model from the handle.
-	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
+	auto iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// First, see if there's an existing override with this name.
-		RenderModel::UniformMap::const_iterator existing = model.variableNameToUniformOverride.find(uniform.name);
+		auto existing = model.variableNameToUniformOverride.find(uniform.name);
 		if (existing != model.variableNameToUniformOverride.end())
 		{
 			// There is an existing override. Change it!
@@ -611,7 +611,7 @@ void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEn
 		else
 		{
 			// This is a new override.
-			NameIdMap::const_iterator loci = variableNameToUniformLocation.find(uniform.name);
+			auto loci = variableNameToUniformLocation.find(uniform.name);
 			assert(loci != variableNameToUniformLocation.end()); // variableNameToUniformLocation should have been populated when we initialized.
 			GLuint loc = loci->second;
 
@@ -626,13 +626,13 @@ void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEn
 void RenderPass::removeModelUniform(RenderModelHandle handle, StringId name)
 {
 	// Find the model from the handle.
-	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
+	auto iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// Find the existing uniform override with this name.
-		RenderModel::UniformMap::const_iterator existing = model.variableNameToUniformOverride.find(name);
+		auto existing = model.variableNameToUniformOverride.find(name);
 		if (existing != model.variableNameToUniformOverride.end())
 		{
 			// There is an existing override. Remove it, then remove it from the mapping.
@@ -650,7 +650,7 @@ void RenderPass::setDefaultTexture(StringId name, const RenderTextureEntry & tex
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	NameIdMap::const_iterator tuIter = textureNameToTextureUnit.find(name);
+	auto tuIter = textureNameToTextureUnit.find(name);
 	if (tuIter != textureNameToTextureUnit.end())
 	{
 		GLuint tu = tuIter->second;
@@ -673,7 +673,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	NameIdMap::const_iterator tuIter = textureNameToTextureUnit.find(name);
+	auto tuIter = textureNameToTextureUnit.find(name);
 	if (tuIter != textureNameToTextureUnit.end())
 	{
 		GLuint tu = tuIter->second;
@@ -698,7 +698,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 
 bool RenderPass::getDefaultUniform(StringId uniformName, RenderUniform & out)
 {
-	NameIdMap::const_iterator locIter = variableNameToUniformLocation.find(uniformName);
+	auto locIter = variableNameToUniformLocation.find(uniformName);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
@@ -719,7 +719,7 @@ bool RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	NameIdMap::const_iterator locIter = variableNameToUniformLocation.find(uniform.name);
+	auto locIter = variableNameToUniformLocation.find(uniform.name);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
@@ -745,7 +745,7 @@ void RenderPass::removeDefaultUniform(StringId name)
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	NameIdMap::const_iterator locIter = variableNameToUniformLocation.find(name);
+	auto locIter = variableNameToUniformLocation.find(name);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
@@ -1134,7 +1134,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		StringId renderTargetNameId = stringMap.addStringId(rt.second.name);
 
 		// Either use an existing render target texture or create a new one.
-		NameTexMap::const_iterator sharedRenderTarget = sharedTextures.find(renderTargetNameId);
+		auto sharedRenderTarget = sharedTextures.find(renderTargetNameId);
 		if (sharedRenderTarget != sharedTextures.end())
 		{
 			// This render target texture has already been created by a previous pass, we just want to use it.

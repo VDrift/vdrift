@@ -338,7 +338,7 @@ void GraphicsGL3::SetupScene(
 		for (const auto & passName : renderer.getPassNames())
 		{
 			std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
-			std::map <std::string, std::string>::const_iterator field = fields.find(matrixName);
+			auto field = fields.find(matrixName);
 			if (field != fields.end() && field->second == suffix)
 			{
 				renderer.setPassUniform(passName, RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
@@ -405,7 +405,7 @@ std::string GraphicsGL3::getCameraForPass(StringId pass) const
 {
 	std::string passString = stringMap.getString(pass);
 	std::string cameraString;
-	std::map <std::string, std::string>::const_iterator camIter = passNameToCameraName.find(passString);
+	auto camIter = passNameToCameraName.find(passString);
 	if (camIter != passNameToCameraName.end())
 		cameraString = camIter->second;
 	return cameraString;
@@ -659,7 +659,7 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 		for (int i = passInfos.size() - 1; i >= 0; i--)
 		{
 			std::map <std::string, std::string> & fields = passInfos[i].userDefinedFields;
-			std::map <std::string, std::string>::const_iterator field = fields.find("conditions");
+			auto field = fields.find("conditions");
 			if (field != fields.end())
 			{
 				GraphicsConfigCondition condition;
@@ -685,7 +685,7 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 			for (auto passName : renderer.getPassNames())
 			{
 				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
-				std::map <std::string, std::string>::const_iterator field = fields.find("camera");
+				auto field = fields.find("camera");
 				if (field != fields.end())
 					passNameToCameraName[stringMap.getString(passName)] = field->second;
 			}
