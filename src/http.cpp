@@ -253,7 +253,7 @@ bool Http::Tick()
 			CURL * easyhandle = msg->easy_handle;
 
 			// Get the url.
-			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
+			auto u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in easyhandles map");
 			std::string url = u->second.url;
 
@@ -280,7 +280,7 @@ bool Http::Tick()
 		for (const auto & hs : easyhandles)
 		{
 			CURL * easyhandle = hs.first;
-			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
+			auto u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in requestUrls map");
 			std::string url = u->second.url;
 
@@ -302,7 +302,7 @@ bool Http::Downloading() const
 
 bool Http::GetRequestInfo(const std::string & url, HttpInfo & out)
 {
-	std::map <std::string, HttpInfo>::iterator i = requests.find(url);
+	auto i = requests.find(url);
 	if (i == requests.end())
 		return false;
 
@@ -358,7 +358,7 @@ std::string Http::GetDownloadPath(const std::string & url) const
 
 void Http::UpdateProgress(CURL * handle, float total, float current)
 {
-	std::map <CURL*, RequestState>::iterator i = easyhandles.find(handle);
+	auto i = easyhandles.find(handle);
 	if (i == easyhandles.end())
 		return;
 

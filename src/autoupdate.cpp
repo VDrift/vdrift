@@ -116,13 +116,13 @@ std::pair <std::vector <std::string>, std::vector <std::string> > AutoUpdate::Ch
 	std::vector <std::string> deleted;
 
 	// Get the relevant available update group.
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound != available_updates.end())
 	{
 		const PairType & check = availfound->second;
 
 		// Get the relevant group.
-		GroupType::const_iterator foundgroup = groups.find(group);
+		auto foundgroup = groups.find(group);
 
 		if (foundgroup == groups.end())
 			// Everything is new!
@@ -139,7 +139,7 @@ std::pair <std::vector <std::string>, std::vector <std::string> > AutoUpdate::Ch
 			for (const auto & item : check)
 			{
 				// See if we have it; if not, it's new and should be updated.
-				PairType::const_iterator c = cur.find(item.first);
+				auto c = cur.find(item.first);
 				if (c == cur.end())
 					changed.push_back(item.first);
 				else
@@ -172,7 +172,7 @@ bool AutoUpdate::empty() const
 
 bool AutoUpdate::empty(const std::string & group) const
 {
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound == available_updates.end())
 		return true;
 	else
@@ -183,17 +183,17 @@ std::pair <int, int> AutoUpdate::GetVersions(const std::string & group, const st
 {
 	int local(0), remote(0);
 
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound != available_updates.end())
 	{
-		PairType::const_iterator remotefound = availfound->second.find(item);
+		auto remotefound = availfound->second.find(item);
 		if (remotefound != availfound->second.end())
 			remote = remotefound->second;
 	}
-	GroupType::const_iterator groupfound = groups.find(group);
+	auto groupfound = groups.find(group);
 	if (groupfound != groups.end())
 	{
-		PairType::const_iterator localfound = groupfound->second.find(item);
+		auto localfound = groupfound->second.find(item);
 		if (localfound != groupfound->second.end())
 			local = localfound->second;
 	}
@@ -203,7 +203,7 @@ std::pair <int, int> AutoUpdate::GetVersions(const std::string & group, const st
 
 std::map <std::string, int> AutoUpdate::GetAvailableUpdates(const std::string & group) const
 {
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound != available_updates.end())
 		return availfound->second;
 	else
@@ -214,7 +214,7 @@ int AutoUpdate::GetFormatVersion(const std::string & group) const
 {
 	int version = 0;
 
-	PairType::const_iterator i = formats.find(group);
+	auto i = formats.find(group);
 	if (i != formats.end())
 		version = i->second;
 

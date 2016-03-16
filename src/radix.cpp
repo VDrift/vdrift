@@ -41,7 +41,7 @@ static inline bool ComputeCounters(
 	if (!ranks_valid)
 	{
 		// Check whether input is alredy sorted while accum the counters.
-		typename std::vector<T>::const_iterator it = input.begin();
+		auto it = input.begin();
 		T vprev = *it;
 		while (bytes != bytes_end)
 		{

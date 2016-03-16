@@ -551,7 +551,7 @@ class TreeMap
 		///returns NULL if the branch does not exist
 		TreeMap * branch ( const std::string & name )
 		{
-			typename std::map <std::string, TreeMap>::iterator i = branches_.find ( name );
+			auto i = branches_.find ( name );
 			if ( i == branches_.end() )
 				return NULL;
 			else
@@ -560,7 +560,7 @@ class TreeMap
 		///returns NULL if the branch does not exist
 		const TreeMap * branch ( const std::string & name ) const
 		{
-			typename std::map <std::string, TreeMap>::const_iterator i = branches_.find ( name );
+			auto i = branches_.find ( name );
 			if ( i == branches_.end() )
 				return NULL;
 			else

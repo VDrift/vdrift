@@ -1128,7 +1128,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		{
 			// reverse the lap sequence, but keep the first bezier where it is (remember, the track is a loop)
 			// so, for example, now instead of 1 2 3 4 we should have 1 4 3 2
-			std::vector<const Bezier *>::iterator secondbezier = data.lap.begin() + 1;
+			auto secondbezier = data.lap.begin() + 1;
 			assert(secondbezier != data.lap.end());
 			std::reverse(secondbezier, data.lap.end());
 		}

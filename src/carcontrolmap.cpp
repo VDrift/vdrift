@@ -914,7 +914,7 @@ const std::string & CarControlMap::GetStringFromInput(const unsigned input)
 
 unsigned CarControlMap::GetInputFromString(const std::string & str)
 {
-	std::map <std::string, unsigned>::const_iterator i = carinput_stringmap.find(str);
+	auto i = carinput_stringmap.find(str);
 	if (i != carinput_stringmap.end())
 		return i->second;
 
@@ -932,7 +932,7 @@ const std::string & CarControlMap::GetStringFromKeycode(const int code)
 
 int CarControlMap::GetKeycodeFromString(const std::string & str)
 {
-	std::map <std::string, int>::const_iterator i = keycode_stringmap.find(str);
+	auto i = keycode_stringmap.find(str);
 	if (i != keycode_stringmap.end())
 		return i->second;
 

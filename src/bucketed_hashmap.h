@@ -275,8 +275,7 @@ public:
 	const DATACLASS * Get(KEYCLASS & key) const
 	{
 		unsigned int idx = hash.GetHash(key) % nbuckets;
-		//typedef std::map <KEYCLASS, DATACLASS> mymap;
-		//mymap::iterator i;// = data[idx].find(key);
+		//auto i;// = data[idx].find(key);
 		/*if (i == data[idx].end())
 			return NULL;
 		else
@@ -291,8 +290,7 @@ public:
 	DATACLASS * Get(KEYCLASS & key)
 	{
 		unsigned int idx = hash.GetHash(key) % nbuckets;
-		//typedef std::map <KEYCLASS, DATACLASS> mymap;
-		//mymap::iterator i;// = data[idx].find(key);
+		//auto i;// = data[idx].find(key);
 		/*if (i == data[idx].end())
 		return NULL;
 		else

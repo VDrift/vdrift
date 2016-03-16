@@ -33,7 +33,7 @@ std::vector <std::string> DownloadableManager::GetUpdatables(const std::map <std
 	// Do a naive n*log(n) algorithm for now.
 	for (const auto & d : downloadables)
 	{
-		std::map <std::string, int>::const_iterator r = remote_downloadables.find(d.first);
+		auto r = remote_downloadables.find(d.first);
 		if (r != remote_downloadables.end() && r->second > d.second)
 			update.push_back(d.first);
 	}

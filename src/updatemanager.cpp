@@ -142,7 +142,7 @@ void UpdateManager::Show(Gui & gui)
 		cur_object_id = allobjects.size() + cur_object_id;
 	cur_object_id = cur_object_id % allobjects.size();
 
-	std::set <std::string>::const_iterator it = allobjects.begin();
+	auto it = allobjects.begin();
 	std::advance(it, cur_object_id);
 	objectname = *it;
 

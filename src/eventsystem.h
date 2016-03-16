@@ -256,7 +256,7 @@ private:
 	{
 		ButtonState s;
 		s.down = s.just_down = s.just_up = false;
-		typename std::map <T, Toggle>::const_iterator i = togglemap.find(id);
+		auto i = togglemap.find(id);
 		if (i != togglemap.end())
 		{
 			s.down = i->second.GetState();

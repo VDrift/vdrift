@@ -251,8 +251,8 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 	//only update car positions when the map is visible, so we get a slight speedup if the map is hidden
 	if (mapvisible)
 	{
-		std::list <std::pair<Vec3, bool> >::const_iterator car = carpositions.begin();
-		std::list <CarDot>::iterator dot = dotlist.begin();
+		auto car = carpositions.begin();
+		auto dot = dotlist.begin();
 		int count = 0;
 		while (car != carpositions.end())
 		{
