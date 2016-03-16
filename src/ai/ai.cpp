@@ -47,7 +47,7 @@ void Ai::AddCar(const CarDynamics * car, float difficulty, const std::string & t
 	assert(car);
 	assert(!ai_factories.empty());
 
-	std::map <std::string, AiFactory*>::iterator it = ai_factories.find(type);
+	auto it = ai_factories.find(type);
 	assert(it != ai_factories.end());
 	AiFactory * factory = it->second;
 	AiCar * aicar = factory->Create(car, difficulty);
