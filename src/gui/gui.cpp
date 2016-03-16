@@ -116,7 +116,7 @@ static bool LoadOptionValues(
 		}
 		else //assume it's "values", meaning the GAME populates the values
 		{
-			std::map<std::string, GuiOption::List>::const_iterator vlist = valuelists.find(values);
+			auto vlist = valuelists.find(values);
 			if (vlist == valuelists.end())
 			{
 				error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
@@ -401,7 +401,7 @@ void Gui::GetOptions(std::map <std::string, std::string> & options) const
 {
 	for (auto & op : options)
 	{
-		OptionMap::const_iterator option = this->options.find(op.first);
+		auto option = this->options.find(op.first);
 		if (option != this->options.end())
 			op.second = option->second.GetCurrentStorageValue();
 	}
@@ -411,7 +411,7 @@ void Gui::SetOptions(const std::map <std::string, std::string> & options)
 {
 	for (const auto & op : options)
 	{
-		OptionMap::iterator option = this->options.find(op.first);
+		auto option = this->options.find(op.first);
 		if (option != this->options.end())
 			option->second.SetCurrentValue(op.second);
 	}
@@ -423,7 +423,7 @@ void Gui::SetOptionValues(
 	const GuiOption::List & newvalues,
 	std::ostream & error_output)
 {
-	OptionMap::iterator op = options.find(optionname);
+	auto op = options.find(optionname);
 	if (op == options.end())
 	{
 		error_output << "Can't find option named " << optionname << " when replacing optionmap values" << std::endl;
@@ -511,7 +511,7 @@ void Gui::RegisterOptions(
 
 bool Gui::SetLabelText(const std::string & pagename, const std::string & labelname, const std::string & text)
 {
-	PageMap::iterator p = pages.find(pagename);
+	auto p = pages.find(pagename);
 	if (p == pages.end())
 		return false;
 
@@ -525,7 +525,7 @@ bool Gui::SetLabelText(const std::string & pagename, const std::string & labelna
 
 void Gui::SetLabelText(const std::string & pagename, const std::map<std::string, std::string> & label_text)
 {
-	PageMap::iterator p = pages.find(pagename);
+	auto p = pages.find(pagename);
 	if (p != pages.end())
 		p->second.SetLabelText(label_text);
 }
@@ -538,7 +538,7 @@ void Gui::SetLabelText(const std::map<std::string, std::string> & label_text)
 
 const std::string & Gui::GetOptionValue(const std::string & name) const
 {
-	OptionMap::const_iterator it = options.find(name);
+	auto it = options.find(name);
 	if (it != options.end())
 		return it->second.GetCurrentStorageValue();
 	return null;
@@ -546,14 +546,14 @@ const std::string & Gui::GetOptionValue(const std::string & name) const
 
 void Gui::SetOptionValue(const std::string & name, const std::string & value)
 {
-	OptionMap::iterator it = options.find(name);
+	auto it = options.find(name);
 	if (it != options.end())
 		it->second.SetCurrentValue(value);
 }
 
 GuiOption & Gui::GetOption(const std::string & name)
 {
-	OptionMap::iterator it = options.find(name);
+	auto it = options.find(name);
 	assert(it != options.end());
 	return it->second;
 }

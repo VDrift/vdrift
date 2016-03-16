@@ -206,7 +206,7 @@ static void ConnectSignal(
 	const SlotMap & slotmap,
 	Signal & signal)
 {
-	typename SlotMap::const_iterator it = slotmap.find(valuestr);
+	auto it = slotmap.find(valuestr);
 	if (it != slotmap.end())
 		it->second->connect(signal);
 }
@@ -217,7 +217,7 @@ static void ConnectAction(
 	const SignalMap & signalmap,
 	Slot & slot)
 {
-	typename SignalMap::const_iterator it = signalmap.find(valuestr);
+	auto it = signalmap.find(valuestr);
 	if (it != signalmap.end())
 		slot.connect(*it->second);
 	else
@@ -246,7 +246,7 @@ static void ConnectActions(
 		std::string action = actionstr.substr(pos, posn - pos);
 		pos = posn;
 
-		typename ActionMap::const_iterator it = actionmap.find(action);
+		auto it = actionmap.find(action);
 		if (it != actionmap.end())
 			it->second->connect(signal);
 	}
@@ -287,7 +287,7 @@ static void ParseActions(
 		pos = posn;
 
 		// check if action is in vactionmap
-		typename ActionMap::const_iterator vai = vactionmap.find(aname);
+		auto vai = vactionmap.find(aname);
 		if (vai != vactionmap.end())
 		{
 			action_val_set.insert(std::make_pair(action, vai->second));
@@ -302,7 +302,7 @@ static void ParseActions(
 		std::string pname = aname.substr(wn + 1);
 
 		// check if action is setting a widget property
-		typename WidgetMap::const_iterator wi = widgetmap.find(wname);
+		auto wi = widgetmap.find(wname);
 		if (wi != widgetmap.end())
 		{
 			Slot1<const std::string &> * pslot;
@@ -312,7 +312,7 @@ static void ParseActions(
 		}
 
 		// check if action is setting a widget list property (only valid for control lists)
-		typename WidgetListMap::const_iterator wli = widgetlistmap.find(wname);
+		auto wli = widgetlistmap.find(wname);
 		if (wli != widgetlistmap.end())
 		{
 			Slot2<int, const std::string &> * pslot;
@@ -442,10 +442,10 @@ bool GuiPage::Load(
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// connect with the value list
-				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
+				auto vni = vnactionmap.find(value);
 				if (vni != vnactionmap.end())
 				{
-					StrSignalMap::const_iterator vsi = vsignalmap.find(value + ".update");
+					auto vsi = vsignalmap.find(value + ".update");
 					if (vsi != vsignalmap.end())
 					{
 						widget_list->update_list.connect(*vsi->second);
@@ -499,10 +499,10 @@ bool GuiPage::Load(
 				widget_list->SetupDrawable(node, content, path, ext, uv, r.z);
 
 				// connect with the value list
-				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
+				auto vni = vnactionmap.find(value);
 				if (vni != vnactionmap.end())
 				{
-					StrSignalMap::const_iterator vsi = vsignalmap.find(value + ".update");
+					auto vsi = vsignalmap.find(value + ".update");
 					if (vsi != vsignalmap.end())
 					{
 						widget_list->update_list.connect(*vsi->second);
@@ -615,8 +615,8 @@ bool GuiPage::Load(
 				// connect with item list
 				if (pagefile.get(section, "list", value))
 				{
-					StrSignalMap::const_iterator vsu = vsignalmap.find(value + ".update");
-					StrSignalMap::const_iterator vsn = vsignalmap.find(value + ".nth");
+					auto vsu = vsignalmap.find(value + ".update");
+					auto vsn = vsignalmap.find(value + ".nth");
 					if (vsu != vsignalmap.end() && vsn != vsignalmap.end())
 					{
 						control_list->update_list.connect(*vsu->second);
