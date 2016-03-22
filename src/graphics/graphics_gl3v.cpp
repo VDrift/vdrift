@@ -43,6 +43,8 @@ GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	// initialize the full screen quad
 	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
+
+	initDrawableAttributes(drawAttribs, stringMap);
 }
 
 GraphicsGL3::~GraphicsGL3()
@@ -469,7 +471,7 @@ void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, st
 		for (auto drawable : drawables)
 		{
 			if (!frustumCull(drawable, *frustum) && !contributionCull(drawable, camPos))
-				out.push_back(&drawable->GenRenderModelData(stringMap));
+				out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 	else if (frustum)
@@ -477,14 +479,14 @@ void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, st
 		for (auto drawable : drawables)
 		{
 			if (!frustumCull(drawable, *frustum))
-				out.push_back(&drawable->GenRenderModelData(stringMap));
+				out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
 		for (auto drawable : drawables)
 		{
-			out.push_back(&drawable->GenRenderModelData(stringMap));
+			out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 }
@@ -506,14 +508,14 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 		for (auto drawable : drawables)
 		{
 			if (!contributionCull(drawable, camPos))
-				out.push_back(&drawable->GenRenderModelData(stringMap));
+				out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
 		for (auto drawable : drawables)
 		{
-			out.push_back(&drawable->GenRenderModelData(stringMap));
+			out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 }
@@ -747,4 +749,13 @@ void GraphicsGL3::SetSunDirection(const Vec3 & value)
 void GraphicsGL3::SetContrast(float /*value*/)
 {
 
+}
+
+void GraphicsGL3::initDrawableAttributes(DrawableAttributes & attribs, StringIdMap & map)
+{
+	attribs.tex0 = map.addStringId("diffuseTexture");
+	attribs.tex1 = map.addStringId("misc1Texture");
+	attribs.tex2 = map.addStringId("normalMapTexture");
+	attribs.transform = map.addStringId("modelMatrix");
+	attribs.color = map.addStringId("colorTint");
 }

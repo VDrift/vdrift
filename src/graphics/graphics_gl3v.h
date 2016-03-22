@@ -176,6 +176,10 @@ private:
 	// a set storing all configuration option conditions (bloom enabled, etc)
 	std::set <std::string> conditions;
 
+	// cache drawable attributes ids
+	DrawableAttributes drawAttribs;
+	static void initDrawableAttributes(DrawableAttributes & attribs, StringIdMap & map);
+
 	Texture static_reflection;
 
 	float closeshadow;
