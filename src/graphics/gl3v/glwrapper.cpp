@@ -373,9 +373,45 @@ void GLWrapper::BlendEquationSeparate(GLenum param0, GLenum param1)
 	GLLOG(glBlendEquationSeparate(param0,param1));ERROR_CHECK;
 }
 
+void GLWrapper::BlendEquationSeparateColor(GLenum param)
+{
+	blend_equation_rgb = param;
+	BlendEquationSeparate(blend_equation_rgb, blend_equation_alpha);
+}
+
+void GLWrapper::BlendEquationSeparateAlpha(GLenum param)
+{
+	blend_equation_alpha = param;
+	BlendEquationSeparate(blend_equation_rgb, blend_equation_alpha);
+}
+
 void GLWrapper::BlendFuncSeparate(GLenum param0, GLenum param1, GLenum param2, GLenum param3)
 {
 	GLLOG(glBlendFuncSeparate(param0, param1, param2, param3));ERROR_CHECK;
+}
+
+void GLWrapper::BlendFuncSeparateSrcColor(GLenum param)
+{
+	blend_src_rgb = param;
+	BlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
+}
+
+void GLWrapper::BlendFuncSeparateSrcAlpha(GLenum param)
+{
+	blend_src_alpha = param;
+	BlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
+}
+
+void GLWrapper::BlendFuncSeparateDstColor(GLenum param)
+{
+	blend_dst_rgb = param;
+	BlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
+}
+
+void GLWrapper::BlendFuncSeparateDstAlpha(GLenum param)
+{
+	blend_dst_alpha = param;
+	BlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
 }
 
 void GLWrapper::BindTexture(GLenum target, GLuint handle)
@@ -678,6 +714,13 @@ void GLWrapper::clearCaches()
 	boundTextures.clear();
 	cachedUniformFloats.clear();
 	cachedUniformInts.clear();
+
+	blend_equation_rgb = GL_FUNC_ADD;
+	blend_equation_alpha = GL_FUNC_ADD;
+	blend_src_rgb = GL_ONE;
+	blend_src_alpha = GL_ONE;
+	blend_dst_rgb = GL_ZERO;
+	blend_dst_alpha = GL_ZERO;
 }
 
 template <typename T>
