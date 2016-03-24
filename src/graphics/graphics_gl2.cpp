@@ -944,11 +944,7 @@ void GraphicsGL2::SetupCameras(
 			light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
 		}
 
-		std::vector <std::string> shadow_names;
-		shadow_names.push_back("near");
-		shadow_names.push_back("medium");
-		shadow_names.push_back("far");
-
+		const std::string shadow_names[] = {"near", "medium", "far"};
 		for (int i = 0; i < 3; i++)
 		{
 			float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
