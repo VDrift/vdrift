@@ -1138,7 +1138,7 @@ void GraphicsGL2::CullScenePass(
 		{
 			auto & draw_list = *pass.draw_lists[i * cubesides + cubeside];
 			if (draw_list.valid)
-				break;
+				continue;
 
 			draw_list.valid = true;
 			if (pass.cull)
