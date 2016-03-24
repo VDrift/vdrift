@@ -191,8 +191,8 @@ private:
 	GLenum blend_equation_rgb;
 	GLenum blend_equation_alpha;
 	GLenum blend_src_rgb;
-	GLenum blend_src_alpha;
 	GLenum blend_dst_rgb;
+	GLenum blend_src_alpha;
 	GLenum blend_dst_alpha;
 
 	void clearCaches();

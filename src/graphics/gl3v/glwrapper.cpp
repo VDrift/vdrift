@@ -370,6 +370,8 @@ void GLWrapper::Hint(GLenum param0, GLenum param1)
 
 void GLWrapper::BlendEquationSeparate(GLenum param0, GLenum param1)
 {
+	blend_equation_rgb = param0;
+	blend_equation_alpha = param1;
 	GLLOG(glBlendEquationSeparate(param0,param1));ERROR_CHECK;
 }
 
@@ -387,6 +389,10 @@ void GLWrapper::BlendEquationSeparateAlpha(GLenum param)
 
 void GLWrapper::BlendFuncSeparate(GLenum param0, GLenum param1, GLenum param2, GLenum param3)
 {
+	blend_src_rgb = param0;
+	blend_dst_rgb = param1;
+	blend_src_alpha = param2;
+	blend_dst_alpha = param3;
 	GLLOG(glBlendFuncSeparate(param0, param1, param2, param3));ERROR_CHECK;
 }
 
@@ -718,8 +724,8 @@ void GLWrapper::clearCaches()
 	blend_equation_rgb = GL_FUNC_ADD;
 	blend_equation_alpha = GL_FUNC_ADD;
 	blend_src_rgb = GL_ONE;
-	blend_src_alpha = GL_ONE;
 	blend_dst_rgb = GL_ZERO;
+	blend_src_alpha = GL_ONE;
 	blend_dst_alpha = GL_ZERO;
 }
 
