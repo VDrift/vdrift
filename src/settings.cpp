@@ -242,15 +242,15 @@ void Settings::Get(std::map<std::string, std::string> & options)
 {
 	Config tempconfig;
 	Serialize(true, tempconfig);
-	for (Config::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
+	for (const auto & s : tempconfig)
 	{
-		std::string section = ic->first;
-		for (Config::Section::const_iterator is = ic->second.begin(); is != ic->second.end(); ++is)
+		const std::string & section = s.first;
+		for (const auto & p : s.second)
 		{
-			if (section.length() > 0)
-				options[section + "." + is->first] = is->second;
+			if (!section.empty())
+				options[section + "." + p.first] = p.second;
 			else
-				options[is->first] = is->second;
+				options[p.first] = p.second;
 		}
 	}
 }
@@ -258,17 +258,17 @@ void Settings::Get(std::map<std::string, std::string> & options)
 void Settings::Set(const std::map<std::string, std::string> & options)
 {
 	Config tempconfig;
-	for (std::map<std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
+	for (const auto & option : options)
 	{
 		std::string section;
-		std::string param = i->first;
+		std::string param = option.first;
 		size_t n = param.find(".");
 		if (n < param.length())
 		{
 			section = param.substr(0, n);
 			param.erase(0, n + 1);
 		}
-		tempconfig.set(section, param, i->second);
+		tempconfig.set(section, param, option.second);
 	}
 	Serialize(false, tempconfig);
 }

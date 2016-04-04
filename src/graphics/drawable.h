@@ -74,7 +74,7 @@ public:
 
 	/// this gets called if we are using the GL3 renderer
 	/// returns a reference to the RenderModelExternal structure
-	RenderModelExt & GenRenderModelData(StringIdMap & string_map);
+	RenderModelExt & GenRenderModelData(const DrawableAttributes & draw_attribs);
 
 	/// setting model will also set bounding sphere center and radius
 	Model * GetModel() const;

@@ -79,8 +79,8 @@ void Timer::Tick(float dt)
 
 	assert(elapsed_time >= 0);
 
-	for (vector <LapInfo>::iterator i = car.begin(); i != car.end(); ++i)
-		i->Tick(elapsed_time);
+	for (auto & lap : car)
+		lap.Tick(elapsed_time);
 }
 
 void Timer::Lap(const unsigned int carid, const int nextsector)
@@ -166,9 +166,9 @@ std::pair <int, int> Timer::GetCarPlace(int index)
     distances.sort();
 
     int curplace = 1;
-	for (std::list <Place>::iterator i = distances.begin(); i != distances.end(); ++i)
+	for (auto & distance : distances)
     {
-        if (i->GetIndex() == index)
+        if (distance.GetIndex() == index)
             place = curplace;
 
         curplace++;

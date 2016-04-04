@@ -54,9 +54,9 @@ void GuiImageList::SetupDrawable(
 
 void GuiImageList::SetImage(const std::string & value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
+	for (auto element : m_elements)
 	{
-		static_cast<GuiImage*>(m_elements[i])->SetImage(value);
+		static_cast<GuiImage*>(element)->SetImage(value);
 	}
 }
 

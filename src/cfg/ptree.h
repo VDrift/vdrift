@@ -211,9 +211,9 @@ template <class T>
 inline void PTree::forEachRecursive(T & functor) const
 {
 	functor(*this);
-	for (const_iterator i = begin(); i != end(); ++i)
+	for (const auto & child : *this)
 	{
-		i->second.forEachRecursive(functor);
+		child.second.forEachRecursive(functor);
 	}
 }
 
@@ -345,7 +345,7 @@ template <>
 inline PTree & PTree::set(const std::string & key, const PTree & value)
 {
 	std::string::size_type n = key.find('.');
-	std::pair<iterator, bool> pi = _children.insert(std::make_pair(key.substr(0, n), value));
+	auto pi = _children.insert(std::make_pair(key.substr(0, n), value));
 	PTree & p = pi.first->second;
 	if (pi.second && p._value.empty())
 	{

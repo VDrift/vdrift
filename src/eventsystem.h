@@ -79,9 +79,9 @@ public:
 
 			void AgeToggles()
 			{
-				for (std::vector <Toggle>::iterator i = button.begin(); i != button.end(); ++i)
+				for (auto & b : button)
 				{
-					i->Tick();
+					b.Tick();
 				}
 			}
 
@@ -240,15 +240,15 @@ private:
 	void AgeToggles(std::map <T, Toggle> & togglemap)
 	{
 		std::list <typename std::map<T, Toggle>::iterator> todel;
-		for (typename std::map <T, Toggle>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
+		for (auto i = togglemap.begin(); i != togglemap.end(); ++i)
 		{
 			i->second.Tick();
 			if (!i->second.GetState() && !i->second.GetImpulseFalling())
 				todel.push_back(i);
 		}
 
-		for (typename std::list <typename std::map<T, Toggle>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-			togglemap.erase(*i);
+		for (auto i : todel)
+			togglemap.erase(i);
 	}
 
 	template <class T>
@@ -256,7 +256,7 @@ private:
 	{
 		ButtonState s;
 		s.down = s.just_down = s.just_up = false;
-		typename std::map <T, Toggle>::const_iterator i = togglemap.find(id);
+		auto i = togglemap.find(id);
 		if (i != togglemap.end())
 		{
 			s.down = i->second.GetState();

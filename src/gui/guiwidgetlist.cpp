@@ -41,9 +41,9 @@ GuiWidgetList::GuiWidgetList()
 
 GuiWidgetList::~GuiWidgetList()
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
+	for (auto element : m_elements)
 	{
-		delete m_elements[i];
+		delete element;
 	}
 }
 
@@ -55,17 +55,17 @@ void GuiWidgetList::Update(SceneNode & scene, float dt)
 		m_values.clear();
 	}
 
-	for (size_t i = 0; i < m_elements.size(); ++i)
+	for (auto element : m_elements)
 	{
-		m_elements[i]->Update(scene, dt);
+		element->Update(scene, dt);
 	}
 }
 
 void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
+	for (auto element : m_elements)
 	{
-		m_elements[i]->SetAlpha(scene, value);
+		element->SetAlpha(scene, value);
 	}
 }
 
@@ -178,32 +178,32 @@ void GuiWidgetList::UpdateList(const std::string & vnum)
 
 void GuiWidgetList::SetColorAll(const std::string & value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
-		m_elements[i]->SetColor(value);
+	for (auto element : m_elements)
+		element->SetColor(value);
 }
 
 void GuiWidgetList::SetOpacityAll(const std::string & value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
-		m_elements[i]->SetOpacity(value);
+	for (auto element : m_elements)
+		element->SetOpacity(value);
 }
 
 void GuiWidgetList::SetHueAll(const std::string & value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
-		m_elements[i]->SetHue(value);
+	for (auto element : m_elements)
+		element->SetHue(value);
 }
 
 void GuiWidgetList::SetSatAll(const std::string & value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
-		m_elements[i]->SetSat(value);
+	for (auto element : m_elements)
+		element->SetSat(value);
 }
 
 void GuiWidgetList::SetValAll(const std::string & value)
 {
-	for (size_t i = 0; i < m_elements.size(); ++i)
-		m_elements[i]->SetVal(value);
+	for (auto element : m_elements)
+		element->SetVal(value);
 }
 
 Drawable & GuiWidgetList::GetDrawable(SceneNode & scene)

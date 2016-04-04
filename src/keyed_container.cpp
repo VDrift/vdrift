@@ -61,9 +61,9 @@ QT_TEST(keyed_container_test)
 	QT_CHECK_EQUAL(*data.find(handle3), 3);
 
 	int count = 0;
-	for (keyed_container <int>::iterator i = data.begin(); i != data.end(); i++)
+	for (const auto item : data)
 	{
-		QT_CHECK_EQUAL(*i, 3);
+		QT_CHECK_EQUAL(item, 3);
 
 		count++;
 	}

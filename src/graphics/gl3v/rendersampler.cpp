@@ -26,8 +26,8 @@ RenderSampler::RenderSampler(GLuint newTu, GLuint newHandle) : tu(newTu), handle
 
 void RenderSampler::apply(GLWrapper & gl) const
 {
-	for (std::vector <RenderState>::const_iterator s = state.begin(); s != state.end(); s++)
-		s->applySampler(gl, handle);
+	for (const auto & s : state)
+		s.applySampler(gl, handle);
 
 	gl.BindSampler(tu, handle);
 }

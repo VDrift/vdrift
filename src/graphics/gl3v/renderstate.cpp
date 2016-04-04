@@ -23,13 +23,6 @@
 
 void RenderState::apply(GLWrapper & gl) const
 {
-	static GLenum last_blendequation_rgb = GL_FUNC_ADD;
-	static GLenum last_blendequation_alpha = GL_FUNC_ADD;
-	static GLenum last_blend_src_rgb = GL_ONE;
-	static GLenum last_blend_src_alpha = GL_ONE;
-	static GLenum last_blend_dst_rgb = GL_ZERO;
-	static GLenum last_blend_dst_alpha = GL_ZERO;
-
 	switch (pname)
 	{
 		case GL_DEPTH_FUNC:
@@ -71,33 +64,27 @@ void RenderState::apply(GLWrapper & gl) const
 		break;
 
 		case GL_BLEND_EQUATION_RGB:
-		last_blendequation_rgb = param[0];
-		gl.BlendEquationSeparate(last_blendequation_rgb, last_blendequation_alpha);
+		gl.BlendEquationSeparateColor(param[0]);
 		break;
 
 		case GL_BLEND_EQUATION_ALPHA:
-		last_blendequation_alpha = param[0];
-		gl.BlendEquationSeparate(last_blendequation_rgb, last_blendequation_alpha);
+		gl.BlendEquationSeparateAlpha(param[0]);
 		break;
 
 		case GL_BLEND_SRC_RGB:
-		last_blend_src_rgb = param[0];
-		gl.BlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
+		gl.BlendFuncSeparateSrcColor(param[0]);
 		break;
 
 		case GL_BLEND_SRC_ALPHA:
-		last_blend_src_alpha = param[0];
-		gl.BlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
+		gl.BlendFuncSeparateSrcAlpha(param[0]);
 		break;
 
 		case GL_BLEND_DST_RGB:
-		last_blend_dst_rgb = param[0];
-		gl.BlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
+		gl.BlendFuncSeparateDstColor(param[0]);
 		break;
 
 		case GL_BLEND_DST_ALPHA:
-		last_blend_dst_alpha = param[0];
-		gl.BlendFuncSeparate(last_blend_src_rgb, last_blend_dst_rgb, last_blend_src_alpha, last_blend_dst_alpha);
+		gl.BlendFuncSeparateDstAlpha(param[0]);
 		break;
 
 		default:

@@ -102,17 +102,17 @@ void GuiOption::SetCurrentValue(const std::string & value)
 	else
 	{
 		size_t current_value = 0;
-		for (List::iterator i = m_values.begin(); i != m_values.end(); ++i)
+		for (const auto & v : m_values)
 		{
 			if (IsFloat())
 			{
 				// number of trailing zeros might differ, use min match
-				size_t len = std::min(i->first.length(), value.length());
-				if (!i->first.compare(0, len, value, 0, len)) break;
+				size_t len = std::min(v.first.length(), value.length());
+				if (!v.first.compare(0, len, value, 0, len)) break;
 			}
 			else
 			{
-				if (i->first == value) break;
+				if (v.first == value) break;
 			}
 			++current_value;
 		}

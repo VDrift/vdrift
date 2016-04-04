@@ -112,9 +112,9 @@ bool Shader::Load(
 	// prepend #version and #define values
 	std::ostringstream dstr;
 	glsl_330 ? dstr << "#version 330\n" : dstr << "#version 120\n";
-	for (std::vector<std::string>::const_iterator i = defines.begin(); i != defines.end(); ++i)
+	for (const auto & define : defines)
 	{
-		dstr << "#define " << *i << "\n";
+		dstr << "#define " << define << "\n";
 	}
 	vertexshader_source = dstr.str() + vertexshader_source;
 	fragmentshader_source = dstr.str() + fragmentshader_source;
@@ -227,9 +227,9 @@ bool Shader::Load(
 
 		// cache uniform locations
 		uniform_locations.reserve(uniforms.size());
-		for (std::vector<std::string>::const_iterator i = uniforms.begin(); i != uniforms.end(); ++i)
+		for (const auto & uniform : uniforms)
 		{
-			const int loc = glGetUniformLocation(program, i->c_str());
+			const int loc = glGetUniformLocation(program, uniform.c_str());
 			uniform_locations.push_back(loc);
 		}
 	}

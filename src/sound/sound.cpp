@@ -27,9 +27,9 @@
 //static std::ofstream logsa("logsa.txt");
 
 template <class T>
-static inline T clamp(T val, T min, T max)
+static inline T clamp(T val, T vmin, T vmax)
 {
-	return val > min ? (val < max ? val : max) : min;
+	return val > vmin ? (val < vmax ? val : vmax) : vmin;
 }
 
 // add item to a compactifying vector
@@ -377,7 +377,7 @@ void Sound::Update(bool pause)
 	// calculate sampler changes from sources
 	ProcessSources();
 /*
-	logso << "id: " <<samplers_update.getFirst().id;
+	logso << "id: " << samplers_update.getFirst().id;
 	logso << " add: " << samplers_update.getFirst().sadd.size();
 	logso << " del: " << samplers_update.getFirst().sremove.size();
 	logso << " set: " << samplers_update.getFirst().sset.size();
@@ -408,11 +408,10 @@ void Sound::GetSourceChanges()
 
 void Sound::ProcessSourceStop()
 {
-	std::vector<size_t> & sstop = sources_stop.getFirst();
-	for (size_t i = 0; i < sstop.size(); ++i)
+	auto & sstop = sources_stop.getFirst();
+	for (auto id : sstop)
 	{
-		size_t id = sstop[i];
-		size_t idn = sources[id].id;
+		auto idn = sources[id].id;
 		if (idn < sources_num)
 		{
 			// if source is still there, stop playing
@@ -426,9 +425,8 @@ void Sound::ProcessSourceStop()
 
 void Sound::ProcessSourceRemove()
 {
-	for (size_t i = 0; i < sources_remove.size(); ++i)
+	for (auto id : sources_remove)
 	{
-		size_t id = sources_remove[i];
 		RemoveItem(id, sources, sources_num);
 	}
 	sources_remove.clear();
@@ -436,7 +434,7 @@ void Sound::ProcessSourceRemove()
 
 void Sound::ProcessSources()
 {
-	std::vector<SamplerSet> & supdate = samplers_update.getFirst().sset;
+	auto & supdate = samplers_update.getFirst().sset;
 	supdate.resize(sources_num);
 
 	sources_active.clear();
@@ -614,10 +612,9 @@ void Sound::ProcessSamplers(unsigned char *stream, int len)
 
 void Sound::ProcessSamplerRemove()
 {
-	std::vector<size_t> & sremove = samplers_update.getLast().sremove;
-	for (size_t i = 0; i < sremove.size(); ++i)
+	auto & sremove = samplers_update.getLast().sremove;
+	for (auto id : sremove)
 	{
-		size_t id = sremove[i];
 		assert(id < samplers.size());
 		RemoveItem(id, samplers, samplers_num);
 	}
@@ -626,13 +623,13 @@ void Sound::ProcessSamplerRemove()
 
 void Sound::ProcessSamplerAdd()
 {
-	std::vector<SamplerAdd> & sadd = samplers_update.getLast().sadd;
-	for (size_t i = 0; i < sadd.size(); ++i)
+	auto & sadd = samplers_update.getLast().sadd;
+	for (const auto & sa : sadd)
 	{
 		Sampler smp;
-		smp.buffer = sadd[i].buffer;
+		smp.buffer = sa.buffer;
 		smp.samples_per_channel = smp.buffer->GetInfo().samples / smp.buffer->GetInfo().channels;
-		smp.sample_pos = sadd[i].offset;
+		smp.sample_pos = sa.offset;
 		smp.sample_pos_remainder = 0;
 		smp.pitch = smp.denom;
 		smp.gain1 = 0;
@@ -640,16 +637,16 @@ void Sound::ProcessSamplerAdd()
 		smp.last_gain1 = 0;
 		smp.last_gain2 = 0;
 		smp.playing = true;
-		smp.loop = sadd[i].loop;
+		smp.loop = sa.loop;
 
-		if (sadd[i].id == -1)
+		if (sa.id == -1)
 		{
 			AddItem(smp, samplers, samplers_num);
 		}
 		else
 		{
-			smp.id = samplers[sadd[i].id].id;
-			samplers[sadd[i].id] = smp;
+			smp.id = samplers[sa.id].id;
+			samplers[sa.id] = smp;
 		}
 	}
 	sadd.clear();

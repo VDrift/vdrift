@@ -37,9 +37,9 @@ void SceneNode::SetChildVisibility(bool newvis)
 {
 	drawlist.SetVisibility(newvis);
 
-	for (List::iterator i = childlist.begin(); i != childlist.end(); ++i)
+	for (auto & child : childlist)
 	{
-		i->SetChildVisibility(newvis);
+		child.SetChildVisibility(newvis);
 	}
 }
 
@@ -47,9 +47,9 @@ void SceneNode::SetChildAlpha(float a)
 {
 	drawlist.SetAlpha(a);
 
-	for (List::iterator i = childlist.begin(); i != childlist.end(); ++i)
+	for (auto & child : childlist)
 	{
-		i->SetChildAlpha(a);
+		child.SetChildAlpha(a);
 	}
 }
 
@@ -59,8 +59,8 @@ void SceneNode::DebugPrint(std::ostream & out, int curdepth) const
 		out << "-";
 	out << "Children: " << childlist.size() << ", Drawables: " << drawlist.size() << std::endl;
 
-	for (List::const_iterator i = childlist.begin(); i != childlist.end(); ++i)
+	for (const auto & child : childlist)
 	{
-		i->DebugPrint(out, curdepth+1);
+		child.DebugPrint(out, curdepth+1);
 	}
 }

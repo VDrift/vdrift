@@ -31,7 +31,7 @@ GLEnums::GLEnums()
 
 GLenum GLEnums::getEnum(const std::string & value) const
 {
-	std::unordered_map <std::string, GLenum>::const_iterator i = strToEnum.find(value);
+	auto i = strToEnum.find(value);
 	if (i == strToEnum.end())
 	{
 		std::cerr << "Unknown GLenum string: " << value << std::endl;
@@ -42,7 +42,7 @@ GLenum GLEnums::getEnum(const std::string & value) const
 
 const std::string & GLEnums::getEnum(GLenum value) const
 {
-	std::unordered_map <GLenum, std::string>::const_iterator i = enumToStr.find(value);
+	auto i = enumToStr.find(value);
 	if (i == enumToStr.end())
 	{
 		std::cerr << "Unknown GLenum value: " << (int)value << std::endl;

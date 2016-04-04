@@ -54,4 +54,13 @@ private:
 	const VertexBuffer::Segment * vsegment;
 };
 
+struct DrawableAttributes
+{
+	StringId tex0;
+	StringId tex1;
+	StringId tex2;
+	StringId transform;
+	StringId color;
+};
+
 #endif

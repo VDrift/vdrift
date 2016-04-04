@@ -122,11 +122,11 @@ Http::Http(const std::string & temporary_folder) : folder(temporary_folder), dow
 
 Http::~Http()
 {
-	for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	for (const auto & hs : easyhandles)
 	{
-		FILE * file = i->second.file;
+		FILE * file = hs.second.file;
 		fclose(file);
-		curl_easy_cleanup(i->first);
+		curl_easy_cleanup(hs.first);
 	}
 	easyhandles.clear();
 	requests.clear();
@@ -253,7 +253,7 @@ bool Http::Tick()
 			CURL * easyhandle = msg->easy_handle;
 
 			// Get the url.
-			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
+			auto u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in easyhandles map");
 			std::string url = u->second.url;
 
@@ -277,10 +277,10 @@ bool Http::Tick()
 		}
 
 		// Update status.
-		for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+		for (const auto & hs : easyhandles)
 		{
-			CURL * easyhandle = i->first;
-			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
+			CURL * easyhandle = hs.first;
+			auto u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in requestUrls map");
 			std::string url = u->second.url;
 
@@ -302,7 +302,7 @@ bool Http::Downloading() const
 
 bool Http::GetRequestInfo(const std::string & url, HttpInfo & out)
 {
-	std::map <std::string, HttpInfo>::iterator i = requests.find(url);
+	auto i = requests.find(url);
 	if (i == requests.end())
 		return false;
 
@@ -316,11 +316,11 @@ bool Http::GetRequestInfo(const std::string & url, HttpInfo & out)
 
 void Http::CancelAllRequests()
 {
-	for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	for (const auto & hs : easyhandles)
 	{
-		FILE * file = i->second.file;
+		FILE * file = hs.second.file;
 		fclose(file);
-		curl_easy_cleanup(i->first);
+		curl_easy_cleanup(hs.first);
 	}
 	easyhandles.clear();
 	requests.clear();
@@ -358,7 +358,7 @@ std::string Http::GetDownloadPath(const std::string & url) const
 
 void Http::UpdateProgress(CURL * handle, float total, float current)
 {
-	std::map <CURL*, RequestState>::iterator i = easyhandles.find(handle);
+	auto i = easyhandles.find(handle);
 	if (i == easyhandles.end())
 		return;
 

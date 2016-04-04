@@ -43,27 +43,27 @@ void ContentManager::addPath(const std::string & path)
 
 void ContentManager::sweep()
 {
-	for (size_t i = 0; i < factory_cached.m_caches.size(); ++i)
+	for (auto & cache : factory_cached.m_caches)
 	{
-		factory_cached.m_caches[i]->sweep();
+		cache->sweep();
 	}
 }
 
 bool ContentManager::_logleaks()
 {
 	size_t n = 0;
-	for (size_t i = 0; i < factory_cached.m_caches.size(); ++i)
+	for (const auto & cache : factory_cached.m_caches)
 	{
-		n += factory_cached.m_caches[i]->size();
+		n += cache->size();
 	}
 	if (n == 0)
 		return false;
 
 	error << "Leaked " << n << " cached objects:";
-	for (size_t i = 0; i < factory_cached.m_caches.size(); ++i)
+	for (const auto & cache : factory_cached.m_caches)
 	{
 		error << "\n";
-		factory_cached.m_caches[i]->log(error);
+		cache->log(error);
 	}
 	error << std::endl;
 	return false;
@@ -74,13 +74,13 @@ bool ContentManager::_logerror(
 	const std::string & name)
 {
 	error << "Failed to load \"" << name << "\" from:";
-	for (size_t i = 0; i < basepaths.size(); ++i)
+	for (const auto & basepath : basepaths)
 	{
-		error << "\n" << basepaths[i] + '/' + path;
+		error << "\n" << basepath + '/' + path;
 	}
-	for (size_t i = 0; i < sharedpaths.size(); ++i)
+	for (const auto & sharedpath : sharedpaths)
 	{
-		error << "\n" << sharedpaths[i];
+		error << "\n" << sharedpath;
 	}
 	error << std::endl;
 	return false;

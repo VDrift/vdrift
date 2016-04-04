@@ -80,9 +80,9 @@ bool CarSound::Load(
 		PTree aud;
 		read_ini(file_aud, aud);
 		enginesounds.reserve(aud.size());
-		for (PTree::const_iterator i = aud.begin(); i != aud.end(); ++i)
+		for (const auto & i : aud)
 		{
-			const PTree & audi = i->second;
+			const PTree & audi = i.second;
 
 			std::string filename;
 			std::shared_ptr<SoundBuffer> soundptr;
@@ -111,17 +111,17 @@ bool CarSound::Load(
 		// set blend start and end locations -- requires multiple passes
 		std::map <EngineSoundInfo *, EngineSoundInfo *> temporary_to_actual_map;
 		std::list <EngineSoundInfo> poweron_sounds, poweroff_sounds;
-		for (std::vector <EngineSoundInfo>::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
+		for (auto & info : enginesounds)
 		{
-			if (i->power == EngineSoundInfo::POWERON)
+			if (info.power == EngineSoundInfo::POWERON)
 			{
-				poweron_sounds.push_back(*i);
-				temporary_to_actual_map[&poweron_sounds.back()] = &*i;
+				poweron_sounds.push_back(info);
+				temporary_to_actual_map[&poweron_sounds.back()] = &info;
 			}
-			else if (i->power == EngineSoundInfo::POWEROFF)
+			else if (info.power == EngineSoundInfo::POWEROFF)
 			{
-				poweroff_sounds.push_back(*i);
-				temporary_to_actual_map[&poweroff_sounds.back()] = &*i;
+				poweroff_sounds.push_back(info);
+				temporary_to_actual_map[&poweroff_sounds.back()] = &info;
 			}
 		}
 
@@ -136,14 +136,14 @@ bool CarSound::Load(
 			if (n == 1)
 				cursounds = &poweroff_sounds;
 
-			for (std::list <EngineSoundInfo>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
+			for (auto i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
 			{
 				// set start blend
 				if (i == (*cursounds).begin())
 					i->fullgainrpmstart = i->minrpm;
 
 				// set end blend
-				std::list <EngineSoundInfo>::iterator inext = i;
+				auto inext = i;
 				inext++;
 				if (inext == (*cursounds).end())
 					i->fullgainrpmend = i->maxrpm;
@@ -155,10 +155,10 @@ bool CarSound::Load(
 			}
 
 			// now assign back to the actual infos
-			for (std::list <EngineSoundInfo>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
+			for (auto & info : *cursounds)
 			{
-				assert(temporary_to_actual_map.find(&(*i)) != temporary_to_actual_map.end());
-				*temporary_to_actual_map[&(*i)] = *i;
+				assert(temporary_to_actual_map.find(&info) != temporary_to_actual_map.end());
+				*temporary_to_actual_map[&info] = info;
 			}
 		}
 	}
@@ -268,9 +268,8 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 
 	std::vector<std::pair<size_t, float> > gainlist;
 	gainlist.reserve(enginesounds.size());
-	for (std::vector<EngineSoundInfo>::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
+	for (auto & info : enginesounds)
 	{
-		EngineSoundInfo & info = *i;
 		float gain = 1.0;
 
 		if (rpm < info.minrpm)
@@ -315,7 +314,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 
 	// normalize gains
 	assert(total_gain >= 0.0);
-	for (std::vector<std::pair<size_t, float> >::iterator i = gainlist.begin(); i != gainlist.end(); ++i)
+	for (const auto & sound_gain : gainlist)
 	{
 		float gain;
 		if (total_gain == 0.0)
@@ -324,13 +323,13 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		}
 		else if (enginesounds.size() == 1 && enginesounds.back().power == EngineSoundInfo::BOTH)
 		{
-			gain = i->second;
+			gain = sound_gain.second;
 		}
 		else
 		{
-			gain = i->second / total_gain;
+			gain = sound_gain.second / total_gain;
 		}
-		psound->SetSourceGain(i->first, gain);
+		psound->SetSourceGain(sound_gain.first, gain);
 	}
 
 	// update tire squeal sounds

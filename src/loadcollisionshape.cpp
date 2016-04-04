@@ -112,12 +112,12 @@ void LoadHullShape(
 	btAlignedObjectArray<btVector3> points;
 	btAlignedObjectArray<btScalar> radii;
 	btScalar has_radius = 0;
-	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
+	for (const auto & hull : cfg)
 	{
 		btVector3 point(0, 0, 0);
 		btScalar radius = 0;
 
-		std::istringstream str(i->second.value());
+		std::istringstream str(hull.second.value());
 		str >> point;
 		str >> radius;
 		has_radius += radius;

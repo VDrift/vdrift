@@ -192,7 +192,7 @@ inline bool ContentManager::_get(
 {
 	// retrieve from cache
 	CacheShared<T> & cache = factory_cached;
-	typename CacheShared<T>::const_iterator i = cache.find(name);
+	auto i = cache.find(name);
 	if (i != cache.end())
 	{
 		sptr = i->second;
@@ -217,9 +217,9 @@ inline bool ContentManager::_load(
 
 	// load from basepaths
 	Factory<T>& factory = getFactory<T>();
-	for (size_t i = 0; i < basepaths.size(); ++i)
+	for (const auto & basepath : basepaths)
 	{
-		if (factory.create(sptr, error, basepaths[i], relpath, name, param))
+		if (factory.create(sptr, error, basepath, relpath, name, param))
 		{
 			// cache loaded content
 			CacheShared<T> & cache = factory_cached;
@@ -241,7 +241,7 @@ inline bool ContentManager::_getdefault(std::shared_ptr<T> & sptr)
 template <class T>
 inline void ContentManager::CacheShared<T>::log(std::ostream & log) const
 {
-	typename CacheShared<T>::const_iterator it = CacheShared<T>::begin();
+	auto it = CacheShared<T>::begin();
 	while (it != CacheShared<T>::end())
 	{
 		log << it->second.use_count() << " : " << it->first;
@@ -257,7 +257,7 @@ inline size_t ContentManager::CacheShared<T>::size() const
 template <class T>
 inline void ContentManager::CacheShared<T>::sweep()
 {
-	typename CacheShared<T>::iterator it = CacheShared<T>::begin();
+	auto it = CacheShared<T>::begin();
 	while (it != CacheShared<T>::end())
 	{
 		if (it->second.unique())

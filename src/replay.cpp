@@ -47,9 +47,9 @@ bool Replay::StartPlaying(const std::string & replayfilename, std::ostream & err
 	if (!Load(replaystream, error_output))
 		return false;
 
-	for (size_t i = 0; i < carstate.size(); ++i)
+	for (auto & state : carstate)
 	{
-		carstate[i].Reset();
+		state.Reset();
 	}
 
 	replaymode = PLAYING;
@@ -77,9 +77,9 @@ void Replay::StartRecording(
 	track = trackname;
 
 	carstate.resize(carinfo.size());
-	for (size_t i = 0; i < carstate.size(); ++i)
+	for (auto & state : carstate)
 	{
-		carstate[i].Reset();
+		state.Reset();
 	}
 }
 

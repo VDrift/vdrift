@@ -110,9 +110,9 @@ void EventSystem::ProcessEvents()
 
 	AgeToggles <SDL_Keycode> (keymap);
 	AgeToggles <int> (mbutmap);
-	for (std::vector <Joystick>::iterator i = joysticks.begin(); i != joysticks.end(); i++)
+	for (auto & joystick : joysticks)
 	{
-		i->AgeToggles();
+		joystick.AgeToggles();
 	}
 
 	while ( SDL_PollEvent( &event ) )

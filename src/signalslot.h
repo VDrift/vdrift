@@ -135,9 +135,9 @@ inline Slot<Delegate> & Slot<Delegate>::operator=(const Slot<Delegate> & other)
 {
 	if (this != &other)
 	{
-		for (std::size_t i = 0; i < m_connections.size(); ++i)
+		for (auto & con : m_connections)
 		{
-			connect(*m_connections[i].signal);
+			connect(*con.signal);
 		}
 		call = other.call;
 	}
@@ -162,16 +162,17 @@ inline void Slot<Delegate>::connect(Signal<Delegate> & signal)
 template <class Delegate>
 inline void Slot<Delegate>::disconnect(void)
 {
-	for (std::size_t i = 0; i < m_connections.size(); ++i)
+	for (const auto & con : m_connections)
 	{
 		// remove slot from signal by swapping
-		Signal<Delegate> & signal = *m_connections[i].signal;
-		std::size_t id = m_connections[i].id;
+		Signal<Delegate> & signal = *con.signal;
+		std::size_t id = con.id;
 		signal.m_connections[id] = signal.m_connections[signal.m_connections.size() - 1];
 
 		// update id of the swapped connection
-		typename Signal<Delegate>::Connection & con = signal.m_connections[id];
-		con.slot->m_connections[con.id].id = id;
+		auto & swapped_con = signal.m_connections[id];
+		swapped_con.slot->m_connections[swapped_con.id].id = id;
+
 		signal.m_connections.pop_back();
 	}
 	m_connections.resize(0);
@@ -194,9 +195,9 @@ inline Signal<Delegate> & Signal<Delegate>::operator=(const Signal & other)
 {
 	if (this != &other)
 	{
-		for (std::size_t i = 0; i < other.m_connections.size(); ++i)
+		for (auto & con : other.m_connections)
 		{
-			other.m_connections[i].slot->connect(*this);
+			con.slot->connect(*this);
 		}
 	}
 	return *this;
@@ -211,16 +212,17 @@ inline Signal<Delegate>::~Signal(void)
 template <class Delegate>
 inline void Signal<Delegate>::disconnect(void)
 {
-	for (std::size_t i = 0; i < m_connections.size(); ++i)
+	for (const auto & con : m_connections)
 	{
 		// remove signal from slot by swapping
-		Slot<Delegate> & slot = *m_connections[i].slot;
-		std::size_t id = m_connections[i].id;
+		Slot<Delegate> & slot = *con.slot;
+		std::size_t id = con.id;
 		slot.m_connections[id] = slot.m_connections[slot.m_connections.size() - 1];
 
 		// update id of the swapped connection
-		typename Slot<Delegate>::Connection & con = slot.m_connections[id];
-		con.signal->m_connections[con.id].id = id;
+		auto & swapped_con = slot.m_connections[id];
+		swapped_con.signal->m_connections[swapped_con.id].id = id;
+
 		slot.m_connections.pop_back();
 	}
 	m_connections.resize(0);
@@ -245,9 +247,9 @@ inline Signal0::Signal0(const Signal0 & other) :
 
 inline void Signal0::operator()() const
 {
-	for (std::size_t i = 0; i < m_connections.size(); ++i)
+	for (const auto & con : m_connections)
 	{
-		m_connections[i].slot->call();
+		con.slot->call();
 	}
 }
 
@@ -267,9 +269,9 @@ inline Signal1<P>::Signal1(const Signal1 & other) :
 template <typename P>
 inline void Signal1<P>::operator()(P p) const
 {
-	for (std::size_t i = 0; i < Signal<Delegate1<void, P> >::m_connections.size(); ++i)
+	for (const auto & con : Signal<Delegate1<void, P> >::m_connections)
 	{
-		Signal<Delegate1<void, P> >::m_connections[i].slot->call(p);
+		con.slot->call(p);
 	}
 }
 
@@ -289,9 +291,9 @@ inline Signal2<P, R>::Signal2(const Signal2 & other) :
 template <typename P, typename R>
 inline void Signal2<P, R>::operator()(P p, R r) const
 {
-	for (std::size_t i = 0; i < Signal<Delegate2<void, P, R> >::m_connections.size(); ++i)
+	for (const auto & con : Signal<Delegate2<void, P, R> >::m_connections)
 	{
-		Signal<Delegate2<void, P, R> >::m_connections[i].slot->call(p, r);
+		con.slot->call(p, r);
 	}
 }
 

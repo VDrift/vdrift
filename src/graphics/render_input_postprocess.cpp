@@ -141,10 +141,10 @@ void RenderInputPostprocess::SetCamera(const GraphicsCamera & cam)
 	frustum_corners[1].Set( lod_far, -lod_far, -lod_far); // BR
 	frustum_corners[2].Set( lod_far,  lod_far, -lod_far); // TR
 	frustum_corners[3].Set(-lod_far,  lod_far, -lod_far); // TL
-	for (int i = 0; i < 4; i++)
+	for (auto & corner : frustum_corners)
 	{
-		proj_inv.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
-		frustum_corners[i][2] = -lod_far;
+		proj_inv.TransformVectorOut(corner[0], corner[1], corner[2]);
+		corner[2] = -lod_far;
 	}
 
 	// frustum corners in world space for dynamic sky shader

@@ -435,17 +435,13 @@ bool Game::InitGUI()
 	else
 	{
 		// Remove any pages that have ~ characters.
-		std::list <std::list <std::string>::iterator> todel;
-		for (std::list <std::string>::iterator i = menufiles.begin(); i != menufiles.end(); ++i)
+		auto i = menufiles.begin();
+		while (i != menufiles.end())
 		{
 			if (i->find("~") != std::string::npos || *i == "SConscript")
-			{
-				todel.push_back(i);
-			}
-		}
-		for (std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-		{
-			menufiles.erase(*i);
+				i = menufiles.erase(i);
+			else
+				i++;
 		}
 	}
 
@@ -519,14 +515,14 @@ bool Game::ParseArguments(std::list <std::string> & args)
 	std::map <std::string, std::string> argmap;
 
 	// Generate an argument map.
-	for (std::list <std::string>::iterator i = args.begin(); i != args.end(); ++i)
+	for (auto i = args.begin(); i != args.end(); ++i)
 	{
 		if ((*i)[0] == '-')
 		{
 			argmap[*i] = "";
 		}
 
-		std::list <std::string>::iterator n = i;
+		auto n = i;
 		n++;
 		if (n != args.end())
 		{
@@ -666,15 +662,15 @@ bool Game::ParseArguments(std::list <std::string> & args)
 	{
 		std::string helpstr;
 		unsigned int longest = 0;
-		for (std::map <std::string, std::string>::iterator i = arghelp.begin(); i != arghelp.end(); ++i)
-			if (i->first.size() > longest)
-				longest = i->first.size();
-		for (std::map <std::string, std::string>::iterator i = arghelp.begin(); i != arghelp.end(); ++i)
+		for (const auto & arg : arghelp)
+			if (arg.first.size() > longest)
+				longest = arg.first.size();
+		for (const auto & arg : arghelp)
 		{
-			helpstr.append(i->first);
-			for (unsigned int n = 0; n < longest+3-i->first.size(); n++)
+			helpstr.append(arg.first);
+			for (unsigned int n = 0; n < longest+3-arg.first.size(); n++)
 				helpstr.push_back(' ');
-			helpstr.append(i->second + "\n");
+			helpstr.append(arg.second + "\n");
 		}
 		info_output << "Command-line help:\n\n" << helpstr << std::endl;
 		continue_game = false;
@@ -718,8 +714,8 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(trackmap.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
 
-	for (std::vector<CarGraphics>::iterator it = car_graphics.begin(); it != car_graphics.end(); ++it)
-		graphics->AddDynamicNode(it->GetNode());
+	for (auto & car : car_graphics)
+		graphics->AddDynamicNode(car.GetNode());
 
 	if (gui.GetNodes().first)
 		graphics->AddDynamicNode(*gui.GetNodes().first);
@@ -1096,13 +1092,12 @@ bool Game::AssignControl()
 	assert(controlgrab && "Trying to assign control with no control grabbed.");
 
 	// Check for key inputs.
-	std::map <SDL_Keycode, Toggle> & keymap = eventsystem.GetKeyMap();
-	for (std::map <SDL_Keycode, Toggle>::iterator i = keymap.begin(); i != keymap.end(); ++i)
+	for (const auto & key : eventsystem.GetKeyMap())
 	{
-		if (i->second.GetImpulseRising())
+		if (key.second.GetImpulseRising())
 		{
 			controlgrab_control.type = CarControlMap::Control::KEY;
-			controlgrab_control.keycode = i->first;
+			controlgrab_control.keycode = key.first;
 			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
@@ -1659,9 +1654,9 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	nodes.push_back(&track.GetRacinglineNode());
 	nodes.push_back(&track.GetTrackNode());
 	nodes.push_back(&track.GetBodyNode());
-	for (std::vector<CarGraphics>::iterator i = car_graphics.begin(); i != car_graphics.end(); ++i)
+	for (auto & car : car_graphics)
 	{
-		nodes.push_back(&i->GetNode());
+		nodes.push_back(&car.GetNode());
 	}
 	graphics->BindStaticVertexData(nodes);
 
@@ -2053,23 +2048,23 @@ static void PopulateCarSet(
 	pathmanager.GetFileList(path, folders);
 	if (cardironly)
 	{
-		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
+		for (const auto & folder : folders)
 		{
-			std::ifstream file((path + "/" + *i + "/" + *i + ext).c_str());
+			std::ifstream file((path + "/" + folder + "/" + folder + ext).c_str());
 			if (file)
-				set.insert(std::make_pair(*i, *i));
+				set.insert(std::make_pair(folder, folder));
 		}
 	}
 	else
 	{
-		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
+		for (const auto & folder : folders)
 		{
 			std::list<std::string> files;
-			pathmanager.GetFileList(path + "/" + *i, files, ext);
-			for (std::list<std::string>::iterator j = files.begin(); j != files.end(); ++j)
+			pathmanager.GetFileList(path + "/" + folder, files, ext);
+			for (const auto & file : files)
 			{
-				const std::string opt = j->substr(0, j->length() - ext.length());
-				const std::string val = *i + "/" + opt;
+				const std::string opt = file.substr(0, file.length() - ext.length());
+				const std::string val = folder + "/" + opt;
 				set.insert(std::make_pair(val, opt));
 			}
 		}
@@ -2081,16 +2076,16 @@ static void PopulateTrackSet(
 	const std::string & path,
 	const PathManager & pathmanager)
 {
-	std::list<std::string> folderlist;
-	pathmanager.GetFileList(path, folderlist);
-	for (std::list <std::string>::iterator i = folderlist.begin(); i != folderlist.end(); ++i)
+	std::list<std::string> folders;
+	pathmanager.GetFileList(path, folders);
+	for (const auto & folder : folders)
 	{
-		std::ifstream file((path + "/" + *i + "/about.txt").c_str());
+		std::ifstream file((path + "/" + folder + "/about.txt").c_str());
 		if (file)
 		{
 			std::string name;
 			getline(file, name);
-			set.insert(std::make_pair(*i, name));
+			set.insert(std::make_pair(folder, name));
 		}
 	}
 }
@@ -2112,9 +2107,9 @@ void Game::PopulateTrackList(GuiOption::List & tracklist)
 	PopulateTrackSet(trackset, pathmanager.GetWriteableTracksPath(), pathmanager);
 
 	tracklist.clear();
-	for (std::set<std::pair<std::string, std::string> >::const_iterator i = trackset.begin(); i != trackset.end(); i++)
+	for (const auto & track : trackset)
 	{
-		tracklist.push_back(*i);
+		tracklist.push_back(track);
 	}
 
 	std::sort(tracklist.begin(), tracklist.end(), SortPairBySecond<std::string, std::string>());
@@ -2128,9 +2123,9 @@ void Game::PopulateCarList(GuiOption::List & carlist, bool cardironly)
 	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager, cardironly);
 
 	carlist.clear();
-	for (std::set<std::pair<std::string, std::string> >::const_iterator i = carset.begin(); i != carset.end(); i++)
+	for (const auto & car : carset)
 	{
-		carlist.push_back(*i);
+		carlist.push_back(car);
 	}
 }
 
@@ -2144,10 +2139,10 @@ void Game::PopulateCarPaintList(const std::string & carname, GuiOption::List & p
 	const std::string paintdir = pathmanager.GetCarPaintPath(cardir);
 	if (pathmanager.GetFileList(paintdir, filelist, ".png"))
 	{
-		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
+		for (const auto & file : filelist)
 		{
-			std::string paintname = i->substr(0, i->find('.'));
-			paintlist.push_back(std::make_pair("skins/" + *i, paintname));
+			std::string paintname = file.substr(0, file.find('.'));
+			paintlist.push_back(std::make_pair("skins/" + file, paintname));
 		}
 	}
 }
@@ -2160,10 +2155,10 @@ void Game::PopulateCarTireList(const std::string & /*carname*/, GuiOption::List 
 	std::list<std::string> filelist;
 	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/tire", filelist, ".tire"))
 	{
-		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
+		for (const auto & file : filelist)
 		{
-			std::string name = i->substr(0, i->find('.'));
-			tirelist.push_back(std::make_pair("tire/" + *i, name));
+			std::string name = file.substr(0, file.find('.'));
+			tirelist.push_back(std::make_pair("tire/" + file, name));
 		}
 	}
 }
@@ -2176,10 +2171,10 @@ void Game::PopulateCarWheelList(const std::string & /*carname*/, GuiOption::List
 	std::list<std::string> filelist;
 	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/wheel", filelist, ".wheel"))
 	{
-		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
+		for (const auto & file : filelist)
 		{
-			std::string name = i->substr(0, i->find('.'));
-			wheellist.push_back(std::make_pair("wheel/" + *i, name));
+			std::string name = file.substr(0, file.find('.'));
+			wheellist.push_back(std::make_pair("wheel/" + file, name));
 		}
 	}
 }
@@ -2189,9 +2184,9 @@ void Game::PopulateDriverList(GuiOption::List & driverlist)
 	const std::vector<std::string> aitypes = ai.ListFactoryTypes();
 	driverlist.clear();
 	driverlist.push_back(std::make_pair("user", "user"));
-	for (size_t i = 0; i < aitypes.size(); ++i)
+	for (const auto & aitype : aitypes)
 	{
-		driverlist.push_back(std::make_pair(aitypes[i], aitypes[i]));
+		driverlist.push_back(std::make_pair(aitype, aitype));
 	}
 }
 
@@ -2211,24 +2206,24 @@ void Game::PopulateReplayList(GuiOption::List & replaylist)
 {
 	replaylist.clear();
 	int numreplays = 0;
-	std::list<std::string> replayfoldercontents;
-	if (pathmanager.GetFileList(pathmanager.GetReplayPath(), replayfoldercontents))
+	std::list<std::string> replayfolder;
+	if (pathmanager.GetFileList(pathmanager.GetReplayPath(), replayfolder))
 	{
-		for (std::list<std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
+		for (auto & file : replayfolder)
 		{
 			// Replay expects a formatted string: "MM-DD-hh-mm-trackname.vdr".
-			if (*i != "benchmark.vdr" &&
-				i->find(".vdr") == i->length() - 4 &&
-				i->length() > 16)
+			if (file != "benchmark.vdr" &&
+				file.find(".vdr") == file.length() - 4 &&
+				file.length() > 16)
 			{
 				// Parse replay name.
-				std::string str = i->substr(0, i->length() - 4);
+				std::string str = file.substr(0, file.length() - 4);
 				str[2] = '/';
 				str[5] = ' ';
 				str[8] = ':';
 				str[11] = ' ';
 
-				replaylist.push_back(std::make_pair(*i, str));
+				replaylist.push_back(std::make_pair(file, str));
 				++numreplays;
 			}
 		}
@@ -2246,11 +2241,11 @@ void Game::PopulateGUISkinList(GuiOption::List & skinlist)
 	pathmanager.GetFileList(pathmanager.GetSkinsPath(), skins);
 
 	skinlist.clear();
-	for (std::list<std::string>::iterator i = skins.begin(); i != skins.end(); ++i)
+	for (const auto & skin : skins)
 	{
-		if (pathmanager.FileExists(pathmanager.GetSkinsPath() + "/" + *i + "/menus/Main"))
+		if (pathmanager.FileExists(pathmanager.GetSkinsPath() + "/" + skin + "/menus/Main"))
 		{
-			skinlist.push_back(std::make_pair(*i, *i));
+			skinlist.push_back(std::make_pair(skin, skin));
 		}
 	}
 }
@@ -2263,11 +2258,11 @@ void Game::PopulateGUILangList(GuiOption::List & langlist)
 
 	langlist.clear();
 	langlist.push_back(std::make_pair("en", "en"));
-	for (std::list<std::string>::iterator i = languages.begin(); i != languages.end(); ++i)
+	for (const auto & language : languages)
 	{
-		if (pathmanager.FileExists(path + *i))
+		if (pathmanager.FileExists(path + language))
 		{
-			std::string value = i->substr(0, i->length()-3);
+			std::string value = language.substr(0, language.length()-3);
 			langlist.push_back(std::make_pair(value, value));
 		}
 	}
@@ -2408,9 +2403,8 @@ bool Game::Download(const std::vector <std::string> & urls)
 		return false;
 	}
 
-	for (unsigned int i = 0; i < urls.size(); i++)
+	for (const auto & url : urls)
 	{
-		std::string url = urls[i];
 		bool requestSuccess = http.Request(url, error_output);
 		if (!requestSuccess)
 		{

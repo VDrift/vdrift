@@ -92,30 +92,30 @@ static void read_xml(std::istream & in, PTree & node, Include * include, std::st
 	}
 }
 
-static void write_xml(const PTree & p, std::ostream & out, std::string indent)
+static void write_xml(const PTree & tree, std::ostream & out, std::string indent)
 {
-	for (PTree::const_iterator i = p.begin(), e = p.end(); i != e; ++i)
+	for (const auto & node : tree)
 	{
-		if (i->second.size() == 0)
+		if (node.second.size() == 0)
 		{
-			out << indent << "<" << i->first << ">" << i->second.value() << "</" << i->first << ">\n";
-			write_xml(i->second, out, indent+"\t");
+			out << indent << "<" << node.first << ">" << node.second.value() << "</" << node.first << ">\n";
+			write_xml(node.second, out, indent+"\t");
 		}
 		else
 		{
-			out << indent << "<" << i->first << ">\n";
-			write_xml(i->second, out, indent+"\t");
-			out << indent << "</" << i->first << ">\n";
+			out << indent << "<" << node.first << ">\n";
+			write_xml(node.second, out, indent+"\t");
+			out << indent << "</" << node.first << ">\n";
 		}
 	}
 }
 
-void read_xml(std::istream & in, PTree & p, Include * inc)
+void read_xml(std::istream & in, PTree & tree, Include * inc)
 {
-	read_xml(in, p, inc, std::string());
+	read_xml(in, tree, inc, std::string());
 }
 
-void write_xml(const PTree & p, std::ostream & out)
+void write_xml(const PTree & tree, std::ostream & out)
 {
-	write_xml(p, out, std::string());
+	write_xml(tree, out, std::string());
 }

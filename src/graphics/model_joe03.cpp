@@ -114,34 +114,34 @@ struct VertHash
 
 static void CorrectEndian(std::vector<JoeFace> & p)
 {
-	for (unsigned int i = 0; i < p.size(); ++i)
+	for (auto & f : p)
 	{
 		for (unsigned int d = 0; d < 3; ++d)
 		{
-			p[i].vertexIndex[d] = ENDIAN_SWAP_16 ( p[i].vertexIndex[d] );
-			p[i].normalIndex[d] = ENDIAN_SWAP_16 ( p[i].normalIndex[d] );
-			p[i].textureIndex[d] = ENDIAN_SWAP_16 ( p[i].textureIndex[d] );
+			f.vertexIndex[d] = ENDIAN_SWAP_16 ( f.vertexIndex[d] );
+			f.normalIndex[d] = ENDIAN_SWAP_16 ( f.normalIndex[d] );
+			f.textureIndex[d] = ENDIAN_SWAP_16 ( f.textureIndex[d] );
 		}
 	}
 }
 
 static void CorrectEndian(std::vector<JoeVertex> & p)
 {
-	for (unsigned int i = 0; i < p.size(); ++i)
+	for (auto & v : p)
 	{
 		for (unsigned int d = 0; d < 3; ++d)
 		{
-			p[i].vertex[d] = ENDIAN_SWAP_FLOAT ( p[i].vertex[d] );
+			v.vertex[d] = ENDIAN_SWAP_FLOAT ( v.vertex[d] );
 		}
 	}
 }
 
 static void CorrectEndian(std::vector<JoeTexCoord> & p)
 {
-	for (unsigned int i = 0; i < p.size(); ++i)
+	for (auto & t : p)
 	{
-		p[i].u = ENDIAN_SWAP_FLOAT ( p[i].u );
-		p[i].v = ENDIAN_SWAP_FLOAT ( p[i].v );
+		t.u = ENDIAN_SWAP_FLOAT ( t.u );
+		t.v = ENDIAN_SWAP_FLOAT ( t.v );
 	}
 }
 
@@ -391,7 +391,7 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 		for (unsigned int j = 0; j < 3; j++)
 		{
 			const Vert vert(f.vertexIndex[j], f.textureIndex[j], f.normalIndex[j]);
-			std::pair<VertMap::iterator, bool> r = vmap.insert(std::make_pair(vert, vnum));
+			auto r = vmap.insert(std::make_pair(vert, vnum));
 			if (r.second)
 				vnum++;
 
@@ -402,19 +402,19 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	vector <float> v_vertices(vnum * 3);
 	vector <float> v_texcoords(vnum * 2);
 	vector <float> v_normals(vnum * 3);
-	for (VertMap::const_iterator i = vmap.begin(); i != vmap.end(); i++)
+	for (const auto & vi : vmap)
 	{
-		const Vert & v = i->first;
-		const unsigned int vi = i->second;
+		const Vert & v = vi.first;
+		const unsigned int i = vi.second;
 
 		for (unsigned int j = 0; j < 3; j++)
-			v_vertices[vi * 3 + j] = frame.verts[v.vi].vertex[j];
+			v_vertices[i * 3 + j] = frame.verts[v.vi].vertex[j];
 
 		for (unsigned int j = 0; j < 3; j++)
-			v_normals[vi * 3 + j] = frame.normals[v.ni].vertex[j];
+			v_normals[i * 3 + j] = frame.normals[v.ni].vertex[j];
 
-		v_texcoords[vi * 2 + 0] = frame.texcoords[v.ti].u;
-		v_texcoords[vi * 2 + 1] = frame.texcoords[v.ti].v;
+		v_texcoords[i * 2 + 0] = frame.texcoords[v.ti].u;
+		v_texcoords[i * 2 + 1] = frame.texcoords[v.ti].v;
 	}
 
 	//assign to our mesh

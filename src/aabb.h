@@ -217,12 +217,9 @@ public:
 		float rd;
 		const float bound = radius;
 		//INTERSECTION intersection = IN; // assume we are fully in until we find an intersection
-		for (int i=0; i<6; i++)
+		for (const auto & p : frustum.frustum)
 		{
-			rd=frustum.frustum[i][0]*center[0]+
-					frustum.frustum[i][1]*center[1]+
-					frustum.frustum[i][2]*center[2]+
-					frustum.frustum[i][3];
+			rd = p[0] * center[0] + p[1] * center[1] + p[2] * center[2] + p[3];
 			if (rd < -bound)
 			{
 				// fully out

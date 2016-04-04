@@ -206,7 +206,7 @@ static void ConnectSignal(
 	const SlotMap & slotmap,
 	Signal & signal)
 {
-	typename SlotMap::const_iterator it = slotmap.find(valuestr);
+	auto it = slotmap.find(valuestr);
 	if (it != slotmap.end())
 		it->second->connect(signal);
 }
@@ -217,7 +217,7 @@ static void ConnectAction(
 	const SignalMap & signalmap,
 	Slot & slot)
 {
-	typename SignalMap::const_iterator it = signalmap.find(valuestr);
+	auto it = signalmap.find(valuestr);
 	if (it != signalmap.end())
 		slot.connect(*it->second);
 	else
@@ -246,7 +246,7 @@ static void ConnectActions(
 		std::string action = actionstr.substr(pos, posn - pos);
 		pos = posn;
 
-		typename ActionMap::const_iterator it = actionmap.find(action);
+		auto it = actionmap.find(action);
 		if (it != actionmap.end())
 			it->second->connect(signal);
 	}
@@ -287,7 +287,7 @@ static void ParseActions(
 		pos = posn;
 
 		// check if action is in vactionmap
-		typename ActionMap::const_iterator vai = vactionmap.find(aname);
+		auto vai = vactionmap.find(aname);
 		if (vai != vactionmap.end())
 		{
 			action_val_set.insert(std::make_pair(action, vai->second));
@@ -302,7 +302,7 @@ static void ParseActions(
 		std::string pname = aname.substr(wn + 1);
 
 		// check if action is setting a widget property
-		typename WidgetMap::const_iterator wi = widgetmap.find(wname);
+		auto wi = widgetmap.find(wname);
 		if (wi != widgetmap.end())
 		{
 			Slot1<const std::string &> * pslot;
@@ -312,7 +312,7 @@ static void ParseActions(
 		}
 
 		// check if action is setting a widget list property (only valid for control lists)
-		typename WidgetListMap::const_iterator wli = widgetlistmap.find(wname);
+		auto wli = widgetlistmap.find(wname);
 		if (wli != widgetlistmap.end())
 		{
 			Slot2<int, const std::string &> * pslot;
@@ -330,17 +330,17 @@ static void RegisterActions(
 	ActionMap & actionmap)
 {
 	signalvs.reserve(actionvs.size());
-	for (typename ActionValSet::const_iterator i = actionvs.begin(); i != actionvs.end(); ++i)
+	for (const auto & av : actionvs)
 	{
 		signalvs.push_back(typename SignalValVec::value_type());
 
-		const std::string & action = i->first;
+		const std::string & action = av.first;
 		size_t n = action.find(':') + 1;
 		if (action[n] == '"')
 			signalvs.back().value = lang(action.substr(n + 1, action.size() - n - 2));
 		else
 			signalvs.back().value = action.substr(n);
-		i->second->connect(signalvs.back().signal);
+		av.second->connect(signalvs.back().signal);
 
 		actionmap[action] = &signalvs.back().action;
 	}
@@ -410,7 +410,7 @@ bool GuiPage::Load(
 	std::vector<Config::const_iterator> controlit;			// control iterator cache
 	std::vector<Config::const_iterator> controlnit;			// control list iterator cache
 	std::vector<GuiControlList*> controllists;				// control list cache
-	for (Config::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
+	for (auto section = pagefile.begin(); section != pagefile.end(); ++section)
 	{
 		if (section->first.empty()) continue;
 
@@ -442,10 +442,10 @@ bool GuiPage::Load(
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// connect with the value list
-				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
+				auto vni = vnactionmap.find(value);
 				if (vni != vnactionmap.end())
 				{
-					StrSignalMap::const_iterator vsi = vsignalmap.find(value + ".update");
+					auto vsi = vsignalmap.find(value + ".update");
 					if (vsi != vsignalmap.end())
 					{
 						widget_list->update_list.connect(*vsi->second);
@@ -499,10 +499,10 @@ bool GuiPage::Load(
 				widget_list->SetupDrawable(node, content, path, ext, uv, r.z);
 
 				// connect with the value list
-				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
+				auto vni = vnactionmap.find(value);
 				if (vni != vnactionmap.end())
 				{
-					StrSignalMap::const_iterator vsi = vsignalmap.find(value + ".update");
+					auto vsi = vsignalmap.find(value + ".update");
 					if (vsi != vsignalmap.end())
 					{
 						widget_list->update_list.connect(*vsi->second);
@@ -615,8 +615,8 @@ bool GuiPage::Load(
 				// connect with item list
 				if (pagefile.get(section, "list", value))
 				{
-					StrSignalMap::const_iterator vsu = vsignalmap.find(value + ".update");
-					StrSignalMap::const_iterator vsn = vsignalmap.find(value + ".nth");
+					auto vsu = vsignalmap.find(value + ".update");
+					auto vsn = vsignalmap.find(value + ".nth");
 					if (vsu != vsignalmap.end() && vsn != vsignalmap.end())
 					{
 						control_list->update_list.connect(*vsu->second);
@@ -653,20 +653,20 @@ bool GuiPage::Load(
 	std::set<ActionValn> action_valn_set;
 	std::set<ActionVal> action_val_set;
 	std::string actionstr;
-	for (size_t i = 0; i < controlit.size(); ++i)
+	for (const auto & ci : controlit)
 	{
-		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
+		for (const auto & signal_name : GuiControl::signal_names)
 		{
-			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
+			if (pagefile.get(ci, signal_name, actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
 					action_val_set, action_valn_set);
 		}
 	}
-	for (size_t i = 0; i < controlnit.size(); ++i)
+	for (const auto & ci : controlnit)
 	{
-		for (size_t j = 0; j < GuiControl::signal_names.size(); ++j)
+		for (const auto & signal_name : GuiControl::signal_names)
 		{
-			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
+			if (pagefile.get(ci, signal_name, actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
 					action_val_set, action_valn_set);
 		}
@@ -754,8 +754,8 @@ void GuiPage::SetVisible(bool value)
 
 void GuiPage::SetAlpha(float value)
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		(*i)->SetAlpha(node, value);
+	for (auto widget : widgets)
+		widget->SetAlpha(node, value);
 }
 
 void GuiPage::ProcessInput(
@@ -775,11 +775,11 @@ void GuiPage::ProcessInput(
 	bool cursoraction = cursormoved || cursordown || cursorjustup;
 	if (cursoraction)
 	{
-		for (std::vector<GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
+		for (auto control : controls)
 		{
-			if ((**i).Focus(cursorx, cursory))
+			if ((*control).Focus(cursorx, cursory))
 			{
-				SetActiveControl(**i);
+				SetActiveControl(*control);
 				select |= cursorjustup;	// cursor select
 				break;
 			}
@@ -806,23 +806,23 @@ void GuiPage::ProcessInput(
 
 void GuiPage::Update(float dt)
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		(*i)->Update(node, dt);
+	for (auto widget : widgets)
+		widget->Update(node, dt);
 }
 
 void GuiPage::SetLabelText(const std::map<std::string, std::string> & label_text)
 {
-	for (std::map <std::string, GuiLabel*>::const_iterator i = labels.begin(); i != labels.end(); ++i)
+	for (const auto & label : labels)
 	{
-		const std::map<std::string, std::string>::const_iterator n = label_text.find(i->first);
+		const auto n = label_text.find(label.first);
 		if (n != label_text.end())
-			i->second->SetText(n->second);
+			label.second->SetText(n->second);
 	}
 }
 
 GuiLabel * GuiPage::GetLabel(const std::string & name)
 {
-	std::map <std::string, GuiLabel*>::const_iterator i = labels.find(name);
+	const auto i = labels.find(name);
 	if (i != labels.end())
 		return i->second;
 	return 0;
@@ -835,11 +835,11 @@ SceneNode & GuiPage::GetNode()
 
 void GuiPage::Clear()
 {
-	for (std::vector <GuiWidget *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		delete *i;
+	for (auto widget : widgets)
+		delete widget;
 
-	for (std::vector <GuiControl *>::iterator i = controls.begin(); i != controls.end(); ++i)
-		delete *i;
+	for (auto control : controls)
+		delete control;
 
 	node.Clear();
 	labels.clear();

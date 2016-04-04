@@ -118,8 +118,8 @@ public:
 	void Normalize()
 	{
 		T len = Magnitude();
-		for (size_t i = 0; i < 4; i++)
-			v[i] /= len;
+		for (auto & i : v)
+			i /= len;
 	}
 
 	///set the given matrix to a matrix representation of this quaternion.

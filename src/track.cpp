@@ -93,22 +93,22 @@ bool Track::Loaded() const
 
 void Track::Clear()
 {
-	for (int i = 0, n = data.objects.size(); i < n; ++i)
+	for (auto & object : data.objects)
 	{
-		data.world->removeCollisionObject(data.objects[i]);
-		delete data.objects[i];
+		data.world->removeCollisionObject(object);
+		delete object;
 	}
 	data.objects.clear();
 
-	for (int i = 0, n = data.shapes.size(); i < n; ++i)
+	for (auto & shape : data.shapes)
 	{
-		delete data.shapes[i];
+		delete shape;
 	}
 	data.shapes.clear();
 
-	for (int i = 0, n = data.meshes.size(); i < n; ++i)
+	for (auto & mesh : data.meshes)
 	{
-		delete data.meshes[i];
+		delete mesh;
 	}
 	data.meshes.clear();
 
@@ -135,11 +135,11 @@ bool Track::CastRay(
 	Vec3 & normal) const
 {
 	bool col = false;
-	for (std::list <RoadStrip>::const_iterator i = data.roads.begin(); i != data.roads.end(); ++i)
+	for (const auto & road : data.roads)
 	{
 		Vec3 coltri, colnorm;
 		const Bezier * colbez = NULL;
-		if (i->Collide(origin, direction, seglen, patch_id, coltri, colbez, colnorm))
+		if (road.Collide(origin, direction, seglen, patch_id, coltri, colbez, colnorm))
 		{
 			if (!col || (coltri - origin).MagnitudeSquared() < (outtri - origin).MagnitudeSquared())
 			{
@@ -157,7 +157,7 @@ void Track::Update()
 {
 	if (!data.loaded) return;
 
-	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
+	auto t = data.body_transforms.begin();
 	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{
 		Transform & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();

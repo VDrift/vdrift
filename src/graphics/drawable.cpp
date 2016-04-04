@@ -103,18 +103,11 @@ void Drawable::SetDecal(bool value)
 	uniforms_changed = true;
 }
 
-RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
+RenderModelExt & Drawable::GenRenderModelData(const DrawableAttributes & draw_attribs)
 {
 	// copy data over to the GL3V render_model object
 	// eventually this should only be done when we update the values, but for now
 	// we call this every time we draw the drawable
-
-	// cache off the stringId values
-	static StringId tex0_id = string_map.addStringId("diffuseTexture");
-	static StringId tex1_id = string_map.addStringId("misc1Texture");
-	static StringId tex2_id = string_map.addStringId("normalMapTexture");
-	static StringId transform_id = string_map.addStringId("modelMatrix");
-	static StringId color_id = string_map.addStringId("colorTint");
 
 	// textures
 	if (textures_changed)
@@ -123,15 +116,15 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 		render_model.textures.clear();
 		if (tex_id[0])
 		{
-			render_model.textures.push_back(RenderTextureEntry(tex0_id, tex_id[0], GL_TEXTURE_2D));
+			render_model.textures.push_back(RenderTextureEntry(draw_attribs.tex0, tex_id[0], GL_TEXTURE_2D));
 		}
 		if (tex_id[1])
 		{
-			render_model.textures.push_back(RenderTextureEntry(tex1_id, tex_id[1], GL_TEXTURE_2D));
+			render_model.textures.push_back(RenderTextureEntry(draw_attribs.tex1, tex_id[1], GL_TEXTURE_2D));
 		}
 		if (tex_id[2])
 		{
-			render_model.textures.push_back(RenderTextureEntry(tex2_id, tex_id[2], GL_TEXTURE_2D));
+			render_model.textures.push_back(RenderTextureEntry(draw_attribs.tex2, tex_id[2], GL_TEXTURE_2D));
 		}
 
 		textures_changed = false;
@@ -145,7 +138,7 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 
 		// only add it if it's not the identity matrix
 		if (transform != Mat4())
-			render_model.uniforms.push_back(RenderUniformEntry(transform_id, transform.GetArray(), 16));
+			render_model.uniforms.push_back(RenderUniformEntry(draw_attribs.transform, transform.GetArray(), 16));
 
 		// only add it if it's not the default
 		if (color != Vec4(1))
@@ -155,7 +148,7 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 			srgba[1] = color[1] < 1 ? pow(color[1], 2.2f) : color[1];
 			srgba[2] = color[2] < 1 ? pow(color[2], 2.2f) : color[2];
 			srgba[3] = color[3];
-			render_model.uniforms.push_back(RenderUniformEntry(color_id, srgba, 4));
+			render_model.uniforms.push_back(RenderUniformEntry(draw_attribs.color, srgba, 4));
 		}
 
 		uniforms_changed = false;

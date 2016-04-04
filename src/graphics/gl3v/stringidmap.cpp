@@ -46,7 +46,7 @@ bool StringIdMap::valid(StringId id)
 
 StringId StringIdMap::addStringId(const std::string & str)
 {
-	std::unordered_map <std::string, StringId>::iterator i = idmap.find(str);
+	auto i = idmap.find(str);
 	if (i != idmap.end())
 		return i->second;
 	else
@@ -60,7 +60,7 @@ StringId StringIdMap::addStringId(const std::string & str)
 
 StringId StringIdMap::getStringId(const std::string & str) const
 {
-	std::unordered_map <std::string, StringId>::const_iterator i = idmap.find(str);
+	auto i = idmap.find(str);
 	if (i != idmap.end())
 		return i->second;
 	else
@@ -69,7 +69,7 @@ StringId StringIdMap::getStringId(const std::string & str) const
 
 std::string StringIdMap::getString(StringId id) const
 {
-	std::unordered_map <StringId, std::string, StringId::hash>::const_iterator i = stringmap.find(id);
+	auto i = stringmap.find(id);
 	if (i != stringmap.end())
 		return i->second;
 	else

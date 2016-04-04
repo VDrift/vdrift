@@ -195,9 +195,7 @@ QT_TEST(TextSerializer_test)
 	QT_CHECK_EQUAL(player2.simplelist.size(),local_simplelist.size());
 
 	{
-		list <int>::iterator i;
-		list <int>::iterator n;
-		for (i = player2.simplelist.begin(),
+		for (auto i = player2.simplelist.begin(),
 			 n = local_simplelist.begin();
 			 i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++)
 		{
@@ -208,13 +206,9 @@ QT_TEST(TextSerializer_test)
 	QT_CHECK_EQUAL(player2.complexlist.size(),local_complexlist.size());
 
 	{
-		list <TestVertex>::iterator i;
-		list <TestVertex>::iterator n;
-		int count;
-		for (i = player2.complexlist.begin(),
-			 n = local_complexlist.begin(),
-										 count = 0;
-										 i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++)
+		int count = 0;
+		for (auto i = player2.complexlist.begin(), n = local_complexlist.begin();
+			i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++)
 		{
 			QT_CHECK_EQUAL(*i,*n);
 		}
@@ -291,11 +285,8 @@ QT_TEST(BinarySerializer_test)
 	QT_CHECK_EQUAL(player2.simplelist.size(),local_simplelist.size());
 
 	{
-		list <int>::iterator i;
-		list <int>::iterator n;
-		for (i = player2.simplelist.begin(),
-			 n = local_simplelist.begin();
-			 i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++)
+		for (auto i = player2.simplelist.begin(), n = local_simplelist.begin();
+			i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++)
 		{
 			QT_CHECK_EQUAL(*i,*n);
 		}
@@ -304,13 +295,9 @@ QT_TEST(BinarySerializer_test)
 	QT_CHECK_EQUAL(player2.complexlist.size(),local_complexlist.size());
 
 	{
-		list <TestVertex>::iterator i;
-		list <TestVertex>::iterator n;
-		int count;
-		for (i = player2.complexlist.begin(),
-			 n = local_complexlist.begin(),
-										 count = 0;
-										 i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++)
+		int count = 0;
+		for (auto i = player2.complexlist.begin(), n = local_complexlist.begin();
+			i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++)
 		{
 			QT_CHECK_EQUAL(*i,*n);
 		}
@@ -412,11 +399,8 @@ QT_TEST(ReflectionSerializer_test)
 	QT_CHECK_EQUAL ( player2.simplelist.size(),local_simplelist.size() );
 
 	{
-		list <int>::iterator i;
-		list <int>::iterator n;
-		for ( i = player2.simplelist.begin(),
-		        n = local_simplelist.begin();
-		        i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++ )
+		for (auto i = player2.simplelist.begin(), n = local_simplelist.begin();
+			i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++ )
 		{
 			QT_CHECK_EQUAL ( *i,*n );
 		}
@@ -425,13 +409,9 @@ QT_TEST(ReflectionSerializer_test)
 	QT_CHECK_EQUAL ( player2.complexlist.size(),local_complexlist.size() );
 
 	{
-		list <TestVertex>::iterator i;
-		list <TestVertex>::iterator n;
-		int count;
-		for ( i = player2.complexlist.begin(),
-		        n = local_complexlist.begin(),
-		        count = 0;
-		        i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++ )
+		int count = 0;
+		for (auto i = player2.complexlist.begin(), n = local_complexlist.begin();
+			i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++ )
 		{
 			QT_CHECK_EQUAL ( *i,*n );
 		}
@@ -495,11 +475,8 @@ QT_TEST(serialization_test_bin_compatibility)
 	QT_CHECK_EQUAL(player2.simplelist.size(),local_simplelist.size());
 
 	{
-		list <int>::iterator i;
-		list <int>::iterator n;
-		for (i = player2.simplelist.begin(),
-			 n = local_simplelist.begin();
-			 i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++)
+		for (auto i = player2.simplelist.begin(), n = local_simplelist.begin();
+			i != player2.simplelist.end() && n != local_simplelist.end(); i++,n++)
 		{
 			QT_CHECK_EQUAL(*i,*n);
 		}
@@ -508,13 +485,9 @@ QT_TEST(serialization_test_bin_compatibility)
 	QT_CHECK_EQUAL(player2.complexlist.size(),local_complexlist.size());
 
 	{
-		list <TestVertex>::iterator i;
-		list <TestVertex>::iterator n;
-		int count;
-		for (i = player2.complexlist.begin(),
-			 n = local_complexlist.begin(),
-										 count = 0;
-										 i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++)
+		int count = 0;
+		for (auto i = player2.complexlist.begin(), n = local_complexlist.begin();
+			i != player2.complexlist.end() && n != local_complexlist.end(); i++,n++,count++)
 		{
 			QT_CHECK_EQUAL(*i,*n);
 		}

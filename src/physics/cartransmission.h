@@ -100,8 +100,9 @@ public:
 	btScalar GetGearRatio(int gear) const
 	{
 		btScalar ratio = 1.0;
-		std::map<int, btScalar>::const_iterator i = gear_ratios.find(gear);
-		if (i != gear_ratios.end()) ratio = i->second;
+		const auto i = gear_ratios.find(gear);
+		if (i != gear_ratios.end())
+			ratio = i->second;
 		return ratio;
 	}
 

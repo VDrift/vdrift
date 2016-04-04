@@ -105,18 +105,19 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::list <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
-					if (!this->Serialize(itemname.str(), *i)) return false;
+					if (!this->Serialize(itemname.str(), i)) return false;
+					count++;
 				}
 			}
 			else //input
 			{
 				t.clear();
 
-				int listsize(0);
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
@@ -143,11 +144,12 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
-					if (!this->Serialize(itemname.str(), const_cast<T&>(*i))) return false;
+					if (!this->Serialize(itemname.str(), const_cast<T&>(i))) return false;
+					count++;
 				}
 			}
 			else //input
@@ -161,8 +163,7 @@ class Serializer
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << i+1;
-					//t.push_back(T());
-					//if (!this->Serialize(itemname.str(), t.back())) return false;
+
 					T prototype;
 					if (!this->Serialize(itemname.str(), prototype)) return false;
 					t.insert(prototype);
@@ -184,17 +185,17 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::vector <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
-					if (!this->Serialize(itemname.str(), *i)) return false;
+					if (!this->Serialize(itemname.str(), i)) return false;
 				}
 			}
 			else //input
 			{
 				//t.clear();
-				int listsize;
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
 
@@ -202,8 +203,6 @@ class Serializer
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << i+1;
-					//t.push_back(T());
-					//if (!this->Serialize(itemname.str(), t.back())) return false;
 					if (!this->Serialize(itemname.str(), t[i])) return false;
 				}
 			}
@@ -221,18 +220,20 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (std::vector <bool>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto i : t)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
-					bool booli = *i;
+
+					bool booli = i;
 					if (!this->Serialize(itemname.str(), booli)) return false;
+					count++;
 				}
 			}
 			else //input
 			{
 				//t.clear();
-				int listsize;
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
 
@@ -240,8 +241,7 @@ class Serializer
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << i+1;
-					//t.push_back(T());
-					//if (!this->Serialize(itemname.str(), t.back())) return false;
+
 					bool booli;
 					if (!this->Serialize(itemname.str(), booli)) return false;
 					t[i] = booli;
@@ -263,17 +263,18 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::deque <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
-					if (!this->Serialize(itemname.str(), *i)) return false;
+					if (!this->Serialize(itemname.str(), i)) return false;
+					count++;
 				}
 			}
 			else //input
 			{
 				//t.clear();
-				int listsize;
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
 
@@ -281,8 +282,6 @@ class Serializer
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << i+1;
-					//t.push_back(T());
-					//if (!this->Serialize(itemname.str(), t.back())) return false;
 					if (!this->Serialize(itemname.str(), t[i])) return false;
 				}
 			}
@@ -302,7 +301,7 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream countstr;
 					countstr << count;
@@ -310,16 +309,17 @@ class Serializer
 					std::string keystr = "*key" + countstr.str();
 					std::string valstr = "*value" + countstr.str();
 
-					U tempkey = i->first;
+					U tempkey = i.first;
 					if (!this->Serialize(keystr, tempkey)) return false;
-					if (!this->Serialize(valstr, i->second)) return false;
+					if (!this->Serialize(valstr, i.second)) return false;
+					count++;
 				}
 			}
 			else //input
 			{
 				t.clear();
 
-				int listsize;
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
@@ -351,7 +351,7 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream countstr;
 					countstr << count;
@@ -359,16 +359,17 @@ class Serializer
 					std::string keystr = "*key" + countstr.str();
 					std::string valstr = "*value" + countstr.str();
 
-					U tempkey = i->first;
+					U tempkey = i.first;
 					if (!this->Serialize(keystr, tempkey)) return false;
-					if (!this->Serialize(valstr, i->second)) return false;
+					if (!this->Serialize(valstr, i.second)) return false;
+					count++;
 				}
 			}
 			else //input
 			{
 				t.clear();
 
-				int listsize;
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
@@ -400,26 +401,26 @@ class Serializer
 				if (!this->Serialize("*size", listsize)) return false;
 
 				int count = 1;
-				for (typename std::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				for (auto & i : t)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
-					if (!this->Serialize(itemname.str(), const_cast<T&>(*i))) return false;
+					if (!this->Serialize(itemname.str(), const_cast<T&>(i))) return false;
+					count++;
 				}
 			}
 			else //input
 			{
 				t.clear();
 
-				int listsize(0);
+				int listsize = 0;
 				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << i+1;
-					//t.push_back(T());
-					//if (!this->Serialize(itemname.str(), t.back())) return false;
+
 					T prototype;
 					if (!this->Serialize(itemname.str(), prototype)) return false;
 					t.insert(prototype);
@@ -509,10 +510,10 @@ class TreeMap
 			}
 			else
 			{
-				for (typename std::map <std::string, TreeMap>::const_iterator i = branches_.begin(); i != branches_.end(); ++i)
+				for (const auto & b : branches_)
 				{
-					location.push_back(i->first);
-					i->second.Print(out, location);
+					location.push_back(b.first);
+					b.second.Print(out, location);
 					location.pop_back();
 				}
 			}
@@ -522,9 +523,9 @@ class TreeMap
 		std::vector <std::string> GetBranches() const
 		{
 			std::vector <std::string> leavesout;
-			for (typename std::map <std::string, TreeMap>::const_iterator i = branches_.begin(); i != branches_.end(); ++i)
+			for (const auto & b : branches_)
 			{
-				leavesout.push_back(i->first);
+				leavesout.push_back(b.first);
 			}
 			return leavesout;
 		}
@@ -550,7 +551,7 @@ class TreeMap
 		///returns NULL if the branch does not exist
 		TreeMap * branch ( const std::string & name )
 		{
-			typename std::map <std::string, TreeMap>::iterator i = branches_.find ( name );
+			auto i = branches_.find ( name );
 			if ( i == branches_.end() )
 				return NULL;
 			else
@@ -559,7 +560,7 @@ class TreeMap
 		///returns NULL if the branch does not exist
 		const TreeMap * branch ( const std::string & name ) const
 		{
-			typename std::map <std::string, TreeMap>::const_iterator i = branches_.find ( name );
+			auto i = branches_.find ( name );
 			if ( i == branches_.end() )
 				return NULL;
 			else
@@ -571,9 +572,9 @@ class TreeMap
 		{
 			const TreeMap * curmap = this;
 
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
+			for (const auto & i : location)
 			{
-				curmap = curmap->branch ( *i );
+				curmap = curmap->branch ( i );
 
 				if ( !curmap ) //branch not found
 				{
@@ -588,9 +589,9 @@ class TreeMap
 		{
 			TreeMap * curmap = this;
 
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
+			for (const auto & i : location)
 			{
-				curmap = curmap->branch ( *i );
+				curmap = curmap->branch ( i );
 
 				if ( !curmap ) //branch not found
 				{
@@ -606,9 +607,9 @@ class TreeMap
 		{
 			const TreeMap * curmap = this;
 
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
+			for (const auto & i : location)
 			{
-				curmap = curmap->branch ( *i );
+				curmap = curmap->branch ( i );
 
 				if ( !curmap ) //branch not found
 				{
@@ -630,12 +631,12 @@ class TreeMap
 		{
 			TreeMap * curmap = this;
 
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
+			for (const auto & i : location)
 			{
-				TreeMap * nextmap = curmap->branch ( *i );
+				TreeMap * nextmap = curmap->branch ( i );
 
 				if ( !nextmap ) //branch not found
-					nextmap = &curmap->AddBranch ( *i );
+					nextmap = &curmap->AddBranch ( i );
 
 				curmap = nextmap;
 			}
@@ -660,7 +661,7 @@ class TreeMap
 		{
 			std::string imploded;
 
-			for (std::deque <std::string>::const_iterator i = container.begin(); i != container.end(); ++i)
+			for (auto i = container.begin(); i != container.end(); ++i)
 			{
 				if (i != container.begin())
 					imploded.push_back(implode_delimiter);
@@ -675,14 +676,13 @@ class TreeMap
 		{
 			leaf_ = othertree.leaf_;
 
-			for (typename std::map <std::string, TreeMap>::const_iterator i = othertree.branches_.begin();
-				i != othertree.branches_.end(); ++i)
+			for (const auto & b : othertree.branches_)
 			{
-				TreeMap * curmap = branch(i->first);
+				TreeMap * curmap = branch(b.first);
 				if (!curmap)
-					branches_[i->first] = i->second;
+					branches_[b.first] = b.second;
 				else
-					curmap->Merge(i->second);
+					curmap->Merge(b.second);
 			}
 		}
 };
@@ -704,12 +704,12 @@ class TextOutputSerializer : public SerializerOutput
 		std::string Escape(const std::string & input) const
 		{
 			std::string outputstr;
-			for (unsigned int i = 0; i < input.length(); i++)
+			for (char c : input)
 			{
-				if (input[i] == '\n')
+				if (c == '\n')
 					outputstr.append("\\n");
 				else
-					outputstr.append(1, input[i]);
+					outputstr.append(1, c);
 			}
 			return outputstr;
 		}
@@ -1214,7 +1214,7 @@ class BinaryInputSerializer : public SerializerInput
 			return true;
 		}
 
-		bool ReadStringData(const std::string & name, std::string & i)
+		bool ReadStringData(const std::string & name, std::string & s)
 		{
 			(void) name;
 			int strlen = 0;
@@ -1227,10 +1227,10 @@ class BinaryInputSerializer : public SerializerInput
 				delete [] inbuffer;
 				return false;
 			}
-			i.clear();
+			s.clear();
 			for (int n = 0; n < strlen; n++)
 			{
-				i.push_back(inbuffer[n]);
+				s.push_back(inbuffer[n]);
 			}
 			delete [] inbuffer;
 			return true;

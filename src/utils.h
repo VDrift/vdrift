@@ -77,7 +77,7 @@ std::string implode(const T & toImplode, const std::string & sep)
 {
 	std::string out;
 
-	for (typename T::const_iterator i = toImplode.begin(); i != toImplode.end(); i++)
+	for (auto i = toImplode.begin(); i != toImplode.end(); i++)
 	{
 		if (i != toImplode.begin())
 			out.append(sep);
@@ -93,7 +93,7 @@ std::vector <std::string> explode(const std::string & toExplode, const std::stri
 template <typename T>
 void print_vector(const std::vector <T> & v, std::ostream & o, const std::string delim = ", ")
 {
-	for (typename std::vector <T>::const_iterator i = v.begin(); i != v.end(); i++)
+	for (auto i = v.begin(); i != v.end(); i++)
 	{
 		if (i != v.begin())
 			o << delim;

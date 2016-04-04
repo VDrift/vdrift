@@ -121,9 +121,8 @@ bool Font::Load(
 	}
 
 	const float inv_scale = 1 / font_scale;
-	for (size_t i = 0; i < charinfo.size(); ++i)
+	for (auto & info : charinfo)
 	{
-		CharInfo & info = charinfo[i];
 		info.x *= inv_scale;
 		info.y *= inv_scale;
 		info.width *= inv_scale;
@@ -142,9 +141,9 @@ float Font::GetWidth(const std::string & newtext) const
 {
 	float cursorx(0);
 	float linewidth(0);
-	for (unsigned int i = 0; i < newtext.size(); ++i)
+	for (char c : newtext)
 	{
-		if (newtext[i] == '\n')
+		if (c == '\n')
 		{
 			if (linewidth < cursorx) linewidth = cursorx;
 			cursorx = 0;
@@ -152,7 +151,7 @@ float Font::GetWidth(const std::string & newtext) const
 		else
 		{
 			const CharInfo * cinfo(0);
-			if (GetCharInfo(newtext[i], cinfo))
+			if (GetCharInfo(c, cinfo))
 			{
 				cursorx += cinfo->xadvance * inv_size;
 			}

@@ -43,9 +43,9 @@ public:
 
 		objectcount += objects.size();
 
-		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
+		for (const auto & child : children)
 		{
-			i->DebugPrint(level+1, objectcount, verbose, output);
+			child.DebugPrint(level+1, objectcount, verbose, output);
 		}
 
 		if (level == 0)
@@ -62,9 +62,9 @@ public:
 	{
 		unsigned int childcount = 0;
 
-		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
+		for (const auto & child : children)
 		{
-			childcount += i->size(objectcount);
+			childcount += child.size(objectcount);
 		}
 
 		objectcount += objects.size() + childcount;
@@ -83,7 +83,7 @@ public:
 
 	void Add(DataType & object, const Aabb <float> & newaabb)
 	{
-		objects.push_back(std::pair <DataType, Aabb <float> > (object, newaabb));
+		objects.push_back(std::make_pair(object, newaabb));
 		if (objects.size() == 1) //don't combine if this is the first object, otherwise the AABB would be forced to include (0,0,0)
 			bbox = newaabb;
 		else
@@ -93,56 +93,48 @@ public:
 	///a slow delete that only requires the object
 	void Delete(DataType & object)
 	{
-		typename std::list <typename objectlist_type::iterator> todel;
-
-		//if we've got objects, test them
-		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
+		//delete using swap and pop
+		auto i = objects.rbegin();
+		while (i != objects.rend())
 		{
-			if (i->first == object)
+			auto k = i++;
+			if (k->first == object)
 			{
-				todel.push_back(i);
+				if (k != objects.rbegin())
+					*k = objects.back();
+				objects.pop_back();
 			}
 		}
 
-		//do any deletions
-		for (typename std::list <typename objectlist_type::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-		{
-			objects.erase(*i);
-		}
-
 		//if we have children, pass it on
-		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+		for (auto & child : children)
 		{
-			i->Delete(object);
+			child.Delete(object);
 		}
 	}
 
 	///a faster delete that uses the supplied AABB to find the object
 	void Delete(DataType & object, const Aabb <float> & objaabb)
 	{
-		typename std::list <typename objectlist_type::iterator> todel;
-
 		//if we've got objects, test them
-		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
+		auto i = objects.rbegin();
+		while (i != objects.rend())
 		{
-			if (i->first == object)
+			auto k = i++;
+			if (k->first == object)
 			{
-				todel.push_back(i);
+				if (k != objects.rbegin())
+					*k = objects.back();
+				objects.pop_back();
 			}
 		}
 
-		//do any deletions
-		for (typename std::list <typename objectlist_type::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-		{
-			objects.erase(*i);
-		}
-
 		//if we have children, pass it on
-		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+		for (auto child : children)
 		{
-			if (i->GetBBOX().Intersect(objaabb))
+			if (child.GetBBOX().Intersect(objaabb))
 			{
-				i->Delete(object, objaabb);
+				child.Delete(object, objaabb);
 			}
 		}
 	}
@@ -154,32 +146,32 @@ public:
 		//if we've got objects, test them
 		if (objects.size() > 1 && testChildren)
 		{
-			for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
+			for (const auto & object : objects)
 			{
-				if (i->second.Intersect(shape) != Aabb<float>::OUT)
+				if (object.second.Intersect(shape) != Aabb<float>::OUT)
 				{
-					outputlist.push_back(i->first);
+					outputlist.push_back(object.first);
 				}
 			}
 		}
 		else
 		{
-			for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
+			for (const auto & object : objects)
 			{
-				outputlist.push_back(i->first);
+				outputlist.push_back(object.first);
 			}
 		}
 
 		//if we have children, test them
-		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
+		for (const auto & child : children)
 		{
-			Aabb<float>::IntersectionEnum intersection = i->GetAabb().Intersect(shape);
+			Aabb<float>::IntersectionEnum intersection = child.GetAabb().Intersect(shape);
 
 			if (intersection != Aabb<float>::OUT)
 			{
 				//our child intersects with the segment, dispatch a query
 				//only bother to test children if we were partially intersecting (if fully in, then we know all children are fully in too)
-				i->Query(shape, outputlist, intersection == Aabb<float>::INTERSECT);
+				child.Query(shape, outputlist, intersection == Aabb<float>::INTERSECT);
 			}
 		}
 	}
@@ -192,15 +184,15 @@ public:
 	void GetContainedObjects(std::list <DataType *> & outputlist)
 	{
 		//if we've got objects, add them
-		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
+		for (auto & object : objects)
 		{
-			outputlist.push_back(&i->first);
+			outputlist.push_back(&object.first);
 		}
 
 		//if we have children, add them
-		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+		for (auto & child : children)
 		{
-			i->GetContainedObjects(outputlist);
+			child.GetContainedObjects(outputlist);
 		}
 	}
 
@@ -218,16 +210,16 @@ private:
 	{
 		if (this != &collapse_target)
 		{
-			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
+			for (auto & object : objects)
 			{
-				collapse_target.Add(i->first, i->second);
+				collapse_target.Add(object.first, object.second);
 			}
 			objects.clear();
 		}
 
-		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+		for (auto & child : children)
 		{
-			i->CollapseTo(collapse_target);
+			child.CollapseTo(collapse_target);
 		}
 		children.clear();
 	}
@@ -248,9 +240,9 @@ private:
 
 		//enforce the rules:  i don't want to start with any children,
 		// so tell all children to send me their objects, then delete them
-		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+		for (auto & child : children)
 		{
-			i->CollapseTo(*this);
+			child.CollapseTo(*this);
 		}
 		children.clear();
 
@@ -263,9 +255,9 @@ private:
 		Vec3 avgcenter;
 		int numobj = objects.size();
 		float incamount = 1.0 / numobj;
-		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
+		for (const auto & object : objects)
 		{
-			avgcenter = avgcenter + i->second.GetCenter() * incamount;
+			avgcenter = avgcenter + object.second.GetCenter() * incamount;
 		}
 
 		//find axis of maximum change, so we know where to split
@@ -289,17 +281,17 @@ private:
 		//distribute objects to each child
 		float avgcentercoord = avgcenter.dot(axismask);
 		int distributor(0);
-		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
+		for (auto & object : objects)
 		{
-			float objcentercoord = i->second.GetCenter().dot(axismask);
+			float objcentercoord = object.second.GetCenter().dot(axismask);
 
 			if (objcentercoord > avgcentercoord)
 			{
-				children.front().Add(i->first, i->second);
+				children.front().Add(object.first, object.second);
 			}
 			else if (objcentercoord < avgcentercoord)
 			{
-				children.back().Add(i->first, i->second);
+				children.back().Add(object.first, object.second);
 			}
 			else
 			{
@@ -307,11 +299,11 @@ private:
 				//distribute children that sit right on our average center in an even way
 				if (distributor % 2 == 0)
 				{
-					children.front().Add(i->first, i->second);
+					children.front().Add(object.first, object.second);
 				}
 				else
 				{
-					children.back().Add(i->first, i->second);
+					children.back().Add(object.first, object.second);
 				}
 				distributor++;
 			}
@@ -329,20 +321,20 @@ private:
 		//if one child doesn't have any objects, then delete both children and take back their objects
 		if (child1obj == 0 || child2obj == 0)
 		{
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+			for (auto & child : children)
 			{
-				for (typename objectlist_type::iterator n = i->objects.begin(); n != i->objects.end(); n++)
+				for (auto & object : child.objects)
 				{
-					Add(n->first, n->second);
+					Add(object.first, object.second);
 				}
 			}
 
 			children.clear();
 		}
 
-		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+		for (auto & child : children)
 		{
-			i->DistributeObjectsToChildren(level + 1);
+			child.DistributeObjectsToChildren(level + 1);
 		}
 	}
 };

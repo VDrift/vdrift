@@ -43,6 +43,8 @@ GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	// initialize the full screen quad
 	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
+
+	initDrawableAttributes(drawAttribs, stringMap);
 }
 
 GraphicsGL3::~GraphicsGL3()
@@ -335,23 +337,22 @@ void GraphicsGL3::SetupScene(
 		//renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
 
 		// examine the user-defined fields to find out which shadow matrix to send to a pass
-		std::vector <StringId> passes = renderer.getPassNames();
-		for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
+		for (const auto & passName : renderer.getPassNames())
 		{
-			std::map <std::string, std::string> fields = renderer.getUserDefinedFields(*i);
-			std::map <std::string, std::string>::const_iterator field = fields.find(matrixName);
+			std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
+			auto field = fields.find(matrixName);
 			if (field != fields.end() && field->second == suffix)
 			{
-				renderer.setPassUniform(*i, RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
+				renderer.setPassUniform(passName, RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
 			}
 		}
 	}
 
 	// send cameras to passes
-	for (std::map <std::string, std::string>::const_iterator i = passNameToCameraName.begin(); i != passNameToCameraName.end(); i++)
+	for (const auto & passCam : passNameToCameraName)
 	{
-		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("viewMatrix"), cameras[i->second].viewMatrix.GetArray(),16));
-		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[i->second].projectionMatrix.GetArray(),16));
+		renderer.setPassUniform(stringMap.addStringId(passCam.first), RenderUniformEntry(stringMap.addStringId("viewMatrix"), cameras[passCam.second].viewMatrix.GetArray(),16));
+		renderer.setPassUniform(stringMap.addStringId(passCam.first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[passCam.second].projectionMatrix.GetArray(),16));
 	}
 
 	// send matrices for the default camera
@@ -406,7 +407,7 @@ std::string GraphicsGL3::getCameraForPass(StringId pass) const
 {
 	std::string passString = stringMap.getString(pass);
 	std::string cameraString;
-	std::map <std::string, std::string>::const_iterator camIter = passNameToCameraName.find(passString);
+	auto camIter = passNameToCameraName.find(passString);
 	if (camIter != passNameToCameraName.end())
 		cameraString = camIter->second;
 	return cameraString;
@@ -467,25 +468,25 @@ void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, st
 {
 	if (frustum && enableContributionCull)
 	{
-		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (auto drawable : drawables)
 		{
-			if (!frustumCull(*i, *frustum) && !contributionCull(*i, camPos))
-				out.push_back(&(*i)->GenRenderModelData(stringMap));
+			if (!frustumCull(drawable, *frustum) && !contributionCull(drawable, camPos))
+				out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 	else if (frustum)
 	{
-		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (auto drawable : drawables)
 		{
-			if (!frustumCull(*i, *frustum))
-				out.push_back(&(*i)->GenRenderModelData(stringMap));
+			if (!frustumCull(drawable, *frustum))
+				out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
-		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (auto drawable : drawables)
 		{
-			out.push_back(&(*i)->GenRenderModelData(stringMap));
+			out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 }
@@ -504,17 +505,17 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 
 	if (frustum && enableContributionCull)
 	{
-		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (auto drawable : drawables)
 		{
-			if (!contributionCull(*i, camPos))
-				out.push_back(&(*i)->GenRenderModelData(stringMap));
+			if (!contributionCull(drawable, camPos))
+				out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
-		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (auto drawable : drawables)
 		{
-			out.push_back(&(*i)->GenRenderModelData(stringMap));
+			out.push_back(&drawable->GenRenderModelData(drawAttribs));
 		}
 	}
 }
@@ -530,9 +531,9 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 	// we want to do culling for each unique camera and draw group combination
 	// use "camera/group" as a unique key string
 	// this is cached to avoid extra memory allocations each frame, so we need to clear old data
-	for (std::map <std::string, std::vector <RenderModelExt*> >::iterator i = cameraDrawGroupDrawLists.begin(); i != cameraDrawGroupDrawLists.end(); i++)
+	for (auto & camGroup : cameraDrawGroupDrawLists)
 	{
-		i->second.clear();
+		camGroup.second.clear();
 	}
 
 	// because the cameraDrawGroupDrawLists are cached, this is how we keep track of which combinations
@@ -540,18 +541,14 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 	std::set <std::string> cameraDrawGroupCombinationsGenerated;
 
 	// for each pass, do culling of the dynamic and static drawlists and put the results into the cameraDrawGroupDrawLists
-	std::vector <StringId> passes = renderer.getPassNames();
-	for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
+	for (auto passName : renderer.getPassNames())
 	{
-		if (renderer.getPassEnabled(*i))
+		if (renderer.getPassEnabled(passName))
 		{
-			const std::set <StringId> & passDrawGroups = renderer.getDrawGroups(*i);
-			for (std::set <StringId>::const_iterator g = passDrawGroups.begin(); g != passDrawGroups.end(); g++)
+			for (auto drawGroupId : renderer.getDrawGroups(passName))
 			{
-				StringId passName = *i;
-				StringId drawGroupName = *g;
-				std::string drawGroupString = stringMap.getString(drawGroupName);
-				std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupName);
+				std::string drawGroupString = stringMap.getString(drawGroupId);
+				std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupId);
 
 				std::vector <RenderModelExt*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
 
@@ -607,16 +604,16 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 				}
 
 				// use the generated combination in our drawMap
-				drawMap[passName][drawGroupName] = &outDrawList;
+				drawMap[passName][drawGroupId] = &outDrawList;
 
 				cameraDrawGroupCombinationsGenerated.insert(cameraDrawGroupKey);
 			}
 		}
 	}
 
-	/*for (std::map <std::string, std::vector <RenderModelExternal*> >::iterator i = cameraDrawGroupDrawLists.begin(); i != cameraDrawGroupDrawLists.end(); i++)
+	/*for (const auto & camGroup : cameraDrawGroupDrawLists)
 	{
-		std::cout << i->first << ": " << i->second.size() << std::endl;
+		std::cout << camGroup.first << ": " << camGroup.second.size() << std::endl;
 	}
 	std::cout << "----------" << std::endl;*/
 	//if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;
@@ -661,11 +658,10 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 	if (passInfosLoaded)
 	{
 		// strip pass infos from the list that we pass to the renderer if they are disabled
-		int origPassInfoSize = passInfos.size();
-		for (int i = origPassInfoSize - 1; i >= 0; i--)
+		for (int i = passInfos.size() - 1; i >= 0; i--)
 		{
 			std::map <std::string, std::string> & fields = passInfos[i].userDefinedFields;
-			std::map <std::string, std::string>::const_iterator field = fields.find("conditions");
+			auto field = fields.find("conditions");
 			if (field != fields.end())
 			{
 				GraphicsConfigCondition condition;
@@ -678,24 +674,22 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 		}
 
 		std::set <std::string> allcapsConditions;
-		for (std::set <std::string>::const_iterator i = conditions.begin(); i != conditions.end(); i++)
+		for (auto c : conditions)
 		{
-			std::string s = *i;
-			std::transform(s.begin(), s.end(), s.begin(), upper);
-			allcapsConditions.insert(s);
+			std::transform(c.begin(), c.end(), c.begin(), upper);
+			allcapsConditions.insert(c);
 		}
 
 		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath, w, h, allcapsConditions, error_output);
 		if (initSuccess)
 		{
 			// assign cameras to each pass
-			std::vector <StringId> passes = renderer.getPassNames();
-			for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
+			for (auto passName : renderer.getPassNames())
 			{
-				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(*i);
-				std::map <std::string, std::string>::const_iterator field = fields.find("camera");
+				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
+				auto field = fields.find("camera");
 				if (field != fields.end())
-					passNameToCameraName[stringMap.getString(*i)] = field->second;
+					passNameToCameraName[stringMap.getString(passName)] = field->second;
 			}
 
 			// set viewport size
@@ -755,4 +749,13 @@ void GraphicsGL3::SetSunDirection(const Vec3 & value)
 void GraphicsGL3::SetContrast(float /*value*/)
 {
 
+}
+
+void GraphicsGL3::initDrawableAttributes(DrawableAttributes & attribs, StringIdMap & map)
+{
+	attribs.tex0 = map.addStringId("diffuseTexture");
+	attribs.tex1 = map.addStringId("misc1Texture");
+	attribs.tex2 = map.addStringId("normalMapTexture");
+	attribs.transform = map.addStringId("modelMatrix");
+	attribs.color = map.addStringId("colorTint");
 }

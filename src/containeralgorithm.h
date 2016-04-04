@@ -57,11 +57,9 @@ namespace calgo
 	template <class Container1, class OutputIterator, class UnaryPredicate>
 	OutputIterator copy_if(const Container1& container_in, OutputIterator result, UnaryPredicate pred)
 	{
-		typename Container1::const_iterator i = container_in.begin();
-		typename Container1::const_iterator iend = container_in.end();
-		for (; i != iend; ++i)
-			if (pred( *i ))
-				*result++ = *i;
+		for (const auto & obj : container_in)
+			if (pred(obj))
+				*result++ = obj;
 		return result;
 	}
 
@@ -106,23 +104,6 @@ namespace calgo
 				}
 				container.pop_back();
 			}
-
-			/*std::vector <unsigned int> remap(container.size());
-			for (unsigned int i = 0; i < remap.size(); i++)
-				remap[i] = i;
-
-			unsigned int orig_container_size = container.size();
-			for (unsigned int i = 0; i < todel.size(); i++)
-			{
-				unsigned int endi = orig_container_size - i - 1;
-				unsigned int todeli = remap[todel[i]];
-				if (endi != todeli)
-				{
-					std::swap(container[endi], container[todeli]);
-					remap[endi] = todeli;
-				}
-				container.pop_back();
-			}*/
 		}
 	}
 }

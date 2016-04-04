@@ -36,28 +36,28 @@ bool AutoUpdate::Write(const std::string & path) const
 
 	// Iterate over all groups (cars, tracks).
 	// Each group will be a section in the config file.
-	for (GroupType::const_iterator g = groups.begin(); g != groups.end(); g++)
+	for (const auto & group : groups)
 	{
-		const std::string & section = g->first;
+		const std::string & section = group.first;
 
 		// Iterate over all paths in this group (360, XS).
-		for (PairType::const_iterator p = g->second.begin(); p != g->second.end(); p++)
-			conf.set(section, p->first, p->second);
+		for (const auto & p : group.second)
+			conf.set(section, p.first, p.second);
 	}
 
 	// Now repeat the above for the available_updates groups.
-	for (GroupType::const_iterator g = available_updates.begin(); g != available_updates.end(); g++)
+	for (const auto & update : available_updates)
 	{
-		const std::string & section = AVAILABLE_PREFIX + g->first;
+		const std::string & section = AVAILABLE_PREFIX + update.first;
 
 		// Iterate over all paths in this group (360, XS).
-		for (PairType::const_iterator p = g->second.begin(); p != g->second.end(); p++)
-			conf.set(section, p->first, p->second);
+		for (const auto & p : update.second)
+			conf.set(section, p.first, p.second);
 	}
 
 	// Now write formats.
-	for (PairType::const_iterator p = formats.begin(); p != formats.end(); p++)
-		conf.set("formats", p->first, p->second);
+	for (const auto & format : formats)
+		conf.set("formats", format.first, format.second);
 
 	// Write data url.
 	conf.set("", "meta_url", meta_url);
@@ -82,28 +82,28 @@ bool AutoUpdate::Load(const std::string & path)
 	conf.get("", "file_url", file_url);
 
 	// Iterate over all sections.
-	for (Config::const_iterator s = conf.begin(); s != conf.end(); s++)
+	for (const auto & s : conf)
 	{
 		// Get the group corresponding to this section (creating it if necessary).
 		PairType * group = NULL;
-		if (s->first == "formats")
+		if (s.first == "formats")
 			group = &formats;
 		else
 		{
-			if (s->first.find(AVAILABLE_PREFIX) == 0)
-				group = &available_updates[s->first.substr(AVAILABLE_PREFIX.size())];
+			if (s.first.find(AVAILABLE_PREFIX) == 0)
+				group = &available_updates[s.first.substr(AVAILABLE_PREFIX.size())];
 			else
-				group = &groups[s->first];
+				group = &groups[s.first];
 		}
 
 		// Iterate over all paths in this group.
-		for (Config::Section::const_iterator p = s->second.begin(); p != s->second.end(); p++)
+		for (const auto & p : s.second)
 		{
 			// Convert the configfile string var to an int.
 			int revnum(0);
-			std::istringstream s(p->second);
+			std::istringstream s(p.second);
 			s >> revnum;
-			(*group)[p->first] = revnum;
+			(*group)[p.first] = revnum;
 		}
 	}
 
@@ -116,18 +116,18 @@ std::pair <std::vector <std::string>, std::vector <std::string> > AutoUpdate::Ch
 	std::vector <std::string> deleted;
 
 	// Get the relevant available update group.
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound != available_updates.end())
 	{
 		const PairType & check = availfound->second;
 
 		// Get the relevant group.
-		GroupType::const_iterator foundgroup = groups.find(group);
+		auto foundgroup = groups.find(group);
 
 		if (foundgroup == groups.end())
 			// Everything is new!
-			for (PairType::const_iterator i = check.begin(); i != check.end(); i++)
-				changed.push_back(i->first);
+			for (const auto & item : check)
+				changed.push_back(item.first);
 		else
 		{
 			const PairType & cur = foundgroup->second;
@@ -136,24 +136,24 @@ std::pair <std::vector <std::string>, std::vector <std::string> > AutoUpdate::Ch
 			PairType incuronly = cur;
 
 			// Iterate through each input item.
-			for (PairType::const_iterator i = check.begin(); i != check.end(); i++)
+			for (const auto & item : check)
 			{
 				// See if we have it; if not, it's new and should be updated.
-				PairType::const_iterator c = cur.find(i->first);
+				auto c = cur.find(item.first);
 				if (c == cur.end())
-					changed.push_back(i->first);
+					changed.push_back(item.first);
 				else
 					// If we have it, we only need to update if the input rev is newer.
-					if (i->second > c->second)
-						changed.push_back(i->first);
+					if (item.second > c->second)
+						changed.push_back(item.first);
 
 				// Record that this item exists in the input.
-				incuronly.erase(i->first);
+				incuronly.erase(item.first);
 			}
 
 			// Now record items that we have that don't exist in the input.
-			for (PairType::const_iterator i = incuronly.begin(); i != incuronly.end(); i++)
-				deleted.push_back(i->first);
+			for (const auto & item : incuronly)
+				deleted.push_back(item.first);
 		}
 	}
 
@@ -172,7 +172,7 @@ bool AutoUpdate::empty() const
 
 bool AutoUpdate::empty(const std::string & group) const
 {
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound == available_updates.end())
 		return true;
 	else
@@ -183,17 +183,17 @@ std::pair <int, int> AutoUpdate::GetVersions(const std::string & group, const st
 {
 	int local(0), remote(0);
 
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound != available_updates.end())
 	{
-		PairType::const_iterator remotefound = availfound->second.find(item);
+		auto remotefound = availfound->second.find(item);
 		if (remotefound != availfound->second.end())
 			remote = remotefound->second;
 	}
-	GroupType::const_iterator groupfound = groups.find(group);
+	auto groupfound = groups.find(group);
 	if (groupfound != groups.end())
 	{
-		PairType::const_iterator localfound = groupfound->second.find(item);
+		auto localfound = groupfound->second.find(item);
 		if (localfound != groupfound->second.end())
 			local = localfound->second;
 	}
@@ -203,7 +203,7 @@ std::pair <int, int> AutoUpdate::GetVersions(const std::string & group, const st
 
 std::map <std::string, int> AutoUpdate::GetAvailableUpdates(const std::string & group) const
 {
-	GroupType::const_iterator availfound = available_updates.find(group);
+	auto availfound = available_updates.find(group);
 	if (availfound != available_updates.end())
 		return availfound->second;
 	else
@@ -214,7 +214,7 @@ int AutoUpdate::GetFormatVersion(const std::string & group) const
 {
 	int version = 0;
 
-	PairType::const_iterator i = formats.find(group);
+	auto i = formats.find(group);
 	if (i != formats.end())
 		version = i->second;
 

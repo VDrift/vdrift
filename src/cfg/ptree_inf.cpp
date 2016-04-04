@@ -88,31 +88,31 @@ static void read_inf(std::istream & in, PTree & node, Include * include, bool ch
 	}
 }
 
-static void write_inf(const PTree & p, std::ostream & out, std::string indent)
+static void write_inf(const PTree & tree, std::ostream & out, std::string indent)
 {
-	for (PTree::const_iterator i = p.begin(), e = p.end(); i != e; ++i)
+	for (const auto & node : tree)
 	{
-		if (i->second.size() == 0)
+		if (node.second.size() == 0)
 		{
-			out << indent << i->first << " " << i->second.value() << "\n";
-			write_inf(i->second, out, indent+"\t");
+			out << indent << node.first << " " << node.second.value() << "\n";
+			write_inf(node.second, out, indent+"\t");
 		}
 		else
 		{
-			out << indent << i->first << "\n";
+			out << indent << node.first << "\n";
 			out << indent << "{" << "\n";
-			write_inf(i->second, out, indent+"\t");
+			write_inf(node.second, out, indent+"\t");
 			out << indent << "}" << "\n";
 		}
 	}
 }
 
-void read_inf(std::istream & in, PTree & p, Include * inc)
+void read_inf(std::istream & in, PTree & tree, Include * inc)
 {
-	read_inf(in, p, inc, false);
+	read_inf(in, tree, inc, false);
 }
 
-void write_inf(const PTree & p, std::ostream & out)
+void write_inf(const PTree & tree, std::ostream & out)
 {
-	write_inf(p, out, std::string());
+	write_inf(tree, out, std::string());
 }

@@ -47,12 +47,10 @@ class hasher <std::string>
 		unsigned int GetHash(const std::string & str) const
 		{
 			unsigned int hash = 5381;
-			unsigned int strlen = str.length();
-			for (std::size_t i = 0; i < strlen; i++)
+			for (const auto c : str)
 			{
-				hash = ((hash << 5) + hash) + str[i];
+				hash = ((hash << 5) + hash) + c;
 			}
-
 			return (hash & 0x7FFFFFFF);
 		}
 };
@@ -268,17 +266,16 @@ public:
 	///iterators will be invalidated
 	void Clear()
 	{
-		for (typename std::vector < std::map <KEYCLASS, DATACLASS> >::iterator i = data.begin(); i != data.end(); ++i)
+		for (auto & bucket : data)
 		{
-			i->clear();
+			bucket.clear();
 		}
 	}
 
 	const DATACLASS * Get(KEYCLASS & key) const
 	{
 		unsigned int idx = hash.GetHash(key) % nbuckets;
-		//typedef std::map <KEYCLASS, DATACLASS> mymap;
-		//mymap::iterator i;// = data[idx].find(key);
+		//auto i;// = data[idx].find(key);
 		/*if (i == data[idx].end())
 			return NULL;
 		else
@@ -293,8 +290,7 @@ public:
 	DATACLASS * Get(KEYCLASS & key)
 	{
 		unsigned int idx = hash.GetHash(key) % nbuckets;
-		//typedef std::map <KEYCLASS, DATACLASS> mymap;
-		//mymap::iterator i;// = data[idx].find(key);
+		//auto i;// = data[idx].find(key);
 		/*if (i == data[idx].end())
 		return NULL;
 		else
@@ -313,84 +309,64 @@ public:
 		return (data[idx])[key];
 	}
 
-	unsigned int GetNumCollisions()
+	unsigned int GetNumCollisions() const
 	{
 		unsigned int col = 0;
-		unsigned int lim = data.size();
-
-		for (unsigned int i = 0; i < lim; i++)
+		for (const auto & bucket : data)
 		{
-			unsigned int subsize = data[i].size();
+			unsigned int subsize = bucket.size();
 			if (subsize > 1)
 				col += subsize-1;
 		}
-
 		return col;
 	}
 
 	unsigned int GetTotalObjects() const
 	{
 		unsigned int obj = 0;
-		//unsigned int lim = data.size();
-
-		/*for (unsigned int i = 0; i < lim; i++)
+		for (const auto & bucket : data)
 		{
-			obj += data[i].size();
-		}*/
-
-		for (typename std::vector < std::map <KEYCLASS, DATACLASS> >::const_iterator i = data.begin(); i != data.end(); ++i)
-		{
-			obj += i->size();
+			obj += bucket.size();
 		}
-
 		return obj;
 	}
 
 	int size() const {return GetTotalObjects();}
 
-	float GetAvgBucketSize()
+	float GetAvgBucketSize() const
 	{
 		float avg = 0;
-		unsigned int lim = data.size();
-
-		for (unsigned int i = 0; i < lim; i++)
+		for (const auto & bucket : data)
 		{
-			avg += data[i].size();
+			avg += bucket.size();
 		}
-
 		return avg / nbuckets;
 	}
 
-	float GetBucketEvenness()
+	float GetBucketEvenness() const
 	{
 		return (GetTotalObjects() - (float) GetNumCollisions()) / nbuckets;
 	}
 
-	float GetEmptyBucketPercent()
+	float GetEmptyBucketPercent() const
 	{
-		unsigned int lim = data.size();
 		unsigned int empty = 0;
-
-		for (unsigned int i = 0; i < lim; i++)
+		for (const auto & bucket : data)
 		{
-			if (data[i].empty())
+			if (bucket.empty())
 				empty++;
 		}
-
 		return (float) empty / (float) nbuckets;
 	}
 
-	unsigned int GetLongestBucket()
+	unsigned int GetLongestBucket() const
 	{
-		unsigned int lim = data.size();
 		unsigned int longest = 0;
-
-		for (unsigned int i = 0; i < lim; i++)
+		for (const auto & bucket : data)
 		{
-			if (data[i].size() > longest)
-				longest = data[i].size();
+			if (bucket.size() > longest)
+				longest = bucket.size();
 		}
-
 		return longest;
 	}
 };

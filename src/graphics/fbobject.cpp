@@ -99,26 +99,26 @@ void FrameBufferObject::Init(
 	height = -1;
 	std::vector <FrameBufferTexture*> color_textures;
 	FrameBufferTexture * depth_texture = 0;
-	for (std::vector <FrameBufferTexture*>::const_iterator i = textures.begin(); i != textures.end(); i++)
+	for (const auto & texture : textures)
 	{
 		// ensure consistent sizes
 		if (width == -1)
-			width = (*i)->GetW();
+			width = texture->GetW();
 		if (height == -1)
-			height = (*i)->GetH();
-		assert(width == int((*i)->GetW()));
-		assert(height == int((*i)->GetH()));
+			height = texture->GetH();
+		assert(width == int(texture->GetW()));
+		assert(height == int(texture->GetH()));
 
 		// separate textures by type
-		if ((*i)->GetFormat() == FrameBufferTexture::DEPTH24)
+		if (texture->GetFormat() == FrameBufferTexture::DEPTH24)
 		{
 			// can't have more than one depth attachment
 			assert(!depth_texture);
-			depth_texture = *i;
+			depth_texture = texture;
 		}
 		else
 		{
-			color_textures.push_back(*i);
+			color_textures.push_back(texture);
 		}
 	}
 	if (verbose) error_output << "INFO: width " << width << ", height " << height << std::endl;
@@ -129,9 +129,9 @@ void FrameBufferObject::Init(
 	assert(color_textures.size() < 5);
 
 	// check for cubemaps
-	for (std::vector <FrameBufferTexture*>::const_iterator i = color_textures.begin(); i != color_textures.end(); i++)
+	for (const auto & texture : color_textures)
 	{
-		if ((*i)->GetTarget() == FrameBufferTexture::CUBEMAP)
+		if (texture->GetTarget() == FrameBufferTexture::CUBEMAP)
 		{
 			if (verbose) error_output << "INFO: found cubemap" << std::endl;
 
@@ -139,7 +139,7 @@ void FrameBufferObject::Init(
 			assert(color_textures.size() == 1);
 
 			// can't have multisample with cubemaps
-			assert((*i)->GetMultiSample() == 0);
+			assert(texture->GetMultiSample() == 0);
 
 			// can't have depth texture with cubemaps
 			assert(!depth_texture);
@@ -151,13 +151,13 @@ void FrameBufferObject::Init(
 	if (!color_textures.empty())
 	{
 		multisample = -1;
-		for (std::vector <FrameBufferTexture*>::const_iterator i = textures.begin(); i != textures.end(); i++)
+		for (const auto & texture : textures)
 		{
 			if (multisample == -1)
-				multisample = (*i)->GetMultiSample();
+				multisample = texture->GetMultiSample();
 
 			// all must have the same multisample
-			assert(multisample == (*i)->GetMultiSample());
+			assert(multisample == texture->GetMultiSample());
 		}
 	}
 
@@ -233,23 +233,24 @@ void FrameBufferObject::Init(
 	{
 		// attach color textures to frame buffer object
 		int count = 0;
-		for (std::vector <FrameBufferTexture*>::iterator i = color_textures.begin(); i != color_textures.end(); i++, count++)
+		for (const auto & texture : color_textures)
 		{
 			int attachment = GL_COLOR_ATTACHMENT0 + count;
-			if ((*i)->GetTarget() == FrameBufferTexture::CUBEMAP)
+			if (texture->GetTarget() == FrameBufferTexture::CUBEMAP)
 			{
 				// if we're using a cubemap, arbitrarily pick one of the faces to activate so we can check that the FBO is complete
-				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, (*i)->GetId(), 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, texture->GetId(), 0);
 
 				if (verbose) error_output << "INFO: attaching arbitrary cubemap face to color attachment " << count << std::endl;
 			}
 			else
 			{
-				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, (*i)->GetTarget(), (*i)->GetId(), 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, texture->GetTarget(), texture->GetId(), 0);
 
 				if (verbose) error_output << "INFO: attaching texture to color attachment " << count << std::endl;
 			}
-			(*i)->SetAttachment(attachment);
+			texture->SetAttachment(attachment);
+			count++;
 
 			CheckForOpenGLErrors("FBO attachment", error_output);
 		}
@@ -267,13 +268,13 @@ void FrameBufferObject::Init(
 
 	GLenum buffers[4] = {GL_NONE, GL_NONE, GL_NONE, GL_NONE};
 	{
-		int count = 0;
-		for (std::vector <FrameBufferTexture*>::const_iterator i = color_textures.begin(); i != color_textures.end(); i++, count++)
+		assert(color_textures.size() <= 4);
+		for (size_t count = 0; count < color_textures.size(); count++)
 		{
 			buffers[count] = GL_COLOR_ATTACHMENT0 + count;
 		}
 
-		glDrawBuffers(count, buffers);
+		glDrawBuffers(color_textures.size(), buffers);
 		glReadBuffer(buffers[0]);
 
 		CheckForOpenGLErrors("FBO buffer mask set", error_output);
@@ -286,10 +287,10 @@ void FrameBufferObject::Init(
 	{
 		error_output << "Error initializing FBO:" << std::endl;
 		int count = 0;
-		for (std::vector <FrameBufferTexture*>::const_iterator i = textures.begin(); i != textures.end(); i++)
+		for (const auto & texture : textures)
 		{
-			error_output << "\t" << count << ". " << TargetToString(FrameBufferTexture::Target((*i)->GetTarget()));
-			error_output << ": " << FormatToString((*i)->GetFormat()) << std::endl;
+			error_output << "\t" << count << ". " << TargetToString(FrameBufferTexture::Target(texture->GetTarget()));
+			error_output << ": " << FormatToString(texture->GetFormat()) << std::endl;
 			count++;
 		}
 		assert(0);
@@ -373,16 +374,16 @@ void FrameBufferObject::DeInit()
 		framebuffer_object = 0;
 	}
 
-	for (std::vector <FrameBufferTexture*>::iterator i = textures.begin(); i != textures.end(); i++)
+	for (auto & texture : textures)
 	{
-		(*i)->SetAttachment(0);
+		texture->SetAttachment(0);
 	}
 	textures.clear();
 
-	for (std::vector<GLuint>::const_iterator i = multisample_renderbuffers.begin(); i != multisample_renderbuffers.end(); i++)
+	for (const auto buffer : multisample_renderbuffers)
 	{
-		if (*i > 0)
-			glDeleteRenderbuffers(1, &*i);
+		if (buffer > 0)
+			glDeleteRenderbuffers(1, &buffer);
 	}
 	multisample_renderbuffers.clear();
 
@@ -453,13 +454,13 @@ void FrameBufferObject::End(GraphicsState & glstate, std::ostream & error_output
 	CheckForOpenGLErrors("FBO multisample blit", error_output);
 
 	// optionally rebuild mipmaps
-	for (std::vector <FrameBufferTexture*>::const_iterator i = textures.begin(); i != textures.end(); i++)
+	for (const auto & texture : textures)
 	{
-		if ((*i)->HasMipMap())
+		if (texture->HasMipMap())
 		{
-			glstate.BindTexture(0, (*i)->GetTarget(), (*i)->GetId());
-			glGenerateMipmap((*i)->GetTarget());
-			glstate.BindTexture(0, (*i)->GetTarget(), 0);
+			glstate.BindTexture(0, texture->GetTarget(), texture->GetId());
+			glGenerateMipmap(texture->GetTarget());
+			glstate.BindTexture(0, texture->GetTarget(), 0);
 		}
 	}
 

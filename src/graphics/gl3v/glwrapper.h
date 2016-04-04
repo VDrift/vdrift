@@ -107,7 +107,13 @@ public:
 	void SampleMaski(GLuint param0, GLbitfield param1);
 	void Hint(GLenum param0, GLenum param1);
 	void BlendEquationSeparate(GLenum param0, GLenum param1);
+	void BlendEquationSeparateColor(GLenum param);
+	void BlendEquationSeparateAlpha(GLenum param);
 	void BlendFuncSeparate(GLenum param0, GLenum param1, GLenum param2, GLenum param3);
+	void BlendFuncSeparateSrcColor(GLenum param);
+	void BlendFuncSeparateSrcAlpha(GLenum param);
+	void BlendFuncSeparateDstColor(GLenum param);
+	void BlendFuncSeparateDstAlpha(GLenum param);
 	void BindTexture(GLenum target, GLuint handle);
 	void TexParameteri(GLenum target, GLenum pname, GLint param);
 	void TexParameterf(GLenum target, GLenum pname, GLfloat param);
@@ -181,6 +187,13 @@ private:
 	std::vector <RenderUniformVector<int> > cachedUniformInts; // indexed by location
 	std::vector <unsigned int> cachedUniformFloatsToApplyNextDrawCall; // indexed by location
 	std::vector <unsigned int> cachedUniformIntsToApplyNextDrawCall; // indexed by location
+
+	GLenum blend_equation_rgb;
+	GLenum blend_equation_alpha;
+	GLenum blend_src_rgb;
+	GLenum blend_dst_rgb;
+	GLenum blend_src_alpha;
+	GLenum blend_dst_alpha;
 
 	void clearCaches();
 

@@ -115,9 +115,9 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 		error_output << "Torque curve begins above stall rpm.\n"
 			<< "Extrapolating to " << stall_rpm << ", " << stall_torque << std::endl;
 	}
-	for (std::vector<std::pair<btScalar, btScalar> >::const_iterator i = torque.begin(); i != torque.end(); ++i)
+	for (const auto & tp : torque)
 	{
-		torque_curve.AddPoint(i->first, i->second);
+		torque_curve.AddPoint(tp.first, tp.second);
 	}
 	if (torque[torque.size() - 1].first < rpm_limit)
 	{
