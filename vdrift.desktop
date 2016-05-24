@@ -1,11 +1,10 @@
-﻿[Desktop Entry]
-Encoding=UTF-8
+[Desktop Entry]
 Type=Application
 Name=VDrift
-Version=2012-07-22
+Version=1.0
 GenericName=Racing Simulation
 Comment=An open source driving simulation made with drift racing in mind
 Exec=vdrift
-Icon=vdrift.png
+Icon=vdrift
 Terminal=false
 Categories=Game;Simulation;

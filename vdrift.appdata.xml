@@ -17,7 +17,6 @@
    VDrift aims to provide an accurate driving physics emulation, based on real world data of the actual vehicles, employing a full rigid body simulation and a complex tire model.
    The recommended input method is a steering wheel with pedals and force feedback support.
   </p>
-  </ul> 
  </description>
  <screenshots>
   <screenshot type="default" width="899" height="507">https://github.com/VDrift/vdrift/blob/master/vdrift/raw/2f19c79de4fac0c326fa099dba7d9f19362552d0/miura_vdrift_899.jpg</screenshot>
