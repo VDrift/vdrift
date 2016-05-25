@@ -32,6 +32,8 @@ This block of information initiates every file.
 
 details a single configuration of a model. "File Header.num\_frames" frames follow the file header.
 
+before each frame header, you will find "File Header.num\_faces" Face blocks.
+
 | data type | block offset | name            | description                                           |
 |-----------|--------------|-----------------|-------------------------------------------------------|
 | int       | 0            | num\_verts      | the number of vertices used in this frame             |
@@ -40,7 +42,6 @@ details a single configuration of a model. "File Header.num\_frames" frames foll
 
 after each frame header, you will find
 
--   File Header.num\_faces Face blocks
 -   num\_verts Vertex blocks
 -   num\_normals Vertex blocks
 -   num\_textcoords Texture Coordinate blocks
