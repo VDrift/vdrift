@@ -23,7 +23,7 @@ This block of information initiates every file.
 
 | data type | block offset | name        | description                                                                                                                               |
 |-----------|--------------|-------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| int       | 0            | magic       | **8441211611**(0x1F722AADB): number used to identify the file as a JOE file. Currently unchecked by vdrift.                               |
+| int       | 0            | magic       | **844121161**(0x32504449): number used to identify the file as a JOE file. Currently unchecked by vdrift.                                 |
 | int       | 4            | version     | report the file version that this file conforms to. This specification details version 3 of the format.                                   |
 | int       | 8            | num\_faces  | every frame is expected to contain the same number of faces (polygons) this value specifies how many. This is currently limited to 32000. |
 | int       | 12           | num\_frames | Presumably, this details the number of frames used in an animation. Currently constrained to "1"                                          |
@@ -31,6 +31,8 @@ This block of information initiates every file.
 ### Frame Format
 
 details a single configuration of a model. "File Header.num\_frames" frames follow the file header.
+
+before each frame header, you will find "File Header.num\_faces" Face blocks.
 
 | data type | block offset | name            | description                                           |
 |-----------|--------------|-----------------|-------------------------------------------------------|
@@ -40,7 +42,6 @@ details a single configuration of a model. "File Header.num\_frames" frames foll
 
 after each frame header, you will find
 
--   File Header.num\_faces Face blocks
 -   num\_verts Vertex blocks
 -   num\_normals Vertex blocks
 -   num\_textcoords Texture Coordinate blocks
