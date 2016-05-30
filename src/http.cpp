@@ -75,6 +75,13 @@ std::string HttpInfo::FormatSpeed(double bytes)
 	return s.str();
 }
 
+std::string HttpInfo::FormatInt(int value)
+{
+	std::ostringstream s;
+	s << value;
+	return s.str();
+}
+
 bool HttpInfo::operator != (const HttpInfo & other) const
 {
 	return !(*this == other);
@@ -169,6 +176,7 @@ bool Http::Request(const std::string & url, std::ostream & error_output)
 	{
 		// Setup the appropriate options for the easy handle.
 		curl_easy_setopt(easyhandle, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(easyhandle, CURLOPT_SSL_VERIFYPEER, 0);
 
 		// This function call will make this multi_handle control the specified easy_handle.
 		// Furthermore, libcurl now initiates the connection associated with the specified easy_handle.
@@ -267,7 +275,10 @@ bool Http::Tick()
 			{
 				// Failure.
 				requests[url].state = HttpInfo::FAILED;
-				requests[url].error = "unknown";
+				requests[url].error = curl_easy_strerror(msg->data.result);
+				requests[url].error.append(" (");
+				requests[url].error.append(HttpInfo::FormatInt(msg->data.result));
+				requests[url].error.append(")");
 			}
 
 			// Cleanup.

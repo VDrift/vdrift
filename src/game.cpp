@@ -2411,6 +2411,10 @@ bool Game::Download(const std::vector <std::string> & urls)
 			http.CancelAllRequests();
 			return false;
 		}
+		else
+		{
+			info_output << "Requesting URL " << url << std::endl;
+		}
 
 		while (http.Tick())
 		{
@@ -2426,7 +2430,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 			if (info.state == HttpInfo::FAILED)
 			{
 				http.CancelAllRequests();
-				error_output << "Failed when downloading URL: " << url << std::endl;
+				error_output << "Failed when downloading URL: " << url << " with error: " << info.error << std::endl;
 				return false;
 			}
 
@@ -2454,7 +2458,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 		if (info.state == HttpInfo::FAILED)
 		{
 			http.CancelAllRequests();
-			error_output << "Failed when downloading URL: " << url << std::endl;
+			error_output << "Failed when downloading URL: " << url << " with error: " << info.error << std::endl;
 			return false;
 		}
 	}

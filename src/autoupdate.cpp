@@ -25,7 +25,7 @@ const std::string AVAILABLE_PREFIX = "available_";
 
 AutoUpdate::AutoUpdate() :
 	file_url("http://svn.code.sf.net/p/vdrift/code/vdrift-data/"),
-	meta_url("http://sourceforge.net/p/vdrift/code/HEAD/tree/vdrift-data/")
+	meta_url("https://sourceforge.net/p/vdrift/code/HEAD/tree/vdrift-data/")
 {
 	// Constructor
 }

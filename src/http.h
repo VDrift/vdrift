@@ -48,6 +48,7 @@ struct HttpInfo
 	/// Pretty-printing functions.
 	static std::string FormatSize(double bytes);
 	static std::string FormatSpeed(double bytesPerSecond);
+	static std::string FormatInt(int value);
 
 	bool operator != (const HttpInfo & other) const;
 	bool operator == (const HttpInfo & other) const;
