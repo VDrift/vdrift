@@ -9,11 +9,16 @@ Windows
 -   Install [MSYS2](http://sourceforge.net/p/msys2/wiki/MSYS2%20installation/) and update local packages.
 -   Install build tools.
 
-        pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-pkgconf scons'
+        pacman -S mingw-w64-x86_64-gcc scons
 
 -   Install VDrift dependencies.
 
         pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis
+
+-   Adjust your paths, if necessary:
+
+        export PATH=$PATH:/mingw64/bin
+        export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mingw64/lib/pkgconfig
 
 -   Build VDrift using MinGW-w64 Win64 Shell.
 
