@@ -646,13 +646,13 @@ void AiCarStandard::AnalyzeOthers(float dt, const CarDynamics cars[], const int 
 
 			// find direction of other cars in our frame
 			btVector3 relative_position = icar->GetCenterOfMass() - car->GetCenterOfMass();
-			relative_position = quatRotate(-car->GetOrientation(), relative_position);
+			relative_position = quatRotate(car->GetOrientation().inverse(), relative_position);
 
 			// only make a move if the other car is within our distance limit
 			float fore_position = relative_position.dot(throttle_axis);
 
-			btVector3 myvel = quatRotate(-car->GetOrientation(), car->GetVelocity());
-			btVector3 othervel = quatRotate(-icar->GetOrientation(), icar->GetVelocity());
+			btVector3 myvel = quatRotate(car->GetOrientation().inverse(), car->GetVelocity());
+			btVector3 othervel = quatRotate(icar->GetOrientation().inverse(), icar->GetVelocity());
 			float speed_diff = othervel.dot(throttle_axis) - myvel.dot(throttle_axis);
 
 			const float fore_position_offset = -half_carlength;
