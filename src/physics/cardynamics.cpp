@@ -245,6 +245,12 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 		if (!cfg.get(s.str(), info.aligning[i], error_output)) return false;
 	}
 
+	// read combining
+	if (!cfg.get("gy1", info.combining[0], error_output)) return false;
+	if (!cfg.get("gy2", info.combining[1], error_output)) return false;
+	if (!cfg.get("gx1", info.combining[2], error_output)) return false;
+	if (!cfg.get("gx2", info.combining[3], error_output)) return false;
+
 	// asymmetric tires support (left right facing direction)
 	// default facing direction is right
 	// fixme: should handle aligning torque too?

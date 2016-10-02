@@ -27,6 +27,7 @@ CarTireInfo::CarTireInfo() :
 	longitudinal(11),
 	lateral(15),
 	aligning(18),
+	combining(4),
 	rolling_resistance_quad(1E-6),
 	rolling_resistance_lin(1E-3),
 	tread(0)
@@ -87,20 +88,13 @@ btVector3 CarTire::getForce(
 	btScalar alpha = -btAtan(lat_velocity / denom) * (180.0 / M_PI);
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
-	// beckman method for pre-combining longitudinal and lateral forces
-	// assume sigma_hat and alpha_hat symmetric
-	btScalar sigma_sign = sigma < 0 ? -1 : 1;
-	btScalar alpha_sign = alpha < 0 ? -1 : 1;
-	btScalar s = sigma / sigma_hat;
-	btScalar a = alpha / alpha_hat;
-	btScalar rho = btMax(btScalar(sqrt(s * s + a * a)), btScalar(1E-4));
-	btScalar sp = rho * sigma_hat * sigma_sign;
-	btScalar ap = rho * alpha_hat * alpha_sign;
-	btScalar gx = s / rho * sigma_sign;
-	btScalar gy = a / rho * alpha_sign;
-	btScalar Fx = gx * PacejkaFx(sp, Fz, friction_coeff, max_Fx);
-	btScalar Fy = gy * PacejkaFy(ap, Fz, gamma, friction_coeff, max_Fy);
+	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
+	btScalar Gx = PacejkaGx(sigma, alpha * (M_PI / 180.0));
+	btScalar Gy = PacejkaGy(sigma, alpha * (M_PI / 180.0));
+	btScalar Fx = Gx * Fx0;
+	btScalar Fy = Gy * Fy0;
 
 	camber = inclination;
 	slide = sigma;
@@ -126,8 +120,7 @@ btScalar CarTire::getRollingResistance(const btScalar velocity, const btScalar r
 	rolling_resistance += velocity * velocity * rolling_resistance_quad;
 
 	// rolling resistance direction
-	btScalar resistance = -rolling_resistance;
-	if (velocity < 0) resistance = -resistance;
+	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
 
 	return resistance;
 }
@@ -179,7 +172,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
 
 	// horizontal shift
-	btScalar Sh = 0;//breaks beckman//b[9] * Fz + b[10];
+	btScalar Sh = b[9] * Fz + b[10];
 
 	// composite
 	btScalar S = 100 * sigma + Sh;
@@ -214,7 +207,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar E = a[6] * Fz + a[7];
 
 	// horizontal shift
-	btScalar Sh = 0;//breaks beckman//a[8] * gamma + a[9] * Fz + a[10];
+	btScalar Sh = a[8] * gamma + a[9] * Fz + a[10];
 
 	// vertical shift
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
@@ -231,6 +224,27 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 
 	btAssert(Fy == Fy);
 	return Fy;
+}
+
+inline btScalar btCosAtan(btScalar x)
+{
+	return btRecipSqrt(1 + x * x);
+}
+
+btScalar CarTire::PacejkaGx(btScalar sigma, btScalar alpha)
+{
+	const std::vector<btScalar> & p = combining;
+	btScalar B = p[2] * btCosAtan(p[3] * sigma);
+	btScalar G = btCosAtan(B * alpha);
+	return G;
+}
+
+btScalar CarTire::PacejkaGy(btScalar sigma, btScalar alpha)
+{
+	const std::vector<btScalar> & p = combining;
+	btScalar B = p[0] * btCosAtan(p[1] * alpha);
+	btScalar G = btCosAtan(B * sigma);
+	return G;
 }
 
 btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const

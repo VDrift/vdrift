@@ -39,6 +39,7 @@ struct CarTireInfo
 	std::vector<btScalar> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
 	std::vector<btScalar> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
 	std::vector<btScalar> aligning; ///< the parameters of the aligning moment pacejka equation.  this is series c
+	std::vector<btScalar> combining; ///< force combining parameters
 	std::vector<btScalar> sigma_hat; ///< maximum grip in the longitudinal direction
 	std::vector<btScalar> alpha_hat; ///< maximum grip in the lateral direction
 	btScalar rolling_resistance_quad; ///< quadratic rolling resistance on a hard surface
@@ -111,6 +112,12 @@ private:
 
 	/// pacejka magic formula function, aligning
 	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
+
+	/// pacejka magic formula longitudinal combining factor
+	btScalar PacejkaGx(btScalar sigma, btScalar alpha);
+
+	/// pacejka magic formula lateral combining factor
+	btScalar PacejkaGy(btScalar sigma, btScalar alpha);
 
 	void getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
 
