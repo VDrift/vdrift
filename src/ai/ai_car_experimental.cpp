@@ -26,7 +26,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <ctime>
 #include <algorithm>
 #include <iostream>
 
@@ -41,7 +40,8 @@ AiCarExperimental::AiCarExperimental(const CarDynamics * new_car, float new_diff
 	lateral_mu(0.9),
 	last_patch(NULL),
 	use_racingline(true),
-	isRecovering(false)
+	is_recovering(false),
+	recover_time(0.0f)
 {
 	assert(car);
 }
@@ -111,7 +111,7 @@ void AiCarExperimental::Update(float dt, const CarDynamics cars[], const int car
 
 	AnalyzeOthers(dt, cars, cars_num);
 	UpdateGasBrake();
-	UpdateSteer();
+	UpdateSteer(dt);
 	float rateLimit = THROTTLE_RATE_LIMIT * dt;
 	inputs[CarInput::THROTTLE] = RateLimit(lastThrottle, inputs[CarInput::THROTTLE],
 		rateLimit, rateLimit);
@@ -528,47 +528,44 @@ const Bezier * AiCarExperimental::GetNearestPatch(const Bezier * /*helper*/)
 	return b_nearest;
 }
 
-bool AiCarExperimental::Recover(const Bezier * /*patch*/)
+bool AiCarExperimental::Recover(float dt, const Bezier * /*patch*/)
 {
 	// Recover mode will basically detect walls on the front
 	// of the car, then go reverse if needed for 3 secs,
 	// then recheck if there is still a wall on the front. If there is no wall,
 	// break to zero speed and then switch to first gear back and leave recover mode.
-	const float maxRayDistant = 3;
-
-
-	if(car->GetSpeed() < 1)
+	if (car->GetVelocity().length2() < 1)
 	{
 		//If the car is not moving, there may be a wall in the front.
 
 		//Cast ray towards front-middle
-		float dist = RayCastDistance(Vec3(0, 1, 0), maxRayDistant);
-
-		if(dist < maxRayDistant * 0.99)
+		const float max_dist = 3;
+		float dist = RayCastDistance(Vec3(0, 1, 0), max_dist);
+		if (dist < max_dist * 0.99)
 		{
 			// Collision detected: we are probably trying to cross a wall.
 			// We need to drive backwards.
 			inputs[CarInput::REVERSE] = 1;
-			time (&recoverStartTime);
-			isRecovering = true;
+			recover_time = 0.0f;
+			is_recovering = true;
 			return true;
-		} else {
+		}
+		else
+		{
 			// If there are no walls in front, just leave the recover mode.
 			inputs[CarInput::FIRST_GEAR] = 1;
-			isRecovering = false;
+			is_recovering = false;
 			return false;
 		}
 	}
-	else if(isRecovering)
+	else if (is_recovering)
 	{
 		// If car is driving and it is in recover mode, count the time since start of recover mode.
-		time_t curr;
-		time (&curr);
-		float diff = difftime(curr, recoverStartTime);
-		if (diff > 3)
+		recover_time += dt;
+		if (recover_time > 3)
 		{
 			// Break to 0 after 3 secs of driving backwards.
-			// After breaking, it will trigger the "isRecovering = false" above and leave recover mode.
+			// After breaking, it will trigger the "is_recovering = false" above and leave recover mode.
 			inputs[CarInput::THROTTLE] = 0;
 			inputs[CarInput::BRAKE] = 1;
 			return true;
@@ -577,7 +574,8 @@ bool AiCarExperimental::Recover(const Bezier * /*patch*/)
 	// If car is still driving and it is not in recover mode, just do the usual stuff.
 	return false;
 }
-void AiCarExperimental::UpdateSteer()
+
+void AiCarExperimental::UpdateSteer(float dt)
 {
 #ifdef VISUALIZE_AI_DEBUG
 	steerlook.clear();
@@ -586,7 +584,7 @@ void AiCarExperimental::UpdateSteer()
 	const Bezier * curr_patch_ptr = GetCurrentPatch(car);
 
 	// if car has no contact with track, just let it roll
-	if (!curr_patch_ptr || isRecovering)
+	if (!curr_patch_ptr || is_recovering)
 	{
 		last_patch = GetNearestPatch(last_patch);
 
@@ -595,7 +593,7 @@ void AiCarExperimental::UpdateSteer()
 		curr_patch_ptr = last_patch;
 
 		// recover to the road.
-		if(Recover(curr_patch_ptr))
+		if (Recover(dt, curr_patch_ptr))
 			return;
 	}
 
@@ -683,7 +681,7 @@ void AiCarExperimental::UpdateSteer()
 	else if (steer_value < -1.0) steer_value = -1.0;
 
 	assert(!std::isnan(steer_value));
-	if(isRecovering){
+	if (is_recovering){
 		// If we are driving backwards, we need to invert steer direction.
 		steer_value = steer_value > 0.0 ? -1.0 : 1.0;
 	}

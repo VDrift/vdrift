@@ -56,8 +56,8 @@ private:
 	float lateral_mu;			///< friction coefficient of the tire - lateral direction
 	const Bezier * last_patch;	///< last patch the car was on, used in case car is off track
 	bool use_racingline;		///< true allows the AI to take a proper racing line
-	bool isRecovering;			///< tries to get back to the road.
-	time_t recoverStartTime;
+	bool is_recovering;			///< tries to get back to the road.
+	float recover_time;
 
 	struct OtherCarInfo
 	{
@@ -78,7 +78,7 @@ private:
 
 	float CalcBrakeDist(float current_speed, float allowed_speed, float friction);
 
-	void UpdateSteer();
+	void UpdateSteer(float dt);
 
 	void AnalyzeOthers(float dt, const CarDynamics cars[], const int cars_num);
 
@@ -120,7 +120,7 @@ private:
 	/// Optionally, you can pass a helper bezier to improve performance, which should be near to the car, but maybe not the nearest.
 	const Bezier * GetNearestPatch(const Bezier * helper = 0);
 
-	bool Recover(const Bezier * patch);
+	bool Recover(float dt, const Bezier * patch);
 
 	/// Creates a ray from the middle of the car. Returns the distance to the first colliding object or max_length.
 	float RayCastDistance(Vec3 direction, float max_length);
