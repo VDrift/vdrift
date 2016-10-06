@@ -129,7 +129,8 @@ Track::Loader::Loader(
 	min_params(14),
 	error(false),
 	list(false),
-	track_shape(0)
+	track_shape(0),
+	nodes(0)
 {
 	objectpath = trackpath + "/objects";
 	objectdir = trackdir + "/objects";
