@@ -205,7 +205,6 @@ protected:
 
 	// wheel contact state
 	btAlignedObjectArray<CollisionContact> wheel_contact;
-	btAlignedObjectArray<btVector3> suspension_force;
 	btAlignedObjectArray<btVector3> wheel_velocity;
 	btAlignedObjectArray<btVector3> wheel_position;
 	btAlignedObjectArray<btQuaternion> wheel_orientation;
@@ -247,16 +246,17 @@ protected:
 
 	void ComputeSuspensionDisplacement(int i, btScalar dt);
 
-	void DoTCS(int i, btScalar suspension_force);
+	// do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
+	void DoTCS(int i);
 
-	void DoABS(int i, btScalar suspension_force);
+	// do anti-lock brake system calculations and modify the brake force if necessary
+	void DoABS(int i);
 
-	btVector3 ApplySuspensionForceToBody(int i, btScalar dt, btVector3 & force, btVector3 & torque);
+	void ApplySuspensionForceToBody(int i, btScalar dt, btVector3 & force, btVector3 & torque);
 
-	btVector3 ComputeTireFrictionForce(int i, btScalar dt, btScalar normal_force,
-		btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation);
+	btVector3 ComputeTireFrictionForce(int i, btScalar normal_force, btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation);
 
-	void ApplyWheelForces(btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque);
+	void ApplyWheelForces(int i, btScalar dt, btScalar wheel_drive_torque, btVector3 & force, btVector3 & torque);
 
 	void ApplyForces(btScalar dt, const btVector3 & force, const btVector3 & torque);
 

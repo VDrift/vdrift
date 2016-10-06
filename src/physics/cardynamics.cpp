@@ -546,7 +546,7 @@ bool CarDynamics::Load(
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
 
-		if (!CarSuspension::Load(cfg_wheel, suspension[i], error)) return false;
+		if (!CarSuspension::Load(cfg_wheel, wheel[i].GetMass(), suspension[i], error)) return false;
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle)
 			maxangle = suspension[i]->GetMaxSteeringAngle();
 
@@ -615,10 +615,7 @@ bool CarDynamics::Load(
 	linear_velocity = body->getLinearVelocity();
 	angular_velocity = body->getAngularVelocity();
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
 		wheel_velocity[i].setZero();
-		suspension_force[i].setZero();
-	}
 
 	maxspeed = CalculateMaxSpeed();
 
@@ -1215,8 +1212,7 @@ void CarDynamics::ApplyAerodynamicsToBody(btVector3 & force, btVector3 & torque)
 	torque = torque + wind_torque;
 }
 
-///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
-void CarDynamics::DoTCS(int i, btScalar /*suspension_force*/)
+void CarDynamics::DoTCS(int i)
 {
 	btScalar sense = 1.0;
 	if (transmission.GetGear() < 0)
@@ -1273,11 +1269,8 @@ void CarDynamics::DoTCS(int i, btScalar /*suspension_force*/)
 		tcs_active[i] = false;
 }
 
-///do anti-lock brake system calculations and modify the brake force if necessary
-void CarDynamics::DoABS(int i, btScalar /*suspension_force*/)
+void CarDynamics::DoABS(int i)
 {
-	//an ideal ABS algorithm
-
 	//only active if brakes commanded past threshold
 	btScalar brakesetting = brake[i].GetBrakeFactor();
 	if (brakesetting > 0.1)
@@ -1313,7 +1306,7 @@ void CarDynamics::DoABS(int i, btScalar /*suspension_force*/)
 		brake[i].SetBrakeFactor(0.0);
 }
 
-void CarDynamics::ComputeSuspensionDisplacement(int i, btScalar /*dt*/)
+void CarDynamics::ComputeSuspensionDisplacement(int i, btScalar dt)
 {
 	//compute bump effect
 	const TrackSurface & surface = wheel_contact[i].GetSurface();
@@ -1324,26 +1317,16 @@ void CarDynamics::ComputeSuspensionDisplacement(int i, btScalar /*dt*/)
 	btScalar amplitude = 0.25 * surface.bumpAmplitude;
 	btScalar bumpoffset = amplitude * (btSin(phase + shift) + btSin(M_PI_2 * phase) - 2.0);
 
-	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius() - bumpoffset;
-	assert(!std::isnan(relative_displacement));
-	suspension[i]->SetDisplacement(suspension[i]->GetDisplacement() - relative_displacement);
-	assert(!std::isnan(suspension[i]->GetDisplacement()));
+	btScalar displacement_delta = 2 * wheel[i].GetRadius() - wheel_contact[i].GetDepth() + bumpoffset;
+	suspension[i]->UpdateDisplacement(displacement_delta, dt);
 }
 
-///returns the suspension force (so it can be applied to the tires)
-btVector3 CarDynamics::ApplySuspensionForceToBody(int i, btScalar dt, btVector3 & force, btVector3 & torque)
+void CarDynamics::ApplySuspensionForceToBody(int i, btScalar dt, btVector3 & force, btVector3 & torque)
 {
-	//compute suspension force
-	btScalar springdampforce = suspension[i]->GetForce(dt);
-	assert(!std::isnan(springdampforce));
-
-	//do anti-roll
-	int otheri = i;
-	if (i == 0 || i == 2) otheri++;
-	else otheri--;
-	btScalar antirollforce = suspension[i]->GetAntiRoll() *
-		(suspension[i]->GetDisplacement() - suspension[WheelPosition(otheri)]->GetDisplacement());
-	assert(!std::isnan(antirollforce));
+	int j = (i == 0 || i == 2) ? i + 1: i - 1;
+	btScalar roll_delta = suspension[i]->GetDisplacement() - suspension[j]->GetDisplacement();
+	suspension[i]->UpdateForces(roll_delta, dt);
+	btScalar suspension_force_magnitude = suspension[i]->GetForce();
 
 	//find the vector direction to apply the suspension force
 #ifdef SUSPENSION_FORCE_DIRECTION
@@ -1352,41 +1335,33 @@ btVector3 CarDynamics::ApplySuspensionForceToBody(int i, btScalar dt, btVector3 
 	btVector3 relwheelext = wheelext - hinge;
 	btVector3 up(0, 0, 1);
 	btVector3 rotaxis = up.cross(relwheelext.Normalize());
-	btVector3 forcedirection = relwheelext.Normalize().cross(rotaxis);
+	btVector3 force_direction = relwheelext.Normalize().cross(rotaxis);
 	//std::cout << i << ". " << forcedirection << std::endl;
 #else
-	btVector3 forcedirection(Direction::up);
+	btVector3 force_direction(Direction::up);
 #endif
-	forcedirection = body->getCenterOfMassTransform().getBasis() * forcedirection;
-
-	btVector3 suspension_force = forcedirection * (antirollforce + springdampforce);
-	btVector3 suspension_force_application_point = wheel_position[i] - body->getCenterOfMassPosition();
+	force_direction = body->getCenterOfMassTransform().getBasis() * force_direction;
+	btVector3 force_application_point = wheel_position[i] - body->getCenterOfMassPosition();
 
 	btScalar overtravel = suspension[i]->GetOvertravel();
 	if (overtravel > 0)
 	{
-		btScalar correction_factor = 0.0;
-		btScalar dv = body->getVelocityInLocalPoint(suspension_force_application_point).dot(forcedirection);
+		btScalar correction_factor = 0;
+		btScalar dv = body->getVelocityInLocalPoint(force_application_point).dot(force_direction);
 		dv -= correction_factor * overtravel / dt;
-		btScalar effectiveMass = 1.0 / body->computeImpulseDenominator(wheel_position[i], forcedirection);
-		btScalar correction = -effectiveMass * dv / dt;
-		if (correction > 0 && correction > antirollforce + springdampforce)
-		{
-			suspension_force = forcedirection * correction;
-		}
+		btScalar effective_mass = 1.0 / body->computeImpulseDenominator(wheel_position[i], force_direction);
+		btScalar overtravel_force = -effective_mass * dv / dt;
+		if (overtravel_force > 0 && overtravel_force > suspension_force_magnitude)
+			suspension_force_magnitude = overtravel_force;
 	}
 
+	btVector3 suspension_force = force_direction * suspension_force_magnitude;
 	force = force + suspension_force;
-	torque = torque + suspension_force_application_point.cross(suspension_force);
-
-	for (int n = 0; n < 3; ++n) assert(!std::isnan(force[n]));
-	for (int n = 0; n < 3; ++n) assert(!std::isnan(torque[n]));
-
-	return suspension_force;
+	torque = torque + force_application_point.cross(suspension_force);
 }
 
 btVector3 CarDynamics::ComputeTireFrictionForce(
-	int i, btScalar /*dt*/, btScalar normal_force,
+	int i, btScalar normal_force,
 	btScalar rotvel, const btVector3 & linvel,
 	const btQuaternion & wheel_orientation)
 {
@@ -1411,16 +1386,14 @@ btVector3 CarDynamics::ComputeTireFrictionForce(
 	btVector3 friction_force = tire[i].getForce(
 		normal_force, friction_coeff, camber, rotvel, lonvel, latvel);
 
-	for (int n = 0; n < 3; ++n) assert(!std::isnan(friction_force[n]));
-
 	return friction_force;
 }
 
-void CarDynamics::ApplyWheelForces(btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque)
+void CarDynamics::ApplyWheelForces(int i, btScalar dt, btScalar wheel_drive_torque, btVector3 & force, btVector3 & torque)
 {
-	btScalar normal_force = suspension_force.length();
+	btScalar wheel_force = suspension[i]->GetWheelForce();
 	btScalar rotvel = wheel[i].GetAngularVelocity() * wheel[i].GetRadius();
-	btVector3 friction_force = ComputeTireFrictionForce(i, dt, normal_force, rotvel, wheel_velocity[i], wheel_orientation[i]);
+	btVector3 friction_force = ComputeTireFrictionForce(i, wheel_force, rotvel, wheel_velocity[i], wheel_orientation[i]);
 
 	//calculate friction torque
 	btVector3 tire_force = Direction::forward * friction_force[0] - Direction::right * friction_force[1];
@@ -1475,58 +1448,48 @@ void CarDynamics::ApplyForces(btScalar dt, const btVector3 & ext_force, const bt
 {
 	assert(dt > 0);
 
-	//start accumulating forces and torques on the car body
+	// start accumulating forces and torques on the car body
 	btVector3 force = ext_force;
 	btVector3 torque = ext_torque;
 
-	//do TCS first thing
 	if (tcs)
 	{
 		for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 		{
-			DoTCS(i, suspension_force[i].length());
+			DoTCS(i);
 		}
 	}
 
-	//compute wheel torques
-	btScalar wheel_drive_torque[4];
+	// compute wheel torques
+	btScalar wheel_drive_torque[WHEEL_POSITION_SIZE];
 	UpdateDriveline(wheel_drive_torque, dt);
 
-	//apply equal and opposite engine torque to the chassis
 	//ApplyEngineTorqueToBody(force, torque);
 
-	//apply aerodynamics
 	ApplyAerodynamicsToBody(force, torque);
 
-	//compute suspension displacements
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		ComputeSuspensionDisplacement(i, dt);
 	}
 
-	//compute suspension forces
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		suspension_force[i] = ApplySuspensionForceToBody(i, dt, force, torque);
+		ApplySuspensionForceToBody(i, dt, force, torque);
 	}
 
-	//do abs
 	if (abs)
 	{
 		for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 		{
-			DoABS(i, suspension_force[i].length());
+			DoABS(i);
 		}
 	}
 
-	//compute wheel forces
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		ApplyWheelForces(dt, wheel_drive_torque[i], i, suspension_force[i], force, torque);
+		ApplyWheelForces(i, dt, wheel_drive_torque[i], force, torque);
 	}
-
-	for (int n = 0; n < 3; ++n) assert(!std::isnan(force[n]));
-	for (int n = 0; n < 3; ++n) assert(!std::isnan(torque[n]));
 
 	body->applyCentralForce(force);
 	body->applyTorque(torque);
@@ -2022,7 +1985,6 @@ void CarDynamics::Init()
 	wheel.resize(WHEEL_POSITION_SIZE);
 	tire.resize(WHEEL_POSITION_SIZE);
 	brake.resize(WHEEL_POSITION_SIZE);
-	suspension_force.resize(WHEEL_POSITION_SIZE);
 	wheel_velocity.resize(WHEEL_POSITION_SIZE);
 	wheel_position.resize(WHEEL_POSITION_SIZE);
 	wheel_orientation.resize(WHEEL_POSITION_SIZE);

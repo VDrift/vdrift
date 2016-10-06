@@ -49,6 +49,8 @@ struct CarSuspensionInfo
 	btScalar caster; ///< caster angle in degrees. sign convention depends on the side
 	btScalar toe; ///< toe angle in degrees. sign convention depends on the side
 
+	btScalar inv_mass; ///< 1 / unsprung mass
+
 	CarSuspensionInfo(); ///< default constructor makes an S2000-like car
 };
 
@@ -78,9 +80,6 @@ public:
 	/// suspension force acting onto car body
 	const btScalar & GetForce() const {return force;}
 
-	/// relative wheel velocity
-	const btScalar & GetVelocity() const {return wheel_velocity;}
-
 	/// wheel overtravel
 	const btScalar & GetOvertravel() const {return overtravel;}
 
@@ -93,11 +92,16 @@ public:
 	btScalar GetDisplacement(btScalar force) const;
 
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
-	virtual void SetSteering(const btScalar & value);
+	virtual void SetSteering(btScalar value);
 
-	void SetDisplacement ( const btScalar & value );
+	/// override current displacement value
+	void SetDisplacement(btScalar value);
 
-	btScalar GetForce ( btScalar dt );
+	/// update displacement, simulate wheel rebound to limit negative delta
+	void UpdateDisplacement(btScalar displacement_delta, btScalar dt);
+
+	/// compute suspension and wheel contact forces
+	void UpdateForces(btScalar roll_delta, btScalar dt);
 
 	void DebugPrint(std::ostream & out) const;
 
@@ -105,11 +109,14 @@ public:
 	{
 		_SERIALIZE_(s, steering_angle);
 		_SERIALIZE_(s, displacement);
+		_SERIALIZE_(s, last_displacement);
+		_SERIALIZE_(s, force);
 		return true;
 	}
 
 	static bool Load(
 		const PTree & cfg_wheel,
+		btScalar wheel_mass,
 		CarSuspension *& suspension,
 		std::ostream & error);
 
@@ -132,8 +139,8 @@ protected:
 	btScalar overtravel;
 	btScalar displacement;
 	btScalar last_displacement;
-	btScalar wheel_velocity;
 	btScalar wheel_force;
+	btScalar wheel_contact;
 
 	void Init(const CarSuspensionInfo & info);
 };
