@@ -228,7 +228,8 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 		i++;
 	}
 	clock_t cpu_timer_stop = clock();
-	float sim_perf = t / float(cpu_timer_stop - cpu_timer_start) * CLOCKS_PER_SEC;
+	clock_t clock_ticks = cpu_timer_stop - cpu_timer_start;
+	float sim_perf = (clock_ticks > 0) ? t / clock_ticks * CLOCKS_PER_SEC : 0;
 
 	info_output << "Top speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s\n";
 	info_output << "Downforce at top speed: " << -maxlift << " N\n";
