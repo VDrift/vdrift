@@ -400,6 +400,14 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	// upload texture
 	unsigned bytespp = surface->format->BytesPerPixel;
 	std::vector<unsigned char> cubeface(width * height * bytespp);
+	const struct {GLenum id; unsigned offsetx; unsigned offsety;} layout[] = {
+		{GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, height},
+		{GL_TEXTURE_CUBE_MAP_POSITIVE_X, width*2, height},
+		{GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, width, height*2},
+		{GL_TEXTURE_CUBE_MAP_POSITIVE_Y, width, 0},
+		{GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, width, height*3},
+		{GL_TEXTURE_CUBE_MAP_POSITIVE_Z, width, height}
+	};
 	for (int i = 0; i < 6; ++i)
 	{
 		// detect channels
@@ -424,51 +432,9 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 				break;
 		}
 
-		int offsetx = 0;
-		int offsety = 0;
-
-		GLenum targetparam;
-		if (i == 0)
-		{
-			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-			offsetx = 0;
-			offsety = height;
-		}
-		else if (i == 1)
-		{
-			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-			offsetx = width*2;
-			offsety = height;
-		}
-		else if (i == 2)
-		{
-			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-			offsetx = width;
-			offsety = height*2;
-		}
-		else if (i == 3)
-		{
-			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-			offsetx = width;
-			offsety = 0;
-		}
-		else if (i == 4)
-		{
-			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
-			offsetx = width;
-			offsety = height*3;
-		}
-		else if (i == 5)
-		{
-			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-			offsetx = width;
-			offsety = height;
-		}
-		else
-		{
-			error << "Texture has unknown format: " + path << std::endl;
-			return false;
-		}
+		int offsetx = layout[i].offsetx;
+		int offsety = layout[i].offsety;
+		GLenum targetparam = layout[i].id;
 
 		if (i == 4) //special case for negative z
 		{
@@ -535,6 +501,14 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texid);
 
+	const GLenum targetparam[] = {
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+		GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+	};
 	for (int i = 0; i < 6; ++i)
 	{
 		SDL_Surface * surface = IMG_Load(cubefiles[i].c_str());
@@ -577,26 +551,7 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		}
 
 		// Create MipMapped Texture
-		GLenum targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-		if (i == 0)
-			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
-		else if (i == 1)
-			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-		else if (i == 2)
-			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-		else if (i == 3)
-			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-		else if (i == 4)
-			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
-		else if (i == 5)
-			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-		else
-		{
-			error << "Iterated too far: " + path + " (" + cubefiles[i] + ")" << std::endl;
-			assert(0);
-		}
-
-		glTexImage2D(targetparam, 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
+		glTexImage2D(targetparam[i], 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
 
 		SDL_FreeSurface(surface);
 	}
