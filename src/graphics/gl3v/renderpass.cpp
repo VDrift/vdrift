@@ -30,7 +30,18 @@
 
 const GLEnums GLEnumHelper;
 
-RenderPass::RenderPass() : configured(false), enabled(true), shaderProgram(0), framebufferObject(0), renderbuffer(0), passIndex(0), timerQuery(0), lastTime(-1)
+RenderPass::RenderPass() :
+	configured(false),
+	enabled(true),
+	clearMask(0),
+	clearDepth(1),
+	clearStencil(0),
+	shaderProgram(0),
+	framebufferObject(0),
+	renderbuffer(0),
+	passIndex(0),
+	timerQuery(0),
+	lastTime(-1)
 {
 	// Constructor.
 }
