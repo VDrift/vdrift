@@ -18,7 +18,6 @@
 /************************************************************************/
 
 #include "cartire.h"
-#include "cfg/ptree.h"
 #include "fastmath.h"
 #include <cassert>
 
