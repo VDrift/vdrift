@@ -163,7 +163,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	// peak factor
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 
-	btScalar BCD = (b[3] * Fz + b[4]) * Fz * exp(-b[5] * Fz);
+	btScalar BCD = (b[3] * Fz + b[4]) * Fz * btExp(-b[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
@@ -178,7 +178,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	btScalar S = 100 * sigma + Sh;
 
 	// longitudinal force
-	btScalar Fx = D * sin(C * atan(B * S - E * (B * S - atan(B * S))));
+	btScalar Fx = D * btSin(C * btAtan(B * S - E * (B * S - btAtan(B * S))));
 
 	// scale by surface friction
 	Fx = Fx * friction_coeff;
@@ -198,7 +198,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
-	btScalar BCD = a[3] * sin(2.0 * atan(Fz / a[4])) * (1.0 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * btSin(2 * btAtan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
 
 	// stiffness factor
 	btScalar B = BCD / (C * D);
@@ -216,7 +216,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar S = alpha + Sh;
 
 	// lateral force
-	btScalar Fy = D * sin(C * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
+	btScalar Fy = D * btSin(C * btAtan(B * S - E * (B * S - btAtan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Fy = Fy * friction_coeff;
@@ -256,7 +256,7 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
-	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1.0 - c[6] * btFabs(gamma)) * exp (-c[5] * Fz);
+	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1.0 - c[6] * btFabs(gamma)) * btExp(-c[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
@@ -274,7 +274,7 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
 
 	// self-aligning torque
-	btScalar Mz = D * sin(c[0] * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
+	btScalar Mz = D * btSin(c[0] * btAtan(B * S - E * (B * S - btAtan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Mz = Mz * friction_coeff;
