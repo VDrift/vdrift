@@ -19,6 +19,7 @@
 
 #include "cartire.h"
 #include "cfg/ptree.h"
+#include "fastmath.h"
 #include <cassert>
 
 #ifndef VDRIFTN
@@ -85,7 +86,7 @@ btVector3 CarTire::getForce(
 	btScalar gamma = inclination * (180.0 / M_PI);
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) / denom;
-	btScalar alpha = -btAtan(lat_velocity / denom) * (180.0 / M_PI);
+	btScalar alpha = -Atan(lat_velocity / denom) * (180.0 / M_PI);
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
@@ -178,7 +179,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	btScalar S = 100 * sigma + Sh;
 
 	// longitudinal force
-	btScalar Fx = D * btSin(C * btAtan(B * S - E * (B * S - btAtan(B * S))));
+	btScalar Fx = D * btSin(C * Atan(B * S - E * (B * S - Atan(B * S))));
 
 	// scale by surface friction
 	Fx = Fx * friction_coeff;
@@ -198,7 +199,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
-	btScalar BCD = a[3] * btSin(2 * btAtan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * btSin(2 * Atan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
 
 	// stiffness factor
 	btScalar B = BCD / (C * D);
@@ -216,7 +217,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar S = alpha + Sh;
 
 	// lateral force
-	btScalar Fy = D * btSin(C * btAtan(B * S - E * (B * S - btAtan(B * S)))) + Sv;
+	btScalar Fy = D * btSin(C * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Fy = Fy * friction_coeff;
@@ -274,7 +275,7 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
 
 	// self-aligning torque
-	btScalar Mz = D * btSin(c[0] * btAtan(B * S - E * (B * S - btAtan(B * S)))) + Sv;
+	btScalar Mz = D * btSin(c[0] * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Mz = Mz * friction_coeff;
