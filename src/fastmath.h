@@ -34,5 +34,28 @@ T Atan(T x)
     return std::copysign(T(M_PI_2), x) - Atan1(1 / x);
 }
 
+// |x| <= pi/2
+// max error: 1.0205878936686563e-6
+template <typename T>
+T SinPi2(T x)
+{
+    T s = x * x;
+    T p = T(-1.8447486103462252e-04);
+    p = T(+8.3109378830028557e-03) + p * s;
+    p = T(-1.6665578084732124e-01) + p * s;
+    p = 1 + p * s;
+    p = p * x;
+    return p;
+}
+
+// |x| <= pi
+// max error: 1.0205878936686563e-6
+template <typename T>
+T SinPi(T x)
+{
+    if (std::abs(x) > T(M_PI_2))
+        x = std::copysign(T(M_PI), x) - x;
+    return SinPi2(x);
+}
 
 #endif // _FASTMATH_H

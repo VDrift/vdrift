@@ -178,7 +178,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	btScalar S = 100 * sigma + Sh;
 
 	// longitudinal force
-	btScalar Fx = D * btSin(C * Atan(B * S - E * (B * S - Atan(B * S))));
+	btScalar Fx = D * SinPi(C * Atan(B * S - E * (B * S - Atan(B * S))));
 
 	// scale by surface friction
 	Fx = Fx * friction_coeff;
@@ -198,7 +198,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
-	btScalar BCD = a[3] * btSin(2 * Atan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * SinPi(2 * Atan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
 
 	// stiffness factor
 	btScalar B = BCD / (C * D);
@@ -216,7 +216,7 @@ btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar S = alpha + Sh;
 
 	// lateral force
-	btScalar Fy = D * btSin(C * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
+	btScalar Fy = D * SinPi(C * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Fy = Fy * friction_coeff;
@@ -274,7 +274,7 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
 
 	// self-aligning torque
-	btScalar Mz = D * btSin(c[0] * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
+	btScalar Mz = D * SinPi(c[0] * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Mz = Mz * friction_coeff;
