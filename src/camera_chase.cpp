@@ -30,7 +30,7 @@ CameraChase::CameraChase(const std::string & name) :
 void CameraChase::SetOffset(const Vec3 & value)
 {
 	offset = value;
-	if (offset.dot(Direction::Forward) < 0.001)
+	if (offset.dot(Direction::Forward) < 1E-3f)
 	{
 		offset = offset - Direction::Forward;
 	}
@@ -52,9 +52,9 @@ void CameraChase::Update(const Vec3 & newfocus, const Quat & focus_facing, float
 	focus_facing.RotateVector(view_offset);
 	Vec3 target_position = focus + view_offset;
 
-	float posblend = 10.0 * dt;
-	if (posblend > 1.0) posblend = 1.0;
-	if (!posblend_on) posblend = 1.0;
-	position = position * (1.0 - posblend) + target_position * posblend;
+	float posblend = 10 * dt;
+	if (posblend > 1) posblend = 1;
+	if (!posblend_on) posblend = 1;
+	position = position * (1 - posblend) + target_position * posblend;
 	rotation = LookAt(position, focus, Direction::Up);
 }
