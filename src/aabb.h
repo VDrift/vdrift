@@ -37,9 +37,9 @@ public:
 	Aabb(const MathVector <T, 3> & min, const MathVector <T, 3> & max)
 	{
 		pos = min;
-		center = (min + max) * 0.5;
+		center = (min + max) * T(0.5);
 		size = max - min;
-		radius = size.Magnitude() * 0.5;
+		radius = size.Magnitude() * T(0.5);
 	}
 
 	Aabb() : radius(0) {}
@@ -75,8 +75,8 @@ public:
 	{
 		center = newcenter;
 		size.Set(newRadius,newRadius,newRadius);
-		size = size * 2.0;
-		pos = center - size*0.5;
+		size = size * 2;
+		pos = center - size * T(0.5);
 		radius = newRadius;
 	}
 
@@ -104,8 +104,8 @@ public:
 
 		pos = c1mod;
 		size = c2mod - c1mod;
-		center = pos + size * 0.5;
-		radius = size.Magnitude() * 0.5;
+		center = pos + size * T(0.5);
+		radius = size.Magnitude() * T(0.5);
 	}
 
 	void CombineWith(const Aabb <T> & other)
@@ -159,7 +159,7 @@ public:
 	IntersectionEnum Intersect(const Ray & ray) const
 	{
 		//if (seglen>3e30f) return IntersectRay(orig, dir); // infinite ray
-		MathVector <T, 3> segdir(ray.dir * (0.5f * ray.seglen));
+		MathVector <T, 3> segdir(ray.dir * (T(0.5) * ray.seglen));
 		MathVector <T, 3> seg_center(ray.orig + segdir);
 		MathVector <T, 3> diff(seg_center - center);
 
@@ -226,7 +226,7 @@ public:
 				return OUT;
 			}
 
-			/*if (fabs(rd) < bound)
+			/*if (std::abs(rd) < bound)
 			{
 				// partially in
 				// we don't return here because we could still be fully out of another frustum plane
