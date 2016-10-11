@@ -185,8 +185,7 @@ class Matrix4
 
 		void Perspective(T fovy, T aspect, T znear, T zfar)
 		{
-			const T pi = 3.14159265;
-			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
+			T f = 1 / std::tan(fovy * T(M_PI / 360));
 			data[0] = f / aspect; data[1] = 0; data[2] = 0; data[3] = 0;
 			data[4] = 0; data[5] = f; data[6] = 0; data[7] = 0;
 			data[8] = 0; data[9] = 0; data[10] = (zfar + znear) / (znear - zfar); data[11] = -1;
@@ -195,10 +194,9 @@ class Matrix4
 
 		void InvPerspective(T fovy, T aspect, T znear, T zfar)
 		{
-			const T pi = 3.14159265;
-			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
-			data[0] = aspect / f; data[1] = 0; data[2] = 0; data[3] = 0;
-			data[4] = 0; data[5] = 1 / f; data[6] = 0; data[7] = 0;
+			T rf = std::tan(fovy * T(M_PI / 360));
+			data[0] = aspect * rf; data[1] = 0; data[2] = 0; data[3] = 0;
+			data[4] = 0; data[5] = rf; data[6] = 0; data[7] = 0;
 			data[8] = 0; data[9] = 0; data[10] = 0; data[11] = (znear - zfar) / (2 * zfar * znear);
 			data[12] = 0; data[13] = 0; data[14] = -1; data[15] = (zfar + znear) / (2 * zfar * znear);
 		}
@@ -221,7 +219,7 @@ class Matrix4
 			T B5 = data[10]*data[15] - data[11]*data[14];
 
 			T Det = A0*B5 - A1*B4 + A2*B3 + A3*B2 - A4*B1 + A5*B0;
-			assert (fabs(Det) > 1e-10); //matrix inversion failed
+			assert (std::abs(Det) > T(1e-10)); //matrix inversion failed
 
 			Inv[ 0] = + data[ 5]*B5 - data[ 6]*B4 + data[ 7]*B3;
 			Inv[ 4] = - data[ 4]*B5 + data[ 6]*B2 - data[ 7]*B1;
@@ -240,7 +238,7 @@ class Matrix4
 			Inv[11] = - data[ 8]*A4 + data[ 9]*A2 - data[11]*A0;
 			Inv[15] = + data[ 8]*A3 - data[ 9]*A1 + data[10]*A0;
 
-			T InvDet = 1.0 / Det;
+			T InvDet = 1 / Det;
 			for (int i = 0; i < 16; i++) Inv[i] *= InvDet;
 
 			return Inv;
@@ -251,32 +249,32 @@ class Matrix4
 			T A = (right+left)/(right-left);
 			T B = (top+bottom)/(top-bottom);
 			T C = (far+near)/(near-far);
-			T D = 2.0*far*near/(near-far);
+			T D = 2*far*near/(near-far);
 
-			data[0] = 2.0*near/(right-left);
-			data[1] = 0.0;
-			data[2] = 0.0;
-			data[3] = 0.0;
+			data[0] = 2*near/(right-left);
+			data[1] = 0;
+			data[2] = 0;
+			data[3] = 0;
 
-			data[4] = 0.0;
-			data[5] = 2.0*near/(top-bottom);
-			data[6] = 0.0;
-			data[7] = 0.0;
+			data[4] = 0;
+			data[5] = 2*near/(top-bottom);
+			data[6] = 0;
+			data[7] = 0;
 
 			data[8] = A;
 			data[9] = B;
 			data[10]= C;
-			data[11]= -1.0;
+			data[11]= -1;
 
-			data[12]= 0.0;
-			data[13]= 0.0;
+			data[12]= 0;
+			data[13]= 0;
 			data[14]= D;
-			data[15]= 0.0;
+			data[15]= 0;
 		}
 
 		void SetPerspective(T fovy, T aspect, T zNear, T zFar)
 		{
-			T ymax = zNear * tan(fovy * M_PI / 360.0);
+			T ymax = zNear * std::tan(fovy * T(M_PI / 360));
 			T ymin = -ymax;
 
 			T xmin = ymin * aspect;
@@ -291,25 +289,25 @@ class Matrix4
 			T ty = -(top+bottom)/(top-bottom);
 			T tz = -(far+near)/(far-near);
 
-			data[0] = 2.0/(right-left);
-			data[1] = 0.0;
-			data[2] = 0.0;
-			data[3] = 0.0;
+			data[0] = 2/(right-left);
+			data[1] = 0;
+			data[2] = 0;
+			data[3] = 0;
 
-			data[4] = 0.0;
-			data[5] = 2.0/(top-bottom);
-			data[6] = 0.0;
-			data[7] = 0.0;
+			data[4] = 0;
+			data[5] = 2/(top-bottom);
+			data[6] = 0;
+			data[7] = 0;
 
-			data[8] = 0.0;
-			data[9] = 0.0;
-			data[10]= -2.0/(far-near);
-			data[11]= 0.0;
+			data[8] = 0;
+			data[9] = 0;
+			data[10]= -2/(far-near);
+			data[11]= 0;
 
 			data[12]= tx;
 			data[13]= ty;
 			data[14]= tz;
-			data[15]= 1.0;
+			data[15]= 1;
 		}
 
 		void OrthoNormalize()
@@ -338,8 +336,8 @@ class Matrix4
 
 		void ForceAffine()
 		{
-			data[3] = data[7] = data[11] = 0.0;
-			data[15] = 1.0;
+			data[3] = data[7] = data[11] = 0;
+			data[15] = 1;
 		}
 
 		/// given an axis and a normalized angle, set the rotation portion of this matrix
