@@ -112,7 +112,7 @@ public:
 		// Bisect to find the interval that distance is on.
 		while ( ( high - low ) > 1 )
 		{
-			index = size_t ( ( high + low ) / 2.0 );
+			index = size_t ( ( high + low ) * T(0.5) );
 			if ( points [index].first > x )
 				high = index;
 			else
@@ -121,7 +121,7 @@ public:
 
 		// Make sure that x_high > x_low.
 		const T diff = points [high].first - points [low].first;
-		assert ( diff >= 0.0 );
+		assert ( diff >= 0 );
 		const T diffy = points [high].second - points [low].second;
 
 		return diffy*(x-points[low].first)/diff+points[low].second;
