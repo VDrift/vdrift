@@ -455,7 +455,7 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 void Renderer::printProfilingInfo(std::ostream & out) const
 {
 	for (const auto & pass : passes)
-		out << pass.getName() << ": " << pass.getLastTime()*1e6 << " us" << std::endl;
+		out << pass.getName() << ": " << pass.getLastTime() * 1E6f << " us" << std::endl;
 }
 
 bool Renderer::loadShader(const std::string & path, const std::string & name, const std::set <std::string> & defines, GLenum shaderType, std::ostream & errorOutput)

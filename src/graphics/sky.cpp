@@ -29,7 +29,7 @@
 #include "strptime.h"
 #endif
 
-#define pi M_PI
+#define pi float(M_PI)
 
 const unsigned texture_size = 512;
 const unsigned tiles_u = 4;
@@ -328,10 +328,10 @@ void Sky::UpdateSunDir()
 	float y = (2 * pi / 365) * (day - 1 + (hour - 12) / 24);
 
 	// equation of time(minutes) corrects for the eccentricity of the Earth's orbit and axial tilt
-	float eot = 229.18f * (0.000075f + 0.001868f * cos(y) - 0.032077f * sin(y) - 0.014615f * cos(2*y) - 0.040849f * sin(2*y));
+	float eot = 229.18f * (0.000075f + 0.001868f * std::cos(y) - 0.032077f * std::sin(y) - 0.014615f * std::cos(2*y) - 0.040849f * std::sin(2*y));
 
 	// solar declination angle
-	float decl = 0.006918f - 0.399912f * cos(y) + 0.070257f * sin(y) - 0.006758f * cos(2*y) + 0.000907f * sin(2*y) - 0.002697f * cos(3*y) + 0.00148f * sin(3*y);
+	float decl = 0.006918f - 0.399912f * std::cos(y) + 0.070257f * std::sin(y) - 0.006758f * std::cos(2*y) + 0.000907f * std::sin(2*y) - 0.002697f * std::cos(3*y) + 0.00148f * std::sin(3*y);
 
 	// solar time offset in minutes (logitude in degrees, timezone in hours from UTC)
 	float time_offset = eot - 4 * longitude + 60 * timezone;
@@ -343,25 +343,25 @@ void Sky::UpdateSunDir()
 	float ha = (solar_time / 4 - 180) * pi / 180;
 
 	// solar zenith angle
-	float cos_ze = sin(lat) * sin(decl) + cos(lat) * cos(decl) * cos(ha);
-	ze = acos(cos_ze);
+	float cos_ze = std::sin(lat) * std::sin(decl) + std::cos(lat) * std::cos(decl) * std::cos(ha);
+	ze = std::acos(cos_ze);
 
 	// solar azimuth angle (clockwise from north)
 	float cos_az = 0;
 	az = 0;
-	float denom = cos(lat) * sin(ze);
+	float denom = std::cos(lat) * std::sin(ze);
 	if (denom != 0)
 	{
-		cos_az = (sin(lat) * cos_ze - sin(decl)) / denom;
-		az = acos(cos_az);
+		cos_az = (std::sin(lat) * cos_ze - std::sin(decl)) / denom;
+		az = std::acos(cos_az);
 		if (ha < 0) az = pi - az;
 		else az = pi + az;
 	}
 
 	az += azdelta;
-	sundir[0] = sin(az) * sin(ze);   // east
-	sundir[1] = cos(az) * sin(ze);   // north
-	sundir[2] = cos(ze);             // up
+	sundir[0] = std::sin(az) * std::sin(ze);   // east
+	sundir[1] = std::cos(az) * std::sin(ze);   // north
+	sundir[2] = std::cos(ze);                  // up
 
 	//error_output << "az " << az << "  ze " << ze << std::endl;
 }
@@ -372,7 +372,7 @@ void Sky::UpdateSunColor()
 	float m = 38;
 	if (ze < pi / 2)
 	{
-		m = 1 / (cos(ze) + 0.50572f * pow(96.07995f - ze / pi * 180.0f, -1.6364f));
+		m = 1 / (std::cos(ze) + 0.50572f * std::pow(96.07995f - ze / pi * 180.0f, -1.6364f));
 	}
 
 	// angstrom turbidity coefficient (0-0.5)
@@ -382,8 +382,8 @@ void Sky::UpdateSunColor()
 	float tau[] = { 0, 0, 0 };
 	for (int i = 0; i < 3; i++)
 	{
-		float tauR = exp(-m * 0.008735f * pow(wavelength[i], 4.0f));
-		float tauA = exp(-m * beta * pow(wavelength[i], -1.3f));
+		float tauR = std::exp(-m * 0.008735f * std::pow(wavelength[i], 4.0f));
+		float tauA = std::exp(-m * beta * std::pow(wavelength[i], -1.3f));
 		tau[i] = tauR * tauA;
 	}
 

@@ -185,11 +185,11 @@ static bool NeedsNormalSwap(JoeObject & object)
 			for (unsigned int v = 0; v < 3; v++)
 				norm = norm + norms[v];
 			Vec3 tnorm = (tri[2] - tri[0]).cross(tri[1] - tri[0]);
-			if (tnorm.Magnitude() > 0.0001 && norm.Magnitude() > 0.0001)
+			if (tnorm.MagnitudeSquared() > 1E-8f && norm.MagnitudeSquared() > 1E-8f)
 			{
 				norm = norm.Normalize();
 				tnorm = tnorm.Normalize();
-				if (norm.dot(tnorm) < 0.5 && norm.dot(tnorm) > -0.5)
+				if (norm.dot(tnorm) < 0.5f && norm.dot(tnorm) > -0.5f)
 				{
 					normal_flip_count++;
 					//std::cout << norm.dot(tnorm) << std::endl;

@@ -359,16 +359,16 @@ void VertexArray::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	dim.Set(w,h);
 	Vec2 center;
 	center.Set(x,y);
-	corner1 = center - dim*0.5;
-	corner2 = center + dim*0.5;
+	corner1 = center - dim*0.5f;
+	corner2 = center + dim*0.5f;
 	Vec2 margin;
 	margin.Set(marginwidth, marginheight);
 
 	float lxmax = std::max((corner1-margin)[0],std::min(clipx,corner1[0]));
 	float cxmax = std::max(corner1[0],std::min(clipx,corner2[0]));
 	float rxmax = std::max(corner2[0],std::min(clipx,(corner2+margin)[0]));
-	float lumax = (lxmax-(corner1-margin)[0])/(corner1[0]-(corner1-margin)[0])*0.5;
-	float rumax = (rxmax-corner2[0])/((corner2+margin)[0]-corner2[0])*0.5+0.5;
+	float lumax = (lxmax-(corner1-margin)[0])/(corner1[0]-(corner1-margin)[0])*0.5f;
+	float rumax = (rxmax-corner2[0])/((corner2+margin)[0]-corner2[0])*0.5f+0.5f;
 
 	//upper left
 	SetVertexData2DQuad((corner1-margin)[0],(corner1-margin)[1],lxmax,corner1[1],
@@ -604,16 +604,16 @@ void VertexArray::Scale(float x, float y, float z)
 		n[1] *= y;
 		n[2] *= z;
 		float len2 = n[0] * n[0] + n[1] * n[1] + n[2] * n[2];
-		if (len2 > 0.0)
+		if (len2 > 0)
 		{
-			float len = 1 / sqrtf(len2);
+			float len = 1 / std::sqrt(len2);
 			n[0] *= len;
 			n[1] *= len;
 			n[2] *= len;
 		}
 	}
 
-	if (x < 0.0f || y < 0.0f || z < 0.0f)
+	if (x < 0 || y < 0 || z < 0)
 	{
 		FixWindingOrder();
 	}

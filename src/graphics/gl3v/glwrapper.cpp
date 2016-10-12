@@ -684,7 +684,7 @@ void GLWrapper::ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 
 void GLWrapper::ClearDepth(GLfloat d)
 {
-	GLLOG(glClearDepth(d));ERROR_CHECK;
+	GLLOG(glClearDepth(GLclampd(d)));ERROR_CHECK;
 }
 
 void GLWrapper::ClearStencil(GLint s)

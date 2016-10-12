@@ -269,9 +269,9 @@ void GraphicsGL3::SetupScene(
 	Quat light_rotation;
 	Vec3 up(0, 0, 1);
 	float cosa = up.dot(light_direction);
-	if (cosa * cosa < 1.0f)
+	if (cosa * cosa < 1)
 	{
-		float a = -acosf(cosa);
+		float a = -std::acos(cosa);
 		Vec3 x = up.cross(light_direction).Normalize();
 		light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
 	}
@@ -279,30 +279,30 @@ void GraphicsGL3::SetupScene(
 	// shadow cameras
 	for (int i = 0; i < 3; i++)
 	{
-		//float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
-		float shadow_radius = (1<<(2-i))*closeshadow+(2-i)*20.0;
+		//float shadow_radius = (1<<i)*closeshadow+(i)*20; //5,30,60
+		float shadow_radius = (1<<(2-i))*closeshadow+(2-i)*20;
 
 		Vec3 shadowbox(1,1,1);
-		//shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
-		shadowbox = shadowbox * (shadow_radius*1.5);
+		//shadowbox = shadowbox * (shadow_radius * std::sqrt(2.0f));
+		shadowbox = shadowbox * (shadow_radius * 1.5f);
 		Vec3 shadowoffset(0,0,-1);
 		shadowoffset = shadowoffset * shadow_radius;
 		(-cam_rotation).RotateVector(shadowoffset);
 		if (i == 2)
-			shadowbox[2] += 25.0;
+			shadowbox[2] += 25;
 		Vec3 shadowPosition = cam_position+shadowoffset;
 
 		// snap the shadow camera's location to shadow map texels
 		// this can be commented out to minimize car aliasing at the expense of scenery aliasing
 		const float shadowMapResolution = 512;
-		float snapToGridSize = 2.f*shadowbox[0]/shadowMapResolution;
+		float snapToGridSize = 2*shadowbox[0]/shadowMapResolution;
 		Vec3 cameraSpaceShadowPosition = shadowPosition;
 		light_rotation.RotateVector(cameraSpaceShadowPosition);
 		for (int n = 0; n < 3; n++)
 		{
 			float pos = cameraSpaceShadowPosition[n];
 			float gridpos = pos / snapToGridSize;
-			gridpos = floor(gridpos);
+			gridpos = std::floor(gridpos);
 			cameraSpaceShadowPosition[n] = gridpos*snapToGridSize;
 		}
 		(-light_rotation).RotateVector(cameraSpaceShadowPosition);

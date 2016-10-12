@@ -158,7 +158,7 @@ bool ModelObj::Load(const std::string & filepath, std::ostream & error_log)
 		else if (id == "vt")
 		{
 			if (!ExtractTwoFloat(texcoords, "texcoords", f, error_log, filepath)) return false;
-			texcoords.back().v = 1.0-texcoords.back().v;
+			texcoords.back().v = 1-texcoords.back().v;
 		}
 		else if (id == "f")
 		{

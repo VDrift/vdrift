@@ -38,12 +38,12 @@ RenderDimensions::RenderDimensions(float w, float h, bool mult) : width(0), heig
 
 bool RenderDimensions::get(unsigned int w, unsigned int h, unsigned int & outw, unsigned int & outh)
 {
-	outw = (unsigned int)floor(origw);
-	outh = (unsigned int)floor(origh);
+	outw = (unsigned int)std::floor(origw);
+	outh = (unsigned int)std::floor(origh);
 	if (origMultiples)
 	{
-		outw = (unsigned int)floor(origw*w);
-		outh = (unsigned int)floor(origh*h);
+		outw = (unsigned int)std::floor(origw*w);
+		outh = (unsigned int)std::floor(origh*h);
 	}
 
 	if (outw != width || outh != height)

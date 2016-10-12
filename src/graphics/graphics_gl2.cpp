@@ -937,9 +937,9 @@ void GraphicsGL2::SetupCameras(
 		Quat light_rotation;
 		Vec3 up(0, 0, 1);
 		float cosa = up.dot(light_direction);
-		if (cosa * cosa < 1.0f)
+		if (cosa * cosa < 1)
 		{
-			float a = -acosf(cosa);
+			float a = -std::acos(cosa);
 			Vec3 x = up.cross(light_direction).Normalize();
 			light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
 		}
@@ -947,14 +947,14 @@ void GraphicsGL2::SetupCameras(
 		const std::string shadow_names[] = {"near", "medium", "far"};
 		for (int i = 0; i < 3; i++)
 		{
-			float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
+			float shadow_radius = (1<<i)*closeshadow+(i)*20; //5,30,60
 
 			Vec3 shadowbox(1,1,1);
-			shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
+			shadowbox = shadowbox * (shadow_radius * std::sqrt(2.0f));
 			Vec3 shadowoffset(0,0,-1);
 			shadowoffset = shadowoffset * shadow_radius;
 			(-cam_rotation).RotateVector(shadowoffset);
-			shadowbox[2] += 60.0;
+			shadowbox[2] += 60;
 
 			GraphicsCamera & cam = cameras["shadows_"+shadow_names[i]];
 			cam = cameras["default"];
