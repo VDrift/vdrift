@@ -101,7 +101,7 @@ inline Quat LookAt(
 	float rollangle = AngleBetween(realup, curup);
 	if (curup.dot(side) > 0)
 	{
-		rollangle = float(M_2_PI) - rollangle;
+		rollangle = float(2 * M_PI) - rollangle;
 	}
 	assert(rollangle == rollangle);
 
