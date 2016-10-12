@@ -345,7 +345,7 @@ void Gui::Update(float dt)
 		{
 			// fade in new active page
 			// ease curve: 3 * p^2 - 2 * p^3
-			float p = 1.0 - animation_counter / animation_count_start;
+			float p = 1 - animation_counter / animation_count_start;
 			float alpha = 3 * p * p - 2 * p * p * p;
 			active_page->second.SetAlpha(alpha);
 			//dlog << active_page->first << " fade in: " << alpha << std::endl;
