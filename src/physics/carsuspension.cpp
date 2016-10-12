@@ -21,6 +21,9 @@
 #include "coordinatesystem.h"
 #include "cfg/ptree.h"
 
+static const btScalar deg2rad = M_PI / 180;
+static const btScalar rad2deg = 180 / M_PI;
+
 CarSuspensionInfo::CarSuspensionInfo() :
 	spring_constant(50000.0),
 	anti_roll(8000),
@@ -61,12 +64,12 @@ void CarSuspension::Init(const CarSuspensionInfo & info)
 {
 	this->info = info;
 
-	btQuaternion toe(Direction::up, info.toe * M_PI / 180.0);
-	btQuaternion cam(Direction::forward, -info.camber * M_PI / 180.0);
+	btQuaternion toe(Direction::up, info.toe * deg2rad);
+	btQuaternion cam(Direction::forward, -info.camber * deg2rad);
 	orientation_ext = toe * cam;
 
-	steering_axis = Direction::up * btCos(-info.caster * M_PI / 180.0) +
-		Direction::right * btSin(-info.caster * M_PI / 180.0);
+	steering_axis = Direction::up * btCos(-info.caster * deg2rad) +
+		Direction::right * btSin(-info.caster * deg2rad);
 
 	position = info.position;
 
@@ -81,11 +84,11 @@ btScalar CarSuspension::GetDisplacement(btScalar force) const
 
 void CarSuspension::SetSteering(btScalar value)
 {
-	btScalar alpha = -value * info.steering_angle * M_PI / 180.0;
-	steering_angle = 0.0;
-	if (alpha != 0.0)
+	btScalar alpha = -value * info.steering_angle * deg2rad;
+	steering_angle = 0;
+	if (alpha != 0)
 	{
-		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
+		steering_angle = std::atan(1 / (1 / std::tan(alpha) - std::tan(info.ackermann * deg2rad)));
 	}
 	btQuaternion steer(steering_axis, steering_angle);
 	orientation = steer * orientation_ext;
@@ -114,7 +117,7 @@ void CarSuspension::UpdateDisplacement(btScalar displacement_delta, btScalar dt)
 	if (displacement_delta < 0)
 	{
 		// simulate wheel rebound (ignoring relative chassis acceleration)
-		btScalar new_delta = -0.5 * info.inv_mass * force * dt * dt;
+		btScalar new_delta = -btScalar(0.5) * info.inv_mass * force * dt * dt;
 		btScalar old_delta = displacement - last_displacement;
 		if (old_delta < 0)
 			new_delta += old_delta;
@@ -153,7 +156,7 @@ void CarSuspension::DebugPrint(std::ostream & out) const
 	out << "Displacement: " << displacement << "\n";
 	out << "Spring Force: " << spring_force << "\n";
 	out << "Damping Force: " << damp_force << "\n";
-	out << "Steering angle: " << steering_angle * 180 / M_PI << "\n";
+	out << "Steering angle: " << steering_angle * rad2deg << "\n";
 }
 
 class BasicSuspension : public CarSuspension

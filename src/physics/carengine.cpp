@@ -69,10 +69,10 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	cfg.get("nos-ratio", nos_fuel_ratio);
 
 	// friction (Heywood 1988 tfmep)
-	friction[0] = 97000 / (4 * M_PI) * displacement;
-	friction[1] = 15000 / (4 * M_PI) * displacement;
-	friction[2] =  5000 / (4 * M_PI) * displacement;
-	std::vector<btScalar> f(3, 0.0f);
+	friction[0] = btScalar(97000 / (4 * M_PI)) * displacement;
+	friction[1] = btScalar(15000 / (4 * M_PI)) * displacement;
+	friction[2] = btScalar(5000 / (4 * M_PI)) * displacement;
+	std::vector<btScalar> f(3, 0);
 	if (cfg.get("torque-friction", f))
 	{
 		friction[0] = f[0];
@@ -162,9 +162,9 @@ btScalar CarEngineInfo::GetTorque(const btScalar throttle, const btScalar rpm) c
 btScalar CarEngineInfo::GetFrictionTorque(btScalar throttle, btScalar rpm) const
 {
 	btScalar s = rpm < 0 ? -1 : 1;
-	btScalar r = s * rpm * 0.001;
+	btScalar r = s * rpm * btScalar(0.001);
 	btScalar f = friction[0] + friction[1] * r + friction[2] * r * r;
-	return -s * f * (1.0 - throttle);
+	return -s * f * (1 - throttle);
 }
 
 CarEngine::CarEngine()

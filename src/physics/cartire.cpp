@@ -23,6 +23,9 @@
 
 #ifndef VDRIFTN
 
+static const btScalar deg2rad = M_PI / 180;
+static const btScalar rad2deg = 180 / M_PI;
+
 CarTireInfo::CarTireInfo() :
 	longitudinal(11),
 	lateral(15),
@@ -63,12 +66,12 @@ btVector3 CarTire::getForce(
 	btScalar lon_velocity,
 	btScalar lat_velocity)
 {
-	if (normal_force * friction_coeff < 1E-6)
+	if (normal_force * friction_coeff < btScalar(1E-6))
 	{
 		return btVector3(0, 0, 0);
 	}
 
-	btScalar Fz = normal_force * 0.001;
+	btScalar Fz = normal_force * btScalar(1E-3);
 
 	// limit input
 	btSetMin(Fz, btScalar(30));
@@ -82,25 +85,25 @@ btVector3 CarTire::getForce(
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
-	btScalar gamma = inclination * (180.0 / M_PI);
+	btScalar gamma = inclination * rad2deg;
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) / denom;
-	btScalar alpha = -Atan(lat_velocity / denom) * (180.0 / M_PI);
+	btScalar alpha = -Atan(lat_velocity / denom) * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
-	btScalar Gx = PacejkaGx(sigma, alpha * (M_PI / 180.0));
-	btScalar Gy = PacejkaGy(sigma, alpha * (M_PI / 180.0));
+	btScalar Gx = PacejkaGx(sigma, alpha * deg2rad);
+	btScalar Gy = PacejkaGy(sigma, alpha * deg2rad);
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
 	camber = inclination;
 	slide = sigma;
-	slip = alpha * (M_PI / 180.0);
+	slip = alpha * deg2rad;
 	ideal_slide = sigma_hat;
-	ideal_slip = alpha_hat * (M_PI / 180.0);
+	ideal_slip = alpha_hat * deg2rad;
 	fx = Fx;
 	fy = Fy;
 	fz = Fz;
@@ -128,7 +131,7 @@ btScalar CarTire::getRollingResistance(const btScalar velocity, const btScalar r
 btScalar CarTire::getMaxFx(btScalar load) const
 {
 	const std::vector<btScalar> & b = longitudinal;
-	btScalar Fz = load * 0.001;
+	btScalar Fz = load * btScalar(1E-3);
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 	return D;
 }
@@ -136,7 +139,7 @@ btScalar CarTire::getMaxFx(btScalar load) const
 btScalar CarTire::getMaxFy(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & a = lateral;
-	btScalar Fz = load * 0.001;
+	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14];
@@ -146,7 +149,7 @@ btScalar CarTire::getMaxFy(btScalar load, btScalar camber) const
 btScalar CarTire::getMaxMz(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & c = aligning;
-	btScalar Fz = load * 0.001;
+	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
@@ -256,13 +259,13 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
-	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1.0 - c[6] * btFabs(gamma)) * btExp(-c[5] * Fz);
+	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * btFabs(gamma)) * btExp(-c[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1.0 - c[10] * btFabs(gamma));
+	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1 - c[10] * btFabs(gamma));
 
 	// horizontal shift
 	btScalar Sh = c[11] * gamma + c[12] * Fz + c[13];
@@ -292,7 +295,7 @@ void CarTire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) c
 	int HAT_ITERATIONS = sigma_hat.size();
 
 	btScalar HAT_LOAD = 0.5;
-	btScalar nf = load * 0.001;
+	btScalar nf = load * btScalar(1E-3);
 	if (nf < HAT_LOAD)
 	{
 		sh = sigma_hat[0];
@@ -312,8 +315,8 @@ void CarTire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) c
 		if (lbound >= (int)sigma_hat.size())
 			lbound = (int)sigma_hat.size()-1;
 		btScalar blend = (nf-HAT_LOAD*(lbound+1))/HAT_LOAD;
-		sh = sigma_hat[lbound]*(1.0-blend)+sigma_hat[lbound+1]*blend;
-		ah = alpha_hat[lbound]*(1.0-blend)+alpha_hat[lbound+1]*blend;
+		sh = sigma_hat[lbound]*(1-blend)+sigma_hat[lbound+1]*blend;
+		ah = alpha_hat[lbound]*(1-blend)+alpha_hat[lbound+1]*blend;
 	}
 }
 

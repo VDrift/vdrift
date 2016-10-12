@@ -120,8 +120,8 @@ public:
 	///get the rotational speed of the clutch given the rotational speed of the driveshaft
 	btScalar CalculateClutchSpeed(btScalar driveshaft_speed)
 	{
-		driveshaft_rpm = driveshaft_speed * 30.0 / M_PI;
-		crankshaft_rpm = driveshaft_speed * gear_ratios[gear] * 30.0 / M_PI;
+		driveshaft_rpm = driveshaft_speed * btScalar(30 / M_PI);
+		crankshaft_rpm = driveshaft_speed * gear_ratios[gear] * btScalar(30 / M_PI);
 		return driveshaft_speed * gear_ratios[gear];
 	}
 

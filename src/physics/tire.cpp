@@ -60,13 +60,13 @@ void Tire::init(const TireInfo & info)
 
 void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
-	btScalar rload = load / max_load * tablesize - 1.0;
-	btClamp(rload, btScalar(0.0), btScalar(tablesize - 1.0));
+	btScalar rload = load / max_load * tablesize - 1;
+	btClamp(rload, btScalar(0), btScalar(tablesize - 1));
 	int lbound = btMin(int(rload), tablesize - 2);
 
 	btScalar blend = rload - lbound;
-	sh = sigma_hat[lbound] * (1.0 - blend) + sigma_hat[lbound + 1] * blend;
-	ah = alpha_hat[lbound] * (1.0 - blend) + alpha_hat[lbound + 1] * blend;
+	sh = sigma_hat[lbound] * (1 - blend) + sigma_hat[lbound + 1] * blend;
+	ah = alpha_hat[lbound] * (1 - blend) + alpha_hat[lbound + 1] * blend;
 }
 
 btVector3 Tire::getForce(
@@ -77,7 +77,7 @@ btVector3 Tire::getForce(
 	btScalar lon_velocity,
 	btScalar lat_velocity)
 {
-	if (normal_load * friction_coeff  < 1E-6)
+	if (normal_load * friction_coeff  < btScalar(1E-6))
 	{
 		slip = slip_angle = 0;
 		ideal_slip = ideal_slip_angle = 1;
@@ -134,8 +134,8 @@ btVector3 Tire::getForce(
 
 btScalar Tire::getSqueal() const
 {
-	btScalar squeal = 0.0;
-	if (vx * vx > 1E-2 && slip * slip > 1E-6)
+	btScalar squeal = 0;
+	if (vx * vx > btScalar(1E-2) && slip * slip > btScalar(1E-6))
 	{
 		btScalar vx_body = vx / slip;
 		btScalar vx_ideal = ideal_slip * vx_body;
@@ -143,7 +143,7 @@ btScalar Tire::getSqueal() const
 		btScalar vx_squeal = btFabs(vx / vx_ideal);
 		btScalar vy_squeal = btFabs(vy / vy_ideal);
 		// start squeal at 80% of the ideal slide/slip, max out at 160%
-		squeal = 1.25 * btMax(vx_squeal, vy_squeal) - 1.0;
+		squeal = btScalar(1.25) * btMax(vx_squeal, vy_squeal) - 1;
 		btClamp(squeal, btScalar(0), btScalar(1));
 	}
 	return squeal;

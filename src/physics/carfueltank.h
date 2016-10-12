@@ -88,7 +88,7 @@ public:
 
 	bool Empty() const
 	{
-		return (volume <= 0.0);
+		return (volume <= 0);
 	}
 
 	btScalar FuelPercent() const

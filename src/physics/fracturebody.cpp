@@ -121,7 +121,7 @@ bool FractureBody::applyImpulse(int con_id, btScalar impulse)
 {
 	if (con_id < 0) return false;
 	btAssert(con_id < m_connections.size());
-	bool activate = m_connections[con_id].m_accImpulse < 1E-3;
+	bool activate = m_connections[con_id].m_accImpulse < btScalar(1E-3);
 	m_connections[con_id].m_accImpulse += impulse;
 	return activate;
 }
@@ -141,8 +141,8 @@ btRigidBody* FractureBody::updateConnection(int con_id)
 			return breakConnection(con_id);
 		}
 		btScalar damage = connection.m_accImpulse - connection.m_elasticLimit;
-		connection.m_elasticLimit -= damage * 0.5;
-		connection.m_plasticLimit -= damage * 0.5;
+		connection.m_elasticLimit -= damage * btScalar(0.5);
+		connection.m_plasticLimit -= damage * btScalar(0.5);
 	}
 	connection.m_accImpulse = 0;
 	return 0;
