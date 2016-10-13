@@ -72,9 +72,9 @@ static T cast(const std::string &str) {
 
 static std::string GetTimeString(float time)
 {
-	if (time != 0.0)
+	if (time != 0)
 	{
-		int minutes = (int) time / 60;
+		int minutes = time * (1 / 60.0f);
 		float seconds = time - minutes * 60;
 		std::ostringstream s;
 		s << std::setfill('0');
@@ -797,11 +797,11 @@ void Game::Advance()
 void Game::Tick(float deltat)
 {
 	// This is the minimum fps the game will run at before it starts slowing down time.
-	const float minfps = 10.0f;
+	const float minfps = 10;
 	// Slow the game down if we can't process fast enough.
-	const unsigned int maxticks = (int) (1.0f / (minfps * timestep));
+	const unsigned int maxticks = (int) (1 / (minfps * timestep));
 	// Slow the game down if we can't process fast enough.
-	const float maxtime = 1.0 / minfps;
+	const float maxtime = 1 / minfps;
 	unsigned int curticks = 0;
 
 	// Throw away wall clock time if necessary to keep the framerate above the minimum.
@@ -928,7 +928,7 @@ void Game::AdvanceGameLogic()
 void Game::ProcessGameInputs()
 {
 	// Most game inputs are allowed whether or not there's a car in the game.
-	if (carcontrols_local.second.GetInput(GameInput::SCREENSHOT) == 1.0)
+	if (carcontrols_local.second.GetInput(GameInput::SCREENSHOT) == 1)
 	{
 		// Determine filename.
 		std::string shotfile;
@@ -954,7 +954,7 @@ void Game::ProcessGameInputs()
 			error_output << "Couldn't find a file to which to save the captured screenshot" << std::endl;
 	}
 
-	if (carcontrols_local.second.GetInput(GameInput::RELOAD_SHADERS) == 1.0)
+	if (carcontrols_local.second.GetInput(GameInput::RELOAD_SHADERS) == 1)
 	{
 		info_output << "Reloading shaders" << std::endl;
 		if (!graphics->ReloadShaders(info_output, error_output))
@@ -963,7 +963,7 @@ void Game::ProcessGameInputs()
 		}
 	}
 
-	if (carcontrols_local.second.GetInput(GameInput::RELOAD_GUI) == 1.0)
+	if (carcontrols_local.second.GetInput(GameInput::RELOAD_GUI) == 1)
 	{
 		info_output << "Reloading GUI" << std::endl;
 
@@ -1032,7 +1032,7 @@ void Game::UpdateTimer()
 			Vec3 relative_pos = pos - back_left;
 			float dist_from_back = 0;
 
-			if (forwardvec.Magnitude() > 0.0001)
+			if (forwardvec.MagnitudeSquared() > 1E-8f)
 				dist_from_back = relative_pos.dot(forwardvec.Normalize());
 
 			timer.UpdateDistance(i, curpatch->GetDistFromStart() + dist_from_back);
@@ -1128,8 +1128,8 @@ bool Game::AssignControl()
 
 			float delta = eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i);
 			int axis = 0;
-			if (delta > 0.4) axis = 1;
-			if (delta < -0.4) axis = -1;
+			if (delta > 0.4f) axis = 1;
+			if (delta < -0.4f) axis = -1;
 			if (axis)
 			{
 				controlgrab_control.type = CarControlMap::Control::JOY;
@@ -1248,25 +1248,25 @@ void Game::UpdateCarSpecList(GuiOption::List & spec_list)
 
 	std::ostringstream s;
 	s << std::fixed << std::setprecision(0);
-	s << round(specs[0] * (imperial ? 2.2369 : 3.6)) << (imperial ? " mph" : " km/h");
+	s << round(specs[0] * (imperial ? 2.2369f : 3.6f)) << (imperial ? " mph" : " km/h");
 	spec_list[0].first = s.str();
 
 	spec_list[1].first = (specs[1] == 1 ? "FWD" : (specs[1] == 2 ? "RWD" : "AWD"));
 
 	s.str("");
-	s << round(specs[2] * 1E6) << " cc";
+	s << round(specs[2] * 1E6f) << " cc";
 	spec_list[2].first = s.str();
 
 	s.str("");
-	s << round(specs[3] * 1.341E-3) << " hp";
+	s << round(specs[3] * 1.341E-3f) << " hp";
 	spec_list[3].first = s.str();
 
 	s.str("");
-	s << round(specs[4] * (imperial ? 0.73756 : 1)) << (imperial ? " ft-lb" : " Nm");
+	s << round(specs[4] * (imperial ? 0.73756f : 1)) << (imperial ? " ft-lb" : " Nm");
 	spec_list[4].first = s.str();
 
 	s.str("");
-	s << round(specs[5] * (imperial ? 2.20462 : 1)) << (imperial ? " lb" : " kg");
+	s << round(specs[5] * (imperial ? 2.20462f : 1)) << (imperial ? " lb" : " kg");
 	spec_list[5].first = s.str();
 
 	s.str("");
@@ -1275,7 +1275,7 @@ void Game::UpdateCarSpecList(GuiOption::List & spec_list)
 
 	s.str("");
 	s << std::setprecision(1);
-	s << specs[5] / specs[3] * (imperial ? 1644 : 745.7) << (imperial ? " lb/hp" : " kg/hp");
+	s << specs[5] / specs[3] * (imperial ? 1644 : 745.7f) << (imperial ? " lb/hp" : " kg/hp");
 	spec_list[7].first = s.str();
 }
 
@@ -1508,11 +1508,11 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	if (race_laps > 0)
 	{
 		float stagingtimeleft = timer.GetStagingTimeLeft();
-		if (stagingtimeleft > 0.5)
+		if (stagingtimeleft > 0.5f)
 			msgstr << (int)stagingtimeleft + 1;
-		else if (stagingtimeleft > 0.0)
+		else if (stagingtimeleft > 0)
 			msgstr << lang("Ready");
-		else if (stagingtimeleft < 0.0 && stagingtimeleft > -1.0)
+		else if (stagingtimeleft < 0 && stagingtimeleft > -1)
 			msgstr << lang("GO");
 		else if (timer.GetPlayerCurrentLap() > race_laps)
 			msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
@@ -1529,8 +1529,8 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	else
 		gearstr << gear;
 
-	float speed_scale = (settings.GetMPH() ? 2.237 : 3.6);
-	float speed = std::fabs(car.GetSpeedMPS()) * speed_scale;
+	float speed_scale = (settings.GetMPH() ? 2.237f : 3.6f);
+	float speed = std::abs(car.GetSpeedMPS()) * speed_scale;
 	float speedometer = car.GetMaxSpeedMPS() * speed_scale;
 	speedometer = std::min(320.0f, std::max(120.0f, std::ceil(speedometer / 40.0f) * 40.0f));
 
@@ -2468,14 +2468,14 @@ bool Game::Download(const std::vector <std::string> & urls)
 
 void Game::UpdateForceFeedback(float dt)
 {
-	const float ffdt = 0.02;
+	const float ffdt = 0.02f;
 
 	if (carcontrols_local.first)
 	{
 		ff_update_time += dt;
 		if (ff_update_time >= ffdt )
 		{
-			ff_update_time = 0.0;
+			ff_update_time = 0;
 
 			float feedback = carcontrols_local.first->GetFeedback();
 
@@ -2486,8 +2486,8 @@ void Game::UpdateForceFeedback(float dt)
 			if (settings.GetFFInvert()) feedback = -feedback;
 
 			// clamp
-			if (feedback > 1.0) feedback = 1.0;
-			if (feedback < -1.0) feedback = -1.0;
+			if (feedback > 1) feedback = 1;
+			if (feedback < -1) feedback = -1;
 
 			forcefeedback->update(feedback, ffdt, error_output);
 		}
@@ -2495,14 +2495,14 @@ void Game::UpdateForceFeedback(float dt)
 
 	if (pause && dt == 0)
 	{
-		forcefeedback->update(0.0f, ffdt, error_output);
+		forcefeedback->update(0, ffdt, error_output);
 	}
 }
 
 void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 {
 	// Only spawn particles every so often...
-	unsigned int interval = 0.2 / dt;
+	unsigned int interval = 0.2f / dt;
 	if (particle_timer % interval == 0)
 	{
 		for (int i = 0; i < 4; i++)
@@ -2520,7 +2520,7 @@ void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 void Game::UpdateParticles(float dt)
 {
 	tire_smoke.Update(dt);
-	particle_timer = (particle_timer + 1) % (unsigned int)((1.0 / timestep));
+	particle_timer = (particle_timer + 1) % (unsigned int)((1 / timestep));
 }
 
 void Game::UpdateParticleGraphics()
@@ -2566,21 +2566,21 @@ void Game::UpdateDriftScore(const int carid, const float dt)
 		float dir_mag = car_direction.length();
 
 		// Speed must be above 10 m/s and orientation must be valid.
-		if (car_speed > 10 && dir_mag > 0.01)
+		if (car_speed > 10 && dir_mag > 0.01f)
 		{
 			// Angle between car's direction and velocity.
 			float cos_angle = car_direction.dot(car_velocity) / (car_speed * dir_mag);
 			if (cos_angle > 1) cos_angle = 1;
 			else if (cos_angle < -1) cos_angle = -1;
-			float car_angle = acosf(cos_angle);
+			float car_angle = std::acos(cos_angle);
 
 			// Drift starts when the angle > 0.2 (around 11.5 degrees).
 			// Drift ends when the angle < 0.1 (aournd 5.7 degrees).
 			float angle_threshold(0.2);
-			if (timer.GetIsDrifting(carid)) angle_threshold = 0.1;
+			if (timer.GetIsDrifting(carid)) angle_threshold = 0.1f;
 
-			is_drifting = (car_angle > angle_threshold && car_angle <= M_PI / 2.0);
-			spin_out = (car_angle > M_PI / 2.0);
+			is_drifting = (car_angle > angle_threshold && car_angle <= float(M_PI_2));
+			spin_out = (car_angle > float(M_PI_2));
 
 			// Calculate score.
 			if (is_drifting)
@@ -3071,9 +3071,9 @@ void Game::SetCarsNum(const std::string & value)
 		for (size_t i = car_info.size(); i < cars_num; ++i)
 		{
 			// variate color, lame version
-			float hue = car_info.back().hsv[0] + 0.07;
-			if (hue > 1.0f) hue -= 1.0f;
-			Vec3 hsv(hue, 0.95, 0.5);
+			float hue = car_info.back().hsv[0] + 0.07f;
+			if (hue > 1) hue -= 1;
+			Vec3 hsv(hue, 0.95f, 0.5f);
 
 			car_info.push_back(car_info.back());
 			CarInfo & info = car_info.back();
