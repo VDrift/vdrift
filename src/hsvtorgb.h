@@ -24,7 +24,7 @@
 
 inline void HSVtoRGB(float h, float s, float v, float & r, float & g, float & b)
 {
-	float hi = std::floor(h * 6 + 1.0E-5); // add eps to avoid nummerical precision issues
+	float hi = std::floor(h * 6 + 1E-5f); // add eps to avoid nummerical precision issues
 	float f = h * 6 - hi;
 	float p = v * (1 - s);
 	float q = v * (1 - (s * f));
