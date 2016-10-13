@@ -88,20 +88,20 @@ void EventSystem::BeginFrame()
 	{
 		double thistick = SDL_GetTicks();
 
-		dt = (thistick-lasttick)/1000.0;
+		dt = (thistick-lasttick)*1E-3;
 
 		/*if (throttle && dt < game.TickPeriod())
 		{
 			//cout << "throttling: " << lasttick.data << "," << thistick << endl;
 			SDL_Delay(10);
 			thistick = SDL_GetTicks();
-			dt = (thistick-lasttick)/1000.0;
+			dt = (thistick-lasttick)*1E-3;
 		}*/
 
 		lasttick = thistick;
 	}
 
-	RecordFPS(1.0f/dt);
+	RecordFPS(1/dt);
 }
 
 void EventSystem::ProcessEvents()
