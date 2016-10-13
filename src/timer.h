@@ -207,7 +207,7 @@ private:
 
 		void SetDrifting ( bool value, bool countit )
 		{
-			if (!value && drifting && countit && thisdriftscore + GetBonusScore() > 5.0)
+			if (!value && drifting && countit && thisdriftscore + GetBonusScore() > 5)
 			{
 				score += thisdriftscore + GetBonusScore();
 				//std::cout << "Incrementing score: " << score << std::endl;
@@ -261,7 +261,7 @@ private:
 
 		float GetBonusScore() const
 		{
-			return max_speed / 2.0 + max_angle * 40.0 / 3.141593 + thisdriftscore; //including thisdriftscore here is redundant on purpose to give more points to long drifts
+			return max_speed * 0.5f + max_angle * 40 / 3.141593f + thisdriftscore; //including thisdriftscore here is redundant on purpose to give more points to long drifts
 		}
 	};
 
@@ -287,7 +287,7 @@ private:
 
 		void Reset()
 		{
-			time = totaltime = 0.0;
+			time = totaltime = 0;
 			lastlap.Reset();
 			bestlap.Reset();
 			num_laps = 0;
@@ -296,7 +296,7 @@ private:
 
 		void Tick(float dt)
 		{
-			time += dt;
+			time += double(dt);
 		}
 
 		void Lap(bool countit)
@@ -308,7 +308,7 @@ private:
 			}
 
 			totaltime += time;
-			time = 0.0;
+			time = 0;
 			num_laps++;
 		}
 
