@@ -109,6 +109,9 @@ void CarSuspension::SetDisplacement(btScalar value)
 		displacement = 0;
 		wheel_contact = 0;
 	}
+
+	// update wheel position
+	position = GetWheelPosition(displacement / info.travel);
 }
 
 void CarSuspension::UpdateDisplacement(btScalar displacement_delta, btScalar dt)
@@ -145,9 +148,6 @@ void CarSuspension::UpdateForces(btScalar roll_delta, btScalar dt)
 	force = spring_force + damp_force + anti_roll_force;
 
 	wheel_force = (force * wheel_contact > 0) ? force : 0;
-
-	// update wheel position
-	position = GetWheelPosition(displacement / info.travel);
 }
 
 void CarSuspension::DebugPrint(std::ostream & out) const
