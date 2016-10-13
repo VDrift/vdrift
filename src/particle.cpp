@@ -129,7 +129,7 @@ void ParticleSystem::UpdateGraphics(
 		Particle & p = particles[i];
 		Vec3 pos = p.position;
 
-		float trans = p.transparency * std::pow((1.0f - p.time / p.longevity), 4);
+		float trans = p.transparency * std::pow((1.0f - p.time / p.longevity), 4.0f);
 		trans = clamp(trans, 0.0f, 1.0f);
 
 		float sizescale = 0.2f * (p.time / p.longevity) + 0.4f;
