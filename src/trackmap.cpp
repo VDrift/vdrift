@@ -225,14 +225,14 @@ bool TrackMap::BuildMap(
 	content.load(cardot1_focused, texturepath, "cardot1_focused.png", dotinfo);
 
 	// map position on screen: right side 16 pixel padding
-	map_min[0] = 1.0 - (track_width * map_scale + 16)  * pixel_size[0];
-	map_min[1] = 0.5 - 0.5 * track_height * map_scale * pixel_size[1];
+	map_min[0] = 1 - (track_width * map_scale + 16)  * pixel_size[0];
+	map_min[1] = 0.5f * (1 - track_height * map_scale * pixel_size[1]);
 
 	map_max[0] = map_min[0] + map_width * pixel_size[0];
 	map_max[1] = map_min[1] + map_height * pixel_size[1];
 
-	dot_size[0] = 0.5 * cardot0->GetW() * pixel_size[0];
-	dot_size[1] = 0.5 * cardot0->GetH() * pixel_size[1];
+	dot_size[0] = 0.5f * cardot0->GetW() * pixel_size[0];
+	dot_size[1] = 0.5f * cardot0->GetH() * pixel_size[1];
 
 	mapverts.SetToBillboard(map_min[0], map_min[1], map_max[0], map_max[1]);
 	mapdraw = mapnode.GetDrawList().twodim.insert(Drawable());
