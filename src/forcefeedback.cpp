@@ -107,14 +107,14 @@ void ForceFeedback::update(
 		return;
 
 	// Clamp force.
-	if (force > 1.0) force = 1.0;
-	if (force < -1.0) force = -1.0;
+	if (force > 1) force = 1;
+	if (force < -1) force = -1;
 
 	// Low pass filter.
-	lastforce = (lastforce + force) * 0.5;
+	lastforce = (lastforce + force) * 0.5f;
 
 	// Update effect.
-	effect.constant.level = Sint16(lastforce * 32767.0);
+	effect.constant.level = Sint16(lastforce * 32767);
 	int new_effect_id = SDL_HapticUpdateEffect(haptic, effect_id, &effect);
 	if (new_effect_id == -1)
 	{
