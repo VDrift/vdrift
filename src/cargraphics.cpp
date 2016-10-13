@@ -105,8 +105,8 @@ static bool LoadWheel(
 		meshname = meshname + sizestr;
 		if (!content.get(mesh, path, meshname))
 		{
-			float width = size[0] * 0.001;
-			float diameter = size[2] * 0.0254;
+			float width = size[0] * 0.001f;
+			float diameter = size[2] * 0.0254f;
 
 			VertexArray rimva, diskva;
 			MeshGen::mg_rim(rimva, size[0], size[1], size[2], 10);
@@ -289,7 +289,7 @@ bool CarGraphics::Load(
 			return false;
 		}
 		cfg_steer->get("max-angle", steer_angle_max);
-		steer_angle_max = steer_angle_max / 180.0 * M_PI;
+		steer_angle_max = steer_angle_max * float(M_PI / 180);
 		SceneNode & steernoderef = bodynoderef.GetNode(steernode);
 		steer_orientation = steernoderef.GetTransform().GetRotation();
 		steer_rotation = steer_orientation;
