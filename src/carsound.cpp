@@ -270,7 +270,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 	gainlist.reserve(enginesounds.size());
 	for (auto & info : enginesounds)
 	{
-		float gain = 1.0;
+		float gain = 1;
 
 		if (rpm < info.minrpm)
 		{
@@ -287,12 +287,12 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		}
 		else if (rpm > info.fullgainrpmend && info.fullgainrpmend < info.maxrpm)
 		{
-			gain *= 1.0 - (rpm - info.fullgainrpmend) / (info.maxrpm - info.fullgainrpmend);
+			gain *= 1 - (rpm - info.fullgainrpmend) / (info.maxrpm - info.fullgainrpmend);
 		}
 
 		if (info.power == EngineSoundInfo::BOTH)
 		{
-			gain *= throttle * 0.5 + 0.5;
+			gain *= (throttle + 1) * 0.5f;
 		}
 		else if (info.power == EngineSoundInfo::POWERON)
 		{
@@ -300,7 +300,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		}
 		else if (info.power == EngineSoundInfo::POWEROFF)
 		{
-			gain *= (1.0-throttle);
+			gain *= (1 - throttle);
 		}
 
 		total_gain += gain;
@@ -313,13 +313,13 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 	}
 
 	// normalize gains
-	assert(total_gain >= 0.0);
+	assert(total_gain >= 0);
 	for (const auto & sound_gain : gainlist)
 	{
 		float gain;
-		if (total_gain == 0.0)
+		if (total_gain == 0)
 		{
-			gain = 0.0;
+			gain = 0;
 		}
 		else if (enginesounds.size() == 1 && enginesounds.back().power == EngineSoundInfo::BOTH)
 		{
@@ -336,13 +336,13 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 	for (int i = 0; i < 4; i++)
 	{
 		// make sure we don't get overlap
-		psound->SetSourceGain(gravelsound[i], 0.0);
-		psound->SetSourceGain(grasssound[i], 0.0);
-		psound->SetSourceGain(tiresqueal[i], 0.0);
+		psound->SetSourceGain(gravelsound[i], 0);
+		psound->SetSourceGain(grasssound[i], 0);
+		psound->SetSourceGain(tiresqueal[i], 0);
 
 		float squeal = dynamics.GetTireSquealAmount(WheelPosition(i));
-		float maxgain = 0.3;
-		float pitchvariation = 0.4;
+		float maxgain = 0.3f;
+		float pitchvariation = 0.4f;
 
 		unsigned sound_active = 0;
 		const TrackSurface & surface = dynamics.GetWheelContact(WheelPosition(i)).GetSurface();
@@ -353,38 +353,38 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		else if (surface.type == TrackSurface::GRASS)
 		{
 			sound_active = grasssound[i];
-			maxgain = 0.4; // up the grass sound volume a little
+			maxgain = 0.4f; // up the grass sound volume a little
 		}
 		else if (surface.type == TrackSurface::GRAVEL)
 		{
 			sound_active = gravelsound[i];
-			maxgain = 0.4;
+			maxgain = 0.4f;
 		}
 		else if (surface.type == TrackSurface::CONCRETE)
 		{
 			sound_active = tiresqueal[i];
-			maxgain = 0.3;
-			pitchvariation = 0.25;
+			maxgain = 0.3f;
+			pitchvariation = 0.25f;
 		}
 		else if (surface.type == TrackSurface::SAND)
 		{
 			sound_active = grasssound[i];
-			maxgain = 0.25; // quieter for sand
-			pitchvariation = 0.25;
+			maxgain = 0.25f; // quieter for sand
+			pitchvariation = 0.25f;
 		}
 		else
 		{
 			sound_active = tiresqueal[i];
-			maxgain = 0.0;
+			maxgain = 0;
 		}
 
 		btVector3 pos_wheel = dynamics.GetWheelPosition(WheelPosition(i));
 		btVector3 vel_wheel = dynamics.GetWheelVelocity(WheelPosition(i));
-		float pitch = (vel_wheel.length() - 5.0) * 0.1;
+		float pitch = (vel_wheel.length() - 5) * 0.1f;
 		pitch = clamp(pitch, 0.0f, 1.0f);
-		pitch = 1.0 - pitch;
+		pitch = 1 - pitch;
 		pitch *= pitchvariation;
-		pitch = pitch + (1.0 - pitchvariation);
+		pitch = pitch + (1 - pitchvariation);
 		pitch = clamp(pitch, 0.1f, 4.0f);
 
 		psound->SetSourcePosition(sound_active, pos_wheel[0], pos_wheel[1], pos_wheel[2]);
@@ -395,7 +395,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 	// update road noise sound
 	{
 		float gain = dynamics.GetVelocity().length();
-		gain *= 0.02;
+		gain *= 0.02f;
 		gain *= gain;
 		if (gain > 1) gain = 1;
 		psound->SetSourceGain(roadnoise, gain);
@@ -413,7 +413,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 			{
 				float bumpsize = suspensionbumpdetection[i].GetTotalBumpSize();
 
-				const float breakevenms = 5.0;
+				const float breakevenms = 5;
 				float gain = bumpsize * GetSpeed() / breakevenms;
 				if (gain > 1)
 					gain = 1;
@@ -453,8 +453,8 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 	// update gear sound
 	if (gearsound_check != dynamics.GetTransmission().GetGear())
 	{
-		float gain = 0.0;
-		if (rpm > 0.0)
+		float gain = 0;
+		if (rpm > 0)
 			gain = dynamics.GetEngine().GetRPMLimit() / rpm;
 		gain = clamp(gain, 0.25f, 0.50f);
 
@@ -473,7 +473,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		if (false)//!psound->GetSourcePlaying(brakesound))
 		{
 			psound->ResetSource(brakesound);
-			psound->SetSourceGain(brakesound, 0.5);
+			psound->SetSourceGain(brakesound, 0.5f);
 		}
 		brakesound_check = true;
 	}
@@ -486,7 +486,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		if (!psound->GetSourcePlaying(handbrakesound))
 		{
 			psound->ResetSource(handbrakesound);
-			psound->SetSourceGain(handbrakesound, 0.5);
+			psound->SetSourceGain(handbrakesound, 0.5f);
 		}
 		handbrakesound_check = true;
 	}
