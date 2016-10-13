@@ -40,9 +40,9 @@ static inline float Ramp(float start, float end, float button_ramp, float dt)
 		return end;
 
 	float cur = start;
-	float sign = 0.3;
+	float sign = 0.3f;
 	if (end < start)
-		sign = -1.2;
+		sign = -1.2f;
 	if (button_ramp > 0)
 		cur += button_ramp*dt*sign;
 
@@ -50,21 +50,21 @@ static inline float Ramp(float start, float end, float button_ramp, float dt)
 
 	if (cur < 0)
 		return 0;
-	if (cur > 1.0)
-		return 1.0;
+	if (cur > 1)
+		return 1;
 	return cur;
 }
 
 static inline float ApplyDeadzone(float dz, float val)
 {
-	if (fabs(val) < dz)
+	if (std::abs(val) < dz)
 		val = 0;
 	else
 	{
 		if (val < 0)
-			val = (val + dz)*(1.0/(1.0-dz));
+			val = (val + dz) * (1 / (1 - dz));
 		else
-			val = (val - dz)*(1.0/(1.0-dz));
+			val = (val - dz) * (1 / (1 - dz));
 	}
 
 	return val;
@@ -73,21 +73,21 @@ static inline float ApplyDeadzone(float dz, float val)
 static inline float ApplyGain(float gain, float val)
 {
 	val *= gain;
-	if (val < -1.0)
-		val = -1.0;
-	if (val > 1.0)
-		val = 1.0;
+	if (val < -1)
+		val = -1;
+	if (val > 1)
+		val = 1;
 
 	return val;
 }
 
 static inline float ApplyExponent(float exponent, float val)
 {
-	val = pow(val, exponent);
-	if (val < -1.0)
-		val = -1.0;
-	if (val > 1.0)
-		val = 1.0;
+	val = std::pow(val, exponent);
+	if (val < -1)
+		val = -1;
+	if (val > 1)
+		val = 1;
 
 	return val;
 }
@@ -421,7 +421,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					val = ApplyDeadzone(control.deadzone,val);
 					val = ApplyGain(control.gain,val);
 
-					double absval = val;
+					float absval = val;
 					bool neg = false;
 					if (val < 0)
 					{
@@ -569,7 +569,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					else if (val > 1)
 						val = 1;
 
-					double absval = val;
+					float absval = val;
 					bool neg = false;
 					if (val < 0)
 					{
@@ -603,8 +603,8 @@ const std::vector <float> & CarControlMap::ProcessInput(
 
 		if (newval < 0)
 			newval = 0;
-		if (newval > 1.0)
-			newval = 1.0;
+		if (newval > 1)
+			newval = 1;
 
 		inputs[n] = newval;
 
@@ -621,7 +621,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 				inputs[CarInput::SIXTH_GEAR] ||
 				inputs[CarInput::REVERSE];
 		if (!havegear)
-			inputs[CarInput::NEUTRAL] = 1.0;
+			inputs[CarInput::NEUTRAL] = 1;
 	}
 
 	float steerpos = lastinputs[CarInput::STEER_RIGHT] - lastinputs[CarInput::STEER_LEFT];
@@ -629,7 +629,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 	lastinputs = inputs;
 
 	//do steering processing
-	ProcessSteering(joytype, steerpos, dt, joy_200, carms*2.23693629, speedsens);
+	ProcessSteering(joytype, steerpos, dt, joy_200, carms*2.23693629f, speedsens);
 
 	return inputs;
 }
@@ -974,11 +974,11 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 		float transat = 15;
 
 		if (carmph < transat)
-			decimate = 1.0;
+			decimate = 1;
 		else if (carmph < normalat)
 		{
 			float coeff = (carmph - transat)/(normalat - transat);
-			decimate = (decimate-1.0f)*coeff + 1.0f;
+			decimate = (decimate-1)*coeff + 1;
 		}
 
 		//std::cout << "Decimating: " << val << " to " << val / decimate << std::endl;
@@ -987,16 +987,16 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 	}
 
 	//do speed sensitivity
-	if ( speedsens != 0.0 )
+	if ( speedsens != 0 )
 	{
-		float coeff = 1.0;
+		float coeff = 1;
 		if (carmph > 1)
 		{
-			float ratio = 20.0f;
-			float ssco = speedsens*(1.0f-pow(val,2.0f));
-			coeff = ratio*45.0f*(1.0f-atan(carmph*80.0f*ssco)*0.6366198);
+			float ratio = 20;
+			float ssco = speedsens*(1-std::pow(val,2.0f));
+			coeff = ratio*45*(1-std::atan(carmph*80*ssco)*0.6366198f);
 		}
-		if (coeff > 1.0f) coeff = 1.0f;
+		if (coeff > 1) coeff = 1;
 
 		//std::cout << "Speed sensitivity coefficient: " << coeff << std::endl;
 
@@ -1010,7 +1010,7 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 	{
 		//if (i->first == inputs[CarInput::STEER_LEFT])
 		//steerpos = -steerpos;
-		float steerstep = 5.0*dt;
+		float steerstep = 5*dt;
 
 		if (val > steerpos)
 		{
@@ -1027,15 +1027,15 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 				steerpos -= steerstep;
 		}
 
-		if (steerpos > 1.0)
-			steerpos = 1.0;
-		if (steerpos < -1.0)
-			steerpos = -1.0;
+		if (steerpos > 1)
+			steerpos = 1;
+		if (steerpos < -1)
+			steerpos = -1;
 
 		val = steerpos;
 
-		/*float coeff = 0.97;
-		val = steerpos * coeff + val * (1.0-coeff);*/
+		/*float coeff = 0.97f;
+		val = steerpos * coeff + val * (1-coeff);*/
 	}
 
 	//std::cout << "After rate limit val: " << val << std::endl;
@@ -1045,8 +1045,8 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 	//std::cout << "Current steering: " << car.GetLastSteer() << std::endl;
 	//std::cout << "New steering: " << val << std::endl;
 
-	inputs[CarInput::STEER_LEFT] = 0.0;
-	inputs[CarInput::STEER_RIGHT] = 0.0;
+	inputs[CarInput::STEER_LEFT] = 0;
+	inputs[CarInput::STEER_RIGHT] = 0;
 	if (val < 0)
 		inputs[CarInput::STEER_LEFT] = -val;
 	else
