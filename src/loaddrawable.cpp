@@ -152,8 +152,9 @@ bool LoadDrawable::operator()(
 			SceneNode::Handle nodehandle = topnode.AddNode();
 			node = &topnode.GetNode(nodehandle);
 		}
+		const float deg2rad = M_PI / 180.0;
 		node->GetTransform().SetTranslation(pos);
-		node->GetTransform().SetRotation(Quat(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
+		node->GetTransform().SetRotation(Quat(rot[0] * deg2rad, rot[1] * deg2rad, rot[2] * deg2rad));
 	}
 
 	// set drawable
