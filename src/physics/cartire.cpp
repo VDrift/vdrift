@@ -277,7 +277,7 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
 
 	// self-aligning torque
-	btScalar Mz = D * SinPi(c[0] * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
+	btScalar Mz = D * Sin3Pi2(c[0] * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Mz = Mz * friction_coeff;

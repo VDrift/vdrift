@@ -53,9 +53,24 @@ T SinPi2(T x)
 template <typename T>
 T SinPi(T x)
 {
-    if (std::abs(x) > T(M_PI_2))
-        x = std::copysign(T(M_PI), x) - x;
-    return SinPi2(x);
+    T y = std::abs(x);
+    T z = T(M_PI) - y;
+    if (y > z) y = z;
+    y = std::copysign(y, x);
+    return SinPi2(y);
 }
+
+// |x| <= 3/2pi
+// max error: 1.0205878936686563e-6
+template <typename T>
+T Sin3Pi2(T x)
+{
+    T y = std::abs(x);
+    T z = T(M_PI) - y;
+    if (y > z) y = z;
+    y = std::copysign(y, y * x);
+    return SinPi2(y);
+}
+
 
 #endif // _FASTMATH_H
