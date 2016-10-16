@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "guicontrol.h"
+#include "minmax.h"
 
 static const std::string names[] = {
 	"onfocus",
@@ -66,7 +67,7 @@ void GuiControl::Signal(Event ev)
 		if (m_signalv[SELECTX].connected())
 		{
 			float sx = (m_focusx - m_xmin) / (m_xmax - m_xmin);
-			sx = (sx <= 1) ? (sx >= 0) ? sx : 0 : 1;
+			sx = Clamp(sx, 0.0f, 1.0f);
 			std::ostringstream s;
 			s << sx;
 			m_signalv[SELECTX](s.str());

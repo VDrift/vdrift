@@ -20,6 +20,7 @@
 #include "ai_car_experimental.h"
 #include "physics/cardynamics.h"
 #include "physics/dynamicsworld.h"
+#include "minmax.h"
 #include "tobullet.h"
 #include "track.h"
 #include "unittest.h"
@@ -86,12 +87,6 @@ AiCarExperimental::~AiCarExperimental()
 		topnode.GetDrawList().normal_noblend.erase(raycastdraw);
 	}
 #endif
-}
-
-float AiCarExperimental::clamp(float val, float min, float max)
-{
-	assert(min <= max);
-	return std::min(max,std::max(min,val));
 }
 
 //note that rate_limit_neg should be positive, it gets inverted inside the function
@@ -229,9 +224,9 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 	//use_racingline = false;
 	if (use_racingline && patch.GetNextPatch() && patch.HasRacingline())
 	{
-		float widthfront = std::min((patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,0)).Magnitude(),
+		float widthfront = Min((patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,0)).Magnitude(),
 									 (patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,3)).Magnitude());
-		float widthback = std::min((patch.GetRacingLine()-patch.GetPoint(3,0)).Magnitude(),
+		float widthback = Min((patch.GetRacingLine()-patch.GetPoint(3,0)).Magnitude(),
 									(patch.GetRacingLine()-patch.GetPoint(3,3)).Magnitude());
 		float trimleft_front = (patch.GetNextPatch()->GetRacingLine() - patch.GetPoint(0,0)).Magnitude()-widthfront;
 		float trimright_front = (patch.GetNextPatch()->GetRacingLine() - patch.GetPoint(0,3)).Magnitude()-widthfront;
@@ -262,7 +257,7 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 			const float maxfalloff = 60;
 			float cur_trim_falloff_distance_fwd = minfalloff;
 			float cur_trim_falloff_distance_rear = minfalloff;
-			float falloff = clamp(trim_falloff_distance*std::abs(speed_diff),minfalloff,maxfalloff);
+			float falloff = Clamp(trim_falloff_distance*std::abs(speed_diff),minfalloff,maxfalloff);
 			if (speed_diff > 0)
 			{
 				//cur_trim_falloff_distance_fwd = falloff;
@@ -270,12 +265,12 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 			else
 				cur_trim_falloff_distance_rear = falloff;
 
-			float scale_front = clamp(1.0f-cardist_front/cur_trim_falloff_distance_fwd, 0, 1);
+			float scale_front = Clamp(1.0f-cardist_front/cur_trim_falloff_distance_fwd, 0.0f, 1.0f);
 			if (cardist_front < 0)
-				scale_front = clamp(1.0f+cardist_front/cur_trim_falloff_distance_rear, 0, 1);
-			float scale_back = clamp(1.0f-cardist_back/cur_trim_falloff_distance_fwd, 0, 1);
+				scale_front = Clamp(1.0f+cardist_front/cur_trim_falloff_distance_rear, 0.0f, 1.0f);
+			float scale_back = Clamp(1.0f-cardist_back/cur_trim_falloff_distance_fwd, 0.0f, 1.0f);
 			if (cardist_back < 0)
-				scale_back = clamp(1.0f+cardist_back/cur_trim_falloff_distance_rear, 0, 1);
+				scale_back = Clamp(1.0f+cardist_back/cur_trim_falloff_distance_rear, 0.0f, 1.0f);
 
 			std::cout << speed_diff << ", " << cur_trim_falloff_distance_fwd << ", " << cur_trim_falloff_distance_rear << ", " << cardist_front << ", " << cardist_back << ", " << scale_front << ", " << scale_back << std::endl;
 
@@ -452,7 +447,7 @@ float AiCarExperimental::CalcSpeedLimit(const Bezier  * patch, const Bezier * ne
 	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
 
 	//take into account downforce
-	float denom = (1 - std::min(1.01f, adjusted_radius * -(car->GetAerodynamicDownforceCoefficient()) * friction * car->GetInvMass()));
+	float denom = (1 - Min(1.01f, adjusted_radius * -(car->GetAerodynamicDownforceCoefficient()) * friction * car->GetInvMass()));
 	float real = (friction * GRAVITY * adjusted_radius) / denom;
 	float v2 = 1000; //some really big number
 	if (real > 0)
@@ -490,7 +485,7 @@ float AiCarExperimental::RayCastDistance(Vec3 direction, float max_length)
 		contact);
 
 	float depth = contact.GetDepth();
-	float dist = std::min(max_length, depth);
+	float dist = Min(max_length, depth);
 
 #ifdef VISUALIZE_AI_DEBUG
 	Vec3 pos_start(ToMathVector<float>(pos));
@@ -674,11 +669,9 @@ void AiCarExperimental::UpdateSteer(float dt)
 		angle = 360 - angle;
 
 	float optimum_range = car->GetTire(FRONT_LEFT).getIdealSlipAngle() * rad2deg;
-	angle = clamp(angle, -optimum_range, optimum_range);
+	angle = Clamp(angle, -optimum_range, optimum_range);
 
-	float steer_value = angle / car->GetMaxSteeringAngle();
-	if (steer_value > 1) steer_value = 1;
-	else if (steer_value < -1) steer_value = -1;
+	float steer_value = Clamp(angle / car->GetMaxSteeringAngle(), -1.0f, 1.0f);
 
 	assert(!std::isnan(steer_value));
 	if (is_recovering){
@@ -699,7 +692,7 @@ float AiCarExperimental::GetHorizontalDistanceAlongPatch(const Bezier & patch, V
 float AiCarExperimental::RampBetween(float val, float startat, float endat)
 {
 	assert(endat > startat);
-	return (clamp(val,startat,endat)-startat)/(endat-startat);
+	return (Clamp(val,startat,endat)-startat)/(endat-startat);
 }
 
 float AiCarExperimental::BrakeFromOthers(float speed_diff)
@@ -749,8 +742,8 @@ float AiCarExperimental::BrakeFromOthers(float speed_diff)
 
 	//std::cout << mineta << ": " << etafeedback << ", " << mindistance << ": " << distancefeedback << ", " << speed_diff << ": " << speedfeedback << std::endl;
 
-	//bias = clamp((etafeedback+distancefeedback)*speedfeedback,0,1);
-	bias = clamp(etafeedback*distancefeedback*speedfeedback,0,1);
+	//bias = Clamp((etafeedback+distancefeedback)*speedfeedback,0.0f,1.0f);
+	bias = Clamp(etafeedback*distancefeedback*speedfeedback,0.0f,1.0f);
 
 	return bias;
 }
@@ -791,7 +784,7 @@ void AiCarExperimental::AnalyzeOthers(float dt, const CarDynamics cars[], const 
 					float my_track_placement = GetHorizontalDistanceAlongPatch(*mycarpatch, mypos);
 					float their_track_placement = GetHorizontalDistanceAlongPatch(*othercarpatch, otpos);
 
-					float speed_diff_denom = clamp(speed_diff, -100, -0.01);
+					float speed_diff_denom = Clamp(speed_diff, -100.f, -0.01f);
 					float eta = (fore_position - fore_position_offset) / -speed_diff_denom;
 
 					if (!info.active)
@@ -820,8 +813,8 @@ float AiCarExperimental::SteerAwayFromOthers()
 {
 	const float spacingdistance = 3.5; //how far left and right we target for our spacing in meters (center of mass to center of mass)
 	const float horizontal_meters_per_second = 5.0; //how fast we want to steer away in horizontal meters per second
-	const float speed = std::max(1.0f, car->GetVelocity().length());
-	const float authority = std::min(10.0f, std::atan(horizontal_meters_per_second / speed) * rad2deg); //steering bias authority limit magnitude in degrees
+	const float speed = Max(1.0f, car->GetVelocity().length());
+	const float authority = Min(10.0f, std::atan(horizontal_meters_per_second / speed) * rad2deg); //steering bias authority limit magnitude in degrees
 	const float gain = 4.0; //amplify steering command by this factor
 	const float mineta = 1.0; //fastest reaction time in seconds
 	const float etaexponent = 1.0;
@@ -841,16 +834,16 @@ float AiCarExperimental::SteerAwayFromOthers()
 	if (min_horizontal_distance == 1000)
 		return 0.0;
 
-	eta = std::max(eta, mineta);
+	eta = Max(eta, mineta);
 
-	float bias = clamp(min_horizontal_distance, -spacingdistance, spacingdistance);
+	float bias = Clamp(min_horizontal_distance, -spacingdistance, spacingdistance);
 	if (bias < 0)
 		bias = -bias - spacingdistance;
 	else
 		bias = spacingdistance - bias;
 
-	bias *= pow(mineta,etaexponent)*gain/pow(eta,etaexponent);
-	clamp(bias, -spacingdistance, spacingdistance);
+	bias *= std::pow(mineta,etaexponent)*gain/std::pow(eta,etaexponent);
+	Clamp(bias, -spacingdistance, spacingdistance);
 
 	//std::cout << "min horiz: " << min_horizontal_distance << ", eta: " << eta << ", " << bias << std::endl;
 

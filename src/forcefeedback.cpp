@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "forcefeedback.h"
+#include "minmax.h"
 
 #include <ostream>
 #include <cstring>
@@ -107,8 +108,7 @@ void ForceFeedback::update(
 		return;
 
 	// Clamp force.
-	if (force > 1) force = 1;
-	if (force < -1) force = -1;
+	force = Clamp(force, -1.0f, 1.0f);
 
 	// Low pass filter.
 	lastforce = (lastforce + force) * 0.5f;

@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "cardifferential.h"
-#include "LinearMath/btMinMax.h"
+#include "minmax.h"
 
 CarDifferentialInfo::CarDifferentialInfo() :
 	final_drive(4.1),
@@ -78,9 +78,9 @@ void CarDifferential::ComputeWheelTorques(btScalar driveshaft_torque)
 	if (current_anti_slip < 0)
 		current_anti_slip *= -anti_slip_torque_deceleration_factor;
 
-	current_anti_slip = btMax(btScalar(0), current_anti_slip);
+	current_anti_slip = Max(current_anti_slip, btScalar(0));
 	btScalar drag = current_anti_slip * (side1_speed - side2_speed);
-	btClamp(drag, -anti_slip, anti_slip);
+	drag = Clamp(drag, -anti_slip, anti_slip);
 
 	btScalar torque = driveshaft_torque * final_drive;
 	side1_torque = torque * (1 - torque_split) - drag;

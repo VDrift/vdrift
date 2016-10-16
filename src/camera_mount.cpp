@@ -57,7 +57,7 @@ void CameraMount::Update(const Vec3 & newpos, const Quat & newdir, float dt)
 	float power = std::pow(bumpdiff, 32.0f);
 	if (power < 0) power = 0;
 	else if (power > 0.2f) power = 0.2f;
-	float veleffect = std::min(std::pow(vel.Magnitude() * (2 - stiffness), 3.0f), 1.0f);
+	float veleffect = Min(std::pow(vel.Magnitude() * (2 - stiffness), 3.0f), 1.0f);
 	float bumpimpulse = power * 130 * veleffect;
 
 	float k = 800 + stiffness * 800 * 4;

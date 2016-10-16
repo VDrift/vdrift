@@ -30,12 +30,6 @@
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
 
-template <typename T>
-static inline T clamp(T val, T min, T max)
-{
-	return (val < max) ? (val > min) ? val : min : max;
-}
-
 struct LoadBody
 {
 	SceneNode & topnode;

@@ -20,6 +20,7 @@
 #include "trackmap.h"
 #include "content/contentmanager.h"
 #include "graphics/texture.h"
+#include "minmax.h"
 
 using std::endl;
 using std::string;
@@ -104,7 +105,7 @@ bool TrackMap::BuildMap(
 	const float track_height = track_max[1] - track_min[1];
 	const float map_scale_w = (map_width - 2) / track_width;
 	const float map_scale_h = (map_height - 2) / track_height;
-	map_scale = (map_scale_w < map_scale_h) ? map_scale_w : map_scale_h;
+	map_scale = Min(map_scale_w, map_scale_h);
 
 	std::vector<unsigned> pixels(map_width * map_height, 0);
 	const int stride = map_width * sizeof(unsigned);

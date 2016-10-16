@@ -26,6 +26,7 @@
 #include "coordinatesystem.h"
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
+#include "minmax.h"
 #include "macros.h"
 
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
@@ -604,7 +605,7 @@ bool CarDynamics::Load(
 	suspension[1]->SetDisplacement(d1);
 	suspension[2]->SetDisplacement(d2);
 	suspension[3]->SetDisplacement(d2);
-	up_offset -= up * btMax(d1, d2);
+	up_offset -= up * Max(d1, d2);
 
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 	UpdateWheelTransform();
@@ -928,10 +929,9 @@ btScalar CarDynamics::GetTireSquealAmount(WheelPosition i) const
 
 	btScalar sr = GetTire(i).getSlip() / GetTire(i).getIdealSlip();
 	btScalar ar = GetTire(i).getSlipAngle() / GetTire(i).getIdealSlipAngle();
-	btScalar maxratio = std::max(std::abs(sr), std::abs(ar));
-	btScalar squealfactor = std::max(btScalar(0), maxratio - 1);
-	squeal *= squealfactor;
-	btClamp(squeal, btScalar(0), btScalar(1));
+	btScalar maxratio = Max(std::abs(sr), std::abs(ar));
+	btScalar squealfactor = Max(btScalar(0), maxratio - 1);
+	squeal = Clamp(squeal * squealfactor, btScalar(0), btScalar(1));
 
 	return squeal;
 }
@@ -1720,8 +1720,7 @@ btScalar CarDynamics::AutoClutch(btScalar dt) const
 		btScalar rpm_min = 0.5f * (engine.GetStallRPM() + rpm_idle);
 		btScalar t = 1.5f - 0.5f * engine.GetThrottle();
 		btScalar c = rpm_engine / (rpm_min * (1 - t) + rpm_idle * t) - 1;
-		btClamp(c, btScalar(0), btScalar(1));
-		clutch_new = c;
+		clutch_new = Clamp(c, btScalar(0), btScalar(1));
 	}
 
 	// shifting
@@ -1737,7 +1736,7 @@ btScalar CarDynamics::AutoClutch(btScalar dt) const
 
 	// rate limit the autoclutch
 	btScalar clutch_delta = clutch_new - clutch_old;
-	btClamp(clutch_delta, -clutch_engage_limit * 2, clutch_engage_limit);
+	clutch_delta = Clamp(clutch_delta, -clutch_engage_limit * 2, clutch_engage_limit);
 	clutch_new = clutch_old + clutch_delta;
 
 	return clutch_new;
@@ -1822,7 +1821,7 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 	// speed limit due to drag
 	btScalar aero_speed = btPow(engine.GetMaxPower() / GetAeordynamicDragCoefficient(), 1 / 3.0f);
 
-	return btMin(drive_speed, aero_speed);
+	return Min(drive_speed, aero_speed);
 }
 
 btScalar CarDynamics::CalculateFrontMassRatio() const

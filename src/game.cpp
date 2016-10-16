@@ -34,6 +34,7 @@
 #include "svn_sourceforge.h"
 #include "game_downloader.h"
 #include "containeralgorithm.h"
+#include "minmax.h"
 #include "tobullet.h"
 #include "hsvtorgb.h"
 #include "camera_orbit.h"
@@ -1493,7 +1494,7 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	std::ostringstream placestr;
 	placestr << curplace.first << " / " << curplace.second;
 
-	int cur_lap = std::max(1, std::min(timer.GetPlayerCurrentLap(), race_laps));
+	int cur_lap = Clamp(timer.GetPlayerCurrentLap(), 1, race_laps);
 	std::ostringstream lapstr;
 	if (race_laps > 0)
 		lapstr << cur_lap << " / " << race_laps;
@@ -1532,12 +1533,12 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	float speed_scale = (settings.GetMPH() ? 2.237f : 3.6f);
 	float speed = std::abs(car.GetSpeedMPS()) * speed_scale;
 	float speedometer = car.GetMaxSpeedMPS() * speed_scale;
-	speedometer = std::min(320.0f, std::max(120.0f, std::ceil(speedometer / 40.0f) * 40.0f));
+	speedometer = Clamp(std::ceil(speedometer / 40.0f) * 40.0f, 120.0f, 320.0f);
 
 	float rpm = car.GetTachoRPM();
 	float rpmred = car.GetEngine().GetRedline();
 	float tachometer = car.GetEngine().GetRPMLimit();
-	tachometer = std::min(20000.0f, std::max(8000.0f, std::ceil(tachometer / 2000.0f) * 2000.0f));
+	tachometer = Clamp(std::ceil(tachometer / 2000.0f) * 2000.0f, 8000.0f, 20000.0f);
 
 	std::ostringstream speedostr, speednstr, speedstr;
 	speedostr << int(speedometer);
@@ -2486,8 +2487,7 @@ void Game::UpdateForceFeedback(float dt)
 			if (settings.GetFFInvert()) feedback = -feedback;
 
 			// clamp
-			if (feedback > 1) feedback = 1;
-			if (feedback < -1) feedback = -1;
+			feedback = Clamp(feedback, -1.0f, 1.0f);
 
 			forcefeedback->update(feedback, ffdt, error_output);
 		}

@@ -20,6 +20,7 @@
 #ifndef _CAMERA_H
 #define _CAMERA_H
 
+#include "minmax.h"
 #include "mathvector.h"
 #include "quaternion.h"
 #include "coordinatesystem.h"
@@ -35,7 +36,7 @@ public:
 
 	const std::string & GetName() const { return name; }
 
-	void SetFOV(float value) { fov = std::max(0.0f, std::min(120.0f, value)); }
+	void SetFOV(float value) { fov = Clamp(value, 0.0f, 120.0f); }
 
 	float GetFOV() const { return fov; }
 

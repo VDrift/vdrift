@@ -18,17 +18,12 @@
 /************************************************************************/
 
 #include "carsound.h"
+#include "minmax.h"
 #include "tobullet.h"
 #include "content/contentmanager.h"
 #include "physics/cardynamics.h"
 #include "sound/sound.h"
 #include "cfg/ptree.h"
-
-template <typename T>
-static inline T clamp(T val, T min, T max)
-{
-	return (val < max) ? (val > min) ? val : min : max;
-}
 
 CarSound::CarSound() :
 	psound(0),
@@ -381,11 +376,11 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		btVector3 pos_wheel = dynamics.GetWheelPosition(WheelPosition(i));
 		btVector3 vel_wheel = dynamics.GetWheelVelocity(WheelPosition(i));
 		float pitch = (vel_wheel.length() - 5) * 0.1f;
-		pitch = clamp(pitch, 0.0f, 1.0f);
+		pitch = Clamp(pitch, 0.0f, 1.0f);
 		pitch = 1 - pitch;
 		pitch *= pitchvariation;
 		pitch = pitch + (1 - pitchvariation);
-		pitch = clamp(pitch, 0.1f, 4.0f);
+		pitch = Clamp(pitch, 0.1f, 4.0f);
 
 		psound->SetSourcePosition(sound_active, pos_wheel[0], pos_wheel[1], pos_wheel[2]);
 		psound->SetSourcePitch(sound_active, pitch);
@@ -438,7 +433,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		const float mingainat = 200;
 		const float maxgainat = 2000;
 		float gain = (crashdecel - mingainat) / (maxgainat - mingainat);
-		gain = clamp(gain, 0.1f, 1.0f);
+		gain = Clamp(gain, 0.1f, 1.0f);
 
 		if (!psound->GetSourcePlaying(crashsound))
 		{
@@ -456,7 +451,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		float gain = 0;
 		if (rpm > 0)
 			gain = dynamics.GetEngine().GetRPMLimit() / rpm;
-		gain = clamp(gain, 0.25f, 0.50f);
+		gain = Clamp(gain, 0.25f, 0.50f);
 
 		if (!psound->GetSourcePlaying(gearsound))
 		{

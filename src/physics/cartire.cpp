@@ -19,6 +19,7 @@
 
 #include "cartire.h"
 #include "fastmath.h"
+#include "minmax.h"
 #include <cassert>
 
 #ifndef VDRIFTN
@@ -71,11 +72,9 @@ btVector3 CarTire::getForce(
 		return btVector3(0, 0, 0);
 	}
 
-	btScalar Fz = normal_force * btScalar(1E-3);
-
 	// limit input
-	btSetMin(Fz, btScalar(30));
-	btClamp(inclination, btScalar(-0.1 * M_PI), btScalar(0.1 * M_PI));
+	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
+	inclination = Clamp(inclination, btScalar(-0.1 * M_PI), btScalar(0.1 * M_PI));
 
 	// get ideal slip ratio
 	btScalar sigma_hat(0);
@@ -86,7 +85,7 @@ btVector3 CarTire::getForce(
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
 	btScalar gamma = inclination * rad2deg;
-	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar denom = Max(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) / denom;
 	btScalar alpha = -Atan(lat_velocity / denom) * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);

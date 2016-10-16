@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "tire.h"
+#include "minmax.h"
 
 template <typename T>
 inline T sgn(T val)
@@ -61,8 +62,8 @@ void Tire::init(const TireInfo & info)
 void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
 	btScalar rload = load / max_load * tablesize - 1;
-	btClamp(rload, btScalar(0), btScalar(tablesize - 1));
-	int lbound = btMin(int(rload), tablesize - 2);
+	rload = Clamp(rload, btScalar(0), btScalar(tablesize - 1));
+	int lbound = Min(int(rload), tablesize - 2);
 
 	btScalar blend = rload - lbound;
 	sh = sigma_hat[lbound] * (1 - blend) + sigma_hat[lbound + 1] * blend;
@@ -87,11 +88,11 @@ btVector3 Tire::getForce(
 	}
 
 	// limit input
-	btClamp(normal_load, btScalar(0), btScalar(max_load));
-	btClamp(camber, -max_camber, max_camber);
+	normal_load = Clamp(normal_load, btScalar(0), btScalar(max_load));
+	camber = Clamp(camber, -max_camber, max_camber);
 
 	// sigma and alpha
-	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar denom = Max(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar lon_slip_velocity = lon_velocity - rot_velocity;
 	btScalar sigma = -lon_slip_velocity / denom;
 	btScalar alpha = btAtan(lat_velocity / denom);
@@ -144,7 +145,7 @@ btScalar Tire::getSqueal() const
 		btScalar vy_squeal = btFabs(vy / vy_ideal);
 		// start squeal at 80% of the ideal slide/slip, max out at 160%
 		squeal = btScalar(1.25) * btMax(vx_squeal, vy_squeal) - 1;
-		btClamp(squeal, btScalar(0), btScalar(1));
+		squeal = Clamp(squeal, btScalar(0), btScalar(1));
 	}
 	return squeal;
 }

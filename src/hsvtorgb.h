@@ -20,6 +20,7 @@
 #ifndef _HSVTORGB_H
 #define _HSVTORGB_H
 
+#include "minmax.h"
 #include <cmath>
 
 inline void HSVtoRGB(float h, float s, float v, float & r, float & g, float & b)
@@ -70,11 +71,11 @@ inline void HSVtoRGB(float h, float s, float v, float & r, float & g, float & b)
 
 inline void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
 {
-	float max = (r > g  ?  r : g) > b  ?  (r > g  ?  r : g) : b;
-	float min = (r < g  ?  r : g) < b  ?  (r < g  ?  r : g) : b;
-	float delta = max - min;
+	float vmax = Max(Max(r, g), b);
+	float vmin = Min(Min(r, g), b);
+	float delta = vmax - vmin;
 
-	v = max;
+	v = vmax;
 	if (delta == 0)
 	{
 		h = 0;
@@ -82,13 +83,13 @@ inline void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
 	}
 	else
 	{
-		s = delta / max;
+		s = delta / vmax;
 
-		if (r == max)
+		if (r == vmax)
 		{
 			h = (g - b) / delta;
 		}
-		else if (g == max)
+		else if (g == vmax)
 		{
 			h = 2 + (b - r) / delta;
 		}
