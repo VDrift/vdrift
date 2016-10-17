@@ -27,7 +27,6 @@ class GraphicsState
 {
 public:
 	GraphicsState() :
-		tutgt(),
 		tutex(),
 		tuactive(0),
 		fbread(0),
@@ -158,7 +157,7 @@ public:
 
 	void ActiveTexture(GLuint texunit)
 	{
-		assert(texunit < 16);
+		assert(texunit < 32);
 		if (tuactive != texunit)
 		{
 			tuactive = texunit;
@@ -168,14 +167,16 @@ public:
 
 	void BindTexture(GLuint texunit, GLenum target, GLuint texture)
 	{
-		assert(texunit < 16);
-		if (tutgt[texunit] != target || tutex[texunit] != texture)
+		assert(texunit < 32);
+		if (target == GL_TEXTURE_2D)
 		{
-			ActiveTexture(texunit);
-			glBindTexture(target, texture);
-			tutgt[texunit] = target;
+			if (tutex[texunit] == texture)
+				return;
+
 			tutex[texunit] = texture;
 		}
+		ActiveTexture(texunit);
+		glBindTexture(target, texture);
 	}
 
 	void BindFramebuffer(GLenum target, GLuint framebuffer)
@@ -224,10 +225,8 @@ public:
 	}
 
 private:
-	//struct TexUnit {GLenum target; GLuint texture; bool enable};
-	GLenum tutgt[16];   // texture unit target
-	GLuint tutex[16];   // texture unit texture
-	GLuint tuactive;
+	GLuint tutex[32];	// cache bound 2d textures
+	GLuint tuactive;	// cache active texture unit
 	GLuint fbread;
 	GLuint fbdraw;
 	GLuint vobject;		// currently bound vertex buffer/array object
