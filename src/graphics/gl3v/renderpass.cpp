@@ -1258,6 +1258,5 @@ void RenderPass::applyTexture(GLWrapper & gl, const RenderTexture & texture)
 
 void RenderPass::applyTexture(GLWrapper & gl, GLuint tu, GLenum target, GLuint handle)
 {
-	gl.ActiveTexture(tu);
-	gl.BindTexture(target, handle);
+	gl.BindTexture(tu, target, handle);
 }

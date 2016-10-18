@@ -115,6 +115,7 @@ public:
 	void BlendFuncSeparateDstColor(GLenum param);
 	void BlendFuncSeparateDstAlpha(GLenum param);
 	void BindTexture(GLenum target, GLuint handle);
+	void BindTexture(unsigned int tu, GLenum target, GLuint handle);
 	void TexParameteri(GLenum target, GLenum pname, GLint param);
 	void TexParameterf(GLenum target, GLenum pname, GLfloat param);
 	void TexParameterfv(GLenum target, GLenum pname, const GLfloat * params);
