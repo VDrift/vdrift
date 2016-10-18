@@ -437,11 +437,6 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 					const RenderTextureBase * texture = textureState[tu];
 					if (texture)
 						applyTexture(gl, tu, texture->target, texture->handle);
-					else
-					{
-						gl.ActiveTexture(tu);
-						gl.unbindTexture(GL_TEXTURE_2D); //TODO: Determine target from sampler.
-					}
 				}
 				for (auto tu : overriddenTextures)
 				{
