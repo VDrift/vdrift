@@ -478,7 +478,7 @@ void Track::Loader::AddBody(SceneNode & scene, const Body & body)
 {
 	bool nolighting = body.nolighting;
 	bool alphablend = body.drawable.GetDecal();
-	keyed_container<Drawable> * dlist = &scene.GetDrawList().normal_noblend;
+	auto dlist = &scene.GetDrawList().normal_noblend;
 	if (body.skybox)
 	{
 		if (alphablend)

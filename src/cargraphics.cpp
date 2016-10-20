@@ -408,8 +408,7 @@ void CarGraphics::Update(const CarDynamics & dynamics)
 void CarGraphics::SetColor(float r, float g, float b)
 {
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	keyed_container<Drawable> & car_noblend = bodynoderef.GetDrawList().car_noblend;
-	for (auto & drawable : car_noblend)
+	for (auto & drawable : bodynoderef.GetDrawList().car_noblend)
 	{
 		drawable.SetColor(r, g, b, 1);
 	}
@@ -422,8 +421,7 @@ void CarGraphics::EnableInteriorView(bool value)
 	// disable glass drawing
 	interior_view = value;
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	keyed_container<Drawable> & normal_blend = bodynoderef.GetDrawList().normal_blend;
-	for (auto & drawable : normal_blend)
+	for (auto & drawable : bodynoderef.GetDrawList().normal_blend)
 	{
 		drawable.SetDrawEnable(!interior_view);
 	}
@@ -470,7 +468,7 @@ bool CarGraphics::LoadLight(
 	}
 	models.insert(mesh);
 
-	keyed_container <Drawable> & dlist = node.GetDrawList().lights_omni;
+	auto & dlist = node.GetDrawList().lights_omni;
 	lights.back().draw = dlist.insert(Drawable());
 
 	Drawable & draw = dlist.get(lights.back().draw);
