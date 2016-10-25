@@ -223,14 +223,17 @@ bool CarGraphics::Load(
 	LoadDrawable loadDrawable(carpath, anisotropy, content, models, textures, error_output);
 
 	// load body first
+	bodynode = topnode.AddNode();
 	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg.get("body", cfg_body, error_output)) return false;
-	if (!cfg_body->get("mesh", meshname, error_output)) return false;
-	if (!cfg_body->get("texture", texname, error_output)) return false;
-	if (carpaint != "default") texname[0] = carpaint;
-	if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
+	if (cfg.get("body", cfg_body, error_output) &&
+		cfg_body->get("mesh", meshname, error_output))
+	{
+		if (!cfg_body->get("texture", texname, error_output)) return false;
+		if (carpaint != "default") texname[0] = carpaint;
+		if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
+	}
 
 	// load wheels
 	const PTree * cfg_wheels;
@@ -366,7 +369,7 @@ void CarGraphics::Update(const std::vector<float> & inputs)
 void CarGraphics::Update(const CarDynamics & dynamics)
 {
 	if (!bodynode.valid()) return;
-	assert(dynamics.GetNumBodies() == topnode.GetNodeList().size());
+	assert(dynamics.GetNumBodies() <= topnode.GetNodeList().size());
 
 	unsigned i = 0;
 	for (auto & node : topnode.GetNodeList())
