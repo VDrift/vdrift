@@ -843,7 +843,7 @@ float AiCarExperimental::SteerAwayFromOthers()
 		bias = spacingdistance - bias;
 
 	bias *= std::pow(mineta,etaexponent)*gain/std::pow(eta,etaexponent);
-	Clamp(bias, -spacingdistance, spacingdistance);
+	bias = Clamp(bias, -spacingdistance, spacingdistance);
 
 	//std::cout << "min horiz: " << min_horizontal_distance << ", eta: " << eta << ", " << bias << std::endl;
 

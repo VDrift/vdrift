@@ -718,7 +718,7 @@ float AiCarStandard::SteerAwayFromOthers()
 		bias = spacingdistance - bias;
 
 	bias *= std::pow(mineta,etaexponent)*gain/std::pow(eta,etaexponent);
-	Clamp(bias, -spacingdistance, spacingdistance);
+	bias = Clamp(bias, -spacingdistance, spacingdistance);
 
 	return (bias / spacingdistance) * authority;
 }
