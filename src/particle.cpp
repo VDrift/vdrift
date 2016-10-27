@@ -20,16 +20,13 @@
 #include "particle.h"
 #include "content/contentmanager.h"
 #include "graphics/texture.h"
+#include "minmax.h"
 #include "unittest.h"
 
-static inline float clamp(float v, float vmin, float vmax)
+template <typename T>
+static inline T Lerp(T x, T y, T s)
 {
-	return std::max(vmin, std::min(vmax, v));
-}
-
-static inline float lerp(float x, float y, float s)
-{
-	return x + clamp(s, 0, 1) * (y - x);
+	return x + Clamp(s, T(0), T(1)) * (y - x);
 }
 
 ParticleSystem::ParticleSystem() :
@@ -129,8 +126,8 @@ void ParticleSystem::UpdateGraphics(
 		Particle & p = particles[i];
 		Vec3 pos = p.position;
 
-		float trans = p.transparency * std::pow((1.0f - p.time / p.longevity), 4);
-		trans = clamp(trans, 0.0f, 1.0f);
+		float trans = p.transparency * std::pow((1.0f - p.time / p.longevity), 4.0f);
+		trans = Clamp(trans, 0.0f, 1.0f);
 
 		float sizescale = 0.2f * (p.time / p.longevity) + 0.4f;
 /*
@@ -139,7 +136,7 @@ void ParticleSystem::UpdateGraphics(
 		float camdist = pos.Magnitude();
 		const float camdist_off = 3.0;
 		const float camdist_full = 4.0;
-		trans = lerp(0.f, trans, (camdist - camdist_off) / (camdist_full - camdist_off));
+		trans = Lerp(0.f, trans, (camdist - camdist_off) / (camdist_full - camdist_off));
 */
 		// assume 9 tiles in texture atlas
 		int vi = p.tid / 3;

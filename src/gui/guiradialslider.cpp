@@ -61,7 +61,7 @@ void GuiRadialSlider::SetupDrawable(
 
 void GuiRadialSlider::UpdateVertexArray()
 {
-	float deg2rad = M_PI / 180.0f;
+	const float deg2rad = M_PI / 180;
 	float anchor[2] = {m_x + m_w * 0.5f, m_y + m_h * 0.5f};
 	float r1 = m_radius * 2.0f - m_h * 0.5f;
 	float r2 = m_h * 0.5f;
@@ -83,7 +83,7 @@ void GuiRadialSlider::UpdateVertexArray()
 		float slider_range = m_max_value - m_min_value;
 		float a1 = m_start_angle + angle_range * m_min_value - 90;
 		float a2 = m_start_angle + angle_range * m_max_value - 90;
-		unsigned n = fabs(m_radius * angle_range * slider_range) + 1;
+		unsigned n = std::abs(m_radius * angle_range * slider_range) + 1;
 
 		m_varray.SetTo2DRing(r1, r2, a1 * deg2rad, a2 * deg2rad, n);
 	}

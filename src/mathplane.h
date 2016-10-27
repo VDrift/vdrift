@@ -131,7 +131,7 @@ class MathPlane
 		{
 			T abcsq = v.a*v.a+v.b*v.b+v.c*v.c;
 			assert(abcsq != 0);
-			return (v.a*point[0]+v.b*point[1]+v.c*point[2]+v.d)/sqrt(abcsq);
+			return (v.a*point[0]+v.b*point[1]+v.c*point[2]+v.d)/std::sqrt(abcsq);
 		}
 };
 

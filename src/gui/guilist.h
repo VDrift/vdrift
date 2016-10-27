@@ -20,6 +20,8 @@
 #ifndef _GUILIST_H
 #define _GUILIST_H
 
+#include "minmax.h"
+
 /// gui element list base class
 class GuiList
 {
@@ -107,18 +109,12 @@ inline void GuiList::GetElemPos(int n, float & x, float & y) const
 	y = m_ymin + row * (m_elemh + m_ypad0 + m_ypad1) + m_ypad0;
 }
 
-template <typename T>
-inline int clamp(T v, T vmin, T vmax)
-{
-	return (v < vmin) ? vmin : ((v > vmax) ? vmax : v);
-}
-
 inline int GuiList::GetElemId(float x, float y) const
 {
 	int col = m_cols * (x - m_xmin) / (m_xmax - m_xmin);
 	int row = m_rows * (y - m_ymin) / (m_ymax - m_ymin);
-	col = clamp<int>(col, 0, m_cols - 1);
-	row = clamp<int>(row, 0, m_rows - 1);
+	col = Clamp(col, 0, int(m_cols) - 1);
+	row = Clamp(row, 0, int(m_rows) - 1);
 	if (m_vertical)
 	{
 		return col * m_rows + row;

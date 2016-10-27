@@ -72,9 +72,11 @@ bool RoadStrip::ReadFrom(
 	}
 
 	// Close the roadstrip if it ends near where it starts.
+	const auto & pb = patches.back().GetPatch();
+	const auto & pf = patches.front().GetPatch();
 	closed = (patches.size() > 2) &&
-		((patches.back().GetPatch().GetFL() - patches.front().GetPatch().GetBL()).Magnitude() < 0.1) &&
-		((patches.back().GetPatch().GetFR() - patches.front().GetPatch().GetBR()).Magnitude() < 0.1);
+		((pb.GetFL() - pf.GetBL()).MagnitudeSquared() < 0.01f) &&
+		((pb.GetFR() - pf.GetBR()).MagnitudeSquared() < 0.01f);
 
 	// Connect patches.
 	for (auto p = patches.begin(); p != patches.end() - 1; ++p)

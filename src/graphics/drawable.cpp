@@ -144,9 +144,9 @@ RenderModelExt & Drawable::GenRenderModelData(const DrawableAttributes & draw_at
 		if (color != Vec4(1))
 		{
 			float srgba[4];
-			srgba[0] = color[0] < 1 ? pow(color[0], 2.2f) : color[0];
-			srgba[1] = color[1] < 1 ? pow(color[1], 2.2f) : color[1];
-			srgba[2] = color[2] < 1 ? pow(color[2], 2.2f) : color[2];
+			srgba[0] = color[0] < 1 ? std::pow(color[0], 2.2f) : color[0];
+			srgba[1] = color[1] < 1 ? std::pow(color[1], 2.2f) : color[1];
+			srgba[2] = color[2] < 1 ? std::pow(color[2], 2.2f) : color[2];
 			srgba[3] = color[3];
 			render_model.uniforms.push_back(RenderUniformEntry(draw_attribs.color, srgba, 4));
 		}

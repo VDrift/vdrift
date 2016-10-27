@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "sound.h"
+#include "minmax.h"
 #include "coordinatesystem.h"
 #include <SDL2/SDL.h>
 #include <algorithm>
@@ -25,12 +26,6 @@
 
 //static std::ofstream logso("logso.txt");
 //static std::ofstream logsa("logsa.txt");
-
-template <class T>
-static inline T clamp(T val, T vmin, T vmax)
-{
-	return val > vmin ? (val < vmax ? val : vmax) : vmin;
-}
 
 // add item to a compactifying vector
 template <class T>
@@ -455,7 +450,7 @@ void Sound::ProcessSources()
 				// distance attenuation
 				// y = a * (x - b)^c + d
 				float cgain = attenuation[0] * powf(len - attenuation[1], attenuation[2]) + attenuation[3];
-				cgain = clamp(cgain, 0.0f, 1.0f);
+				cgain = Clamp(cgain, 0.0f, 1.0f);
 
 				// directional attenuation
 				// maximum at 0.75 (source on opposite side)
@@ -593,8 +588,8 @@ void Sound::ProcessSamplers(unsigned char *stream, int len)
 				int val1 = sstream[pos] + buffer1[n];
 				int val2 = sstream[pos + 1] + buffer2[n];
 
-				val1 = clamp(val1, -32768, 32767);
-				val2 = clamp(val2, -32768, 32767);
+				val1 = Clamp(val1, -32768, 32767);
+				val2 = Clamp(val2, -32768, 32767);
 
 				sstream[pos] = val1;
 				sstream[pos + 1] = val2;
@@ -723,8 +718,8 @@ void Sound::SampleAndAdvanceWithPitch16bit(
 		// limit gain change rate
 		int gain_delta1 = sampler.gain1 - sampler.last_gain1;
 		int gain_delta2 = sampler.gain2 - sampler.last_gain2;
-		gain_delta1 = clamp(gain_delta1, -sampler.max_gain_delta, sampler.max_gain_delta);
-		gain_delta2 = clamp(gain_delta2, -sampler.max_gain_delta, sampler.max_gain_delta);
+		gain_delta1 = Clamp(gain_delta1, -sampler.max_gain_delta, sampler.max_gain_delta);
+		gain_delta2 = Clamp(gain_delta2, -sampler.max_gain_delta, sampler.max_gain_delta);
 		sampler.last_gain1 += gain_delta1;
 		sampler.last_gain2 += gain_delta2;
 

@@ -85,7 +85,7 @@ public:
 		btScalar wind_speed = -Direction::forward.dot(bodyspace_wind_vector);
 
 		//assume the surface doesn't generate much lift when in reverse
-		if (wind_speed < 0) wind_speed = -wind_speed * 0.2;
+		if (wind_speed < 0) wind_speed = -wind_speed * btScalar(0.2);
 
 		//calculate lift force and associated drag
 		lift_vector = (Direction::up * lift_coefficient -
@@ -115,9 +115,9 @@ public:
 	AeroDevice(const AeroDeviceInfo & info)
 	{
 		// elliptic load wing: 1 / (pi * AR * e) = 1 - lift_efficiency
-		lift_coefficient = 0.5 * info.air_density * info.lift_coefficient * info.lift_surface_area;
-		induced_drag_coefficient = lift_coefficient * info.lift_coefficient * (1.0 - info.lift_efficiency);
-		drag_coefficient = 0.5 * info.air_density * info.drag_coefficient * info.drag_frontal_area;
+		lift_coefficient = btScalar(0.5) * info.air_density * info.lift_coefficient * info.lift_surface_area;
+		induced_drag_coefficient = lift_coefficient * info.lift_coefficient * (1 - info.lift_efficiency);
+		drag_coefficient = btScalar(0.5) * info.air_density * info.drag_coefficient * info.drag_frontal_area;
 		position = info.position;
 		user_ptr = info.user_ptr;
 	}

@@ -256,7 +256,7 @@ void K1999::CalcRaceLine()
 	//
 	for (int Step = stepsize; (Step /= 2) > 0;)
 	{
-		for (int i = Iterations * int(sqrt(float(Step))); --i >= 0;)
+		for (int i = Iterations * int(std::sqrt(float(Step))); --i >= 0;)
 			Smooth(Step);
 		Interpolate(Step);
 	}

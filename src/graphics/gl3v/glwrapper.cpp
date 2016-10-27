@@ -45,7 +45,8 @@ GLWrapper::GLWrapper(VertexBuffer & vb) :
 	infoOutput(NULL),
 	errorOutput(NULL),
 	initialized(false),
-	logEnable(false)
+	logEnable(false),
+	curActiveTexture(0)
 {
 	clearCaches();
 }
@@ -423,8 +424,7 @@ void GLWrapper::BlendFuncSeparateDstAlpha(GLenum param)
 void GLWrapper::BindTexture(GLenum target, GLuint handle)
 {
 	// Only cache 2D textures at the moment, so if it's not 2D, then just send it and return.
-	// If we don't know what TU is active, then we can't do cache either.
-	if (target != GL_TEXTURE_2D || curActiveTexture == UINT_MAX)
+	if (target != GL_TEXTURE_2D)
 	{
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
 		return;
@@ -445,6 +445,37 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 
 	if (send)
 	{
+		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
+		boundTextures[curActiveTexture] = handle;
+	}
+}
+
+void GLWrapper::BindTexture(unsigned int tu, GLenum target, GLuint handle)
+{
+	// Only cache 2D textures at the moment, so if it's not 2D, then just send it and return.
+	if (target != GL_TEXTURE_2D)
+	{
+		ActiveTexture(tu);
+		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
+		return;
+	}
+
+	// Check the cache.
+	bool send = false;
+	if (tu < boundTextures.size())
+	{
+		if (boundTextures[tu] != handle)
+			send = true;
+	}
+	else
+	{
+		boundTextures.resize(tu+1,0);
+		send = true;
+	}
+
+	if (send)
+	{
+		ActiveTexture(tu);
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
 		boundTextures[curActiveTexture] = handle;
 	}
@@ -684,7 +715,7 @@ void GLWrapper::ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 
 void GLWrapper::ClearDepth(GLfloat d)
 {
-	GLLOG(glClearDepth(d));ERROR_CHECK;
+	GLLOG(glClearDepth(GLclampd(d)));ERROR_CHECK;
 }
 
 void GLWrapper::ClearStencil(GLint s)
@@ -716,7 +747,8 @@ void GLWrapper::logging(bool log)
 
 void GLWrapper::clearCaches()
 {
-	curActiveTexture = UINT_MAX;
+	ActiveTexture(0);
+
 	boundTextures.clear();
 	cachedUniformFloats.clear();
 	cachedUniformInts.clear();

@@ -55,9 +55,9 @@ static Rect LoadRect(
 		else if (pagefile.get(section, "right", r))
 			x = 1 - (r + w) * hwratio;
 		else if (pagefile.get(section, "center-left", l))
-			x = 0.5 + l * hwratio;
+			x = 0.5f + l * hwratio;
 		else if (pagefile.get(section, "center-right", r))
-			x = 0.5 - (r + w) * hwratio;
+			x = 0.5f - (r + w) * hwratio;
 		w = w * hwratio;
 	}
 	else
@@ -66,11 +66,11 @@ static Rect LoadRect(
 		if (pagefile.get(section, "left", l))
 			l = l * hwratio;
 		else if (pagefile.get(section, "center-left", l))
-			l = 0.5 + l * hwratio;
+			l = 0.5f + l * hwratio;
 		if (pagefile.get(section, "right", r))
 			r = r * hwratio;
 		else if (pagefile.get(section, "center-right", r))
-			r = 0.5 + r * hwratio;
+			r = 0.5f + r * hwratio;
 		x = l;
 		w = 1 - (l + r);
 	}
@@ -94,8 +94,8 @@ static Rect LoadRect(
 	pagefile.get(section, "layer", z);
 
 	// widgets expect rectangle center
-	x = x + w * 0.5;
-	y = y + h * 0.5;
+	x = x + w * 0.5f;
+	y = y + h * 0.5f;
 
 	// draw order offset
 	z = z + 100;

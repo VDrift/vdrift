@@ -76,9 +76,9 @@ void GuiLabel::SetText(const std::string & text)
 
 		float x = m_x;
 		float textw = m_font->GetWidth(m_text) * m_scalex;
-		if (m_align == -1) x -= m_w * 0.5;
-		else if (m_align == 0) x -= textw * 0.5;
-		else if (m_align == 1) x -= (textw - m_w * 0.5);
+		if (m_align == -1) x -= m_w * 0.5f;
+		else if (m_align == 0) x -= textw * 0.5f;
+		else if (m_align == 1) x -= (textw - m_w * 0.5f);
 
 		m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
 	}

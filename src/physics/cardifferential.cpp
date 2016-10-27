@@ -18,11 +18,11 @@
 /************************************************************************/
 
 #include "cardifferential.h"
-#include "LinearMath/btMinMax.h"
+#include "minmax.h"
 
 CarDifferentialInfo::CarDifferentialInfo() :
 	final_drive(4.1),
-	anti_slip(600.0),
+	anti_slip(600),
 	anti_slip_torque(0),
 	anti_slip_torque_deceleration_factor(0),
 	torque_split(0.5)
@@ -47,8 +47,8 @@ void CarDifferential::Init(const CarDifferentialInfo & info)
 void CarDifferential::DebugPrint(std::ostream & out) const
 {
 	out << "---Differential---" << "\n";
-	out << "Side 1 RPM: " << side1_speed * 30.0 / 3.141593 << "\n";
-	out << "Side 2 RPM: " << side2_speed * 30.0 / 3.141593 << "\n";
+	out << "Side 1 RPM: " << side1_speed * btScalar(30 / M_PI) << "\n";
+	out << "Side 2 RPM: " << side2_speed * btScalar(30 / M_PI) << "\n";
 	out << "Side 1 Torque: " << side1_torque << "\n";
 	out << "Side 2 Torque: " << side2_torque << "\n";
 }
@@ -57,12 +57,12 @@ btScalar CarDifferential::CalculateDriveshaftSpeed(btScalar new_side1_speed, btS
 {
 	side1_speed = new_side1_speed;
 	side2_speed = new_side2_speed;
-	return final_drive * (side1_speed + side2_speed) * 0.5;
+	return final_drive * (side1_speed + side2_speed) *  btScalar(0.5);
 }
 
 btScalar CarDifferential::GetDriveshaftSpeed() const
 {
-	return final_drive * (side1_speed + side2_speed) * 0.5;
+	return final_drive * (side1_speed + side2_speed) * btScalar(0.5);
 }
 
 void CarDifferential::ComputeWheelTorques(btScalar driveshaft_torque)
@@ -78,9 +78,9 @@ void CarDifferential::ComputeWheelTorques(btScalar driveshaft_torque)
 	if (current_anti_slip < 0)
 		current_anti_slip *= -anti_slip_torque_deceleration_factor;
 
-	current_anti_slip = btMax(btScalar(0), current_anti_slip);
+	current_anti_slip = Max(current_anti_slip, btScalar(0));
 	btScalar drag = current_anti_slip * (side1_speed - side2_speed);
-	btClamp(drag, -anti_slip, anti_slip);
+	drag = Clamp(drag, -anti_slip, anti_slip);
 
 	btScalar torque = driveshaft_torque * final_drive;
 	side1_torque = torque * (1 - torque_split) - drag;

@@ -66,7 +66,7 @@ public:
 
 	const T Magnitude() const
 	{
-		return sqrt(MagnitudeSquared());
+		return std::sqrt(MagnitudeSquared());
 	}
 	const T MagnitudeSquared() const
 	{
@@ -109,13 +109,13 @@ public:
 	{
 		MathVector <T, dimension> output;
 
-		const T mag = (Magnitude());
-
+		const T mag = Magnitude();
 		assert(mag != 0);
+		const T n = 1 / mag;
 
 		for (size_type i = 0; i < dimension; i++)
 		{
-			output[i] = v[i]/mag;
+			output[i] = v[i] * n;
 		}
 
 		return output;
@@ -149,7 +149,7 @@ public:
 	{
 		MathVector <T, dimension> output;
 
-		output = (*this)-other*T(2.0)*other.dot(*this);
+		output = (*this)-other*2*other.dot(*this);
 
 		return output;
 	}
@@ -183,15 +183,7 @@ public:
 	MathVector <T, dimension> operator / (const T & scalar) const
 	{
 		assert(scalar != 0);
-
-		MathVector <T, dimension> output;
-
-		for (size_type i = 0; i < dimension; i++)
-		{
-			output[i] = v[i]/scalar;
-		}
-
-		return output;
+		return (*this) * (1 / scalar);
 	}
 
 	MathVector <T, dimension> operator + (const MathVector <T, dimension> & other) const
@@ -307,7 +299,7 @@ public:
 
 	inline const T Magnitude() const
 	{
-		return sqrt(MagnitudeSquared());
+		return std::sqrt(MagnitudeSquared());
 	}
 	inline const T MagnitudeSquared() const
 	{
@@ -341,7 +333,7 @@ public:
 	{
 		const T mag = Magnitude();
 		assert(mag != 0);
-		const T maginv = (1.0/mag);
+		const T maginv = 1 / mag;
 
 		return MathVector <T, 3> (v.x*maginv, v.y*maginv, v.z*maginv);
 	}
@@ -388,7 +380,7 @@ public:
 	MathVector <T, 3> operator / (const T & scalar) const
 	{
 		assert(scalar != 0);
-		T invscalar = 1.0/scalar;
+		T invscalar = 1/scalar;
 		return (*this)*invscalar;
 	}
 
@@ -434,16 +426,17 @@ public:
 	///set all vector components to be positive
 	inline void absify()
 	{
-		v.x = fabs(v.x);
-		v.y = fabs(v.y);
-		v.z = fabs(v.z);
+		v.x = std::abs(v.x);
+		v.y = std::abs(v.y);
+		v.z = std::abs(v.z);
 	}
 
 	///project this vector onto the vector 'vec'.  neither needs to be a unit vector
 	MathVector <T, 3> project(const MathVector <T, 3> & vec) const
 	{
-		T scalar_projection = dot(vec.Normalize());
-		return vec.Normalize() * scalar_projection;
+		const MathVector <T, 3> n = vec.Normalize();
+		const T projection = dot(n);
+		return n * projection;
 	}
 
 	bool Serialize(joeserialize::Serializer & s)

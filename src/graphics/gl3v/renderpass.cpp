@@ -30,7 +30,18 @@
 
 const GLEnums GLEnumHelper;
 
-RenderPass::RenderPass() : configured(false), enabled(true), shaderProgram(0), framebufferObject(0), renderbuffer(0), passIndex(0), timerQuery(0), lastTime(-1)
+RenderPass::RenderPass() :
+	configured(false),
+	enabled(true),
+	clearMask(0),
+	clearDepth(1),
+	clearStencil(0),
+	shaderProgram(0),
+	framebufferObject(0),
+	renderbuffer(0),
+	passIndex(0),
+	timerQuery(0),
+	lastTime(-1)
 {
 	// Constructor.
 }
@@ -426,11 +437,6 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 					const RenderTextureBase * texture = textureState[tu];
 					if (texture)
 						applyTexture(gl, tu, texture->target, texture->handle);
-					else
-					{
-						gl.ActiveTexture(tu);
-						gl.unbindTexture(GL_TEXTURE_2D); //TODO: Determine target from sampler.
-					}
 				}
 				for (auto tu : overriddenTextures)
 				{
@@ -1252,6 +1258,5 @@ void RenderPass::applyTexture(GLWrapper & gl, const RenderTexture & texture)
 
 void RenderPass::applyTexture(GLWrapper & gl, GLuint tu, GLenum target, GLuint handle)
 {
-	gl.ActiveTexture(tu);
-	gl.BindTexture(target, handle);
+	gl.BindTexture(tu, target, handle);
 }

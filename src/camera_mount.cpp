@@ -49,19 +49,19 @@ void CameraMount::Update(const Vec3 & newpos, const Quat & newdir, float dt)
 	pos = pos + newpos;
 
 	Vec3 vel = pos - position;
-	effect = (vel.Magnitude() - 0.02) / 0.04;
+	effect = (vel.Magnitude() - 0.02f) * 25;
 	if (effect < 0) effect = 0;
 	else if (effect > 1) effect = 1;
 
 	float bumpdiff = randgen.Get();
-	float power = pow(bumpdiff, 32);
+	float power = std::pow(bumpdiff, 32.0f);
 	if (power < 0) power = 0;
-	else if (power > 0.2) power = 0.2;
-	float veleffect = std::min(pow(vel.Magnitude() * ( 2.0 - stiffness), 3.0), 1.0);
-	float bumpimpulse = power * 130.0 * veleffect;
+	else if (power > 0.2f) power = 0.2f;
+	float veleffect = Min(std::pow(vel.Magnitude() * (2 - stiffness), 3.0f), 1.0f);
+	float bumpimpulse = power * 130 * veleffect;
 
-	float k = 800.0 + stiffness * 800.0 * 4.0;
-	float c = 2.0 * std::sqrt(k * mass) * 0.35;
+	float k = 800 + stiffness * 800 * 4;
+	float c = 2 * std::sqrt(k * mass) * 0.35f;
 	Vec3 bumpforce = Direction::Up * bumpimpulse;
 	Vec3 springforce = -displacement * k;
 	Vec3 damperforce = -velocity * c;
@@ -77,13 +77,13 @@ void CameraMount::UpdatePosition(const Vec3 & newpos)
 	Vec3 dp = displacement;
 	rotation.RotateVector(dp);
 	Vec3 maxdp(0.05, 0.05, 0.05);
-	maxdp = maxdp * 1.0 / (stiffness + 1.0);
+	maxdp = maxdp * 1 / (stiffness + 1);
 	for (int i = 0; i < 3; i++)
 	{
 		if (dp[i] > maxdp[i]) dp[i] = maxdp[i];
 		if (dp[i] < -maxdp[i]) dp[i] = -maxdp[i];
 	}
-	dp[1] *= 0.5;
+	dp[1] *= 0.5f;
 
 	position = newpos + (dp * effect) * offset_effect_strength;
 }

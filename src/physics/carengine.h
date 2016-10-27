@@ -130,7 +130,7 @@ public:
 
 	btScalar GetRPM() const
 	{
-		return shaft.ang_velocity * 30.0 / M_PI;
+		return shaft.ang_velocity * btScalar(30 / M_PI);
 	}
 
 	btScalar GetThrottle() const
@@ -169,7 +169,7 @@ public:
 
 	void StartEngine()
 	{
-		shaft.ang_velocity = info.start_rpm * 3.141593 / 30.0;
+		shaft.ang_velocity = info.start_rpm * btScalar(M_PI / 30.0);
 	}
 
 	///set the throttle position where 0.0 is no throttle and 1.0 is full throttle

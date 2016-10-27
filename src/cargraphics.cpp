@@ -30,12 +30,6 @@
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
 
-template <typename T>
-static inline T clamp(T val, T min, T max)
-{
-	return (val < max) ? (val > min) ? val : min : max;
-}
-
 struct LoadBody
 {
 	SceneNode & topnode;
@@ -105,8 +99,8 @@ static bool LoadWheel(
 		meshname = meshname + sizestr;
 		if (!content.get(mesh, path, meshname))
 		{
-			float width = size[0] * 0.001;
-			float diameter = size[2] * 0.0254;
+			float width = size[0] * 0.001f;
+			float diameter = size[2] * 0.0254f;
 
 			VertexArray rimva, diskva;
 			MeshGen::mg_rim(rimva, size[0], size[1], size[2], 10);
@@ -229,14 +223,17 @@ bool CarGraphics::Load(
 	LoadDrawable loadDrawable(carpath, anisotropy, content, models, textures, error_output);
 
 	// load body first
+	bodynode = topnode.AddNode();
 	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg.get("body", cfg_body, error_output)) return false;
-	if (!cfg_body->get("mesh", meshname, error_output)) return false;
-	if (!cfg_body->get("texture", texname, error_output)) return false;
-	if (carpaint != "default") texname[0] = carpaint;
-	if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
+	if (cfg.get("body", cfg_body, error_output) &&
+		cfg_body->get("mesh", meshname, error_output))
+	{
+		if (!cfg_body->get("texture", texname, error_output)) return false;
+		if (carpaint != "default") texname[0] = carpaint;
+		if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
+	}
 
 	// load wheels
 	const PTree * cfg_wheels;
@@ -289,7 +286,7 @@ bool CarGraphics::Load(
 			return false;
 		}
 		cfg_steer->get("max-angle", steer_angle_max);
-		steer_angle_max = steer_angle_max / 180.0 * M_PI;
+		steer_angle_max = steer_angle_max * float(M_PI / 180);
 		SceneNode & steernoderef = bodynoderef.GetNode(steernode);
 		steer_orientation = steernoderef.GetTransform().GetRotation();
 		steer_rotation = steer_orientation;
@@ -372,7 +369,7 @@ void CarGraphics::Update(const std::vector<float> & inputs)
 void CarGraphics::Update(const CarDynamics & dynamics)
 {
 	if (!bodynode.valid()) return;
-	assert(dynamics.GetNumBodies() == topnode.GetNodeList().size());
+	assert(dynamics.GetNumBodies() <= topnode.GetNodeList().size());
 
 	unsigned i = 0;
 	for (auto & node : topnode.GetNodeList())
@@ -414,8 +411,7 @@ void CarGraphics::Update(const CarDynamics & dynamics)
 void CarGraphics::SetColor(float r, float g, float b)
 {
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	keyed_container<Drawable> & car_noblend = bodynoderef.GetDrawList().car_noblend;
-	for (auto & drawable : car_noblend)
+	for (auto & drawable : bodynoderef.GetDrawList().car_noblend)
 	{
 		drawable.SetColor(r, g, b, 1);
 	}
@@ -428,8 +424,7 @@ void CarGraphics::EnableInteriorView(bool value)
 	// disable glass drawing
 	interior_view = value;
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	keyed_container<Drawable> & normal_blend = bodynoderef.GetDrawList().normal_blend;
-	for (auto & drawable : normal_blend)
+	for (auto & drawable : bodynoderef.GetDrawList().normal_blend)
 	{
 		drawable.SetDrawEnable(!interior_view);
 	}
@@ -476,7 +471,7 @@ bool CarGraphics::LoadLight(
 	}
 	models.insert(mesh);
 
-	keyed_container <Drawable> & dlist = node.GetDrawList().lights_omni;
+	auto & dlist = node.GetDrawList().lights_omni;
 	lights.back().draw = dlist.insert(Drawable());
 
 	Drawable & draw = dlist.get(lights.back().draw);

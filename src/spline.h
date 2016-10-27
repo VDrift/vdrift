@@ -50,8 +50,8 @@ private:
 		// Fill in the arrays that represent the tridiagonal matrix.
 		// a [0] is not used.
 		T diff = points [1].first - points [0].first;
-		b [0] = diff / 3.0;
-		c [0] = diff / 6.0;
+		b [0] = diff * T(1/3.0);
+		c [0] = diff * T(1/6.0);
 		r [0] = ( points [1].second - points [0].second ) / diff - first_slope;
 
 		for ( size_t i = 1; i < n - 1; i++ )
@@ -59,16 +59,16 @@ private:
 			T diff1 = points [i+1].first - points [i].first;
 			T diff2 = points [i].first - points [i-1].first;
 
-			a [i] = diff2 / 6.0;
-			b [i] = ( points [i+1].first - points [i-1].first ) / 3.0;
-			c [i] = diff1 / 6.0;
+			a [i] = diff2 * T(1/6.0);
+			b [i] = ( points [i+1].first - points [i-1].first ) * T(1/3.0);
+			c [i] = diff1 * T(1/6.0);
 			r [i] = ( points [i+1].second - points [i].second ) / diff1
 				- ( points [i].second - points [i-1].second ) / diff2;
 		}
 
 		diff = points [n-1].first - points [n-2].first;
-		a [n-1] = diff / 6.0;
-		b [n-1] = diff / 3.0;
+		a [n-1] = diff * T(1/6.0);
+		b [n-1] = diff * T(1/3.0);
 		// c [n-1] is not used.
 		r [n-1] = last_slope - ( points [n-1].second - points [n-2].second ) / diff;
 
@@ -103,13 +103,13 @@ private:
 	}
 
 public:
-	Spline() : first_slope(0.0), last_slope(0.0), derivs_calculated(false), slope(0.0) {}
+	Spline() : first_slope(0), last_slope(0), derivs_calculated(false), slope(0) {}
 
 	void Clear()
 	{
 		points.clear();
 		derivs_calculated = false;
-		slope = 0.0;
+		slope = 0;
 	}
 
 	void AddPoint(const T x, const T y)
@@ -133,7 +133,7 @@ public:
 	{
 		if ( points.size() == 1 )
 		{
-			slope = 0.0;
+			slope = 0;
 			return points [0].second;
 		}
 
@@ -150,7 +150,7 @@ public:
 		// Bisect to find the interval that distance is on.
 		while ( ( high - low ) > 1 )
 		{
-			index = size_t ( ( high + low ) / 2.0 );
+			index = size_t ( ( high + low ) * T(0.5) );
 			if ( points [index].first > x )
 				high = index;
 			else
@@ -159,26 +159,26 @@ public:
 
 		// Make sure that x_high > x_low.
 		const T diff = points [high].first - points [low].first;
-		assert ( diff >= 0.0 );
+		assert ( diff >= 0 );
 
 		// Evaluate the coefficients for the cubic spline equation.
 		const T a = ( points [high].first - x ) / diff;
-		const T b = 1.0 - a;
-		const T sq = diff*diff / 6.0;
-		const T a2 = a*a;
-		const T b2 = b*b;
+		const T b = 1 - a;
+		const T sq = diff * diff * T(1/6.0);
+		const T a2 = a * a;
+		const T b2 = b * b;
 
 		// Find the first derivitive.
 		slope =
 			( points [high].second - points [low].second ) /diff
-			- ( 3.0 * a2- 1.0 ) / 6.0 * diff * second_deriv [low]
-			+ ( 3.0 * b2 - 1.0 ) / 6.0 * diff * second_deriv [high];
+			- ( 3 * a2- 1 ) * T(1/6.0) * diff * second_deriv [low]
+			+ ( 3 * b2 - 1 ) * T(1/6.0) * diff * second_deriv [high];
 
 		// Return the interpolated value.
 		return a * points [low].second
 			+ b * points [high].second
-			+ a * ( a2 - 1.0 ) * sq * second_deriv [low]
-			+ b * ( b2 - 1.0 ) * sq * second_deriv [high];
+			+ a * ( a2 - 1 ) * sq * second_deriv [low]
+			+ b * ( b2 - 1 ) * sq * second_deriv [high];
 	}
 };
 

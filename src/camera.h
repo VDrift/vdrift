@@ -20,6 +20,7 @@
 #ifndef _CAMERA_H
 #define _CAMERA_H
 
+#include "minmax.h"
 #include "mathvector.h"
 #include "quaternion.h"
 #include "coordinatesystem.h"
@@ -35,7 +36,7 @@ public:
 
 	const std::string & GetName() const { return name; }
 
-	void SetFOV(float value) { fov = std::max(0.0f, std::min(120.0f, value)); }
+	void SetFOV(float value) { fov = Clamp(value, 0.0f, 120.0f); }
 
 	float GetFOV() const { return fov; }
 
@@ -65,11 +66,11 @@ protected:
 inline float AngleBetween(Vec3 vec1, Vec3 vec2)
 {
 	float dotprod = vec1.Normalize().dot(vec2.Normalize());
-	float angle = acos(dotprod);
-	float epsilon = 1e-6;
-	if (fabs(dotprod) <= epsilon) angle = M_PI * 0.5;
-	if (dotprod >= 1.0-epsilon) angle = 0.0;
-	if (dotprod <= -1.0+epsilon) angle = M_PI;
+	float angle = std::acos(dotprod);
+	float epsilon = 1E-6f;
+	if (std::abs(dotprod) <= epsilon) angle = M_PI_2;
+	if (dotprod >= 1-epsilon) angle = 0;
+	if (dotprod <= epsilon-1) angle = M_PI;
 	return angle;
 }
 
@@ -88,7 +89,7 @@ inline Quat LookAt(
 	//rotate so the camera is pointing along the forward line
 	float theta = AngleBetween(forward, Direction::Forward);
 	assert(theta == theta);
-	if (fabs(theta) > 0.001)
+	if (std::abs(theta) > 1E-3f)
 	{
 		Vec3 axis = forward.cross(Direction::Forward).Normalize();
 		rotation.Rotate(-theta, axis[0], axis[1], axis[2]);
@@ -99,9 +100,9 @@ inline Quat LookAt(
 	rotation.RotateVector(curup);
 
 	float rollangle = AngleBetween(realup, curup);
-	if (curup.dot(side) > 0.0)
+	if (curup.dot(side) > 0)
 	{
-		rollangle = 2 * M_PI - rollangle;
+		rollangle = float(2 * M_PI) - rollangle;
 	}
 	assert(rollangle == rollangle);
 

@@ -21,16 +21,6 @@
 #include "vertexarray.h"
 #include "mathvector.h"
 
-static double sinD(double degrees)
-{
-	return (double) sin(degrees * M_PI / 180.000f);
-}
-
-static double cosD(double degrees)
-{
-	return (double) cos(degrees * M_PI / 180.000f);
-}
-
 namespace MeshGen
 {
 
@@ -69,7 +59,7 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 	{
 		// use function parameters - comment out this section
 		float sectionWidth_m = sectionWidth_mm / 1000.0f;
-		float rimRadius_m = rimDiameter_in * 0.0254f * 0.5;
+		float rimRadius_m = rimDiameter_in * 0.0254f * 0.5f;
 
 
 		innerRadius = rimRadius_m;
@@ -135,7 +125,7 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 	// non-configurable parameters
 	unsigned int vertexRings = 8;
-	float angleIncrement = 360.0f / (float) segmentsAround;
+	float angleIncrement = float(2 * M_PI) / float(segmentsAround);
 
 	/////////////////////////////////////
 	//
@@ -150,60 +140,60 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 	// Right-side, Inner Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 0) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 0) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 0.5f * innerWidth;
+		vertexData[(lv+vertexesAround * 0) * 3 + 1] = innerRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 2] = innerRadius * std::sin(angleIncrement * lv);
 	}
 	// Right-side, Sidewall Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 1.0f * (treadWidth / 2.0f + sidewallBulge);
-		vertexData[(lv+vertexesAround * 1) * 3 + 1] = sidewallRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 1) * 3 + 2] = sidewallRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 0.5f * treadWidth + sidewallBulge;
+		vertexData[(lv+vertexesAround * 1) * 3 + 1] = sidewallRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 2] = sidewallRadius * std::sin(angleIncrement * lv);
 	}
 	// Right-side, Shoulder Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 1.0f * (treadWidth / 2.0f + shoulderBulge);
-		vertexData[(lv+vertexesAround * 2) * 3 + 1] = shoulderRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 2) * 3 + 2] = shoulderRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 0.5f * treadWidth + shoulderBulge;
+		vertexData[(lv+vertexesAround * 2) * 3 + 1] = shoulderRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 2] = shoulderRadius * std::sin(angleIncrement * lv);
 	}
 	// Right-side, Tread Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 3) * 3 + 0] = 1.0f * (treadWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 3) * 3 + 1] = treadRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 3) * 3 + 2] = treadRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 0] = 0.5f * treadWidth;
+		vertexData[(lv+vertexesAround * 3) * 3 + 1] = treadRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 2] = treadRadius * std::sin(angleIncrement * lv);
 	}
 
 
 	// Left-side, Tread Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -1.0f * (treadWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 4) * 3 + 1] = treadRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 4) * 3 + 2] = treadRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -0.5f * treadWidth;
+		vertexData[(lv+vertexesAround * 4) * 3 + 1] = treadRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 2] = treadRadius * std::sin(angleIncrement * lv);
 	}
 	// Left-side, Shoulder Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -1.0f * (treadWidth / 2.0f + shoulderBulge);
-		vertexData[(lv+vertexesAround * 5) * 3 + 1] = shoulderRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 5) * 3 + 2] = shoulderRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -0.5f * treadWidth - shoulderBulge;
+		vertexData[(lv+vertexesAround * 5) * 3 + 1] = shoulderRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 2] = shoulderRadius * std::sin(angleIncrement * lv);
 	}
 	// Left-side, Sidewall Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 6) * 3 + 0] = -1.0f * (treadWidth / 2.0f + sidewallBulge);
-		vertexData[(lv+vertexesAround * 6) * 3 + 1] = sidewallRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 6) * 3 + 2] = sidewallRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 6) * 3 + 0] = -0.5f * treadWidth - sidewallBulge;
+		vertexData[(lv+vertexesAround * 6) * 3 + 1] = sidewallRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 6) * 3 + 2] = sidewallRadius * std::sin(angleIncrement * lv);
 	}
 	// Left-side, Inner Ring
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 7) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 7) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 7) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 7) * 3 + 0] = -0.5f * innerWidth;
+		vertexData[(lv+vertexesAround * 7) * 3 + 1] = innerRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 7) * 3 + 2] = innerRadius * std::sin(angleIncrement * lv);
 	}
 
 
@@ -795,7 +785,7 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float /*aspectRatio*/, flo
 
 	// non-configurable parameters
 	unsigned int vertexRings = 6;
-	float angleIncrement = 360.0f / (float) segmentsAround;
+	float angleIncrement = float(2 * M_PI) / float(segmentsAround);
 
 	/////////////////////////////////////
 	//
@@ -810,47 +800,47 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float /*aspectRatio*/, flo
 	// Right-side bevel, outer lip
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 1.0f * (flangeOutsideWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 0) * 3 + 1] = flangeOuterRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 0) * 3 + 2] = flangeOuterRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 0.5f * flangeOutsideWidth;
+		vertexData[(lv+vertexesAround * 0) * 3 + 1] = flangeOuterRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 2] = flangeOuterRadius * std::sin(angleIncrement * lv);
 	}
 	// Right-side bevel, inner lip
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 1) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 1) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 0.5f * innerWidth;
+		vertexData[(lv+vertexesAround * 1) * 3 + 1] = innerRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 2] = innerRadius * std::sin(angleIncrement * lv);
 	}
 
 
 	// Right-side of main cylinder
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 2) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 2) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 0.5f * innerWidth;
+		vertexData[(lv+vertexesAround * 2) * 3 + 1] = innerRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 2] = innerRadius * std::sin(angleIncrement * lv);
 	}
 	// Left-side of main cylinder,
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 3) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 3) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 3) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 0] = -0.5f * innerWidth;
+		vertexData[(lv+vertexesAround * 3) * 3 + 1] = innerRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 2] = innerRadius * std::sin(angleIncrement * lv);
 	}
 
 	// Left-side bevel, inner lip
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 4) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 4) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -0.5f * innerWidth;
+		vertexData[(lv+vertexesAround * 4) * 3 + 1] = innerRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 2] = innerRadius * std::sin(angleIncrement * lv);
 	}
 	// Left-side bevel, outer lip
 	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -1.0f * (flangeOutsideWidth / 2.0f);
-		vertexData[(lv+vertexesAround * 5) * 3 + 1] = (flangeOuterRadius) * cosD(angleIncrement * lv);
-		vertexData[(lv+vertexesAround * 5) * 3 + 2] = (flangeOuterRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -0.5f * flangeOutsideWidth ;
+		vertexData[(lv+vertexesAround * 5) * 3 + 1] = flangeOuterRadius * std::cos(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 2] = flangeOuterRadius * std::sin(angleIncrement * lv);
 	}
 
 
@@ -936,27 +926,27 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float /*aspectRatio*/, flo
 		float v = 0;
         if ( tlv < vertexesAround*1 )
         {
-            v = 1.0 - 0.0f;
+            v = 1.0f - 0.0f;
         }
         else if ( tlv < vertexesAround*2 )
         {
-            v = 1.0 - 0.125f;
+            v = 1.0f - 0.125f;
         }
         else if ( tlv < vertexesAround*3 )
         {
-            v = 1.0 - 0.125f;
+            v = 1.0f - 0.125f;
         }
         else if ( tlv < vertexesAround*4 )
         {
-            v = 1.0 - 0.25f;
+            v = 1.0f - 0.25f;
         }
         else if ( tlv < vertexesAround*5 )
         {
-            v = 1.0 - 0.125f;
+            v = 1.0f - 0.125f;
         }
         else            //if ( tlv < vertexesAround*6 )
         {
-            v = 1.0 - 0.25f;
+            v = 1.0f - 0.25f;
         }
         texData[ tlv * 2 + 1 ] = v;
     }
@@ -1225,7 +1215,7 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     float thickness_m = thickness_mm / 1000.0f;
 
     unsigned int vertexesAround = segmentsAround + 1;
-    float angleIncrement = 360.0f / segmentsAround ;
+    float angleIncrement = float(2 * M_PI) / float(segmentsAround);
 
 
 
@@ -1236,7 +1226,7 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     vertexData.resize(vertexFloatCount);
 
     // first cap, first vertex
-    vertexData[0+0] = -1.0f * thickness_m / 2.0f;
+    vertexData[0+0] = -0.5f * thickness_m;
     vertexData[0+1] = 0.0f;
     vertexData[0+2] = 0.0f;
 
@@ -1247,9 +1237,9 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 		float *y = &vertexData[3 + (vlv + vertexesAround*0) * 3 + 1];
 		float *z = &vertexData[3 + (vlv + vertexesAround*0) * 3 + 2];
 
-		*x = -1.0f * (thickness_m / 2.0f);
-		*y = radius_m * cosD( angleIncrement * vlv);
-		*z = radius_m * sinD( angleIncrement * vlv);
+		*x = -0.5f * thickness_m;
+		*y = radius_m * std::cos(angleIncrement * vlv);
+		*z = radius_m * std::sin(angleIncrement * vlv);
 	}
 
     // strip in the center, first ring
@@ -1259,9 +1249,9 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 		float *y = &vertexData[(vlv + vertexesAround*1) * 3 + 1];
 		float *z = &vertexData[(vlv + vertexesAround*1) * 3 + 2];
 
-		*x = -1.0f * (thickness_m / 2.0f) + 0.00f;
-		*y = radius_m * cosD( angleIncrement * vlv);
-		*z = radius_m * sinD( angleIncrement * vlv);
+		*x = -0.5f * thickness_m + 0.00f;
+		*y = radius_m * std::cos(angleIncrement * vlv);
+		*z = radius_m * std::sin(angleIncrement * vlv);
 
     }
     // strip in the center, second ring
@@ -1271,9 +1261,9 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 		float *y = &vertexData[(vlv + vertexesAround*2) * 3 + 1];
 		float *z = &vertexData[(vlv + vertexesAround*2) * 3 + 2];
 
-		*x = 1.0f * (thickness_m / 2.0f) + 0.00f;
-		*y = radius_m * cosD( angleIncrement * vlv);
-		*z = radius_m * sinD( angleIncrement * vlv);
+		*x = 0.5f * thickness_m + 0.00f;
+		*y = radius_m * std::cos(angleIncrement * vlv);
+		*z = radius_m * std::sin(angleIncrement * vlv);
 
     }
 
@@ -1284,13 +1274,13 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 		float *y = &vertexData[(vlv + vertexesAround*3) * 3 + 1];
 		float *z = &vertexData[(vlv + vertexesAround*3) * 3 + 2];
 
-		*x = 1.0f * (thickness_m / 2.0f) + 0.00f;
-		*y = radius_m * cosD( angleIncrement * vlv);
-		*z = radius_m * sinD( angleIncrement * vlv);
+		*x = 0.5f * thickness_m + 0.00f;
+		*y = radius_m * std::cos(angleIncrement * vlv);
+		*z = radius_m * std::sin(angleIncrement * vlv);
 	}
 
     // last cap, last vertex
-    vertexData[ (vertexCount-1)*3 +0] = thickness_m / 2.0f + 0.0f;
+    vertexData[ (vertexCount-1)*3 +0] = 0.5f * thickness_m + 0.0f;
     vertexData[ (vertexCount-1)*3 +1] = 0.0f;
     vertexData[ (vertexCount-1)*3 +2] = 0.0f;
 
@@ -1414,8 +1404,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 		float *u = &texData[2 + (vlv + vertexesAround*0) * 2 + 0];
 		float *v = &texData[2 + (vlv + vertexesAround*0) * 2 + 1];
 
-		*u = 0.5f  * cosD( angleIncrement * vlv) + 0.5f;
-		*v = 0.5f  * sinD( angleIncrement * vlv) + 0.5f;
+		*u = 0.5f * std::cos(angleIncrement * vlv) + 0.5f;
+		*v = 0.5f * std::sin(angleIncrement * vlv) + 0.5f;
 
 		*u = *u * 14.0f / 16.0f;
 		*v = *v * 14.0f / 16.0f;
@@ -1451,8 +1441,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 		float *u = &texData[(vlv + vertexesAround*3) * 2 + 0];
 		float *v = &texData[(vlv + vertexesAround*3) * 2 + 1];
 
-		*u = 0.5f  * cosD( angleIncrement * vlv) + 0.5f;
-		*v = 0.5f  * sinD( angleIncrement * vlv) + 0.5f;
+		*u = 0.5f * std::cos(angleIncrement * vlv) + 0.5f;
+		*v = 0.5f * std::sin(angleIncrement * vlv) + 0.5f;
 
 		*u = *u * 14.0f / 16.0f;
 		*v = *v * 14.0f / 16.0f;

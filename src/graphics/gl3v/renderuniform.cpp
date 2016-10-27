@@ -19,7 +19,7 @@
 
 #include "renderuniform.h"
 
-RenderUniform::RenderUniform()
+RenderUniform::RenderUniform() : location(0)
 {
 	// Constructor.
 }

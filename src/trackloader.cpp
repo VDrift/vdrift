@@ -35,6 +35,8 @@
 
 #define EXTBULLET
 
+static const float deg2rad = M_PI / 180;
+
 static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
 	std::string str;
@@ -129,7 +131,8 @@ Track::Loader::Loader(
 	min_params(14),
 	error(false),
 	list(false),
-	track_shape(0)
+	track_shape(0),
+	nodes(0)
 {
 	objectpath = trackpath + "/objects";
 	objectdir = trackdir + "/objects";
@@ -311,7 +314,7 @@ std::pair<bool, bool> Track::Loader::Continue()
 
 bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & body)
 {
-	if (body.mass < 1E-3)
+	if (body.mass < 1E-3f)
 	{
 		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
 		mesh->addIndexedMesh(GetIndexedMesh(model));
@@ -475,7 +478,7 @@ void Track::Loader::AddBody(SceneNode & scene, const Body & body)
 {
 	bool nolighting = body.nolighting;
 	bool alphablend = body.drawable.GetDecal();
-	keyed_container<Drawable> * dlist = &scene.GetDrawList().normal_noblend;
+	auto dlist = &scene.GetDrawList().normal_noblend;
 	if (body.skybox)
 	{
 		if (alphablend)
@@ -518,10 +521,10 @@ bool Track::Loader::LoadNode(const PTree & sec)
 
 	Vec3 position, angle;
 	bool has_transform = sec.get("position",  position) | sec.get("rotation", angle);
-	Quat rotation(angle[0]/180*M_PI, angle[1]/180*M_PI, angle[2]/180*M_PI);
+	Quat rotation(angle[0] * deg2rad, angle[1] * deg2rad, angle[2] * deg2rad);
 
 	const Body & body = ib->second;
-	if (body.mass < 1E-3)
+	if (body.mass < 1E-3f)
 	{
 		// static geometry
 		if (has_transform)
@@ -866,12 +869,12 @@ bool Track::Loader::LoadSurfaces()
 		surf_cfg.get("Type", type);
 		surface.setType(type);
 
-		float temp = 0.0;
+		float temp = 0;
 		surf_cfg.get("BumpWaveLength", temp, error_output);
-		if (temp <= 0.0)
+		if (temp <= 0)
 		{
-			error_output << "Surface Type = " << type << " has BumpWaveLength = 0.0 in " << path << std::endl;
-			temp = 1.0;
+			error_output << "Surface Type = " << type << " has BumpWaveLength = 0 in " << path << std::endl;
+			temp = 1;
 		}
 		surface.bumpWaveLength = temp;
 
@@ -1042,10 +1045,10 @@ bool Track::Loader::LoadStartPositions(const PTree & info)
 		std::ostringstream so_name;
 		so_name << "start orientation " << sp_num;
 		Quat q;
-		std::vector <float> angle(3, 0.0);
+		std::vector <float> angle(3, 0);
 		if (info.get(so_name.str(), angle, error_output))
 		{
-			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
+			q.SetEulerZYX(angle[0] * deg2rad, angle[1] * deg2rad, angle[2] * deg2rad);
 		}
 
 		Quat orient(q[2], q[0], q[1], q[3]);

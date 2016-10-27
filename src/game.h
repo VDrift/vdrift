@@ -380,7 +380,7 @@ private:
 	Http http;
 
 	std::unique_ptr <ForceFeedback> forcefeedback;
-	double ff_update_time;
+	float ff_update_time;
 };
 
 #endif

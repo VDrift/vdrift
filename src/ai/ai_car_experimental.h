@@ -88,12 +88,7 @@ private:
 	///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
 	float BrakeFromOthers(float speed_diff);
 
-	///< returns the angle in degrees of the normalized 2-vector
-	double Angle(double x1, double y1);
-
 	Bezier RevisePatch(const Bezier * origpatch, bool use_racingline);
-
-	static float clamp(float val, float min, float max);
 
 	static float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg);
 
@@ -107,7 +102,7 @@ private:
 
 	static Vec3 GetPatchWidthVector(const Bezier & patch);
 
-	static double GetPatchRadius(const Bezier & patch);
+	static float GetPatchRadius(const Bezier & patch);
 
 	static void TrimPatch(Bezier & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back);
 

@@ -51,18 +51,19 @@ void LoadCapsuleShape(
 	cfg.get("size", size);
 
 	int axis = size.maxAxis();
-	int radius = size.minAxis();
+	btScalar height = size[axis];
+	btScalar radius = size[size.minAxis()] * btScalar(0.5);
 	if (axis == 0)
 	{
-		shape = new btCapsuleShapeX(size[radius] * 0.5, size[axis]);
+		shape = new btCapsuleShapeX(radius, height);
 	}
 	else if (axis == 1)
 	{
-		shape = new btCapsuleShape(size[radius] * 0.5, size[axis]);
+		shape = new btCapsuleShape(radius, height);
 	}
 	else
 	{
-		shape = new btCapsuleShapeZ(size[radius] * 0.5, size[axis]);
+		shape = new btCapsuleShapeZ(radius, height);
 	}
 
 	if (!shape_transform.getOrigin().isZero() && !compound)
