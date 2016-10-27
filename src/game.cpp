@@ -128,7 +128,8 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	particle_timer(0),
 	track(),
 	replay(timestep),
-	http("/tmp")
+	http("/tmp"),
+	ff_update_time(0)
 {
 	carcontrols_local.first = NULL;
 	dynamics.setContactAddedCallback(&CarDynamics::WheelContactCallback);
