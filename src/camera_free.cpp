@@ -48,9 +48,7 @@ void CameraFree::Reset(const Vec3 & newpos, const Quat & newquat)
 
 void CameraFree::Rotate(float up, float left)
 {
-	updown_rotation += up;
-	if (updown_rotation > 1) updown_rotation = 1;
-	if (updown_rotation <-1) updown_rotation =-1;
+	updown_rotation = Clamp(updown_rotation + up, -1.0f, 1.0f);
 	leftright_rotation += left;
 
 	rotation.LoadIdentity();

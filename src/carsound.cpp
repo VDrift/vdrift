@@ -410,10 +410,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 
 				const float breakevenms = 5;
 				float gain = bumpsize * GetSpeed() / breakevenms;
-				if (gain > 1)
-					gain = 1;
-				if (gain < 0)
-					gain = 0;
+				gain = Clamp(gain, 0.0f, 1.0f);
 
 				if (gain > 0 && !tirebump[i].Audible())
 				{

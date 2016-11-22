@@ -20,6 +20,7 @@
 #include "carcontrolmap.h"
 #include "eventsystem.h"
 #include "cfg/config.h"
+#include "minmax.h"
 
 #include <string>
 #include <list>
@@ -47,12 +48,7 @@ static inline float Ramp(float start, float end, float button_ramp, float dt)
 		cur += button_ramp*dt*sign;
 
 	//std::cout << "start: " << start << ", end: " << end << ", cur: " << cur << ", increment: "  << button_ramp*dt*sign << std::endl;
-
-	if (cur < 0)
-		return 0;
-	if (cur > 1)
-		return 1;
-	return cur;
+	return Clamp(cur, 0.0f, 1.0f);
 }
 
 static inline float ApplyDeadzone(float dz, float val)
@@ -66,30 +62,17 @@ static inline float ApplyDeadzone(float dz, float val)
 		else
 			val = (val - dz) * (1 / (1 - dz));
 	}
-
 	return val;
 }
 
 static inline float ApplyGain(float gain, float val)
 {
-	val *= gain;
-	if (val < -1)
-		val = -1;
-	if (val > 1)
-		val = 1;
-
-	return val;
+	return Clamp(val * gain, -1.0f, 1.0f);
 }
 
 static inline float ApplyExponent(float exponent, float val)
 {
-	val = std::pow(val, exponent);
-	if (val < -1)
-		val = -1;
-	if (val > 1)
-		val = 1;
-
-	return val;
+	return Clamp(std::pow(val, exponent), -1.0f, 1.0f);
 }
 
 static const std::string invalid("INVALID");
@@ -538,12 +521,9 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					//std::cout << pos[0] << "," << pos[1] << std::endl;
 
 					float xval = (pos[0]-screenw/2.0)/(screenw/4.0);
-					if (xval < -1) xval = -1;
-					if (xval > 1) xval = 1;
-
 					float yval = (pos[1]-screenh/2.0)/(screenh/4.0);
-					if (yval < -1) yval = -1;
-					if (yval > 1) yval = 1;
+					xval = Clamp(xval, -1.0f, 1.0f);
+					yval = Clamp(yval, -1.0f, 1.0f);
 
 					float val = 0;
 
@@ -556,18 +536,10 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					else if (control.mdir == Control::RIGHT)
 						val = xval;
 
-					if (val < 0)
-						val = 0;
-					else if (val > 1)
-						val = 1;
-
+					val = Clamp(val, 0.0f, 1.0f);
 					val = ApplyDeadzone(control.deadzone,val);
 					val = ApplyGain(control.gain,val);
-
-					if (val < 0)
-						val = 0;
-					else if (val > 1)
-						val = 1;
+					val = Clamp(val, 0.0f, 1.0f);
 
 					float absval = val;
 					bool neg = false;
@@ -580,12 +552,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					if (neg)
 						val = -val;
 
-					if (val < 0)
-						val = 0;
-					else if (val > 1)
-						val = 1;
-
-					tempval = val;
+					tempval = Clamp(val, 0.0f, 1.0f);
 
 					//cout << val << std::endl;
 
@@ -601,12 +568,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 			assert(handled);
 		}
 
-		if (newval < 0)
-			newval = 0;
-		if (newval > 1)
-			newval = 1;
-
-		inputs[n] = newval;
+		inputs[n] = Clamp(newval, 0.0f, 1.0f);
 
 		//std::cout << "New input value: " << inputs[n->first] << std::endl;
 	}
@@ -1027,12 +989,7 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 				steerpos -= steerstep;
 		}
 
-		if (steerpos > 1)
-			steerpos = 1;
-		if (steerpos < -1)
-			steerpos = -1;
-
-		val = steerpos;
+		val = Clamp(steerpos, -1.0f, 1.0f);
 
 		/*float coeff = 0.97f;
 		val = steerpos * coeff + val * (1-coeff);*/
