@@ -143,9 +143,9 @@ Sound::Sound() :
 	sources_num(0),
 	update_id(0),
 	sources_pause(true),
-	samplers_fade(false),
 	samplers_num(0),
-	samplers_pause(true)
+	samplers_pause(true),
+	samplers_fade(false)
 {
 	attenuation[0] =  0.9146065;
 	attenuation[1] =  0.2729276;
