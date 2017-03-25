@@ -113,6 +113,7 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	active_camera(0),
 	car_info(1),
 	player_car_id(0),
+	camera_car_id(0),
 	car_edit_id(0),
 	race_laps(0),
 	practice(true),
@@ -1383,15 +1384,21 @@ void Game::ProcessCarInputs(const size_t carid)
 
 void Game::ProcessCameraInputs()
 {
-	const size_t carid = player_car_id;
-	CarDynamics & car = car_dynamics[carid];
-	CarGraphics & car_gfx = car_graphics[carid];
-	CarSound & car_snd = car_sounds[carid];
+	CarControlMap & carcontrol = carcontrols_local.second;
+
+	// Handle camera focus
+	unsigned car_count = car_dynamics.size();
+	if (carcontrol.GetInput(GameInput::FOCUS_NEXT))
+		camera_car_id = (camera_car_id < car_count - 1) ? camera_car_id + 1 : 0;
+	else if (carcontrol.GetInput(GameInput::FOCUS_PREV))
+		camera_car_id = (camera_car_id > 0) ? camera_car_id - 1 : car_count - 1;
+
+	CarDynamics & car = car_dynamics[camera_car_id];
+	CarGraphics & car_gfx = car_graphics[camera_car_id];
+	CarSound & car_snd = car_sounds[camera_car_id];
 
 	// Handle camera mode change inputs.
-	CarControlMap & carcontrol = carcontrols_local.second;
-	Camera * old_camera = active_camera;
-	unsigned int camera_id = settings.GetCamera();
+	unsigned camera_id = settings.GetCamera();
 	if (carcontrol.GetInput(GameInput::VIEW_HOOD))
 		camera_id = 0;
 	else if (carcontrol.GetInput(GameInput::VIEW_INCAR))
@@ -1410,13 +1417,14 @@ void Game::ProcessCameraInputs()
 		camera_id--;
 
 	// wrap around
-	const unsigned int camera_count = car_gfx.GetCameras().size();
+	unsigned camera_count = car_gfx.GetCameras().size();
 	if (camera_id > camera_count)
 		camera_id = camera_count - 1;
 	else if (camera_id == camera_count)
 		camera_id = 0;
 
 	// set active camera
+	Camera * old_camera = active_camera;
 	active_camera = car_gfx.GetCameras()[camera_id];
 	settings.SetCamera(camera_id);
 
@@ -1595,6 +1603,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	race_laps = num_laps;
 
 	// Start out with no camera.
+	camera_car_id = player_car_id;
 	active_camera = NULL;
 
 	// Get cars count.

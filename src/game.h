@@ -356,6 +356,7 @@ private:
 	std::vector <CarSound> car_sounds;
 	std::vector <CarInfo> car_info;
 	size_t player_car_id;
+	size_t camera_car_id;
 	size_t car_edit_id;
 	int race_laps;
 	bool practice;
