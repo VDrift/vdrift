@@ -1375,7 +1375,7 @@ void Game::ProcessCarInputs(const size_t carid)
 	if (replay.GetRecording())
 		replay.RecordFrame(carid, carinputs, car);
 
-	if (carid == player_car_id)
+	if (carid == camera_car_id)
 	{
 		if (settings.GetHUD() != "NoHud")
 			UpdateHUD(carid, carinputs);
@@ -1499,11 +1499,11 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 		signal_brake(brakestr.str());
 	}
 
-	std::pair <int, int> curplace = timer.GetPlayerPlace();
+	std::pair <int, int> curplace = timer.GetCarPlace(carid);
 	std::ostringstream placestr;
 	placestr << curplace.first << " / " << curplace.second;
 
-	int cur_lap = Clamp(timer.GetPlayerCurrentLap(), 1, race_laps);
+	int cur_lap = Clamp(timer.GetCurrentLap(carid), 1, race_laps);
 	std::ostringstream lapstr;
 	if (race_laps > 0)
 		lapstr << cur_lap << " / " << race_laps;
@@ -1524,7 +1524,7 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 			msgstr << lang("Ready");
 		else if (stagingtimeleft < 0 && stagingtimeleft > -1)
 			msgstr << lang("GO");
-		else if (timer.GetPlayerCurrentLap() > race_laps)
+		else if (timer.GetCurrentLap(carid) > race_laps)
 			msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
 	}
 	if (msgstr.tellp() <= 0 && timer.GetIsDrifting(carid))
@@ -1567,9 +1567,9 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
 	nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
 
-	signal_lap_time[0](GetTimeString(timer.GetPlayerTime()));
-	signal_lap_time[1](GetTimeString(timer.GetLastLap()));
-	signal_lap_time[2](GetTimeString(timer.GetBestLap()));
+	signal_lap_time[0](GetTimeString(timer.GetTime(carid)));
+	signal_lap_time[1](GetTimeString(timer.GetLastLap(carid)));
+	signal_lap_time[2](GetTimeString(timer.GetBestLap(carid)));
 
 	signal_pos(placestr.str());
 	signal_lap(lapstr.str());

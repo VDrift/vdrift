@@ -56,16 +56,16 @@ public:
 
 	void DebugPrint(std::ostream & out) const;
 
-	float GetPlayerTime() {assert(playercarindex<car.size());return car[playercarindex].GetTime();}
+	float GetTime(unsigned int index) {assert(index<car.size());return car[index].GetTime();}
 
-	float GetLastLap() {assert(playercarindex<car.size());return car[playercarindex].GetLastLap();}
+	float GetLastLap(unsigned int index) {assert(index<car.size());return car[index].GetLastLap();}
 
-	float GetBestLap()
+	float GetBestLap(unsigned int index)
 	{
-		assert(playercarindex<car.size());
-		float curbestlap = car[playercarindex].GetBestLap();
+		assert(index<car.size());
+		float curbestlap = car[index].GetBestLap();
 		float prevbest(0);
-		bool haveprevbest = trackrecords.get(car[playercarindex].GetCarType(), "sector 0", prevbest);
+		bool haveprevbest = trackrecords.get(car[index].GetCarType(), "sector 0", prevbest);
 		if (haveprevbest)
 		{
 			if (curbestlap == 0)
@@ -80,8 +80,6 @@ public:
 			return curbestlap;
 	}
 
-	int GetPlayerCurrentLap() const {return GetCurrentLap(playercarindex);}
-
 	int GetCurrentLap(unsigned int index) const {assert(index<car.size()); return car[index].GetCurrentLap();}
 
 	int GetLastSector(unsigned int index) const {assert(index<car.size()); return car[index].GetSector();}
@@ -90,8 +88,6 @@ public:
 
 	///return the place (first element) out of total (second element)
 	std::pair <int, int> GetCarPlace(int index);
-
-	std::pair <int, int> GetPlayerPlace() {return GetCarPlace(playercarindex);}
 
 	float GetDriftScore(unsigned int index) const
 	{
