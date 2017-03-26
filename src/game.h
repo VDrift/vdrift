@@ -350,7 +350,7 @@ private:
 	CameraFree garage_camera;
 	Camera * active_camera;
 
-	std::pair <CarDynamics *, CarControlMap> carcontrols_local;
+	CarControlMap car_controls_local;
 	btAlignedObjectArray <CarDynamics> car_dynamics;
 	std::vector <CarGraphics> car_graphics;
 	std::vector <CarSound> car_sounds;
