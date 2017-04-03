@@ -733,7 +733,7 @@ void Game::Draw(float dt)
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
 
 		Vec3 reflection_location = active_camera->GetPosition();
-		if (car_dynamics.size() < camera_car_id)
+		if (camera_car_id < unsigned(car_dynamics.size()))
 			reflection_location = ToMathVector<float>(car_dynamics[camera_car_id].GetCenterOfMass());
 
 		Quat camlook;
