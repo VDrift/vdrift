@@ -980,7 +980,7 @@ void Game::ProcessGameInputs()
 void Game::UpdateTimer()
 {
 	// Check for cars doing a lap.
-	for (int i = 0; i != car_dynamics.size(); ++i)
+	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
 		const CarDynamics & car = car_dynamics[i];
 		bool advance = false;
@@ -1052,7 +1052,7 @@ void Game::UpdateTimer()
 void Game::UpdateTrackMap()
 {
 	std::list <std::pair<Vec3, bool> > carpositions;
-	for (unsigned i = 0; i != unsigned(car_dynamics.size()); ++i)
+	for (unsigned i = 0; i < unsigned(car_dynamics.size()); ++i)
 	{
 		const CarDynamics & car = car_dynamics[i];
 		bool active = (i == camera_car_id);
@@ -2332,7 +2332,7 @@ void Game::ProcessNewSettings()
 		track.SetRacingLineVisibility(settings.GetRacingline());
 	}
 
-	if (car_dynamics.size() < player_car_id)
+	if (player_car_id < unsigned(car_dynamics.size()))
 	{
 		car_dynamics[player_car_id].SetAutoClutch(settings.GetAutoClutch());
 		car_dynamics[player_car_id].SetAutoShift(settings.GetAutoShift());
