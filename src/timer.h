@@ -138,37 +138,6 @@ private:
 	unsigned int playercarindex; //the index for the player's car; defaults to zero
 	bool loaded;
 
-	class LapTime
-	{
-	private:
-		double time;
-
-	public:
-		LapTime() : time(0) {}
-
-		void Reset() { time = 0; }
-
-		double GetTimeInSeconds() const { return time; }
-
-		///convert time in seconds into output min and secs
-		void GetTimeInMinutesSeconds(float & secs, int & min) const
-		{
-			min = (int) time / 60;
-			secs = time - min*60;
-		}
-		void Set(double newtime)
-		{
-			time = newtime;
-		}
-
-		///only set the time if we don't have a time or if the new time is faster than the current time
-		void SetIfFaster(double newtime)
-		{
-			if (time == 0 || time > newtime)
-				time = newtime;
-		}
-	};
-
 	class DriftScore
 	{
 	private:
@@ -261,14 +230,21 @@ private:
 	{
 	private:
 		double time; //running time for this lap
-		LapTime lastlap; //last lap time for player & opponents
-		LapTime bestlap; //best lap time for player & opponents
+		double lastlap; //last lap time for player & opponents
+		double bestlap; //best lap time for player & opponents
 		double totaltime; //total time of a race for player & opponents
 		int num_laps; //current lap
 		int sector;
 		std::string cartype;
 		double lapdistance; //total track distance driven this lap in meters
 		DriftScore driftscore;
+
+		///only set the time if we don't have a time or if the new time is faster than the current time
+		static inline void SetIfFaster(double & time, double newtime)
+		{
+			if (time == 0 || time > newtime)
+				time = newtime;
+		}
 
 	public:
 		LapInfo(const std::string & newcartype) :
@@ -280,8 +256,8 @@ private:
 		void Reset()
 		{
 			time = totaltime = 0;
-			lastlap.Reset();
-			bestlap.Reset();
+			lastlap = 0;
+			bestlap = 0;
 			num_laps = 0;
 			sector = -1;
 		}
@@ -295,8 +271,8 @@ private:
 		{
 			if (countit)
 			{
-				lastlap.Set(time);
-				bestlap.SetIfFaster(time);
+				lastlap = time;
+				SetIfFaster(bestlap, time);
 			}
 
 			totaltime += time;
@@ -311,9 +287,9 @@ private:
 
 		void DebugPrint(std::ostream & out) const
 		{
-			out << "car=" << cartype << ", t=" << totaltime << ", tlap=" << time << ", last=" <<
-				lastlap.GetTimeInSeconds() << ", best=" << bestlap.GetTimeInSeconds() <<
-				", lap=" << num_laps << std::endl;
+			out << "car=" << cartype << ", t=" << totaltime << ", tlap=" << time
+				<< ", last=" << lastlap << ", best=" << bestlap
+				<< ", lap=" << num_laps << std::endl;
 		}
 
 		double GetTime() const
@@ -323,12 +299,12 @@ private:
 
 		double GetLastLap() const
 		{
-			return lastlap.GetTimeInSeconds();
+			return lastlap;
 		}
 
 		double GetBestLap() const
 		{
-			return bestlap.GetTimeInSeconds();
+			return bestlap;
 		}
 
 		int GetCurrentLap() const
