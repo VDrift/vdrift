@@ -60,25 +60,7 @@ public:
 
 	float GetLastLap(unsigned int index) {assert(index<car.size());return car[index].GetLastLap();}
 
-	float GetBestLap(unsigned int index)
-	{
-		assert(index<car.size());
-		float curbestlap = car[index].GetBestLap();
-		float prevbest(0);
-		bool haveprevbest = trackrecords.get(car[index].GetCarType(), "sector 0", prevbest);
-		if (haveprevbest)
-		{
-			if (curbestlap == 0)
-				return prevbest;
-			else
-				if (prevbest < curbestlap)
-					return prevbest;
-				else
-					return curbestlap;
-		}
-		else
-			return curbestlap;
-	}
+	float GetBestLap(unsigned int index) {assert(index<car.size());return car[index].GetBestLap();}
 
 	int GetCurrentLap(unsigned int index) const {assert(index<car.size()); return car[index].GetCurrentLap();}
 
@@ -229,14 +211,14 @@ private:
 	class LapInfo
 	{
 	private:
-		double time; //running time for this lap
-		double lastlap; //last lap time for player & opponents
+		std::string cartype;
 		double bestlap; //best lap time for player & opponents
+		double lastlap; //last lap time for player & opponents
+		double time; //running time for this lap
 		double totaltime; //total time of a race for player & opponents
+		double lapdistance; //total track distance driven this lap in meters
 		int num_laps; //current lap
 		int sector;
-		std::string cartype;
-		double lapdistance; //total track distance driven this lap in meters
 		DriftScore driftscore;
 
 		///only set the time if we don't have a time or if the new time is faster than the current time
@@ -247,19 +229,17 @@ private:
 		}
 
 	public:
-		LapInfo(const std::string & newcartype) :
-			cartype(newcartype)
+		LapInfo(const std::string & newcartype, double newbestlap=0) :
+			cartype(newcartype),
+			bestlap(newbestlap),
+			lastlap(0),
+			time(0),
+			totaltime(0),
+			lapdistance(0),
+			num_laps(0),
+			sector(-1)
 		{
-			Reset();
-		}
-
-		void Reset()
-		{
-			time = totaltime = 0;
-			lastlap = 0;
-			bestlap = 0;
-			num_laps = 0;
-			sector = -1;
+			// ctor
 		}
 
 		void Tick(float dt)

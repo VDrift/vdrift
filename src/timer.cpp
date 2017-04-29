@@ -47,7 +47,9 @@ bool Timer::Load(const std::string & trackrecordspath, float stagingtime)
 
 int Timer::AddCar(const std::string & cartype)
 {
-	car.push_back(LapInfo(cartype));
+	float bestlap = 0;
+	trackrecords.get(cartype, "sector 0", bestlap);
+	car.push_back(LapInfo(cartype, bestlap));
 	return car.size()-1;
 }
 
