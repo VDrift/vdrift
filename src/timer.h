@@ -141,18 +141,15 @@ private:
 	class LapTime
 	{
 	private:
-		bool havetime;
 		double time;
 
 	public:
-		LapTime() {Reset();}
-		void Reset()
-		{
-			havetime = false;
-			time = 0;
-		}
-		bool HaveTime() const {return havetime;}
-		double GetTimeInSeconds() const {return time;}
+		LapTime() : time(0) {}
+
+		void Reset() { time = 0; }
+
+		double GetTimeInSeconds() const { return time; }
+
 		///convert time in seconds into output min and secs
 		void GetTimeInMinutesSeconds(float & secs, int & min) const
 		{
@@ -162,14 +159,13 @@ private:
 		void Set(double newtime)
 		{
 			time = newtime;
-			havetime = true;
 		}
+
 		///only set the time if we don't have a time or if the new time is faster than the current time
 		void SetIfFaster(double newtime)
 		{
-			if (!havetime || newtime < time)
+			if (time == 0 || time > newtime)
 				time = newtime;
-			havetime = true;
 		}
 	};
 
