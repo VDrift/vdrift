@@ -415,7 +415,7 @@ void Game::InitPlayerCar()
 	hsv[1] = settings.GetCarColorSat();
 	hsv[2] = settings.GetCarColorVal();
 
-	car_info[0].driver = "user";
+	car_info[0].driver = "";
 	car_info[0].name = settings.GetCar();
 	car_info[0].paint = settings.GetCarPaint();
 	car_info[0].ailevel = settings.GetAILevel();
@@ -482,7 +482,7 @@ bool Game::InitGUI()
 	// Set driver/edit num to update gui explicitely
 	// as they are not stored in settings
 	gui.SetOptionValue("game.car_edit", "0");
-	gui.SetOptionValue("game.driver", "user");
+	gui.SetOptionValue("game.driver", "");
 
 	// Set input control labels
 	LoadControlsIntoGUI();
@@ -1305,7 +1305,7 @@ void Game::ProcessCarInputs(const size_t carid)
 			carinputs[i] = inputs[i];
 		}
 	}
-	else if (carid == player_car_id)
+	else if (carid == player_car_id && car_info[carid].driver.empty())
 	{
 		carinputs = car_controls_local.GetInputs();
 #ifdef VISUALIZE_AI_DEBUG
@@ -1649,7 +1649,8 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		timer.AddCar(car_info[i].name);
 	}
-	timer.SetPlayerCarId(player_car_id);
+	timer.SetPlayerCarId(
+		car_info[player_car_id].driver.empty() ? player_car_id : car_info.size());
 
 	// Bind vertex data.
 	std::vector<SceneNode *> nodes;
@@ -1793,7 +1794,7 @@ bool Game::LoadCar(
 		return false;
 	}
 
-	bool isai = (info.driver != "user");
+	bool isai = !info.driver.empty();
 	if (isai)
 		ai.AddCar(&car, info.ailevel, info.driver);
 
@@ -2182,7 +2183,7 @@ void Game::PopulateDriverList(GuiOption::List & driverlist)
 {
 	const std::vector<std::string> aitypes = ai.ListFactoryTypes();
 	driverlist.clear();
-	driverlist.push_back(std::make_pair("user", "user"));
+	driverlist.push_back(std::make_pair("", "player"));
 	for (const auto & aitype : aitypes)
 	{
 		driverlist.push_back(std::make_pair(aitype, aitype));
@@ -2194,10 +2195,12 @@ void Game::PopulateStartList(GuiOption::List & startlist)
 	startlist.clear();
 	for (size_t i = 0; i < car_info.size(); ++i)
 	{
-		const size_t n0 = car_info[i].name.find("/") + 1;
-		const size_t n1 = car_info[i].name.length();
-		const std::string carname = car_info[i].name.substr(n0, n1 - n0);
-		startlist.push_back(std::make_pair(cast(i + 1), carname + " / " + car_info[i].driver));
+		auto & info = car_info[i];
+		const size_t n0 = info.name.find("/") + 1;
+		const size_t n1 = info.name.length();
+		const std::string entry = info.name.substr(n0, n1 - n0) + " / "
+			+ (info.driver.empty() ? "player" : info.driver);
+		startlist.push_back(std::make_pair(cast(i + 1), entry));
 	}
 }
 
@@ -2332,7 +2335,8 @@ void Game::ProcessNewSettings()
 		track.SetRacingLineVisibility(settings.GetRacingline());
 	}
 
-	if (player_car_id < unsigned(car_dynamics.size()))
+	if (player_car_id < unsigned(car_dynamics.size()) &&
+		car_info[player_car_id].driver.empty())
 	{
 		car_dynamics[player_car_id].SetAutoClutch(settings.GetAutoClutch());
 		car_dynamics[player_car_id].SetAutoShift(settings.GetAutoShift());
@@ -2840,7 +2844,6 @@ void Game::SyncOptions()
 
 	// hack: store player car info only
 	CarInfo & info = car_info[player_car_id];
-	assert(info.driver == "user");
 	info.name = optionmap["game.car"];
 	info.paint = optionmap["game.car_paint"];
 	info.tire = optionmap["game.car_tire"];
@@ -2869,9 +2872,8 @@ void Game::SyncSettings()
 	settings.Get(optionmap);
 	gui.GetOptions(optionmap);
 
-	// hack: store first car info only
+	// hack: store player car info only
 	const CarInfo & info = car_info[player_car_id];
-	assert(info.driver == "user");
 	optionmap["game.driver"] = info.driver;
 	optionmap["game.car"] = info.name;
 	optionmap["game.car_paint"] = info.paint;
@@ -3004,26 +3006,14 @@ void Game::SetCarDriver(const std::string & value)
 	if (value == info.driver)
 		return;
 
-	// reset option in the no opponents case
-	if (car_info.size() == 1)
-	{
-		gui.SetOptionValue("game.driver", "user");
-		return;
-	}
-
-	// swap driver with user
-	if (value == "user")
+	// swap driver with player
+	if (value.empty())
 	{
 		CarInfo & pinfo = car_info[player_car_id];
 		pinfo.driver = info.driver;
 		player_car_id = car_edit_id;
 	}
-	else if (player_car_id == car_edit_id)
-	{
-		player_car_id = (car_edit_id + 1) % car_info.size();
-		CarInfo & pinfo = car_info[player_car_id];
-		pinfo.driver = "user";
-	}
+
 	info.driver = value;
 
 	UpdateStartList();
@@ -3037,26 +3027,23 @@ void Game::SetCarAILevel(const std::string & value)
 void Game::SetCarsNum(const std::string & value)
 {
 	size_t cars_num = cast<size_t>(value);
-	int delta = cars_num - car_info.size();
-	if (delta == 0)
+	if (cars_num == car_info.size())
 		return;
 
-	if (delta < 0)
+	if (cars_num < car_info.size())
 	{
-		for (size_t i = car_info.size(); i > cars_num; --i)
+		if (car_edit_id >= cars_num)
+			car_edit_id = cars_num - 1;
+
+		if (player_car_id >= cars_num)
 		{
-			if (player_car_id == i - 1)
-			{
-				CarInfo & info = car_info[--player_car_id];
-				info.driver = "user";
-			}
-			car_info.pop_back();
+			car_info[cars_num - 1] = car_info[player_car_id];
+			player_car_id = cars_num - 1;
 		}
 
-		if (car_edit_id >= cars_num)
-			car_edit_id = cars_num;
+		car_info.resize(cars_num);
 	}
-	else if (delta > 0)
+	else
 	{
 		car_info.reserve(cars_num);
 		for (size_t i = car_info.size(); i < cars_num; ++i)
