@@ -1316,7 +1316,7 @@ void Game::ProcessCarInputs()
 	}
 	#endif
 
-	for (unsigned carid = 0; carid < unsigned(car_dynamics.size()); ++carid)
+	for (unsigned carid = 0, aiid = 0; carid < unsigned(car_dynamics.size()); ++carid)
 	{
 		CarDynamics & car = car_dynamics[carid];
 		CarGraphics & car_gfx = car_graphics[carid];
@@ -1327,7 +1327,7 @@ void Game::ProcessCarInputs()
 		else if (carid == player_car_id && !player_car_ai)
 			carinputs = car_controls_local.GetInputs();
 		else
-			carinputs = ai.GetInputs(&car);
+			carinputs = ai.GetInputs(aiid++);
 
 		assert(carinputs.size() >= CarInput::INVALID);
 

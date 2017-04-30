@@ -25,7 +25,7 @@
 
 const std::string Ai::default_type = "aistd";
 
-Ai::Ai() : empty_input(CarInput::INVALID, 0.0)
+Ai::Ai()
 {
 	AddFactory("aistd", new AiCarStandardFactory());
 	AddFactory("aiexp", new AiCarExperimentalFactory());
@@ -42,7 +42,7 @@ Ai::~Ai()
 	ai_factories.clear();
 }
 
-void Ai::AddCar(const CarDynamics * car, float difficulty, const std::string & type)
+unsigned Ai::AddCar(const CarDynamics * car, float difficulty, const std::string & type)
 {
 	assert(car);
 	assert(!ai_factories.empty());
@@ -50,23 +50,11 @@ void Ai::AddCar(const CarDynamics * car, float difficulty, const std::string & t
 	auto it = ai_factories.find(type);
 	assert(it != ai_factories.end());
 	AiFactory * factory = it->second;
+
 	AiCar * aicar = factory->Create(car, difficulty);
 	ai_cars.push_back(aicar);
-}
 
-void Ai::RemoveCar(const CarDynamics * car)
-{
-	assert(car);
-
-	for (auto i = ai_cars.begin(); i != ai_cars.end(); i++)
-	{
-		if((*i)->GetCar() == car)
-		{
-			delete *i;
-			ai_cars.erase(i);
-			return;
-		}
-	}
+	return ai_cars.size() - 1;
 }
 
 void Ai::ClearCars()
@@ -86,16 +74,9 @@ void Ai::Update(float dt, const CarDynamics cars[], const int cars_num)
 	}
 }
 
-const std::vector<float> & Ai::GetInputs(const CarDynamics * car) const
+const std::vector<float> & Ai::GetInputs(unsigned id) const
 {
-	for (const auto ai_car : ai_cars)
-	{
-		if (car == ai_car->GetCar())
-		{
-			return ai_car->GetInputs();
-		}
-	}
-	return empty_input;
+	return ai_cars[id]->GetInputs();
 }
 
 void Ai::AddFactory(const std::string & type_name, AiFactory * factory)

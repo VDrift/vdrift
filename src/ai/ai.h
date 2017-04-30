@@ -35,16 +35,13 @@ public:
 
 	~Ai();
 
-	void AddCar(const CarDynamics * car, float difficulty, const std::string & type = default_type);
-
-	void RemoveCar(const CarDynamics * car);
+	unsigned AddCar(const CarDynamics * car, float difficulty, const std::string & type = default_type);
 
 	void ClearCars();
 
 	void Update(float dt, const CarDynamics cars[], const int cars_num);
 
-	///< Returns an empty vector if the car isn't AI-controlled.
-	const std::vector<float> & GetInputs(const CarDynamics * car) const;
+	const std::vector<float> & GetInputs(unsigned id) const;
 
 	void AddFactory(const std::string & type_name, AiFactory * factory);
 
@@ -57,7 +54,6 @@ public:
 private:
 	std::vector <AiCar*> ai_cars;
 	std::map <std::string, AiFactory*> ai_factories;
-	std::vector <float> empty_input;
 };
 
 #endif //_AI_H
