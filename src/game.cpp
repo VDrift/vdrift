@@ -871,8 +871,7 @@ void Game::AdvanceGameLogic()
 		PROFILER.endBlock("ai");
 
 		//PROFILER.beginBlock("input");
-		for (int i = 0; i < car_dynamics.size(); ++i)
-			ProcessCarInputs(i);
+		ProcessCarInputs();
 		//PROFILER.endBlock("input");
 
 		PROFILER.beginBlock("physics");
@@ -1290,88 +1289,72 @@ void Game::UpdateCars(float dt)
 	}
 }
 
-void Game::ProcessCarInputs(const size_t carid)
+void Game::ProcessCarInputs()
 {
-	CarDynamics & car = car_dynamics[carid];
-	CarGraphics & car_gfx = car_graphics[carid];
-
-	std::vector <float> carinputs(CarInput::INVALID, 0.0f);
-	if (replay.GetPlaying())
+	bool player_car_ai = !car_info[player_car_id].driver.empty();
+	#ifdef VISUALIZE_AI_DEBUG
+	if (player_car_ai)
 	{
-		const std::vector<float> inputs = replay.PlayFrame(carid, car);
-		assert(inputs.size() <= carinputs.size());
-		for (size_t i = 0; i < inputs.size(); ++i)
-		{
-			carinputs[i] = inputs[i];
-		}
-	}
-	else if (carid == player_car_id && car_info[carid].driver.empty())
-	{
-		carinputs = car_controls_local.GetInputs();
-#ifdef VISUALIZE_AI_DEBUG
-		// It allows to activate the AI on the player car with F9 button.
-		// AI will override player inputs.
+		// It allows to deactivate the AI on the player car with F9 button.
 		// This is useful for bringing the car in strange
 		// situations and test how the AI solves it.
-		static bool aiControlled = false;
-		static bool buttonPressed = false;
-		if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+		static bool override_ai = false;
+		static bool button_pressed = false;
+		if (button_pressed != eventsystem.GetKeyState(SDLK_F9).just_down)
 		{
-			buttonPressed = !buttonPressed;
-			if (buttonPressed)
+			button_pressed = !button_pressed;
+			if (button_pressed)
 			{
-				aiControlled = !aiControlled;
-				if (aiControlled)
-				{
-					info_output << "Switching to AI controlled player." << std::endl;
-					ai.AddCar(&car, 1.0);
-				}
+				override_ai = !override_ai;
+				if (override_ai)
+					info_output << "Switching to user controlled player car." << std::endl;
 				else
-				{
-					info_output << "Switching to user controlled player." << std::endl;
-					ai.RemoveCar(&car);
-				}
+					info_output << "Switching to ai controlled player car." << std::endl;
 			}
 		}
-		if (aiControlled)
-		{
+		player_car_ai = !override_ai;
+	}
+	#endif
+
+	for (unsigned carid = 0; carid < unsigned(car_dynamics.size()); ++carid)
+	{
+		CarDynamics & car = car_dynamics[carid];
+		CarGraphics & car_gfx = car_graphics[carid];
+
+		std::vector <float> carinputs(CarInput::INVALID, 0.0f);
+		if (replay.GetPlaying())
+			carinputs = replay.PlayFrame(carid, car);
+		else if (carid == player_car_id && !player_car_ai)
+			carinputs = car_controls_local.GetInputs();
+		else
 			carinputs = ai.GetInputs(&car);
-			assert(carinputs.size() == CarInput::INVALID);
+
+		assert(carinputs.size() >= CarInput::INVALID);
+
+		// Force brake at start and once the race is over.
+		if (timer.Staging())
+		{
+			carinputs[CarInput::BRAKE] = 1.0;
+			carinputs[CarInput::CLUTCH] = 1.0;
 		}
-#endif
-	}
-	else
-	{
-		carinputs = ai.GetInputs(&car);
-		assert(carinputs.size() == CarInput::INVALID);
-	}
+		else if (race_laps > 0 && (int)timer.GetCurrentLap(carid) > race_laps)
+		{
+			carinputs[CarInput::BRAKE] = 1.0;
+			carinputs[CarInput::CLUTCH] = 1.0;
+			carinputs[CarInput::THROTTLE] = 0.0;
 
-	// Force brake at start and once the race is over.
-	if (timer.Staging())
-	{
-		carinputs[CarInput::BRAKE] = 1.0;
-		carinputs[CarInput::CLUTCH] = 1.0;
-	}
-	else if (race_laps > 0 && (int)timer.GetCurrentLap(carid) > race_laps)
-	{
-		carinputs[CarInput::BRAKE] = 1.0;
-		carinputs[CarInput::CLUTCH] = 1.0;
-		carinputs[CarInput::THROTTLE] = 0.0;
+			if (benchmode)
+				eventsystem.Quit();
+		}
 
-		if (benchmode)
-			eventsystem.Quit();
-	}
+		car.Update(carinputs);
+		car_gfx.Update(carinputs);
 
-	car.Update(carinputs);
-	car_gfx.Update(carinputs);
+		// Record car state.
+		if (replay.GetRecording())
+			replay.RecordFrame(carid, carinputs, car);
 
-	// Record car state.
-	if (replay.GetRecording())
-		replay.RecordFrame(carid, carinputs, car);
-
-	if (carid == camera_car_id)
-	{
-		if (settings.GetHUD() != "NoHud")
+		if (carid == camera_car_id && settings.GetHUD() != "NoHud")
 			UpdateHUD(carid, carinputs);
 	}
 }

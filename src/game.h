@@ -105,7 +105,7 @@ private:
 
 	void UpdateCars(float dt);
 
-	void ProcessCarInputs(const size_t carid);
+	void ProcessCarInputs();
 
 	/// Updates camera, call after physics update
 	void ProcessCameraInputs();
