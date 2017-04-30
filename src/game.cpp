@@ -1291,9 +1291,9 @@ void Game::UpdateCars(float dt)
 
 void Game::ProcessCarInputs()
 {
-	bool player_car_ai = !car_info[player_car_id].driver.empty();
+	bool player_control = car_info[player_car_id].driver.empty();
 	#ifdef VISUALIZE_AI_DEBUG
-	if (player_car_ai)
+	if (!player_control)
 	{
 		// It allows to deactivate the AI on the player car with F9 button.
 		// This is useful for bringing the car in strange
@@ -1312,7 +1312,7 @@ void Game::ProcessCarInputs()
 					info_output << "Switching to ai controlled player car." << std::endl;
 			}
 		}
-		player_car_ai = !override_ai;
+		player_control = override_ai;
 	}
 	#endif
 
@@ -1324,7 +1324,7 @@ void Game::ProcessCarInputs()
 		std::vector <float> carinputs(CarInput::INVALID, 0.0f);
 		if (replay.GetPlaying())
 			carinputs = replay.PlayFrame(carid, car);
-		else if (carid == player_car_id && !player_car_ai)
+		else if (carid == player_car_id && player_control)
 			carinputs = car_controls_local.GetInputs();
 		else
 			carinputs = ai.GetInputs(aiid++);
