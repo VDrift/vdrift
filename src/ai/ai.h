@@ -35,7 +35,7 @@ public:
 
 	~Ai();
 
-	unsigned AddCar(const CarDynamics * car, float difficulty, const std::string & type = default_type);
+	unsigned AddCar(unsigned carid, float difficulty, const std::string & type = default_type);
 
 	void ClearCars();
 

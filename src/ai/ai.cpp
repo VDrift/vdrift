@@ -42,16 +42,13 @@ Ai::~Ai()
 	ai_factories.clear();
 }
 
-unsigned Ai::AddCar(const CarDynamics * car, float difficulty, const std::string & type)
+unsigned Ai::AddCar(unsigned carid, float difficulty, const std::string & type)
 {
-	assert(car);
-	assert(!ai_factories.empty());
-
 	auto it = ai_factories.find(type);
 	assert(it != ai_factories.end());
 	AiFactory * factory = it->second;
 
-	AiCar * aicar = factory->Create(car, difficulty);
+	AiCar * aicar = factory->Create(carid, difficulty);
 	ai_cars.push_back(aicar);
 
 	return ai_cars.size() - 1;

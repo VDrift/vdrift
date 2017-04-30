@@ -1762,7 +1762,8 @@ bool Game::LoadCar(
 	}
 
 	car_dynamics.push_back(CarDynamics());
-	CarDynamics & car = car_dynamics[car_dynamics.size() - 1];
+	unsigned carid = car_dynamics.size() - 1;
+	CarDynamics & car = car_dynamics[carid];
 	if (!car.Load(
 		*carconf, cardir, info.tire,
 		ToBulletVector(position),
@@ -1779,7 +1780,7 @@ bool Game::LoadCar(
 
 	bool isai = !info.driver.empty();
 	if (isai)
-		ai.AddCar(&car, info.ailevel, info.driver);
+		ai.AddCar(carid, info.ailevel, info.driver);
 
 	car.SetAutoClutch(settings.GetAutoClutch() || isai);
 	car.SetAutoShift(settings.GetAutoShift() || isai);
