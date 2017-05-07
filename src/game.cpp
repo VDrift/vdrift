@@ -1782,6 +1782,7 @@ bool Game::LoadCar(
 	if (isai)
 		ai.AddCar(carid, info.ailevel, info.driver);
 
+	car.SetAutoReverse(settings.GetAutoReverse() && !isai);
 	car.SetAutoClutch(settings.GetAutoClutch() || isai);
 	car.SetAutoShift(settings.GetAutoShift() || isai);
 	car.SetABS(settings.GetABS() || isai);
@@ -2324,6 +2325,7 @@ void Game::ProcessNewSettings()
 	{
 		car_dynamics[player_car_id].SetAutoClutch(settings.GetAutoClutch());
 		car_dynamics[player_car_id].SetAutoShift(settings.GetAutoShift());
+		car_dynamics[player_car_id].SetAutoReverse(settings.GetAutoReverse());
 	}
 
 	sound.SetVolume(settings.GetSoundVolume());

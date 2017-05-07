@@ -65,6 +65,7 @@ Settings::Settings() :
 	speed_sensitivity(1.0),
 	joystick_calibrated(false),
 	view_distance(1000.0),
+	autoreverse(true),
 	autoclutch(true),
 	autoshift(true),
 	racingline(false),
@@ -208,6 +209,7 @@ void Settings::Serialize(bool write, Config & config)
 
 	config.get("control", section);
 	Param(config, write, section, "speed_sens_steering", speed_sensitivity);
+	Param(config, write, section, "autoreverse", autoreverse);
 	Param(config, write, section, "autoclutch", autoclutch);
 	Param(config, write, section, "autotrans", autoshift);
 	Param(config, write, section, "mousegrab", mousegrab);

@@ -182,6 +182,11 @@ public:
 		return view_distance;
 	}
 
+	bool GetAutoReverse() const
+	{
+		return autoreverse;
+	}
+
 	bool GetAutoClutch() const
 	{
 		return autoclutch;
@@ -426,6 +431,7 @@ private:
 	float speed_sensitivity;
 	bool joystick_calibrated;
 	float view_distance;
+	bool autoreverse;
 	bool autoclutch;
 	bool autoshift;
 	bool racingline;

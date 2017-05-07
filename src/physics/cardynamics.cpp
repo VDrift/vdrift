@@ -665,6 +665,11 @@ void CarDynamics::AlignWithGround()
 	body->setLinearVelocity(btVector3(0, 0, 0));
 }
 
+void CarDynamics::SetAutoReverse(bool value)
+{
+	autoreverse = value;
+}
+
 void CarDynamics::SetAutoClutch(bool value)
 {
 	autoclutch = value;
@@ -693,14 +698,6 @@ void CarDynamics::Update(const std::vector<float> & inputs)
 {
 	assert(inputs.size() >= CarInput::INVALID);
 
-	SetBrake(inputs[CarInput::BRAKE]);
-
-	SetHandBrake(inputs[CarInput::HANDBRAKE]);
-
-	// do steering
-	float steer_value = inputs[CarInput::STEER_RIGHT] - inputs[CarInput::STEER_LEFT];
-	SetSteering(steer_value);
-
 	// do shifting
 	int gear_change = 0;
 	if (inputs[CarInput::SHIFT_UP] == 1)
@@ -727,11 +724,45 @@ void CarDynamics::Update(const std::vector<float> & inputs)
 	if (inputs[CarInput::SIXTH_GEAR])
 		new_gear = 6;
 
-	ShiftGear(new_gear);
+	float brake_input = inputs[CarInput::BRAKE];
+	float throttle_input = inputs[CarInput::THROTTLE];
+	if (autoreverse && driveshaft_rpm < 1)
+	{
+		if (new_gear > 0 &&
+			brake_input > 1E-3f &&
+			throttle_input < 1E-3f &&
+			inputs[CarInput::CLUTCH] < 1)
+		{
+			new_gear = -1;
+		}
+		else if (new_gear < 0)
+		{
+			if (driveshaft_rpm > -1 &&
+				brake_input < 1E-3f &&
+				throttle_input > 1E-3f &&
+				inputs[CarInput::CLUTCH] < 1)
+			{
+				new_gear = 1;
+			}
+			//else
+			{
+				throttle_input = inputs[CarInput::BRAKE];
+				brake_input = inputs[CarInput::THROTTLE];
+			}
+		}
+	}
 
-	SetThrottle(inputs[CarInput::THROTTLE]);
+	SetSteering(inputs[CarInput::STEER_RIGHT] - inputs[CarInput::STEER_LEFT]);
+
+	SetHandBrake(inputs[CarInput::HANDBRAKE]);
+
+	SetBrake(brake_input);
+
+	SetThrottle(throttle_input);
 
 	SetClutch(1 - inputs[CarInput::CLUTCH]);
+
+	ShiftGear(new_gear);
 
 	SetNOS(inputs[CarInput::NOS]);
 
@@ -1662,18 +1693,17 @@ btScalar CarDynamics::CalculateDriveshaftSpeed()
 void CarDynamics::UpdateTransmission(btScalar dt)
 {
 	btScalar driveshaft_speed = CalculateDriveshaftSpeed();
+	driveshaft_rpm = driveshaft_speed * btScalar(30 / M_PI);
 
-	driveshaft_rpm = transmission.GetClutchSpeed(driveshaft_speed) * btScalar(30 / M_PI);
+	btScalar clutch_rpm = transmission.GetClutchSpeed(driveshaft_speed) * btScalar(30 / M_PI);
 
 	if (autoshift)
 	{
-		int gear = NextGear();
+		int gear = NextGear(clutch_rpm);
 		ShiftGear(gear);
 	}
 
-	remaining_shift_time -= dt;
-	if (remaining_shift_time < 0) remaining_shift_time = 0;
-
+	remaining_shift_time = Max(remaining_shift_time - dt, 0.0f);
 	if (remaining_shift_time <= transmission.GetShiftTime() *  btScalar(0.5) && !shifted)
 	{
 		shifted = true;
@@ -1688,13 +1718,13 @@ void CarDynamics::UpdateTransmission(btScalar dt)
 		}
 
 		btScalar throttle = engine.GetThrottle();
-		throttle = ShiftAutoClutchThrottle(throttle, dt);
+		throttle = ShiftAutoClutchThrottle(throttle, clutch_rpm, dt);
 		engine.SetThrottle(throttle);
 
 		// allow auto clutch override
 		if (clutch.GetPosition() >= clutch_value)
 		{
-			clutch_value = AutoClutch(dt);
+			clutch_value = AutoClutch(clutch_rpm, dt);
 			clutch.SetPosition(clutch_value);
 		}
 	}
@@ -1705,16 +1735,15 @@ bool CarDynamics::WheelDriven(int i) const
 	return (1 << i) & drive;
 }
 
-btScalar CarDynamics::AutoClutch(btScalar dt) const
+btScalar CarDynamics::AutoClutch(btScalar clutch_rpm, btScalar dt) const
 {
 	btScalar clutch_engage_limit = 10 * dt; // 0.1 seconds
 	btScalar clutch_old = clutch_value;
 	btScalar clutch_new = 1;
 
 	// antistall
-	btScalar rpm_clutch = driveshaft_rpm;
 	btScalar rpm_idle = engine.GetStartRPM();
-	if (rpm_clutch < rpm_idle)
+	if (clutch_rpm < rpm_idle)
 	{
 		btScalar rpm_engine = engine.GetRPM();
 		btScalar rpm_min = 0.5f * (engine.GetStallRPM() + rpm_idle);
@@ -1742,11 +1771,11 @@ btScalar CarDynamics::AutoClutch(btScalar dt) const
 	return clutch_new;
 }
 
-btScalar CarDynamics::ShiftAutoClutchThrottle(btScalar throttle, btScalar dt)
+btScalar CarDynamics::ShiftAutoClutchThrottle(btScalar throttle, btScalar clutch_rpm, btScalar dt)
 {
 	if (remaining_shift_time > 0)
 	{
-		if (engine.GetRPM() < driveshaft_rpm && engine.GetRPM() < engine.GetRedline())
+		if (engine.GetRPM() < clutch_rpm && engine.GetRPM() < engine.GetRedline())
 		{
 			remaining_shift_time += dt;
 			return 1;
@@ -1760,22 +1789,22 @@ btScalar CarDynamics::ShiftAutoClutchThrottle(btScalar throttle, btScalar dt)
 }
 
 ///return the gear change (0 for no change, -1 for shift down, 1 for shift up)
-int CarDynamics::NextGear() const
+int CarDynamics::NextGear(btScalar clutch_rpm) const
 {
 	int gear = transmission.GetGear();
 
 	// only autoshift if a shift is not in progress
 	if (shifted && clutch.GetPosition() == 1)
 	{
-		// shift up when driveshaft speed exceeds engine redline
+		// shift up when clutch speed exceeds engine redline
 		// we do not shift up from neutral/reverse
-		if (driveshaft_rpm > engine.GetRedline() && gear > 0)
+		if (clutch_rpm > engine.GetRedline() && gear > 0)
 		{
 			return gear + 1;
 		}
-		// shift down when driveshaft speed below shift_down_point
+		// shift down when clutch speed below shift_down_point
 		// we do not auto shift down from 1st gear to neutral
-		if (driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
+		if (clutch_rpm < DownshiftRPM(gear) && gear > 1)
 		{
 			return gear - 1;
 		}
@@ -1967,6 +1996,7 @@ void CarDynamics::Init()
 	drive = NONE;
 	driveshaft_rpm = 0;
 	tacho_rpm = 0;
+	autoreverse = false;
 	autoclutch = true;
 	autoshift = false;
 	shifted = true;

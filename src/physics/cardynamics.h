@@ -78,6 +78,7 @@ public:
 	void AlignWithGround();
 
 	// fime: move into car input vector?
+	void SetAutoReverse(bool value);
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 	void SetABS(bool value);
@@ -213,6 +214,7 @@ protected:
 	btScalar driveshaft_rpm;
 	btScalar tacho_rpm;
 
+	bool autoreverse;
 	bool autoclutch;
 	bool autoshift;
 	bool shifted;
@@ -280,12 +282,12 @@ protected:
 
 	bool WheelDriven(int i) const;
 
-	btScalar AutoClutch(btScalar dt) const;
+	btScalar AutoClutch(btScalar clutch_rpm, btScalar dt) const;
 
-	btScalar ShiftAutoClutchThrottle(btScalar throttle, btScalar dt);
+	btScalar ShiftAutoClutchThrottle(btScalar throttle, btScalar clutch_rpm, btScalar dt);
 
 	// calculate next gear based on engine rpm
-	int NextGear() const;
+	int NextGear(btScalar clutch_rpm) const;
 
 	// calculate downshift point based on gear, engine rpm
 	btScalar DownshiftRPM(int gear) const;
