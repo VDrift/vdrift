@@ -145,15 +145,17 @@ public:
 
 	const btVector3 & GetCenterOfMassOffset() const;
 
-	btScalar GetAerodynamicDownforceCoefficient() const;
-
-	btScalar GetAeordynamicDragCoefficient() const;
-
 	btVector3 GetTotalAero() const;
 
 	btScalar GetFeedback() const;
 
 	btScalar GetTireSquealAmount(WheelPosition i) const;
+
+	// Maxumum speed for a curve with given radius and friction coefficient
+	btScalar GetMaxSpeed(btScalar radius, btScalar friction) const;
+
+	// Distance required to reduce initial to final speed
+	btScalar GetBrakeDistance(btScalar initial_speed, btScalar final_speed, btScalar friction) const;
 
 	// This is needed for ray casts in the AI implementation.
 	DynamicsWorld * getDynamicsWorld() const {return world;}
@@ -229,6 +231,12 @@ protected:
 	std::vector<int> abs_active;
 	std::vector<int> tcs_active;
 
+	// cached coeffs used by CaculateMaxSpeed, GetMaxSpeed and GetBrakeDistance
+	btScalar aero_lift_coeff;
+	btScalar aero_drag_coeff;
+	btScalar lon_friction_coeff;
+	btScalar lat_friction_coeff;
+
 	btScalar maxangle;
 	btScalar maxspeed;
 	btScalar feedback_scale;
@@ -297,6 +305,12 @@ protected:
 
 	// car mass fraction at front wheels
 	btScalar CalculateFrontMassRatio() const;
+
+	// total aerodynamic lift and drag coefficients
+	void CalculateAerodynamicCoeffs(btScalar & cl, btScalar & cd) const;
+
+	// total longitudinal and lateral tire friction coefficients
+	void CalculateFrictionCoeffs(btScalar & mulon, btScalar & mulat) const;
 
 	// car controls
 

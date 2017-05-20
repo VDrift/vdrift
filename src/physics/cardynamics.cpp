@@ -35,6 +35,8 @@
 
 #include <cmath>
 
+static const btScalar gravity = 9.81;
+
 static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
 	std::string str;
@@ -599,8 +601,8 @@ bool CarDynamics::Load(
 	btScalar m = 1 / body->getInvMass();
 	btScalar m1 = m * CalculateFrontMassRatio();
 	btScalar m2 = m - m1;
-	btScalar d1 = suspension[0]->GetDisplacement(m1 * btScalar(9.81/2));
-	btScalar d2 = suspension[3]->GetDisplacement(m2 * btScalar(9.81/2));
+	btScalar d1 = suspension[0]->GetDisplacement(m1 * gravity / 2);
+	btScalar d2 = suspension[3]->GetDisplacement(m2 * gravity / 2);
 	suspension[0]->SetDisplacement(d1);
 	suspension[1]->SetDisplacement(d1);
 	suspension[2]->SetDisplacement(d2);
@@ -619,12 +621,14 @@ bool CarDynamics::Load(
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 		wheel_velocity[i].setZero();
 
+	CalculateAerodynamicCoeffs(aero_lift_coeff, aero_drag_coeff);
+	CalculateFrictionCoeffs(lon_friction_coeff, lat_friction_coeff);
 	maxspeed = CalculateMaxSpeed();
 
 	// calculate steering feedback scale factor
 	// use max Mz of the 2 front wheels assuming even weight distribution
 	// and a fudge factor of 8 to get feedback into -1, 1 range
-	const float max_wheel_load = btScalar(9.81/4) / body->getInvMass() ;
+	const float max_wheel_load = gravity / (4 * body->getInvMass());
 	feedback_scale = 1 / (8 * 2 * tire[0].getMaxMz(max_wheel_load, 0));
 
 	return true;
@@ -920,26 +924,6 @@ btVector3 CarDynamics::GetTotalAero() const
 	return downforce;
 }
 
-btScalar CarDynamics::GetAerodynamicDownforceCoefficient() const
-{
-	btScalar coeff = 0.0;
-	for (int i = 0; i != aerodevice.size(); ++i)
-	{
-		coeff += aerodevice[i].getLiftCoefficient();
-	}
-	return coeff;
-}
-
-btScalar CarDynamics::GetAeordynamicDragCoefficient() const
-{
-	btScalar coeff = 0.0;
-	for (int i = 0; i != aerodevice.size(); ++i)
-	{
-		coeff += aerodevice[i].getDragCoefficient();
-	}
-	return coeff;
-}
-
 btScalar CarDynamics::GetFeedback() const
 {
 	return feedback;
@@ -965,6 +949,34 @@ btScalar CarDynamics::GetTireSquealAmount(WheelPosition i) const
 	squeal = Clamp(squeal * squealfactor, btScalar(0), btScalar(1));
 
 	return squeal;
+}
+
+btScalar CarDynamics::GetMaxSpeed(btScalar radius, btScalar friction) const
+{
+	// m*v^2 / r = mu * (m*g + cl*v^2)
+	btScalar fr = friction * lat_friction_coeff * radius;
+	btScalar d = 1 + fr * aero_lift_coeff * GetInvMass();
+	btScalar v2 = fr * gravity  / Max(d, btScalar(1E-9));
+	btScalar v = std::sqrt(v2);
+	return v;
+}
+
+btScalar CarDynamics::GetBrakeDistance(btScalar initial_speed, btScalar final_speed, btScalar friction) const
+{
+	if (initial_speed <= final_speed)
+		return 0;
+
+	// m/2 * (v2^2 - v1^2) = integrate(mu * (m*g + cl*v^2) + cd*v^2)
+	btScalar mu = friction * lon_friction_coeff;
+	btScalar v1s = initial_speed * initial_speed;
+	btScalar v2s = final_speed * final_speed;
+	btScalar d = (-aero_lift_coeff * mu + aero_drag_coeff) * GetInvMass();
+	btScalar e = 1 / d;
+	btScalar f = e * mu * gravity;
+	btScalar g = (f + v1s) / (f + v2s);
+	btScalar distance = 0.5f * e * std::log(g);
+	//btScalar distance = (v1s - v2s) / (mu * gravity * 2);
+	return distance;
 }
 
 std::vector<float> CarDynamics::GetSpecs() const
@@ -1848,7 +1860,7 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 	}
 
 	// speed limit due to drag
-	btScalar aero_speed = btPow(engine.GetMaxPower() / GetAeordynamicDragCoefficient(), 1 / 3.0f);
+	btScalar aero_speed = btPow(engine.GetMaxPower() / aero_drag_coeff, 1 / 3.0f);
 
 	return Min(drive_speed, aero_speed);
 }
@@ -1859,6 +1871,34 @@ btScalar CarDynamics::CalculateFrontMassRatio() const
 	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
 	btScalar r2 = suspension[3]->GetWheelPosition()[1] + dr;
 	return r2 / (r2 - r1);
+}
+
+void CarDynamics::CalculateAerodynamicCoeffs(btScalar & cl, btScalar & cd) const
+{
+	btScalar lift = 0;
+	btScalar drag = 0;
+	for (int i = 0; i < aerodevice.size(); i++)
+	{
+		lift += aerodevice[i].getLiftCoefficient();
+		drag += aerodevice[i].getDragCoefficient();
+	}
+	cl = lift;
+	cd = drag;
+}
+
+void CarDynamics::CalculateFrictionCoeffs(btScalar & mulon, btScalar & mulat) const
+{
+	btScalar mg = gravity * GetInvMass();
+	btScalar tire_load = 0.25f * mg;
+	btScalar lon_friction = 0;
+	btScalar lat_friction = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		lon_friction += tire[i].getMaxFx(tire_load);
+		lat_friction += tire[i].getMaxFy(tire_load, 0);
+	}
+	mulon = lon_friction / mg;
+	mulat = lat_friction / mg;
 }
 
 void CarDynamics::SetSteering(const btScalar value)
@@ -2006,6 +2046,10 @@ void CarDynamics::Init()
 	brake_value = 0;
 	abs = false;
 	tcs = false;
+	aero_lift_coeff = 0.1;
+	aero_drag_coeff = 0.3;
+	lon_friction_coeff = 1;
+	lat_friction_coeff = 1;
 	maxangle = 0;
 	maxspeed = 0;
 	feedback_scale = 0;

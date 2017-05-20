@@ -49,8 +49,6 @@ public:
 #endif
 
 private:
-	float longitude_mu;			///< friction coefficient of the tire - longitude direction
-	float lateral_mu;			///< friction coefficient of the tire - lateral direction
 	const Bezier * last_patch;	///< last patch the car was on, used in case car is off track
 	bool use_racingline;		///< true allows the AI to take a proper racing line
 	bool is_recovering;			///< tries to get back to the road.
@@ -75,10 +73,7 @@ private:
 		const CarDynamics & car,
 		const Bezier * patch,
 		const Bezier * nextpatch,
-		float friction,
 		float extraradius = 0);
-
-	static float CalcBrakeDist(float current_speed, float allowed_speed, float friction);
 
 	void UpdateSteer(const CarDynamics & car, float dt);
 

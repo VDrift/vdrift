@@ -30,8 +30,6 @@
 #include <algorithm>
 #include <iostream>
 
-#define GRAVITY 9.81f
-
 //used to calculate brake value
 #define MAX_SPEED_DIFF 6.0f
 #define MIN_SPEED_DIFF 1.0f
@@ -60,8 +58,6 @@ AiCar * AiCarStandardFactory::Create(unsigned carid, float difficulty)
 
 AiCarStandard::AiCarStandard(unsigned new_carid, float new_difficulty) :
 	AiCar(new_carid, new_difficulty),
-	longitude_mu(0.9),
-	lateral_mu(0.9),
 	last_patch(NULL),
 	use_racingline(true)
 {
@@ -284,8 +280,6 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	else
 		inputs[CarInput::START_ENGINE] = 0.0;
 
-	CalcMu(car);
-
 	const Bezier * curr_patch_ptr = GetCurrentPatch(car);
 	if (!curr_patch_ptr)
 	{
@@ -305,12 +299,13 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	float speed_limit = 0;
 	if (!curr_patch.GetNextPatch())
 	{
-		speed_limit = CalcSpeedLimit(car, &curr_patch, NULL, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude());
+		speed_limit = CalcSpeedLimit(car, &curr_patch, 0, 0);
 	}
 	else
 	{
 		Bezier next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
-		speed_limit = CalcSpeedLimit(car, &curr_patch, &next_patch, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude());
+		float width = GetPatchWidthVector(*curr_patch_ptr).Magnitude();
+		speed_limit = CalcSpeedLimit(car, &curr_patch, &next_patch, width);
 	}
 	speed_limit *= difficulty;
 
@@ -340,7 +335,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	}
 
 	// check upto maxlookahead distance
-	float maxlookahead = CalcBrakeDist(car, currentspeed, 0, longitude_mu)+10;
+	float maxlookahead = car.GetBrakeDistance(currentspeed, 0, FRICTION_FACTOR_LONG) + 10;
 	float dist_checked = 0;
 	float brake_dist = 0;
 	Bezier patch_to_check = curr_patch;
@@ -371,16 +366,17 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 
 		if (!patch_to_check.GetNextPatch())
 		{
-			speed_limit = CalcSpeedLimit(car, &patch_to_check, NULL, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude());
+			speed_limit = CalcSpeedLimit(car, &patch_to_check, 0, 0);
 		}
 		else
 		{
 			Bezier next_patch = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
-			speed_limit = CalcSpeedLimit(car, &patch_to_check, &next_patch, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude());
+			float width = GetPatchWidthVector(*unmodified_patch_to_check).Magnitude();
+			speed_limit = CalcSpeedLimit(car, &patch_to_check, &next_patch, width);
 		}
 
 		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
-		brake_dist = CalcBrakeDist(car, currentspeed, speed_limit, longitude_mu);
+		brake_dist = car.GetBrakeDistance(currentspeed, speed_limit, FRICTION_FACTOR_LONG);
 		if (brake_dist > dist_checked)
 		{
 			brake_value = 1;
@@ -396,72 +392,24 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	inputs[CarInput::BRAKE] = brake_value;
 }
 
-void AiCarStandard::CalcMu(const CarDynamics & car)
-{
-	float inv_mass = car.GetInvMass();
-	float tire_load = 0.25f * GRAVITY / inv_mass;
-	float long_friction = 0;
-	float lat_friction = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		long_friction += car.GetTire(WheelPosition(i)).getMaxFx(tire_load);
-		lat_friction += car.GetTire(WheelPosition(i)).getMaxFy(tire_load, 0);
-	}
-	float long_mu = FRICTION_FACTOR_LONG * long_friction * inv_mass / GRAVITY;
-	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * inv_mass / GRAVITY;
-	if (!std::isnan(long_mu)) longitude_mu = long_mu;
-	if (!std::isnan(lat_mu)) lateral_mu = lat_mu;
-}
-
 float AiCarStandard::CalcSpeedLimit(
 	const CarDynamics & car,
 	const Bezier * patch,
 	const Bezier * nextpatch,
-	float friction,
 	float extraradius)
 {
 	assert(patch);
 
-	//adjust the radius at corner exit to allow a higher speed.
-	//this will get the car to accelerate out of corner
-	//float track_width = GetPatchWidthVector(*patch).Magnitude();
-	float adjusted_radius = GetPatchRadius(*patch);
-	if (nextpatch)
+	// adjust the radius at corner exit to allow a higher speed.
+	// this will get the car to accelerate out of corner
+	float radius = GetPatchRadius(*patch);
+	if (nextpatch &&
+		GetPatchRadius(*nextpatch) > radius &&
+		radius > LOOKAHEAD_MIN_RADIUS)
 	{
-		if (GetPatchRadius(*nextpatch) > adjusted_radius &&
-			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
-		{
-			adjusted_radius += extraradius;
-		}
+		radius += extraradius;
 	}
-
-	//no downforce
-	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
-
-	//take into account downforce
-	float denom = (1 - Min(1.01f, adjusted_radius * -(car.GetAerodynamicDownforceCoefficient()) * friction * car.GetInvMass()));
-	float real = (friction * GRAVITY * adjusted_radius) / denom;
-	float v2 = 1000; //some really big number
-	if (real > 0)
-		v2 = std::sqrt(real);
-
-	//std::cout << v2 << ", " << sqrt(friction * GRAVITY * adjusted_radius) << ", " << GetPatchRadius(*patch) << ", " << acos((-GetPatchDirection(*patch)).Normalize().dot(GetPatchDirection(*patch->GetNextPatch()).Normalize()))*180.0/3.141593 << " --- " << -GetPatchDirection(*patch) << " --- " << GetPatchDirection(*patch->GetNextPatch()) << std::endl;
-
-	return v2;
-}
-
-float AiCarStandard::CalcBrakeDist(
-	const CarDynamics & car,
-	float current_speed,
-	float allowed_speed,
-	float friction)
-{
-	float c = friction * GRAVITY;
-	float d = (-(car.GetAerodynamicDownforceCoefficient()) * friction +
-				car.GetAeordynamicDragCoefficient()) * car.GetInvMass();
-	float v1sqr = current_speed * current_speed;
-	float v2sqr = allowed_speed * allowed_speed;
-	return -log((c + v2sqr * d) / (c + v1sqr * d)) / (2 * d);
+	return car.GetMaxSpeed(radius, FRICTION_FACTOR_LAT);
 }
 
 void AiCarStandard::UpdateSteer(const CarDynamics & car)
