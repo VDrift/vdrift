@@ -59,6 +59,8 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         env.Replace(CC = "g++")
     if 'CXXFLAGS' in os.environ:
         env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
+    #Add -std=c++11
+    env.Append(CXXFLAGS = ['-std=c++11'])
 
 #------------#
 # OS X build #
