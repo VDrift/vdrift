@@ -1888,7 +1888,7 @@ void CarDynamics::CalculateAerodynamicCoeffs(btScalar & cl, btScalar & cd) const
 
 void CarDynamics::CalculateFrictionCoeffs(btScalar & mulon, btScalar & mulat) const
 {
-	btScalar mg = gravity * GetInvMass();
+	btScalar mg = gravity / GetInvMass();
 	btScalar tire_load = 0.25f * mg;
 	btScalar lon_friction = 0;
 	btScalar lat_friction = 0;
