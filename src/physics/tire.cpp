@@ -90,10 +90,10 @@ btVector3 Tire::getForce(
 	btScalar camber = Clamp(btAsin(sin_camber), -max_camber, max_camber);
 
 	// sigma and alpha
-	btScalar denom = Max(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar lon_slip_velocity = lon_velocity - rot_velocity;
-	btScalar sigma = -lon_slip_velocity / denom;
-	btScalar alpha = btAtan(lat_velocity / denom);
+	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar slip_velocity = lon_velocity - rot_velocity;
+	btScalar sigma = -slip_velocity * rcp_lon_velocity;
+	btScalar alpha = btAtan(lat_velocity * rcp_lon_velocity);
 
 	// force parameters
 	btScalar Fz = Clamp(normal_load, btScalar(0), btScalar(max_load));
@@ -125,7 +125,7 @@ btVector3 Tire::getForce(
 	fy = Fy;
 	fz = Fz;
 	mz = Mz0;
-	vx = lon_slip_velocity;
+	vx = slip_velocity;
 	vy = lat_velocity;
 
 	return btVector3(Fx, Fy, Mz0);
