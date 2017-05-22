@@ -81,13 +81,13 @@ btVector3 CarTire::getForce(
 	btScalar alpha_hat(0);
 	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
-	// gamma: positive when tire top tilts to the right, viewed from rear in deg
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
+	// gamma: positive when tire top tilts to the right, viewed from rear in deg
+	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
+	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
 	btScalar gamma = inclination * rad2deg;
-	btScalar denom = Max(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (rot_velocity - lon_velocity) / denom;
-	btScalar alpha = -Atan(lat_velocity / denom) * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
