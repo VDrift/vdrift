@@ -61,14 +61,14 @@ public:
 
 	/// normal_force: tire load in N
 	/// friction_coeff: contact surface friction coefficient
-	/// inclination: wheel inclination in degrees
+	/// sin_camber: dot product of wheel axis and contact surface normal
 	/// rot_velocity: tire contact velocity (w * r)
 	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
 	/// lat_velocty: tire lateral velocity relative to surface in m/s
 	btVector3 getForce(
 		btScalar normal_force,
 		btScalar friction_coeff,
-		btScalar inclination,
+		btScalar sin_camber,
 		btScalar rot_velocity,
 		btScalar lon_velocty,
 		btScalar lat_velocity);

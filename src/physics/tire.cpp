@@ -73,7 +73,7 @@ void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) cons
 btVector3 Tire::getForce(
 	btScalar normal_load,
 	btScalar friction_coeff,
-	btScalar camber,
+	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
 	btScalar lat_velocity)
@@ -87,9 +87,7 @@ btVector3 Tire::getForce(
 		return btVector3(0, 0, 0);
 	}
 
-	// limit input
-	normal_load = Clamp(normal_load, btScalar(0), btScalar(max_load));
-	camber = Clamp(camber, -max_camber, max_camber);
+	btScalar camber = Clamp(btAsin(sin_camber), -max_camber, max_camber);
 
 	// sigma and alpha
 	btScalar denom = Max(btFabs(lon_velocity), btScalar(1E-3));
@@ -98,7 +96,7 @@ btVector3 Tire::getForce(
 	btScalar alpha = btAtan(lat_velocity / denom);
 
 	// force parameters
-	btScalar Fz = normal_load;
+	btScalar Fz = Clamp(normal_load, btScalar(0), btScalar(max_load));
 	btScalar Fz0 = nominal_load;
 	btScalar dFz = (Fz - Fz0) / Fz0;
 

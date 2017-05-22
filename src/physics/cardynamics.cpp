@@ -1418,8 +1418,6 @@ btVector3 CarDynamics::ComputeTireFrictionForce(
 	btScalar coszyw = z.dot(yw);
 	btVector3 x = (xw - z * coszxw).normalized();
 	btVector3 y = (yw - z * coszyw).normalized();
-
-	btScalar camber = btScalar(M_PI_2) - btAcos(coszxw);
 	btScalar lonvel = y.dot(linvel);
 	btScalar latvel = -x.dot(linvel);
 
@@ -1428,7 +1426,7 @@ btVector3 CarDynamics::ComputeTireFrictionForce(
 		(1 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
 	btVector3 friction_force = tire[i].getForce(
-		normal_force, friction_coeff, camber, rotvel, lonvel, latvel);
+		normal_force, friction_coeff, coszxw, rotvel, lonvel, latvel);
 
 	return friction_force;
 }

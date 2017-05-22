@@ -62,7 +62,7 @@ void CarTire::init(const CarTireInfo & info)
 btVector3 CarTire::getForce(
 	btScalar normal_force,
 	btScalar friction_coeff,
-	btScalar inclination,
+	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
 	btScalar lat_velocity)
@@ -72,9 +72,10 @@ btVector3 CarTire::getForce(
 		return btVector3(0, 0, 0);
 	}
 
-	// limit input
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
-	inclination = Clamp(inclination, btScalar(-0.1 * M_PI), btScalar(0.1 * M_PI));
+
+	// camber
+	camber = Clamp(btAsin(sin_camber), btScalar(-0.1 * M_PI), btScalar(0.1 * M_PI));
 
 	// get ideal slip ratio
 	btScalar sigma_hat(0);
@@ -87,7 +88,7 @@ btVector3 CarTire::getForce(
 	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
 	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
-	btScalar gamma = inclination * rad2deg;
+	btScalar gamma = camber * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
@@ -98,7 +99,6 @@ btVector3 CarTire::getForce(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	camber = inclination;
 	slide = sigma;
 	slip = alpha * deg2rad;
 	ideal_slide = sigma_hat;

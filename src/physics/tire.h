@@ -88,14 +88,14 @@ public:
 
 	/// normal_load: tire load in N
 	/// friction_coeff: contact surface friction coefficient
-	/// camber: wheel camber in rad, positive when tire top tilts to the right, viewed from rear
+	/// sin_camber: dot product of wheel axis and contact surface normal
 	/// rot_velocity: tire contact velocity (w * r)
 	/// lon_velocty: tire longitudinal velocity relative to surface
 	/// lat_velocty: tire lateral velocity relative to surface
 	btVector3 getForce(
 		btScalar normal_load,
 		btScalar friction_coeff,
-		btScalar camber,
+		btScalar sin_camber,
 		btScalar rot_velocity,
 		btScalar lon_velocty,
 		btScalar lat_velocity);
