@@ -87,7 +87,9 @@ btVector3 Tire::getForce(
 		return btVector3(0, 0, 0);
 	}
 
-	btScalar camber = Clamp(btAsin(sin_camber), -max_camber, max_camber);
+	// approximate asin(x) = x + x^3/6 for +-18 deg range
+	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
+	btScalar camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
 
 	// sigma and alpha
 	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));

@@ -74,8 +74,9 @@ btVector3 CarTire::getForce(
 
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
 
-	// camber
-	camber = Clamp(btAsin(sin_camber), btScalar(-0.1 * M_PI), btScalar(0.1 * M_PI));
+	// approximate asin(x) = x + x^3/6 for +-18 deg range
+	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
+	camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
 
 	// get ideal slip ratio
 	btScalar sigma_hat(0);
