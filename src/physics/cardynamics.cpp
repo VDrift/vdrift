@@ -162,7 +162,39 @@ static bool LoadBrake(
 	return true;
 }
 
-#if defined(VDRIFTN)
+#if defined(VDRIFTP)
+static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
+{
+	btVector3 tire_size;
+	if (!cfg_wheel.get("tire.size", tire_size, error_output)) return false;
+	btScalar width = tire_size[0] * 0.001f;
+	btScalar aspect_ratio = tire_size[1] * 0.01f;
+	btScalar radius = tire_size[2] * 0.5f * 0.0254f + width * aspect_ratio;
+
+	CarTireInfo info;
+	info.radius = radius;
+	info.width = width;
+	info.ar = aspect_ratio;
+
+	if (!cfg.get("pt", info.pt, error_output)) return false;
+	if (!cfg.get("ktx", info.ktx, error_output)) return false;
+	if (!cfg.get("kty", info.kty, error_output)) return false;
+	if (!cfg.get("kcb", info.kcb, error_output)) return false;
+	if (!cfg.get("ccb", info.ccb, error_output)) return false;
+	if (!cfg.get("cfy", info.cfy, error_output)) return false;
+	if (!cfg.get("dz0", info.dz0, error_output)) return false;
+	if (!cfg.get("p0", info.p0, error_output)) return false;
+	if (!cfg.get("mus", info.mus, error_output)) return false;
+	if (!cfg.get("muc", info.muc, error_output)) return false;
+	if (!cfg.get("vs", info.vs, error_output)) return false;
+	if (!cfg.get("cr0", info.cr0, error_output)) return false;
+	if (!cfg.get("cr2", info.cr2, error_output)) return false;
+	if (!cfg.get("tread", info.tread, error_output)) return false;
+
+	tire.init(info);
+	return true;
+}
+#elif defined(VDRIFTN)
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
 	CarTireInfo info;
@@ -268,7 +300,7 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 
 	return true;
 }
-#endif // VDRIFTN
+#endif
 
 static bool LoadWheel(const PTree & cfg, CarWheel & wheel, std::ostream & error_output)
 {
@@ -540,7 +572,9 @@ bool CarDynamics::Load(
 		std::shared_ptr<PTree> cfg_tire;
 		if ((cartire.empty() || cartire == "default") &&
 			!cfg_wheel.get("tire.type", tirestr, error)) return false;
-		#ifdef VDRIFTN
+		#if defined(VDRIFTP)
+		tirestr += "p";
+		#elif defined(VDRIFTN)
 		tirestr += "n";
 		#endif
 		content.load(cfg_tire, cardir, tirestr);
