@@ -127,7 +127,6 @@ src = Split("""
 		physics/cartire3.cpp
 		physics/dynamicsworld.cpp
 		physics/fracturebody.cpp
-		physics/tire.cpp
 		quaternion.cpp
 		radix.cpp
 		random.cpp
