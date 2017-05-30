@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "tire.h"
+#include "cartire2.h"
 #include "minmax.h"
 
 template <typename T>
@@ -27,10 +27,10 @@ inline T sgn(T val)
 }
 
 #define ENTRY(x) #x,
-const char * TireInfo::coeffname[] = { TIRE_COEFF_LIST };
+const char * CarTireInfo2::coeffname[] = { TIRE_COEFF_LIST };
 #undef ENTRY
 
-TireInfo::TireInfo() :
+CarTireInfo2::CarTireInfo2() :
 	nominal_load(5000),
 	max_load(10000),
 	max_camber(15),
@@ -41,7 +41,7 @@ TireInfo::TireInfo() :
 	// ctor
 }
 
-Tire::Tire() :
+CarTire2::CarTire2() :
 	slip(0),
 	slip_angle(0),
 	ideal_slip(0),
@@ -53,13 +53,13 @@ Tire::Tire() :
 	// ctor
 }
 
-void Tire::init(const TireInfo & info)
+void CarTire2::init(const CarTireInfo2 & info)
 {
-	TireInfo::operator=(info);
+	CarTireInfo2::operator=(info);
 	initSigmaHatAlphaHat();
 }
 
-void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
+void CarTire2::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
 	btScalar rload = load / max_load * tablesize - 1;
 	rload = Clamp(rload, btScalar(0), btScalar(tablesize - 1));
@@ -70,7 +70,7 @@ void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) cons
 	ah = alpha_hat[lbound] * (1 - blend) + alpha_hat[lbound + 1] * blend;
 }
 
-btVector3 Tire::getForce(
+btVector3 CarTire2::getForce(
 	btScalar normal_load,
 	btScalar friction_coeff,
 	btScalar sin_camber,
@@ -133,7 +133,7 @@ btVector3 Tire::getForce(
 	return btVector3(Fx, Fy, Mz0);
 }
 
-btScalar Tire::getSqueal() const
+btScalar CarTire2::getSqueal() const
 {
 	btScalar squeal = 0;
 	if (vx * vx > btScalar(1E-2) && slip * slip > btScalar(1E-6))
@@ -150,7 +150,7 @@ btScalar Tire::getSqueal() const
 	return squeal;
 }
 
-btScalar Tire::getMaxFx(btScalar load) const
+btScalar CarTire2::getMaxFx(btScalar load) const
 {
 	const btScalar * p = coefficients;
 	btScalar Fz = load;
@@ -161,7 +161,7 @@ btScalar Tire::getMaxFx(btScalar load) const
 	return D + Sv;
 }
 
-btScalar Tire::getMaxFy(btScalar load, btScalar camber) const
+btScalar CarTire2::getMaxFy(btScalar load, btScalar camber) const
 {
 	const btScalar * p = coefficients;
 	btScalar Fz = load;
@@ -173,7 +173,19 @@ btScalar Tire::getMaxFy(btScalar load, btScalar camber) const
 	return D + Sv;
 }
 
-btScalar Tire::PacejkaFx(
+btScalar CarTire2::getMaxMz(btScalar load, btScalar camber) const
+{
+	const btScalar * p = coefficients;
+	btScalar Fz = load;
+	btScalar Fz0 = nominal_load;
+	btScalar dFz = (Fz - Fz0) / Fz0;
+	btScalar yz = camber;
+	btScalar R0 = 0.3;
+	btScalar Dr = Fz * (p[QDZ6] + p[QDZ7] * dFz + (p[QDZ8] + p[QDZ9] * dFz) * yz) * R0;
+	return Dr;
+}
+
+btScalar CarTire2::PacejkaFx(
 	btScalar sigma,
 	btScalar Fz,
 	btScalar dFz,
@@ -214,7 +226,7 @@ btScalar Tire::PacejkaFx(
 	return F;
 }
 
-btScalar Tire::PacejkaFy(
+btScalar CarTire2::PacejkaFy(
 	btScalar alpha,
 	btScalar gamma,
 	btScalar Fz,
@@ -265,7 +277,7 @@ btScalar Tire::PacejkaFy(
 	return F;
 }
 
-btScalar Tire::PacejkaMz(
+btScalar CarTire2::PacejkaMz(
 	btScalar alpha,
 	btScalar gamma,
 	btScalar Fz,
@@ -306,7 +318,7 @@ btScalar Tire::PacejkaMz(
 	return Mzt + Mzr;
 }
 
-btScalar Tire::PacejkaGx(
+btScalar CarTire2::PacejkaGx(
 	btScalar sigma,
 	btScalar alpha)
 {
@@ -320,7 +332,7 @@ btScalar Tire::PacejkaGx(
 	return G;
 }
 
-btScalar Tire::PacejkaGy(
+btScalar CarTire2::PacejkaGy(
 	btScalar sigma,
 	btScalar alpha)
 {
@@ -334,7 +346,7 @@ btScalar Tire::PacejkaGy(
 	return G;
 }
 
-btScalar Tire::PacejkaSvy(
+btScalar CarTire2::PacejkaSvy(
 	btScalar sigma,
 	btScalar alpha,
 	btScalar gamma,
@@ -347,7 +359,7 @@ btScalar Tire::PacejkaSvy(
 	return Sv;
 }
 
-void Tire::findSigmaHatAlphaHat(
+void CarTire2::findSigmaHatAlphaHat(
 	btScalar load,
 	btScalar & output_sigmahat,
 	btScalar & output_alphahat,
@@ -385,7 +397,7 @@ void Tire::findSigmaHatAlphaHat(
 	}
 }
 
-void Tire::initSigmaHatAlphaHat()
+void CarTire2::initSigmaHatAlphaHat()
 {
 	btScalar load_delta = max_load / tablesize;
 	for (int i = 0; i < tablesize; ++i)
@@ -393,4 +405,3 @@ void Tire::initSigmaHatAlphaHat()
 		findSigmaHatAlphaHat((btScalar)(i + 1) * load_delta, sigma_hat[i], alpha_hat[i]);
 	}
 }
-

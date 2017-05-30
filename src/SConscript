@@ -122,7 +122,8 @@ src = Split("""
 		physics/cardynamics.cpp
 		physics/carengine.cpp
 		physics/carsuspension.cpp
-		physics/cartire.cpp
+		physics/cartire1.cpp
+		physics/cartire2.cpp
 		physics/dynamicsworld.cpp
 		physics/fracturebody.cpp
 		physics/tire.cpp

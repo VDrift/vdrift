@@ -162,7 +162,7 @@ static bool LoadBrake(
 	return true;
 }
 
-#ifdef VDRIFTN
+#if defined(VDRIFTN)
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
 	CarTireInfo info;
@@ -188,17 +188,17 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	std::string facing;
 	if (cfg_wheel.get("tire.facing", facing))
 		side_factor = (facing != "left") ? 1 : -1;
-	info.coefficients[TireInfo::PEY3] *= side_factor;
-	info.coefficients[TireInfo::PEY4] *= side_factor;
-	info.coefficients[TireInfo::PVY1] *= side_factor;
-	info.coefficients[TireInfo::PVY2] *= side_factor;
-	info.coefficients[TireInfo::PHY1] *= side_factor;
-	info.coefficients[TireInfo::PHY2] *= side_factor;
-	info.coefficients[TireInfo::PHY3] *= side_factor;
-	info.coefficients[TireInfo::RBY3] *= side_factor;
-	info.coefficients[TireInfo::RHX1] *= side_factor;
-	info.coefficients[TireInfo::RHY1] *= side_factor;
-	info.coefficients[TireInfo::RVY5] *= side_factor;
+	info.coefficients[CarTireInfo::PEY3] *= side_factor;
+	info.coefficients[CarTireInfo::PEY4] *= side_factor;
+	info.coefficients[CarTireInfo::PVY1] *= side_factor;
+	info.coefficients[CarTireInfo::PVY2] *= side_factor;
+	info.coefficients[CarTireInfo::PHY1] *= side_factor;
+	info.coefficients[CarTireInfo::PHY2] *= side_factor;
+	info.coefficients[CarTireInfo::PHY3] *= side_factor;
+	info.coefficients[CarTireInfo::RBY3] *= side_factor;
+	info.coefficients[CarTireInfo::RHX1] *= side_factor;
+	info.coefficients[CarTireInfo::RHY1] *= side_factor;
+	info.coefficients[CarTireInfo::RVY5] *= side_factor;
 
 	tire.init(info);
 
