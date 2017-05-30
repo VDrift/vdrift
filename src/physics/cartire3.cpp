@@ -364,7 +364,7 @@ btVector3 CarTire3::getMaxForce(btScalar fz, bool needfx, bool needfy) const
 		mz = msz + mcz;
 	}
 
-	return btVector3(fx, fy, fz);
+	return btVector3(fx, fy, mz);
 }
 
 void CarTire3::findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const
