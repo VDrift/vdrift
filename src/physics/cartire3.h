@@ -92,11 +92,11 @@ private:
 	btScalar ideal_slip_angle;
 	btScalar slip;
 	btScalar slip_angle;
-    btScalar fx;
-    btScalar fy;
-    btScalar mz;
+	btScalar fx;
+	btScalar fy;
+	btScalar mz;
 
-    // cached derived parameters
+	// cached derived parameters
 	btScalar rkz; // 1 / tire vertical stiffness
 	btScalar rkb; // 1 / carcass bending stiffness
 	btScalar rp0; // 1 / nominal contact pressure

@@ -50,8 +50,8 @@ CarTire3::CarTire3():
 	slip(0),
 	slip_angle(0),
 	fx(0),
-    fy(0),
-    mz(0)
+	fy(0),
+	mz(0)
 {
 	// ctor
 }
@@ -60,7 +60,7 @@ void CarTire3::init(const CarTireInfo3 & info)
 {
 	CarTireInfo3::operator=(info);
 
-    // vertical stiffness ~200000 N/m
+	// vertical stiffness ~200000 N/m
 	btScalar cf = 0.28f * btSqrt((1.03f - 0.4f * ar) * width * radius * 2);
 	btScalar kz = 9.81f * (1E5f * pt * cf + 3450);
 
