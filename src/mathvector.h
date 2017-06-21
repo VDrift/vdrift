@@ -448,8 +448,8 @@ public:
 	}
 };
 
-template <typename T, unsigned int dimension>
-std::ostream & operator << (std::ostream &os, const MathVector <T, dimension> & v)
+template <typename T, unsigned int dimension, class Stream>
+Stream & operator << (Stream & os, const MathVector <T, dimension> & v)
 {
 	for (size_t i = 0; i < dimension-1; i++)
 	{
@@ -459,8 +459,8 @@ std::ostream & operator << (std::ostream &os, const MathVector <T, dimension> & 
 	return os;
 }
 
-template <typename T, unsigned int dimension>
-std::istream & operator >> (std::istream &is, MathVector <T, dimension> & v)
+template <typename T, unsigned int dimension, class Stream>
+Stream & operator >> (Stream & is, MathVector <T, dimension> & v)
 {
 	std::string value;
 	for (size_t i = 0; i < dimension && std::getline(is, value, ','); ++i)

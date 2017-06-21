@@ -22,8 +22,7 @@
 
 #include "mathvector.h"
 
-#include <iostream>
-#include <cstring>
+#include <cstring> // memcpy
 
 template <typename T>
 class Matrix3
@@ -56,11 +55,12 @@ class Matrix3
 			return data[n];
 		}
 
-		void DebugPrint(std::ostream & out) const
+		template <class Stream>
+		void DebugPrint(Stream & out) const
 		{
 			for (size_type i = 0; i < 9; i++)
 			{
-				out << i << ". " << data[i] << std::endl;
+				out << i << ". " << data[i] << "\n";
 			}
 		}
 

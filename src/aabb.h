@@ -22,7 +22,6 @@
 
 #include "mathvector.h"
 #include "frustum.h"
-#include <ostream>
 
 template <typename T>
 class Aabb
@@ -59,16 +58,18 @@ public:
 
 	const MathVector <T, 3> & GetCenter() const {return center;}
 
-	void DebugPrint(std::ostream & o) const
+	template <class Stream>
+	void DebugPrint(Stream & o) const
 	{
 		MathVector <T, 3> min(pos);
 		MathVector <T, 3> max(pos+size);
-		o << min[0] << "," << min[1] << "," << min[2] << " to " << max[0] << "," << max[1] << "," << max[2] << std::endl;
+		o << min[0] << "," << min[1] << "," << min[2] << " to " << max[0] << "," << max[1] << "," << max[2] << "\n";
 	}
 
-	void DebugPrint2(std::ostream & o) const
+	template <class Stream>
+	void DebugPrint2(Stream & o) const
 	{
-		o << "center: " << center[0] << "," << center[1] << "," << center[2] << " size: " << size[0] << "," << size[1] << "," << size[2] << std::endl;
+		o << "center: " << center[0] << "," << center[1] << "," << center[2] << " size: " << size[0] << "," << size[1] << "," << size[2] << "\n";
 	}
 
 	void SetFromSphere(const MathVector <T, 3> & newcenter, float newRadius)

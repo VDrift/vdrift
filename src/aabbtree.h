@@ -23,15 +23,15 @@
 #include "aabb.h"
 #include "mathvector.h"
 
-#include <list>
-#include <iostream>
-#include <map>
+#include <vector>
+#include <iostream> // std::cout
 
 template <typename DataType, unsigned int ideal_objects_per_node = 1>
 class AabbTreeNode
 {
 public:
-	void DebugPrint(int level, int & objectcount, bool verbose, std::ostream & output) const
+	template <class Stream>
+	void DebugPrint(int level, int & objectcount, bool verbose, Stream & output) const
 	{
 		if (verbose)
 		{
@@ -52,9 +52,9 @@ public:
 		{
 			if (verbose)
 			{
-				output << "================" << std::endl;
+				output << "================\n";
 			}
-			output << "TOTAL OBJECTS: " << objectcount << std::endl;
+			output << "TOTAL OBJECTS: " << objectcount << "\n";
 		}
 	}
 
@@ -181,7 +181,8 @@ public:
 	void Clear() {objects.clear(); children.clear();}
 
 	///traverse the entire tree putting pointers to all DataType objects into the given outputlist
-	void GetContainedObjects(std::list <DataType *> & outputlist)
+	template <class List>
+	void GetContainedObjects(List & outputlist)
 	{
 		//if we've got objects, add them
 		for (auto & object : objects)

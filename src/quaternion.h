@@ -23,10 +23,8 @@
 #include "mathvector.h"
 #include "joeserialize.h"
 
-#include <vector>
 #include <cassert>
 #include <cmath>
-#include <iostream>
 
 template <typename T>
 class Quaternion
@@ -455,8 +453,8 @@ public:
 	}
 };
 
-template <typename T>
-std::ostream & operator << (std::ostream &os, const Quaternion <T> & v)
+template <typename T, class Stream>
+Stream & operator << (Stream & os, const Quaternion <T> & v)
 {
 	os << "x=" << v[0] << ", y=" << v[1] << ", z=" << v[2] << ", w=" << v[3];
 	return os;
