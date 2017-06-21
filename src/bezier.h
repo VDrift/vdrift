@@ -149,8 +149,6 @@ private:
 		float &t, float &u, float &v) const;
 
 	Vec3 points[4][4];
-	Vec3 center;
-	float radius;
 	float length;
 	float dist_from_start;
 
