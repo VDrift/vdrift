@@ -4,7 +4,6 @@ Features
 --------
 
 -   Any input method can be used to navigate the menu.
--   Joysticks can be used by calibrating them in the Options -&gt; Controls -&gt; Joystick -&gt; Calibrate menu.
 -   Any input can be assigned to any control.
 -   Gas, brake, and steering controls only allow a single setting. All other controls can have any number of settings on any types of input devices.
 

@@ -63,7 +63,6 @@ Settings::Settings() :
 	joytype("joystick"),
 	joy200(false),
 	speed_sensitivity(1.0),
-	joystick_calibrated(false),
 	view_distance(1000.0),
 	autoreverse(true),
 	autoclutch(true),
@@ -201,7 +200,6 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "device_type", joytype);
 	Param(config, write, section, "two_hundred", joy200);
 	joy200 = false;
-	Param(config, write, section, "calibrated", joystick_calibrated);
 	Param(config, write, section, "ff_device", ff_device);
 	Param(config, write, section, "ff_gain", ff_gain);
 	Param(config, write, section, "ff_invert", ff_invert);
