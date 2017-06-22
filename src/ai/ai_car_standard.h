@@ -50,7 +50,6 @@ public:
 
 private:
 	const Bezier * last_patch;	///< last patch the car was on, used in case car is off track
-	bool use_racingline;		///< true allows the AI to take a proper racing line
 
 	struct OtherCarInfo
 	{
@@ -81,7 +80,7 @@ private:
 	///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
 	float BrakeFromOthers(float speed_diff);
 
-	Bezier RevisePatch(const Bezier * origpatch, bool use_racingline);
+	Bezier RevisePatch(const Bezier * origpatch);
 
 	static float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg);
 

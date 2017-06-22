@@ -59,7 +59,6 @@ AiCar * AiCarExperimentalFactory::Create(unsigned carid, float difficulty)
 AiCarExperimental::AiCarExperimental(unsigned new_carid, float new_difficulty) :
 	AiCar(new_carid, new_difficulty),
 	last_patch(NULL),
-	use_racingline(true),
 	is_recovering(false),
 	recover_time(0.0f)
 {
@@ -212,13 +211,12 @@ void AiCarExperimental::TrimPatch(Bezier & patch, float trimleft_front, float tr
 	patch.SetFromCorners(newfl, newfr, newbl, newbr);
 }
 
-Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingline)
+Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch)
 {
 	Bezier patch = *origpatch;
 
 	//take into account the racing line
-	//use_racingline = false;
-	if (use_racingline && patch.GetNextPatch() && patch.HasRacingline())
+	if (patch.GetNextPatch() && patch.HasRacingline())
 	{
 		float widthfront = Min((patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,0)).Magnitude(),
 									 (patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,3)).Magnitude());
@@ -306,7 +304,7 @@ void AiCarExperimental::UpdateGasBrake(const CarDynamics & car)
 		return;
 	}
 
-	Bezier curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
+	Bezier curr_patch = RevisePatch(curr_patch_ptr);
 
 	const Vec3 patch_direction = GetPatchDirection(curr_patch).Normalize();
 	const Vec3 car_velocity = ToMathVector<float>(car.GetVelocity());
@@ -320,7 +318,7 @@ void AiCarExperimental::UpdateGasBrake(const CarDynamics & car)
 	}
 	else
 	{
-		Bezier next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
+		Bezier next_patch = RevisePatch(curr_patch.GetNextPatch());
 		float width = GetPatchWidthVector(*curr_patch_ptr).Magnitude();
 		speed_limit = CalcSpeedLimit(car, &curr_patch, &next_patch, width);
 	}
@@ -374,7 +372,7 @@ void AiCarExperimental::UpdateGasBrake(const CarDynamics & car)
 		}
 		else
 		{
-			patch_to_check = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
+			patch_to_check = RevisePatch(patch_to_check.GetNextPatch());
 		}
 
 #ifdef VISUALIZE_AI_DEBUG
@@ -387,7 +385,7 @@ void AiCarExperimental::UpdateGasBrake(const CarDynamics & car)
 		}
 		else
 		{
-			Bezier next_patch = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
+			Bezier next_patch = RevisePatch(patch_to_check.GetNextPatch());
 			float width = GetPatchWidthVector(*unmodified_patch_to_check).Magnitude();
 			speed_limit = CalcSpeedLimit(car, &patch_to_check, &next_patch, width);
 		}
@@ -547,7 +545,7 @@ void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
 
 	last_patch = curr_patch_ptr;
 
-	Bezier curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
+	Bezier curr_patch = RevisePatch(curr_patch_ptr);
 #ifdef VISUALIZE_AI_DEBUG
 	steerlook.push_back(curr_patch);
 #endif
@@ -556,7 +554,7 @@ void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
 	if (!curr_patch.GetNextPatch())
 		return;
 
-	Bezier next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
+	Bezier next_patch = RevisePatch(curr_patch.GetNextPatch());
 
 	// find the point to steer towards
 	float lookahead = 1.0;
@@ -579,7 +577,7 @@ void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
 			break;
 		}
 
-		next_patch = RevisePatch(next_patch.GetNextPatch(), use_racingline);
+		next_patch = RevisePatch(next_patch.GetNextPatch());
 
 		// if next patch is a very sharp corner, stop lookahead
 		if (GetPatchRadius(next_patch) < LOOKAHEAD_MIN_RADIUS)
