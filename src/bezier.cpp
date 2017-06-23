@@ -38,7 +38,6 @@ std::ostream & operator << (std::ostream &os, const Bezier & b)
 Bezier::Bezier()
 {
 	next_patch = NULL;
-	turn = 0;
 	dist_from_start = 0;
 	length = 0;
 	have_racingline = false;
@@ -46,7 +45,7 @@ Bezier::Bezier()
 
 Bezier::~Bezier()
 {
- // dtor
+	// dtor
 }
 
 Aabb <float> Bezier::GetAABB() const
@@ -309,19 +308,6 @@ void Bezier::Attach(Bezier & other, bool reverse)
 		track_radius = 10000;
 	else
 		track_radius = 0.5f * d1mag / std::cos(alpha);
-	if (d1mag < 1E-4f)
-		track_curvature = 0;
-	else
-		track_curvature = 2 * std::cos(alpha) / d1mag;
-
-	//determine it's a left or right turn at the connection
-	Vec3 d = d1.cross(d2);
-	if (std::abs(d[0]) < 0.1f && std::abs(d[1]) < 0.1f && std::abs(d[2]) < 0.1f)
-		turn = 0; //straight ahead
-	else if (d[1] > 0)
-		turn = -1; //left turn ahead
-	else
-		turn = 1; //right turn ahead
 
 	//calculate distance from start of the road
 	if (other.next_patch == NULL || reverse)
@@ -416,8 +402,6 @@ Bezier & Bezier::CopyFrom(const Bezier &other)
 	dist_from_start = other.dist_from_start;
 	next_patch = other.next_patch;
 	track_radius = other.track_radius;
-	turn = other.turn;
-	track_curvature = other.track_curvature;
 	racing_line = other.racing_line;
 	have_racingline = other.have_racingline;
 

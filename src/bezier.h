@@ -154,8 +154,6 @@ private:
 
 	Bezier *next_patch;
 	float track_radius;
-	int turn; //-1 - this is a left turn, +1 - a right turn, 0 - straight
-	float track_curvature;
 	Vec3 racing_line;
 	bool have_racingline;
 };
