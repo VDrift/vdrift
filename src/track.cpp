@@ -131,21 +131,21 @@ bool Track::CastRay(
 	const float seglen,
 	int & patch_id,
 	Vec3 & outtri,
-	const Bezier * & colpatch,
+	const RoadPatch * & colpatch,
 	Vec3 & normal) const
 {
 	bool col = false;
 	for (const auto & road : data.roads)
 	{
-		Vec3 coltri, colnorm;
-		const Bezier * colbez = NULL;
-		if (road.Collide(origin, direction, seglen, patch_id, coltri, colbez, colnorm))
+		Vec3 tri, norm;
+		const RoadPatch * patch = NULL;
+		if (road.Collide(origin, direction, seglen, patch_id, tri, patch, norm))
 		{
-			if (!col || (coltri - origin).MagnitudeSquared() < (outtri - origin).MagnitudeSquared())
+			if (!col || (tri - origin).MagnitudeSquared() < (outtri - origin).MagnitudeSquared())
 			{
-				outtri = coltri;
-				normal = colnorm;
-				colpatch = colbez;
+				outtri = tri;
+				normal = norm;
+				colpatch = patch;
 			}
 			col = true;
 		}

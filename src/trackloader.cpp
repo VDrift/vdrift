@@ -952,17 +952,16 @@ static void AddRacingLineSegment(
 		faces.insert(faces.end(), fs, fs + 6);
 	}
 
-	const Bezier & p = patch.GetPatch();
-	distance += (p.GetRacingLine() - prev_segment).Magnitude();
-	prev_segment = p.GetRacingLine();
+	distance += (patch.GetRacingLine() - prev_segment).Magnitude();
+	prev_segment = patch.GetRacingLine();
 
 	const float tc[4] = {0, distance, 1, distance};
 	texcoords.insert(texcoords.end(), tc, tc + 4);
 
 	const float hwidth = 0.2;
 	const Vec3 zoffset(0.0, 0.0, 0.1);
-	const Vec3 r = p.GetRacingLine() + zoffset;
-	const Vec3 t = (p.GetPoint(0, 0) - p.GetPoint(0, 3)).Normalize();
+	const Vec3 r = patch.GetRacingLine() + zoffset;
+	const Vec3 t = (patch.GetPoint(0, 0) - patch.GetPoint(0, 3)).Normalize();
 	const Vec3 v0 = r - t * hwidth;
 	const Vec3 v1 = r + t * hwidth;
 
@@ -997,7 +996,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 
 	// generate racing line
 	float line_length = 0;
-	Vec3 line_center = strip.GetPatches()[0].GetPatch().GetRacingLine();
+	Vec3 line_center = strip.GetPatches()[0].GetRacingLine();
 	for (size_t n = 0, m = 0; n < batch_count; ++n)
 	{
 		// fill batch
@@ -1110,7 +1109,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 					if (data.reverse)
 						patchid = num_patches - patchid;
 
-					data.lap.push_back(&road.GetPatches()[patchid].GetPatch());
+					data.lap.push_back(&road.GetPatches()[patchid]);
 					break;
 				}
 				curroad++;
@@ -1129,16 +1128,16 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 	{
 		if (data.lap.size() > 1)
 		{
-			// reverse the lap sequence, but keep the first bezier where it is (remember, the track is a loop)
+			// reverse the lap sequence, but keep the first patch where it is (remember, the track is a loop)
 			// so, for example, now instead of 1 2 3 4 we should have 1 4 3 2
-			auto secondbezier = data.lap.begin() + 1;
-			assert(secondbezier != data.lap.end());
-			std::reverse(secondbezier, data.lap.end());
+			auto second_patch = data.lap.begin() + 1;
+			assert(second_patch != data.lap.end());
+			std::reverse(second_patch, data.lap.end());
 		}
 
 		// move timing sector 0 back so we'll still drive over it when going in reverse around the track
 		// find patch in front of first start position
-		const Bezier * lap0 = 0;
+		const RoadPatch * lap0 = 0;
 		float minlen2 = 10E6;
 		Vec3 pos = data.start_positions[0].first;
 		Vec3 dir = Direction::Forward;
@@ -1149,13 +1148,13 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		{
 			for (const auto & p : road.GetPatches())
 			{
-				Vec3 vec = p.GetPatch().GetBL() - bpos;
+				Vec3 vec = p.GetBL() - bpos;
 				float len2 = vec.MagnitudeSquared();
 				bool fwd = vec.dot(bdir) > 0;
 				if (fwd && len2 < minlen2)
 				{
 					minlen2 = len2;
-					lap0 = &p.GetPatch();
+					lap0 = &p;
 				}
 			}
 		}
@@ -1166,18 +1165,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 	// calculate distance from starting line for each patch to account for those tracks
 	// where starting line is not on the 1st patch of the road
 	// note this only updates the road with lap sequence 0 on it
-	Bezier* start_patch = const_cast <Bezier *> (data.lap[0]);
-	start_patch->dist_from_start = 0.0;
-	Bezier* curr_patch = start_patch->next_patch;
-	float total_dist = start_patch->length;
-	int count = 0;
-	while ( curr_patch && curr_patch != start_patch)
-	{
-		count++;
-		curr_patch->dist_from_start = total_dist;
-		total_dist += curr_patch->length;
-		curr_patch = curr_patch->next_patch;
-	}
+	const_cast<RoadPatch*>(data.lap[0])->CalculateDistanceFromStart();
 
 	info_output << "Track timing sectors: " << lapmarkers << std::endl;
 	return true;

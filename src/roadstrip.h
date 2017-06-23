@@ -42,7 +42,7 @@ public:
 		const float seglen,
 		int & patch_id,
 		Vec3 & outtri,
-		const Bezier * & colpatch,
+		const RoadPatch * & colpatch,
 		Vec3 & normal) const;
 
 	const std::vector<RoadPatch> & GetPatches() const

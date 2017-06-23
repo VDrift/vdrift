@@ -89,7 +89,7 @@ public:
 		const float seglen,
 		int & patch_id,
 		Vec3 & outtri,
-		const Bezier * & colpatch,
+		const RoadPatch * & colpatch,
 		Vec3 & normal) const;
 
 	/// Synchronize graphics and physics.
@@ -112,7 +112,7 @@ public:
 		return data.lap.size();
 	}
 
-	const Bezier * GetSectorPatch(unsigned int sector) const
+	const RoadPatch * GetSectorPatch(unsigned int sector) const
 	{
 		assert (sector < data.lap.size());
 		return data.lap[sector];
@@ -178,7 +178,7 @@ private:
 		std::list<MotionState> body_transforms;
 
 		// road information
-		std::vector<const Bezier*> lap;
+		std::vector<const RoadPatch*> lap;
 		std::list<RoadStrip> roads;
 		std::vector<std::pair<Vec3, Quat > > start_positions;
 

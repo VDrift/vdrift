@@ -989,7 +989,7 @@ void Game::UpdateTimer()
 			nextsector = (timer.GetLastSector(i) + 1) % track.GetSectors();
 			for (int p = 0; p < 4; ++p)
 			{
-				const Bezier * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
+				const RoadPatch * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
 				if (patch == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
@@ -1002,7 +1002,7 @@ void Game::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const Bezier * curpatch = car.GetWheelContact(FRONT_LEFT).GetPatch();
+		const RoadPatch * curpatch = car.GetWheelContact(FRONT_LEFT).GetPatch();
 		if (!curpatch)
 			curpatch = car.GetWheelContact(FRONT_RIGHT).GetPatch();
 

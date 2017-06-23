@@ -96,9 +96,9 @@ void AiCarStandard::Update(float dt, const CarDynamics cars[], const unsigned ca
 	UpdateSteer(cars[carid]);
 }
 
-const Bezier * AiCarStandard::GetCurrentPatch(const CarDynamics & car)
+const RoadPatch * AiCarStandard::GetCurrentPatch(const CarDynamics & car)
 {
-	const Bezier *curr_patch = car.GetWheelContact(WheelPosition(0)).GetPatch();
+	const RoadPatch *curr_patch = car.GetWheelContact(WheelPosition(0)).GetPatch();
 	if (!curr_patch)
 	{
 		// let's try the other wheel
@@ -108,28 +108,28 @@ const Bezier * AiCarStandard::GetCurrentPatch(const CarDynamics & car)
 	return curr_patch;
 }
 
-Vec3 AiCarStandard::GetPatchFrontCenter(const Bezier & patch)
+Vec3 AiCarStandard::GetPatchFrontCenter(const RoadPatch & patch)
 {
 	return (patch.GetPoint(0,0) + patch.GetPoint(0,3)) * 0.5;
 }
 
-Vec3 AiCarStandard::GetPatchBackCenter(const Bezier & patch)
+Vec3 AiCarStandard::GetPatchBackCenter(const RoadPatch & patch)
 {
 	return (patch.GetPoint(3,0) + patch.GetPoint(3,3)) * 0.5;
 }
 
-Vec3 AiCarStandard::GetPatchDirection(const Bezier & patch)
+Vec3 AiCarStandard::GetPatchDirection(const RoadPatch & patch)
 {
 	return (GetPatchFrontCenter(patch) - GetPatchBackCenter(patch)) * 0.5;
 }
 
-Vec3 AiCarStandard::GetPatchWidthVector(const Bezier & patch)
+Vec3 AiCarStandard::GetPatchWidthVector(const RoadPatch & patch)
 {
 	return ((patch.GetPoint(0,0) + patch.GetPoint(3,0)) -
 			(patch.GetPoint(0,3) + patch.GetPoint(3,3))) * 0.5;
 }
 
-float AiCarStandard::GetPatchRadius(const Bezier & patch)
+float AiCarStandard::GetPatchRadius(const RoadPatch & patch)
 {
 	if (patch.GetNextPatch() && patch.GetNextPatch()->GetNextPatch())
 	{
@@ -154,7 +154,7 @@ float AiCarStandard::GetPatchRadius(const Bezier & patch)
 }
 
 ///trim the patch's width in-place
-void AiCarStandard::TrimPatch(Bezier & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
+void AiCarStandard::TrimPatch(RoadPatch & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
 {
 	Vec3 frontvector = (patch.GetPoint(0,3) - patch.GetPoint(0,0));
 	Vec3 backvector = (patch.GetPoint(3,3) - patch.GetPoint(3,0));
@@ -195,9 +195,9 @@ void AiCarStandard::TrimPatch(Bezier & patch, float trimleft_front, float trimri
 	patch.SetFromCorners(newfl, newfr, newbl, newbr);
 }
 
-Bezier AiCarStandard::RevisePatch(const Bezier * origpatch)
+RoadPatch AiCarStandard::RevisePatch(const RoadPatch * origpatch)
 {
-	Bezier patch = *origpatch;
+	RoadPatch patch = *origpatch;
 
 	//take into account the racing line
 	if (patch.GetNextPatch() && patch.HasRacingline())
@@ -278,7 +278,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	else
 		inputs[CarInput::START_ENGINE] = 0.0;
 
-	const Bezier * curr_patch_ptr = GetCurrentPatch(car);
+	const RoadPatch * curr_patch_ptr = GetCurrentPatch(car);
 	if (!curr_patch_ptr)
 	{
 		// if car is not on track, just let it roll
@@ -287,7 +287,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 		return;
 	}
 
-	Bezier curr_patch = RevisePatch(curr_patch_ptr);
+	RoadPatch curr_patch = RevisePatch(curr_patch_ptr);
 
 	const Vec3 patch_direction = GetPatchDirection(curr_patch).Normalize();
 	const Vec3 car_velocity = ToMathVector<float>(car.GetVelocity());
@@ -301,7 +301,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	}
 	else
 	{
-		Bezier next_patch = RevisePatch(curr_patch.GetNextPatch());
+		RoadPatch next_patch = RevisePatch(curr_patch.GetNextPatch());
 		float width = GetPatchWidthVector(*curr_patch_ptr).Magnitude();
 		speed_limit = CalcSpeedLimit(car, &curr_patch, &next_patch, width);
 	}
@@ -336,7 +336,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 	float maxlookahead = car.GetBrakeDistance(currentspeed, 0, FRICTION_FACTOR_LONG) + 10;
 	float dist_checked = 0;
 	float brake_dist = 0;
-	Bezier patch_to_check = curr_patch;
+	RoadPatch patch_to_check = curr_patch;
 
 #ifdef VISUALIZE_AI_DEBUG
 	brakelook.push_back(patch_to_check);
@@ -344,7 +344,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 
 	while (dist_checked < maxlookahead)
 	{
-		Bezier * unmodified_patch_to_check = patch_to_check.GetNextPatch();
+		RoadPatch * unmodified_patch_to_check = patch_to_check.GetNextPatch();
 
 		if (!patch_to_check.GetNextPatch())
 		{
@@ -368,7 +368,7 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 		}
 		else
 		{
-			Bezier next_patch = RevisePatch(patch_to_check.GetNextPatch());
+			RoadPatch next_patch = RevisePatch(patch_to_check.GetNextPatch());
 			float width = GetPatchWidthVector(*unmodified_patch_to_check).Magnitude();
 			speed_limit = CalcSpeedLimit(car, &patch_to_check, &next_patch, width);
 		}
@@ -392,8 +392,8 @@ void AiCarStandard::UpdateGasBrake(const CarDynamics & car)
 
 float AiCarStandard::CalcSpeedLimit(
 	const CarDynamics & car,
-	const Bezier * patch,
-	const Bezier * nextpatch,
+	const RoadPatch * patch,
+	const RoadPatch * nextpatch,
 	float extraradius)
 {
 	assert(patch);
@@ -416,7 +416,7 @@ void AiCarStandard::UpdateSteer(const CarDynamics & car)
 	steerlook.clear();
 #endif
 
-	const Bezier *curr_patch_ptr = GetCurrentPatch(car);
+	const RoadPatch *curr_patch_ptr = GetCurrentPatch(car);
 
 	//if car has no contact with track, just let it roll
 	if (!curr_patch_ptr)
@@ -429,7 +429,7 @@ void AiCarStandard::UpdateSteer(const CarDynamics & car)
 
 	last_patch = curr_patch_ptr; //store the last patch car was on
 
-	Bezier curr_patch = RevisePatch(curr_patch_ptr);
+	RoadPatch curr_patch = RevisePatch(curr_patch_ptr);
 
 #ifdef VISUALIZE_AI_DEBUG
 	steerlook.push_back(curr_patch);
@@ -438,7 +438,7 @@ void AiCarStandard::UpdateSteer(const CarDynamics & car)
 	// if there is no next patch (probably a non-closed track), let it roll
 	if (!curr_patch.GetNextPatch()) return;
 
-	Bezier next_patch = RevisePatch(curr_patch.GetNextPatch());
+	RoadPatch next_patch = RevisePatch(curr_patch.GetNextPatch());
 
 	// find the point to steer towards
 	float lookahead = 1;
@@ -512,7 +512,7 @@ void AiCarStandard::UpdateSteer(const CarDynamics & car)
 	inputs[CarInput::STEER_RIGHT] = steer_value;
 }
 
-float AiCarStandard::GetHorizontalDistanceAlongPatch(const Bezier & patch, Vec3 carposition)
+float AiCarStandard::GetHorizontalDistanceAlongPatch(const RoadPatch & patch, Vec3 carposition)
 {
 	Vec3 leftside = (patch.GetPoint(0,0) + patch.GetPoint(3,0))*0.5f;
 	Vec3 rightside = (patch.GetPoint(0,3) + patch.GetPoint(3,3))*0.5f;
@@ -610,8 +610,8 @@ void AiCarStandard::AnalyzeOthers(float dt, const CarDynamics cars[], const unsi
 		const float fore_position_offset = -half_carlength;
 		if (fore_position > fore_position_offset)
 		{
-			const Bezier * othercarpatch = GetCurrentPatch(icar);
-			const Bezier * mycarpatch = GetCurrentPatch(car);
+			const RoadPatch * othercarpatch = GetCurrentPatch(icar);
+			const RoadPatch * mycarpatch = GetCurrentPatch(car);
 
 			if (othercarpatch && mycarpatch)
 			{

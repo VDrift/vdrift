@@ -43,15 +43,15 @@ bool RoadStrip::ReadFrom(
 	int badcount = 0;
 	for (int i = 0; i < num; ++i)
 	{
-		Bezier * prevbezier = 0;
-		if (!patches.empty()) prevbezier = &patches.back().GetPatch();
+		RoadPatch * prev = 0;
+		if (!patches.empty()) prev = &patches.back();
 
 		patches.push_back(RoadPatch());
-		patches.back().GetPatch().ReadFromYZX(openfile);
+		patches.back().ReadFromYZX(openfile);
 
-		if (prevbezier) prevbezier->Attach(patches.back().GetPatch());
+		if (prev) prev->Attach(patches.back());
 
-		if (patches.back().GetPatch().CheckForProblems())
+		if (patches.back().CheckForProblems())
 		{
 			badcount++;
 			patches.pop_back();
@@ -59,7 +59,7 @@ bool RoadStrip::ReadFrom(
 	}
 
 	if (badcount > 0)
-		error_output << "Rejected " << badcount << " bezier patch(es) from roadstrip due to errors" << std::endl;
+		error_output << "Rejected " << badcount << " patch(es) from roadstrip due to errors" << std::endl;
 
 	// Reverse patches.
 	if (reverse)
@@ -67,13 +67,13 @@ bool RoadStrip::ReadFrom(
 		std::reverse(patches.begin(), patches.end());
 		for (auto & patch : patches)
 		{
-			patch.GetPatch().Reverse();
+			patch.Reverse();
 		}
 	}
 
 	// Close the roadstrip if it ends near where it starts.
-	const auto & pb = patches.back().GetPatch();
-	const auto & pf = patches.front().GetPatch();
+	const auto & pb = patches.back();
+	const auto & pf = patches.front();
 	closed = (patches.size() > 2) &&
 		((pb.GetFL() - pf.GetBL()).MagnitudeSquared() < 0.01f) &&
 		((pb.GetFR() - pf.GetBR()).MagnitudeSquared() < 0.01f);
@@ -81,12 +81,11 @@ bool RoadStrip::ReadFrom(
 	// Connect patches.
 	for (auto p = patches.begin(); p != patches.end() - 1; ++p)
 	{
-		auto n = p + 1;
-		p->GetPatch().Attach(n->GetPatch());
+		p->Attach(*(p + 1));
 	}
 	if (closed)
 	{
-		patches.back().GetPatch().Attach(patches.front().GetPatch());
+		patches.back().Attach(patches.front());
 	}
 
 	GenerateSpacePartitioning();
@@ -99,7 +98,7 @@ void RoadStrip::GenerateSpacePartitioning()
 	aabb_part.Clear();
 	for (unsigned i = 0; i < patches.size(); ++i)
 	{
-		aabb_part.Add(i, patches[i].GetPatch().GetAABB());
+		aabb_part.Add(i, patches[i].GetAABB());
 	}
 	aabb_part.Optimize();
 }
@@ -110,7 +109,7 @@ bool RoadStrip::Collide(
 	const float seglen,
 	int & patch_id,
 	Vec3 & outtri,
-	const Bezier * & colpatch,
+	const RoadPatch * & colpatch,
 	Vec3 & normal) const
 {
 	if (patch_id >= 0 && patch_id < (int)patches.size())
@@ -120,7 +119,7 @@ bool RoadStrip::Collide(
 		{
 			outtri = coltri;
 			normal = colnorm;
-			colpatch = &patches[patch_id].GetPatch();
+			colpatch = &patches[patch_id];
 			return true;
 		}
 	}
@@ -137,7 +136,7 @@ bool RoadStrip::Collide(
 			{
 				outtri = coltri;
 				normal = colnorm;
-				colpatch = &patches[candidate].GetPatch();
+				colpatch = &patches[candidate];
 				patch_id = candidate;
 			}
 			col = true;

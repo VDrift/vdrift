@@ -108,7 +108,8 @@ DynamicsWorld::~DynamicsWorld()
 	reset();
 }
 
-const Bezier* DynamicsWorld::GetSectorPatch(int i){
+const RoadPatch * DynamicsWorld::GetSectorPatch(int i)
+{
 	return track->GetSectorPatch(i);
 }
 
@@ -123,7 +124,7 @@ bool DynamicsWorld::castRay(
 	btVector3 n = -direction;
 	btScalar d = length;
 	int patch_id = -1;
-	const Bezier * b = 0;
+	const RoadPatch * patch = 0;
 	const TrackSurface * s = TrackSurface::None();
 	const btCollisionObject * c = 0;
 
@@ -164,7 +165,7 @@ bool DynamicsWorld::castRay(
 			Vec3 colpoint;
 			Vec3 colnormal;
 			patch_id = contact.GetPatchId();
-			if (track->CastRay(org, dir, length, patch_id, colpoint, b, colnormal))
+			if (track->CastRay(org, dir, length, patch_id, colpoint, patch, colnormal))
 			{
 				p = ToBulletVector(colpoint);
 				n = ToBulletVector(colnormal);
@@ -172,12 +173,12 @@ bool DynamicsWorld::castRay(
 			}
 		}
 
-		contact = CollisionContact(p, n, d, patch_id, b, s, c);
+		contact = CollisionContact(p, n, d, patch_id, patch, s, c);
 		return true;
 	}
 
 	// should only happen on vehicle rollover
-	contact = CollisionContact(p, n, d, patch_id, b, s, c);
+	contact = CollisionContact(p, n, d, patch_id, patch, s, c);
 	return false;
 }
 

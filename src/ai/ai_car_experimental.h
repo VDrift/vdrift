@@ -24,7 +24,7 @@
 #include "ai_factory.h"
 #include "physics/carinput.h"
 #include "graphics/scenenode.h"
-#include "bezier.h"
+#include "roadpatch.h"
 
 #include <vector>
 
@@ -49,7 +49,7 @@ public:
 #endif
 
 private:
-	const Bezier * last_patch;	///< last patch the car was on, used in case car is off track
+	const RoadPatch * last_patch;	///< last patch the car was on, used in case car is off track
 	bool is_recovering;			///< tries to get back to the road.
 	float recover_time;
 
@@ -70,8 +70,8 @@ private:
 
 	static float CalcSpeedLimit(
 		const CarDynamics & car,
-		const Bezier * patch,
-		const Bezier * nextpatch,
+		const RoadPatch * patch,
+		const RoadPatch * nextpatch,
 		float extraradius = 0);
 
 	void UpdateSteer(const CarDynamics & car, float dt);
@@ -84,34 +84,34 @@ private:
 	///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
 	float BrakeFromOthers(float speed_diff);
 
-	Bezier RevisePatch(const Bezier * origpatch);
+	RoadPatch RevisePatch(const RoadPatch * origpatch);
 
 	static float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg);
 
-	static const Bezier * GetCurrentPatch(const CarDynamics & car);
+	static const RoadPatch * GetCurrentPatch(const CarDynamics & car);
 
-	static Vec3 GetPatchFrontCenter(const Bezier & patch);
+	static Vec3 GetPatchFrontCenter(const RoadPatch & patch);
 
-	static Vec3 GetPatchBackCenter(const Bezier & patch);
+	static Vec3 GetPatchBackCenter(const RoadPatch & patch);
 
-	static Vec3 GetPatchDirection(const Bezier & patch);
+	static Vec3 GetPatchDirection(const RoadPatch & patch);
 
-	static Vec3 GetPatchWidthVector(const Bezier & patch);
+	static Vec3 GetPatchWidthVector(const RoadPatch & patch);
 
-	static float GetPatchRadius(const Bezier & patch);
+	static float GetPatchRadius(const RoadPatch & patch);
 
-	static void TrimPatch(Bezier & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back);
+	static void TrimPatch(RoadPatch & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back);
 
-	static float GetHorizontalDistanceAlongPatch(const Bezier & patch, Vec3 carposition);
+	static float GetHorizontalDistanceAlongPatch(const RoadPatch & patch, Vec3 carposition);
 
 	static float RampBetween(float val, float startat, float endat);
 
 	/// This will return the nearest patch to the car.
 	/// This is only useful if the car is outside of the road.
-	/// Optionally, you can pass a helper bezier to improve performance, which should be near to the car, but maybe not the nearest.
-	static const Bezier * GetNearestPatch(const CarDynamics & car, const Bezier * helper = 0);
+	/// Optionally, you can pass a helper RoadPatch to improve performance, which should be near to the car, but maybe not the nearest.
+	static const RoadPatch * GetNearestPatch(const CarDynamics & car, const RoadPatch * helper = 0);
 
-	bool Recover(const CarDynamics & car, float dt, const Bezier * patch);
+	bool Recover(const CarDynamics & car, float dt, const RoadPatch * patch);
 
 	/// Creates a ray from the middle of the car. Returns the distance to the first colliding object or max_length.
 	float RayCastDistance(const CarDynamics & car, Vec3 direction, float max_length);

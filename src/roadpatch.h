@@ -22,16 +22,27 @@
 
 #include "bezier.h"
 
-class RoadPatch
+class RoadPatch : public Bezier
 {
 public:
-	RoadPatch() : track_curvature(0) {}
+	RoadPatch();
 
-	const Bezier & GetPatch() const {return patch;}
+	/// attach this patch and the other by moving them and adjusting control points as necessary.
+	/// note that the other patch will be modified
+	void Attach(RoadPatch & other, bool reverse = false);
 
-	Bezier & GetPatch() {return patch;}
+	/// calculate distance from this start patch
+	/// note that attached patches will be modified
+	void CalculateDistanceFromStart();
 
-	///return true if the ray starting at the given origin going in the given direction intersects this patch.
+	void SetRacingLine(const Vec3 & position, float curvature)
+	{
+		racing_line = position;
+		track_curvature = curvature;
+		have_racingline = true;
+	}
+
+	/// return true if the ray starting at the given origin going in the given direction intersects this patch.
 	/// output the contact point and normal to the given outtri and normal variables.
 	bool Collide(
 		const Vec3 & origin,
@@ -40,9 +51,9 @@ public:
 		Vec3 & outtri,
 		Vec3 & normal) const;
 
-	float GetTrackCurvature() const
+	RoadPatch * GetNextPatch() const
 	{
-		return track_curvature;
+		return next;
 	}
 
 	Vec3 GetRacingLine() const
@@ -50,22 +61,29 @@ public:
 		return racing_line;
 	}
 
-	void SetTrackCurvature ( float value )
+	float GetTrackRadius() const
 	{
-		track_curvature = value;
+		return track_radius;
 	}
 
-	void SetRacingLine ( const MathVector< float, 3 >& value )
+	float GetDistFromStart() const
 	{
-		racing_line = value;
-		patch.racing_line = value;
-		patch.have_racingline = true;
+		return dist_from_start;
+	}
+
+	bool HasRacingline() const
+	{
+		return have_racingline;
 	}
 
 private:
-	Bezier patch;
-	float track_curvature;
+	RoadPatch * next;
 	Vec3 racing_line;
+	float track_radius;
+	float track_curvature;
+	float length;
+	float dist_from_start;
+	bool have_racingline;
 };
 
 #endif // _ROADPATCH_H

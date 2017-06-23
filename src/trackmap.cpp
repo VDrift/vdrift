@@ -72,7 +72,7 @@ bool TrackMap::BuildMap(
 	{
 		for (const auto & curp : road.GetPatches())
 		{
-			const Bezier & b = curp.GetPatch();
+			const RoadPatch & b = curp;
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
@@ -115,11 +115,10 @@ bool TrackMap::BuildMap(
 	{
 		for (const auto & p : road.GetPatches())
 		{
-			const Bezier & b = p.GetPatch();
-			const Vec3 & bl = b.GetBL();
-			const Vec3 & br = b.GetBR();
-			const Vec3 & fl = b.GetFL();
-			const Vec3 & fr = b.GetFR();
+			const Vec3 & bl = p.GetBL();
+			const Vec3 & br = p.GetBR();
+			const Vec3 & fl = p.GetFL();
+			const Vec3 & fr = p.GetFR();
 
 			float x[6], y[6];
 			x[2] = (bl[1] - track_min[0]) * map_scale + 1;

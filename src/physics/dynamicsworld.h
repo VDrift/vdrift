@@ -27,7 +27,7 @@
 class Track;
 class CollisionContact;
 class FractureBody;
-class Bezier;
+class RoadPatch;
 
 class DynamicsWorld  : public btDiscreteDynamicsWorld
 {
@@ -50,7 +50,7 @@ public:
 	// set custon contact callback
 	void setContactAddedCallback(ContactAddedCallback cb);
 
-	const Bezier* GetSectorPatch(int i);
+	const RoadPatch * GetSectorPatch(int i);
 
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool castRay(
