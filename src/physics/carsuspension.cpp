@@ -150,15 +150,6 @@ void CarSuspension::UpdateForces(btScalar roll_delta, btScalar dt)
 	wheel_force = (force * wheel_contact > 0) ? force : 0;
 }
 
-void CarSuspension::DebugPrint(std::ostream & out) const
-{
-	out << "---Suspension---" << "\n";
-	out << "Displacement: " << displacement << "\n";
-	out << "Spring Force: " << spring_force << "\n";
-	out << "Damping Force: " << damp_force << "\n";
-	out << "Steering angle: " << steering_angle * rad2deg << "\n";
-}
-
 class BasicSuspension : public CarSuspension
 {
 public:

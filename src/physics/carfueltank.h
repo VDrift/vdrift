@@ -24,8 +24,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-#include <iostream>
-
 class CarFuelTank
 {
 friend class joeserialize::Serializer;
@@ -38,14 +36,6 @@ public:
 		volume(0.0492)
 	{
 		// ctor
-	}
-
-	void DebugPrint(std::ostream & out) const
-	{
-		out << "---Fuel Tank---" << "\n";
-		out << "Current volume: " << volume << "\n";
-		out << "Capacity: " << capacity << "\n";
-		out << "Mass: " << mass << "\n";
 	}
 
 	void SetCapacity(const btScalar & value)
@@ -104,6 +94,15 @@ public:
 		volume = mass / density;
 	}
 
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Fuel Tank---" << "\n";
+		out << "Current volume: " << volume << "\n";
+		out << "Capacity: " << capacity << "\n";
+		out << "Mass: " << mass << "\n";
+	}
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s, mass);
@@ -120,13 +119,6 @@ private:
 	//variables
 	btScalar mass;
 	btScalar volume;
-
-	void UpdateMass()
-	{
-
-	}
-
-
 };
 
 #endif

@@ -103,7 +103,15 @@ public:
 	/// compute suspension and wheel contact forces
 	void UpdateForces(btScalar roll_delta, btScalar dt);
 
-	void DebugPrint(std::ostream & out) const;
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Suspension---" << "\n";
+		out << "Displacement: " << displacement << "\n";
+		out << "Spring Force: " << spring_force << "\n";
+		out << "Damping Force: " << damp_force << "\n";
+		out << "Steering angle: " << steering_angle * btScalar(180 / M_PI) << "\n";
+	}
 
 	bool Serialize(joeserialize::Serializer & s)
 	{

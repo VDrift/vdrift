@@ -24,7 +24,7 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-#include <iostream>
+#include <map>
 
 class CarTransmission
 {
@@ -133,7 +133,8 @@ public:
 		return driveshaft_speed * i->second;
 	}
 
-	void DebugPrint(std::ostream & out) const
+	template <class Stream>
+	void DebugPrint(Stream & out) const
 	{
 		out << "---Transmission---" << "\n";
 		//out << "Gear ratio: " << gear_ratios.at(gear) << "\n";
