@@ -21,7 +21,6 @@
 #define _QUATERNION_H
 
 #include "mathvector.h"
-#include "joeserialize.h"
 
 #include <cassert>
 #include <cmath>
@@ -29,7 +28,6 @@
 template <typename T>
 class Quaternion
 {
-friend class joeserialize::Serializer;
 private:
 	T v[4]; //x y z w
 
@@ -443,7 +441,8 @@ public:
 		return qout;
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		if (!s.Serialize("x",v[0])) return false;
 		if (!s.Serialize("y",v[1])) return false;

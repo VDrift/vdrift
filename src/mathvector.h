@@ -20,21 +20,15 @@
 #ifndef _MATHVECTOR_H
 #define _MATHVECTOR_H
 
-#include "joeserialize.h"
-
 #include <iostream>
 #include <sstream>
 #include <cstring> // memcpy
 #include <cassert>
-#ifndef _USE_MATH_DEFINES
-#define _USE_MATH_DEFINES
-#endif
 #include <cmath>
 
 template <typename T, unsigned int dimension>
 class MathVector
 {
-friend class joeserialize::Serializer;
 private:
 	T v[dimension];
 
@@ -248,7 +242,8 @@ public:
 		return output;
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		for (unsigned int i = 0; i < dimension; i++)
 		{
@@ -264,7 +259,6 @@ public:
 template <class T>
 class MathVector <T, 3>
 {
-friend class joeserialize::Serializer;
 private:
 	struct Vector3
 	{
@@ -438,7 +432,8 @@ public:
 		return n * projection;
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		if (!s.Serialize("x",v.x)) return false;
 		if (!s.Serialize("y",v.y)) return false;
