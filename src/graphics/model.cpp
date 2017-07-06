@@ -128,11 +128,11 @@ void Model::GenMeshMetrics()
 	float minv[3] = {+fmax, +fmax, +fmax};
 
 	const float * verts;
-	int vnum3;
+	unsigned int vnum3;
 	varray.GetVertices(verts, vnum3);
 	assert(vnum3);
 
-	for (int n = 0; n < vnum3; n += 3)
+	for (unsigned int n = 0; n < vnum3; n += 3)
 	{
 		const float * v = verts + n;
 		if (v[0] > maxv[0]) maxv[0] = v[0];

@@ -38,28 +38,28 @@ public:
 
 	VertexArray operator+ (const VertexArray & v) const;
 
-	void GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const;
+	void GetColors(const unsigned char * & output_array_pointer, unsigned & output_array_num) const;
 
-	void GetTexCoords(const float * & output_array_pointer, int & output_array_num) const;
+	void GetTexCoords(const float * & output_array_pointer, unsigned & output_array_num) const;
 
-	void GetNormals(const float * & output_array_pointer, int & output_array_num) const;
+	void GetNormals(const float * & output_array_pointer, unsigned & output_array_num) const;
 
-	void GetVertices(const float * & output_array_pointer, int & output_array_num) const;
+	void GetVertices(const float * & output_array_pointer, unsigned & output_array_num) const;
 
-	void GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const;
+	void GetFaces(const unsigned * & output_array_pointer, unsigned & output_array_num) const;
 
-	unsigned int GetNumVertices() const { return vertices.size() / 3; }
+	unsigned GetNumVertices() const { return vertices.size() / 3; }
 
-	unsigned int GetNumIndices() const { return faces.size(); }
+	unsigned GetNumIndices() const { return faces.size(); }
 
 	VertexFormat::Enum GetVertexFormat() const { return format; }
 
 	void Add(
-		const unsigned int newfaces[], int newfacecount,
-		const float newvert[], int newvertcount,
-		const float newtco[] = 0, int newtcocount = 0,
-		const float newnorm[] = 0, int newnormcount = 0,
-		const unsigned char newcol[] = 0, int newcolcount = 0);
+		const unsigned newfaces[], unsigned newfacecount,
+		const float newvert[], unsigned newvertcount,
+		const float newtco[] = 0, unsigned newtcocount = 0,
+		const float newnorm[] = 0, unsigned newnormcount = 0,
+		const unsigned char newcol[] = 0, unsigned newcolcount = 0);
 
 	/// helper functions
 

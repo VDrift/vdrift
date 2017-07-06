@@ -64,9 +64,9 @@ static inline std::istream & operator >> (std::istream & lhs, std::vector<std::s
 static btIndexedMesh GetIndexedMesh(const Model & model)
 {
 	const float * vertices;
-	int vcount;
+	unsigned int vcount;
 	const unsigned int * faces;
-	int fcount;
+	unsigned int fcount;
 	model.GetVertexArray().GetVertices(vertices, vcount);
 	model.GetVertexArray().GetFaces(faces, fcount);
 

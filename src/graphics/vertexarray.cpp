@@ -72,31 +72,31 @@ VertexArray VertexArray::operator+ (const VertexArray & v) const
 	return out;
 }
 
-void VertexArray::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetColors(const unsigned char * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = colors.size();
 	output_array_pointer = colors.empty() ? NULL : &colors[0];
 }
 
-void VertexArray::GetTexCoords(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetTexCoords(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = texcoords.size();
 	output_array_pointer = texcoords.empty() ? NULL : &texcoords[0];
 }
 
-void VertexArray::GetNormals(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetNormals(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = normals.size();
 	output_array_pointer = normals.empty() ? NULL : &normals[0];
 }
 
-void VertexArray::GetVertices(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetVertices(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = vertices.size();
 	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
 }
 
-void VertexArray::GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetFaces(const unsigned * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = faces.size();
 	output_array_pointer = faces.empty() ? NULL : &faces[0];
@@ -176,11 +176,11 @@ void VertexArray::SetFaces(const unsigned int array[], unsigned count, unsigned 
 }
 
 void VertexArray::Add(
-	const unsigned int newfaces[], int newfacecount,
-	const float newvert[], int newvertcount,
-	const float newtco[], int newtcocount,
-	const float newnorm[], int newnormcount ,
-	const unsigned char newcol[], int newcolcount)
+	const unsigned newfaces[], unsigned newfacecount,
+	const float newvert[], unsigned newvertcount,
+	const float newtco[], unsigned newtcocount,
+	const float newnorm[], unsigned newnormcount ,
+	const unsigned char newcol[], unsigned newcolcount)
 {
 	SetFaces(newfaces, newfacecount, faces.size(), vertices.size() / 3);
 	SetVertices(newvert, newvertcount, vertices.size());
@@ -780,7 +780,7 @@ QT_TEST(vertexarray_buldfromfaces_test)
 
 	const float * tempfloat(NULL);
 	const unsigned int * tempint(NULL);
-	int tempnum;
+	unsigned int tempnum;
 
 	varray.GetNormals(tempfloat, tempnum);
 	QT_CHECK(tempfloat != NULL);
