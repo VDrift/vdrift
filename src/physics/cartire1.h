@@ -21,7 +21,6 @@
 #define _CARTIRE1_H
 
 #include "LinearMath/btVector3.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <vector>
@@ -42,7 +41,6 @@ struct CarTireInfo1
 
 class CarTire1 : private CarTireInfo1
 {
-friend class joeserialize::Serializer;
 public:
 	CarTire1();
 
@@ -86,7 +84,8 @@ public:
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
-	bool Serialize(joeserialize::Serializer & s);
+	template <class Serializer>
+	bool Serialize(Serializer & s);
 
 private:
 	btScalar camber; ///< tire camber relative to track surface
@@ -164,7 +163,8 @@ inline btScalar CarTire1::getMz() const
 	return mz;
 }
 
-inline bool CarTire1::Serialize(joeserialize::Serializer & /*s*/)
+template <class Serializer>
+inline bool CarTire1::Serialize(Serializer & /*s*/)
 {
 	return true;
 }

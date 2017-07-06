@@ -241,13 +241,3 @@ btScalar CarEngine::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btSc
 
 	return clutch_torque;
 }
-
-bool CarEngine::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s, shaft.ang_velocity);
-	_SERIALIZE_(s, throttle_position);
-	_SERIALIZE_(s, clutch_torque);
-	_SERIALIZE_(s, out_of_gas);
-	_SERIALIZE_(s, rev_limit_exceeded);
-	return true;
-}

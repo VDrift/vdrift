@@ -21,7 +21,6 @@
 #define _CARDIFFERENTIAL_H
 
 #include "LinearMath/btScalar.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 /// A differential that supports speed-sensitive limited slip functionality.
@@ -40,7 +39,6 @@ struct CarDifferentialInfo
 
 class CarDifferential : private CarDifferentialInfo
 {
-friend class joeserialize::Serializer;
 public:
 	/// Default constructor makes an S2000-like car.
 	CarDifferential();
@@ -63,8 +61,6 @@ public:
 
 	btScalar GetFinalDrive() const;
 
-	bool Serialize(joeserialize::Serializer & s);
-
 	template <class Stream>
 	void DebugPrint(Stream & out) const
 	{
@@ -73,6 +69,16 @@ public:
 		out << "Side 2 RPM: " << side2_speed * btScalar(30 / M_PI) << "\n";
 		out << "Side 1 Torque: " << side1_torque << "\n";
 		out << "Side 2 Torque: " << side2_torque << "\n";
+	}
+
+	template <class Serializer>
+	bool Serialize(Serializer & s)
+	{
+		_SERIALIZE_(s, side1_speed);
+		_SERIALIZE_(s, side2_speed);
+		_SERIALIZE_(s, side1_torque);
+		_SERIALIZE_(s, side2_torque);
+		return true;
 	}
 
 private:

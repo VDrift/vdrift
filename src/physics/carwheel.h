@@ -21,12 +21,10 @@
 #define _CARWHEEL_H
 
 #include "driveshaft.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 class CarWheel
 {
-friend class joeserialize::Serializer;
 public:
 	CarWheel() : radius(0.3), width(0.2), mass(20) {}
 
@@ -112,7 +110,8 @@ public:
 		out << "RPM: " << GetRPM() << "\n";
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, shaft.ang_velocity);
 		_SERIALIZE_(s, shaft.angle);

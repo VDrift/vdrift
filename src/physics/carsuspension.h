@@ -23,7 +23,6 @@
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btQuaternion.h"
 #include "linearinterp.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <iosfwd>
@@ -113,7 +112,8 @@ public:
 		out << "Steering angle: " << steering_angle * btScalar(180 / M_PI) << "\n";
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, steering_angle);
 		_SERIALIZE_(s, displacement);
@@ -127,8 +127,6 @@ public:
 		btScalar wheel_mass,
 		CarSuspension *& suspension,
 		std::ostream & error);
-
-	friend class joeserialize::Serializer;
 
 protected:
 	CarSuspensionInfo info;

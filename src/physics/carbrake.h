@@ -21,12 +21,10 @@
 #define _CARBRAKE_H
 
 #include "LinearMath/btScalar.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 class CarBrake
 {
-	friend class joeserialize::Serializer;
 	private:
 		//constants (not actually declared as const because they can be changed after object creation)
 		btScalar friction; ///< sliding coefficient of friction for the brake pads on the rotor
@@ -124,13 +122,6 @@ class CarBrake
 			return brake_factor;
 		}
 
-		bool Serialize(joeserialize::Serializer & s)
-		{
-			_SERIALIZE_(s, brake_factor);
-			_SERIALIZE_(s, handbrake_factor);
-			return true;
-		}
-
 		void SetHandbrake(const btScalar & value)
 		{
 			handbrake = value;
@@ -140,6 +131,14 @@ class CarBrake
 		void SetHandbrakeFactor(const btScalar & value)
 		{
 			handbrake_factor = value;
+		}
+
+		template <class Serializer>
+		bool Serialize(Serializer & s)
+		{
+			_SERIALIZE_(s, brake_factor);
+			_SERIALIZE_(s, handbrake_factor);
+			return true;
 		}
 };
 

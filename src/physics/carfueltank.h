@@ -21,12 +21,10 @@
 #define _CARFUELTANK_H
 
 #include "LinearMath/btVector3.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 class CarFuelTank
 {
-friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
 	CarFuelTank() :
@@ -103,7 +101,8 @@ public:
 		out << "Mass: " << mass << "\n";
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, mass);
 		_SERIALIZE_(s, volume);

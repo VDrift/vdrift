@@ -23,7 +23,6 @@
 #include "driveshaft.h"
 #include "LinearMath/btVector3.h"
 #include "spline.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <iosfwd>
@@ -67,7 +66,6 @@ struct CarEngineInfo
 
 class CarEngine
 {
-friend class joeserialize::Serializer;
 public:
 	CarEngine();
 
@@ -206,7 +204,16 @@ public:
 		out << "Running: " << !stalled << "\n";
 	}
 
-	bool Serialize(joeserialize::Serializer & s);
+	template <class Serializer>
+	bool Serialize(Serializer & s)
+	{
+		_SERIALIZE_(s, shaft.ang_velocity);
+		_SERIALIZE_(s, throttle_position);
+		_SERIALIZE_(s, clutch_torque);
+		_SERIALIZE_(s, out_of_gas);
+		_SERIALIZE_(s, rev_limit_exceeded);
+		return true;
+	}
 
 private:
 	CarEngineInfo info;

@@ -102,12 +102,3 @@ btScalar CarDifferential::GetFinalDrive() const
 {
 	return final_drive;
 }
-
-bool CarDifferential::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s, side1_speed);
-	_SERIALIZE_(s, side2_speed);
-	_SERIALIZE_(s, side1_torque);
-	_SERIALIZE_(s, side2_torque);
-	return true;
-}

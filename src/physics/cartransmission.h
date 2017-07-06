@@ -21,14 +21,12 @@
 #define _CARTRANSMISSION_H
 
 #include "LinearMath/btScalar.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <map>
 
 class CarTransmission
 {
-friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
 	CarTransmission() :
@@ -142,7 +140,8 @@ public:
 		out << "Driveshaft RPM: " << driveshaft_rpm << "\n";
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, gear);
 		return true;

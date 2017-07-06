@@ -21,12 +21,10 @@
 #define _CARCLUTCH_H
 
 #include "LinearMath/btScalar.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 class CarClutch
 {
-friend class joeserialize::Serializer;
 private:
 	btScalar max_torque;
 
@@ -105,7 +103,8 @@ public:
 		return last_torque;
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, position);
 		return true;

@@ -21,8 +21,9 @@
 #include "coordinatesystem.h"
 #include "cfg/ptree.h"
 
+#include <iomanip> // std::setw
+
 static const btScalar deg2rad = M_PI / 180;
-static const btScalar rad2deg = 180 / M_PI;
 
 CarSuspensionInfo::CarSuspensionInfo() :
 	spring_constant(50000.0),
