@@ -38,6 +38,7 @@
 #include "tobullet.h"
 #include "hsvtorgb.h"
 #include "camera_orbit.h"
+#include "tokenize.h"
 
 #include <fstream>
 #include <string>
