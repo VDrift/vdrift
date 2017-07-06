@@ -22,7 +22,6 @@
 
 #include "joeserialize.h"
 
-#include <vector>
 #include <iostream>
 #include <sstream>
 #include <cstring> // memcpy
