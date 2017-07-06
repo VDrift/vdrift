@@ -20,6 +20,7 @@
 #include "timer.h"
 #include "unittest.h"
 
+#include <list>
 #include <string>
 #include <sstream>
 

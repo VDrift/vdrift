@@ -20,6 +20,7 @@
 #include "renderstate.h"
 #include "glenums.h"
 #include <cassert>
+#include <iostream>
 
 void RenderState::apply(GLWrapper & gl) const
 {

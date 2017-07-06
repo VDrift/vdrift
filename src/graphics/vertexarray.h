@@ -21,7 +21,6 @@
 #define _VERTEXARRAY_H
 
 #include "vertexformat.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <vector>
@@ -159,10 +158,18 @@ public:
 	// set winding order to match normal direction, used by scale
 	void FixWindingOrder();
 
-	bool Serialize(joeserialize::Serializer & s);
+	template <class Serializer>
+	bool Serialize(Serializer & s)
+	{
+		_SERIALIZE_(s,vertices);
+		_SERIALIZE_(s,normals);
+		//_SERIALIZE_(s,colors); fixme
+		_SERIALIZE_(s,texcoords);
+		_SERIALIZE_(s,faces);
+		return true;
+	}
 
 private:
-	friend class joeserialize::Serializer;
 	friend class ModelObj;
 	std::vector <unsigned char> colors;
 	std::vector <float> texcoords;

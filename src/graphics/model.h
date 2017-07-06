@@ -30,7 +30,6 @@
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class Model
 {
-friend class joeserialize::Serializer;
 public:
 	Model();
 
@@ -47,8 +46,6 @@ public:
 	virtual bool Load(const std::string & strFileName, std::ostream & error_output);
 
 	bool Load(const VertexArray & nvarray, std::ostream & error_output);
-
-	bool Serialize(joeserialize::Serializer & s);
 
 	bool WriteToFile(const std::string & filepath);
 
@@ -74,6 +71,13 @@ public:
 	const VertexArray & GetVertexArray() const;
 
 	bool Loaded() const;
+
+	template <class Serializer>
+	bool Serialize(Serializer & s)
+	{
+		_SERIALIZE_(s, varray);
+		return true;
+	}
 
 protected:
 	VertexArray varray;			///< to be filled by the derived classes

@@ -21,6 +21,8 @@
 #include "quaternion.h"
 #include "unittest.h"
 
+#include <map>
+
 VertexArray::VertexArray() :
 	format(VertexFormat::P3)
 {
@@ -664,15 +666,6 @@ void VertexArray::FixWindingOrder()
 	}
 }
 
-bool VertexArray::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s,vertices);
-	_SERIALIZE_(s,normals);
-	//_SERIALIZE_(s,colors); fixme
-	_SERIALIZE_(s,texcoords);
-	_SERIALIZE_(s,faces);
-	return true;
-}
 /* fixme
 QT_TEST(vertexarray_test)
 {

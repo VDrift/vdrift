@@ -18,6 +18,8 @@
 /************************************************************************/
 
 #include "model.h"
+#include "joeserialize.h"
+
 #include <fstream>
 #include <string>
 #include <limits>
@@ -69,12 +71,6 @@ bool Model::Load(const VertexArray & nvarray, std::ostream & /*error_output*/)
 
 	GenMeshMetrics();
 
-	return true;
-}
-
-bool Model::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s, varray);
 	return true;
 }
 
