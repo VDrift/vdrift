@@ -178,15 +178,15 @@ private:
 	std::vector <unsigned int> faces;
 	VertexFormat::Enum format;
 
-	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
+	void SetColors(const unsigned char array[], unsigned count, unsigned offset = 0);
 
-	void SetTexCoords(const float array[], size_t count, size_t offset = 0);
+	void SetTexCoords(const float array[], unsigned count, unsigned offset = 0);
 
-	void SetNormals(const float array[], size_t count, size_t offset = 0);
+	void SetNormals(const float array[], unsigned count, unsigned offset = 0);
 
-	void SetVertices(const float array[], size_t count, size_t offset = 0);
+	void SetVertices(const float array[], unsigned count, unsigned offset = 0);
 
-	void SetFaces(const unsigned int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
+	void SetFaces(const unsigned int array[], unsigned count, unsigned offset = 0, unsigned idoffset = 0);
 };
 
 #endif

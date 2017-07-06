@@ -57,10 +57,10 @@ VertexArray VertexArray::operator+ (const VertexArray & v) const
 
 	COMBINEVECTORS(vertices);
 
-	const int offset = vertices.size() / 3;
+	const unsigned offset = vertices.size() / 3;
 	out.faces.reserve(faces.size() + v.faces.size());
 	out.faces.insert(out.faces.end(), faces.begin(), faces.end());
-	for (unsigned int face : v.faces)
+	for (unsigned face : v.faces)
 	{
 		out.faces.push_back(face + offset);
 	}
@@ -101,9 +101,9 @@ void VertexArray::GetFaces(const unsigned int * & output_array_pointer, int & ou
 	output_array_pointer = faces.empty() ? NULL : &faces[0];
 }
 
-void VertexArray::SetColors(const unsigned char array[], size_t count, size_t offset)
+void VertexArray::SetColors(const unsigned char array[], unsigned count, unsigned offset)
 {
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	// Tried to assign values that aren't in sets of 4
 	assert(size % 4 == 0);
@@ -112,32 +112,32 @@ void VertexArray::SetColors(const unsigned char array[], size_t count, size_t of
 		colors.resize(size);
 
 	unsigned char * myarray = &(colors[offset]);
-	for (size_t i = 0; i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i];
 	}
 }
 
-void VertexArray::SetTexCoords(const float array[], size_t count, size_t offset)
+void VertexArray::SetTexCoords(const float array[], unsigned count, unsigned offset)
 {
 	// Tried to assign values that aren't in sets of 2
 	assert(count % 2 == 0);
 
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	if (size != texcoords.size())
 		texcoords.resize(size);
 
 	float * myarray = &(texcoords[offset]);
-	for (size_t i = 0; i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i];
 	}
 }
 
-void VertexArray::SetNormals(const float array[], size_t count, size_t offset)
+void VertexArray::SetNormals(const float array[], unsigned count, unsigned offset)
 {
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	// Tried to assign values that aren't in sets of 3
 	assert(size % 3 == 0);
@@ -146,15 +146,15 @@ void VertexArray::SetNormals(const float array[], size_t count, size_t offset)
 		normals.resize(size);
 
 	float * myarray = &(normals[offset]);
-	for (size_t i = 0; i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i];
 	}
 }
 
-void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
+void VertexArray::SetVertices(const float array[], unsigned count, unsigned offset)
 {
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	// Tried to assign values that aren't in sets of 3
 	assert(size % 3 == 0);
@@ -163,24 +163,24 @@ void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
 		vertices.resize(size);
 
 	float * myarray = &(vertices[offset]);
-	for (size_t i = 0; i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i];
 	}
 }
 
-void VertexArray::SetFaces(const unsigned int array[], size_t count, size_t offset, size_t idoffset)
+void VertexArray::SetFaces(const unsigned int array[], unsigned count, unsigned offset, unsigned idoffset)
 {
 	// Tried to assign values that aren't in sets of 3
 	assert (count % 3 == 0);
 
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	if (size != faces.size())
 		faces.resize(size);
 
 	unsigned int * myarray = &(faces[offset]);
-	for (size_t i = 0; i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i] + idoffset;
 	}
