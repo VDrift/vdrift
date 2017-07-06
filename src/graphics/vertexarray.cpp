@@ -21,6 +21,7 @@
 #include "quaternion.h"
 #include "unittest.h"
 
+#include <cstring> // std::memcpy
 #include <map>
 
 VertexArray::VertexArray() :
@@ -112,10 +113,7 @@ void VertexArray::SetColors(const unsigned char array[], unsigned count, unsigne
 		colors.resize(size);
 
 	unsigned char * myarray = &(colors[offset]);
-	for (unsigned i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(unsigned char) * count);
 }
 
 void VertexArray::SetTexCoords(const float array[], unsigned count, unsigned offset)
@@ -129,10 +127,7 @@ void VertexArray::SetTexCoords(const float array[], unsigned count, unsigned off
 		texcoords.resize(size);
 
 	float * myarray = &(texcoords[offset]);
-	for (unsigned i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(float) * count);
 }
 
 void VertexArray::SetNormals(const float array[], unsigned count, unsigned offset)
@@ -146,10 +141,7 @@ void VertexArray::SetNormals(const float array[], unsigned count, unsigned offse
 		normals.resize(size);
 
 	float * myarray = &(normals[offset]);
-	for (unsigned i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(float) * count);
 }
 
 void VertexArray::SetVertices(const float array[], unsigned count, unsigned offset)
@@ -163,10 +155,7 @@ void VertexArray::SetVertices(const float array[], unsigned count, unsigned offs
 		vertices.resize(size);
 
 	float * myarray = &(vertices[offset]);
-	for (unsigned i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(float) * count);
 }
 
 void VertexArray::SetFaces(const unsigned int array[], unsigned count, unsigned offset, unsigned idoffset)
