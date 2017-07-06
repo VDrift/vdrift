@@ -20,15 +20,11 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include "graphics/texture.h"
-#include "graphics/vertexarray.h"
 #include "cfg/config.h"
-#include "gui/font.h"
 
 #include <ostream>
 #include <string>
 #include <vector>
-#include <map>
 
 class Timer
 {
