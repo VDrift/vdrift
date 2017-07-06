@@ -47,8 +47,6 @@ public:
 
 	void Init(const CarDifferentialInfo & info);
 
-	void DebugPrint(std::ostream & out) const;
-
 	btScalar CalculateDriveshaftSpeed(btScalar new_side1_speed, btScalar new_side2_speed);
 
 	btScalar GetDriveshaftSpeed() const;
@@ -66,6 +64,16 @@ public:
 	btScalar GetFinalDrive() const;
 
 	bool Serialize(joeserialize::Serializer & s);
+
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Differential---" << "\n";
+		out << "Side 1 RPM: " << side1_speed * btScalar(30 / M_PI) << "\n";
+		out << "Side 2 RPM: " << side2_speed * btScalar(30 / M_PI) << "\n";
+		out << "Side 1 Torque: " << side1_torque << "\n";
+		out << "Side 2 Torque: " << side2_torque << "\n";
+	}
 
 private:
 	/// By convention, side1 is left or front, side2 is right or rear.

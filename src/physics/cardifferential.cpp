@@ -44,15 +44,6 @@ void CarDifferential::Init(const CarDifferentialInfo & info)
 	*static_cast<CarDifferentialInfo*>(this) = info;
 }
 
-void CarDifferential::DebugPrint(std::ostream & out) const
-{
-	out << "---Differential---" << "\n";
-	out << "Side 1 RPM: " << side1_speed * btScalar(30 / M_PI) << "\n";
-	out << "Side 2 RPM: " << side2_speed * btScalar(30 / M_PI) << "\n";
-	out << "Side 1 Torque: " << side1_torque << "\n";
-	out << "Side 2 Torque: " << side2_torque << "\n";
-}
-
 btScalar CarDifferential::CalculateDriveshaftSpeed(btScalar new_side1_speed, btScalar new_side2_speed)
 {
 	side1_speed = new_side1_speed;

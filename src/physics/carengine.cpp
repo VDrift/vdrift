@@ -242,19 +242,6 @@ btScalar CarEngine::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btSc
 	return clutch_torque;
 }
 
-void CarEngine::DebugPrint(std::ostream & out) const
-{
-	out << "---Engine---" << "\n";
-	out << "Throttle position: " << throttle_position << "\n";
-	out << "Combustion torque: " << combustion_torque << "\n";
-	out << "Clutch torque: " << -clutch_torque << "\n";
-	out << "Friction torque: " << friction_torque << "\n";
-	out << "Total torque: " << GetTorque() << "\n";
-	out << "RPM: " << GetRPM() << "\n";
-	out << "Rev limit exceeded: " << rev_limit_exceeded << "\n";
-	out << "Running: " << !stalled << "\n";
-}
-
 bool CarEngine::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, shaft.ang_velocity);

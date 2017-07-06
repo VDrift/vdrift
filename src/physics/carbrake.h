@@ -24,8 +24,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-#include <iostream>
-
 class CarBrake
 {
 	friend class joeserialize::Serializer;
@@ -60,7 +58,8 @@ class CarBrake
 			// ctor
 		}
 
-		void DebugPrint(std::ostream & out) const
+		template <class Stream>
+		void DebugPrint(Stream & out) const
 		{
 			out << "---Brake---" << "\n";
 			out << "Brake control: " << brake_factor << ", " << handbrake_factor << "\n";

@@ -107,7 +107,8 @@ public:
 		shaft.applyMomentum(torque * dt);
 	}
 
-	void DebugPrint(std::ostream & out) const
+	template <class Stream>
+	void DebugPrint(Stream & out) const
 	{
 		out << "---Wheel---" << "\n";
 		out << "RPM: " << GetRPM() << "\n";

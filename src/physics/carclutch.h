@@ -24,8 +24,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-#include <iostream>
-
 class CarClutch
 {
 friend class joeserialize::Serializer;
@@ -51,7 +49,8 @@ public:
 		drive_speed(0)
 	{}
 
-	void DebugPrint(std::ostream & out) const
+	template <class Stream>
+	void DebugPrint(Stream & out) const
 	{
 		out << "---Clutch---" << "\n";
 		out << "Position: " << position << "\n";

@@ -192,7 +192,19 @@ public:
 	/// calculate torque acting on crankshaft, update engine angular velocity
 	btScalar Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt);
 
-	void DebugPrint(std::ostream & out) const;
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Engine---" << "\n";
+		out << "Throttle position: " << throttle_position << "\n";
+		out << "Combustion torque: " << combustion_torque << "\n";
+		out << "Clutch torque: " << -clutch_torque << "\n";
+		out << "Friction torque: " << friction_torque << "\n";
+		out << "Total torque: " << GetTorque() << "\n";
+		out << "RPM: " << GetRPM() << "\n";
+		out << "Rev limit exceeded: " << rev_limit_exceeded << "\n";
+		out << "Running: " << !stalled << "\n";
+	}
 
 	bool Serialize(joeserialize::Serializer & s);
 
