@@ -24,8 +24,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-#include <iostream>
-
 class CarWheel
 {
 friend class joeserialize::Serializer;
