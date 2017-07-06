@@ -764,6 +764,8 @@ class TextOutputSerializer : public SerializerOutput
 	public:
 		TextOutputSerializer(std::ostream & newout) : out_(newout),indent_(0) {}
 
+		using Serializer::Serialize;
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return WriteData(name, i, false);
@@ -1057,6 +1059,8 @@ class TextInputSerializer : public SerializerInput
 			return true;
 		}
 
+		using Serializer::Serialize;
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return ReadData(name, i);
@@ -1144,6 +1148,8 @@ class BinaryOutputSerializer : public SerializerOutput
 
 	public:
 		BinaryOutputSerializer(std::ostream & newout) : out_(newout),bigendian_(IsBigEndian()) {}
+
+		using Serializer::Serialize;
 
 		virtual bool Serialize(const std::string & name, int & i)
 		{
@@ -1238,6 +1244,8 @@ class BinaryInputSerializer : public SerializerInput
 
 	public:
 		BinaryInputSerializer(std::istream & newin) : in_(newin),bigendian_(IsBigEndian()) {}
+
+		using Serializer::Serialize;
 
 		virtual bool Serialize(const std::string & name, int & i)
 		{
