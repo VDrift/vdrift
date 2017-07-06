@@ -22,6 +22,7 @@
 
 #include "mathvector.h"
 
+#include <cassert>
 #include <cstring> // memcpy
 
 template <typename T>
@@ -90,7 +91,12 @@ class Matrix3
 
 		void Set(const T * newdata)
 		{
-			//std::memcpy(data,newdata,sizeof(T)*9); //high performance, but portability issues?
+			std::memcpy(data,newdata,sizeof(T)*9);
+		}
+
+		template <typename T2>
+		void Set(const T2 * newdata)
+		{
 			for (int i = 0; i < 9; i++)
 				data[i] = newdata[i];
 		}
