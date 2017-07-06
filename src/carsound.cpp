@@ -25,6 +25,9 @@
 #include "sound/sound.h"
 #include "cfg/ptree.h"
 
+#include <fstream>
+#include <list>
+
 CarSound::CarSound() :
 	psound(0),
 	gearsound_check(0),

@@ -27,13 +27,13 @@
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
 #include "minmax.h"
-#include "macros.h"
 
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/CollisionShapes/btCylinderShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleShape.h"
 
 #include <cmath>
+#include <iomanip> // setprecision
 
 static const btScalar gravity = 9.81;
 
@@ -1137,87 +1137,6 @@ void CarDynamics::DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool
 			out << "Lift: " << aerodevice[i].getLift() << "\n\n";
 		}
 	}
-}
-
-static bool serialize(joeserialize::Serializer & s, btQuaternion & q)
-{
-	_SERIALIZE_(s, q[0]);
-	_SERIALIZE_(s, q[1]);
-	_SERIALIZE_(s, q[2]);
-	_SERIALIZE_(s, q[3]);
-	return true;
-}
-
-static bool serialize(joeserialize::Serializer & s, btVector3 & v)
-{
-	_SERIALIZE_(s, v[0]);
-	_SERIALIZE_(s, v[1]);
-	_SERIALIZE_(s, v[2]);
-	return true;
-}
-
-static bool serialize(joeserialize::Serializer & s, btMatrix3x3 & m)
-{
-	if (!serialize(s, m[0])) return false;
-	if (!serialize(s, m[1])) return false;
-	if (!serialize(s, m[2])) return false;
-	return true;
-}
-
-static bool serialize(joeserialize::Serializer & s, btTransform & t)
-{
-	if (!serialize(s, t.getBasis())) return false;
-	if (!serialize(s, t.getOrigin())) return false;
-	return true;
-}
-
-static bool serialize(joeserialize::Serializer & s, btRigidBody & b)
-{
-	btTransform t = b.getCenterOfMassTransform();
-	btVector3 v = b.getLinearVelocity();
-	btVector3 w = b.getAngularVelocity();
-	if (!serialize(s, t)) return false;
-	if (!serialize(s, v)) return false;
-	if (!serialize(s, w)) return false;
-	b.setCenterOfMassTransform(t);
-	b.setLinearVelocity(v);
-	b.setAngularVelocity(w);
-	return true;
-}
-
-bool CarDynamics::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s, engine);
-	_SERIALIZE_(s, clutch);
-	_SERIALIZE_(s, transmission);
-	_SERIALIZE_(s, differential_front);
-	_SERIALIZE_(s, differential_rear);
-	_SERIALIZE_(s, differential_center);
-	_SERIALIZE_(s, fuel_tank);
-	_SERIALIZE_(s, abs);
-	_SERIALIZE_(s, abs_active);
-	_SERIALIZE_(s, tcs);
-	_SERIALIZE_(s, tcs_active);
-	_SERIALIZE_(s, clutch_value);
-	_SERIALIZE_(s, remaining_shift_time);
-	_SERIALIZE_(s, shift_gear);
-	_SERIALIZE_(s, shifted);
-	_SERIALIZE_(s, autoshift);
-	if (!serialize(s, *body)) return false;
-	if (!serialize(s, transform)) return false;
-	if (!serialize(s, linear_velocity)) return false;
-	if (!serialize(s, angular_velocity)) return false;
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		_SERIALIZE_(s, wheel[i]);
-		_SERIALIZE_(s, brake[i]);
-		//_SERIALIZE_(s, tire[i]);
-		_SERIALIZE_(s, *suspension[i]);
-		if (!serialize(s, wheel_velocity[i])) return false;
-		if (!serialize(s, wheel_position[i])) return false;
-		if (!serialize(s, wheel_orientation[i])) return false;
-	}
-	return true;
 }
 
 btVector3 CarDynamics::GetDownVector() const

@@ -33,7 +33,7 @@
 #include "aerodevice.h"
 #include "collision_contact.h"
 #include "motionstate.h"
-#include "joeserialize.h"
+#include "macros.h"
 
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
@@ -48,8 +48,6 @@ class PTree;
 
 class CarDynamics : public btActionInterface
 {
-friend class joeserialize::Serializer;
-
 public:
 	CarDynamics();
 
@@ -171,7 +169,8 @@ public:
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
 
-	bool Serialize(joeserialize::Serializer & s);
+	template <class Serializer>
+	bool Serialize(Serializer & s);
 
 	static bool WheelContactCallback(
 		btManifoldPoint& cp,
@@ -336,5 +335,95 @@ protected:
 
 	void Init();
 };
+
+
+#define _SERIALIZEX_(s,var) if (!Serializex(s,var)) return false
+
+template <class Serializer>
+inline bool Serializex(Serializer & s, btQuaternion & q)
+{
+	_SERIALIZE_(s, q[0]);
+	_SERIALIZE_(s, q[1]);
+	_SERIALIZE_(s, q[2]);
+	_SERIALIZE_(s, q[3]);
+	return true;
+}
+
+template <class Serializer>
+inline bool Serializex(Serializer & s, btVector3 & v)
+{
+	_SERIALIZE_(s, v[0]);
+	_SERIALIZE_(s, v[1]);
+	_SERIALIZE_(s, v[2]);
+	return true;
+}
+
+template <class Serializer>
+inline bool Serializex(Serializer & s, btMatrix3x3 & m)
+{
+	_SERIALIZEX_(s, m[0]);
+	_SERIALIZEX_(s, m[1]);
+	_SERIALIZEX_(s, m[2]);
+	return true;
+}
+
+template <class Serializer>
+inline bool Serializex(Serializer & s, btTransform & t)
+{
+	_SERIALIZEX_(s, t.getBasis());
+	_SERIALIZEX_(s, t.getOrigin());
+	return true;
+}
+
+template <class Serializer>
+inline bool Serializex(Serializer & s, btRigidBody & b)
+{
+	btTransform t = b.getCenterOfMassTransform();
+	btVector3 v = b.getLinearVelocity();
+	btVector3 w = b.getAngularVelocity();
+	_SERIALIZEX_(s, t);
+	_SERIALIZEX_(s, v);
+	_SERIALIZEX_(s, w);
+	b.setCenterOfMassTransform(t);
+	b.setLinearVelocity(v);
+	b.setAngularVelocity(w);
+	return true;
+}
+
+template <class Serializer>
+inline bool CarDynamics::Serialize(Serializer & s)
+{
+	_SERIALIZE_(s, engine);
+	_SERIALIZE_(s, clutch);
+	_SERIALIZE_(s, transmission);
+	_SERIALIZE_(s, differential_front);
+	_SERIALIZE_(s, differential_rear);
+	_SERIALIZE_(s, differential_center);
+	_SERIALIZE_(s, fuel_tank);
+	_SERIALIZE_(s, abs);
+	_SERIALIZE_(s, abs_active);
+	_SERIALIZE_(s, tcs);
+	_SERIALIZE_(s, tcs_active);
+	_SERIALIZE_(s, clutch_value);
+	_SERIALIZE_(s, remaining_shift_time);
+	_SERIALIZE_(s, shift_gear);
+	_SERIALIZE_(s, shifted);
+	_SERIALIZE_(s, autoshift);
+	_SERIALIZEX_(s, *(btRigidBody*)body);
+	_SERIALIZEX_(s, transform);
+	_SERIALIZEX_(s, linear_velocity);
+	_SERIALIZEX_(s, angular_velocity);
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		_SERIALIZE_(s, wheel[i]);
+		_SERIALIZE_(s, brake[i]);
+		//_SERIALIZE_(s, tire[i]);
+		_SERIALIZE_(s, *suspension[i]);
+		_SERIALIZEX_(s, wheel_velocity[i]);
+		_SERIALIZEX_(s, wheel_position[i]);
+		_SERIALIZEX_(s, wheel_orientation[i]);
+	}
+	return true;
+}
 
 #endif

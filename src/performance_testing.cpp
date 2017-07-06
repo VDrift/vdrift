@@ -23,6 +23,7 @@
 #include "physics/tracksurface.h"
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
+#include "joeserialize.h"
 
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
