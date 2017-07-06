@@ -1445,6 +1445,11 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 		if (!profilingmode)
 		{
 			std::ostringstream debug_info[4];
+			debug_info[0] << std::fixed << std::setprecision(2);
+			debug_info[1] << std::fixed << std::setprecision(2);
+			debug_info[2] << std::fixed << std::setprecision(2);
+			debug_info[3] << std::fixed << std::setprecision(2);
+
 			car.DebugPrint(debug_info[0], true, false, false, false);
 			car.DebugPrint(debug_info[1], false, true, false, false);
 			car.DebugPrint(debug_info[2], false, false, true, false);

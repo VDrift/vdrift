@@ -33,7 +33,6 @@
 #include "BulletCollision/CollisionShapes/btTriangleShape.h"
 
 #include <cmath>
-#include <iomanip> // setprecision
 
 static const btScalar gravity = 9.81;
 
@@ -1025,118 +1024,6 @@ std::vector<float> CarDynamics::GetSpecs() const
 	specs.push_back(1 / body->getInvMass());
 	specs.push_back(CalculateFrontMassRatio());
 	return specs;
-}
-
-static std::ostream & operator << (std::ostream & os, const btVector3 & v)
-{
-	os << v[0] << ", " << v[1] << ", " << v[2];
-	return os;
-}
-
-static std::ostream & operator << (std::ostream & os, const CarTire & tire)
-{
-	os << "Fx: " << tire.getFx() << "\n";
-	os << "Fy: " << tire.getFy() << "\n";
-	os << "Slip Ang: " << tire.getSlipAngle() * btScalar(180 / M_PI) << " / ";
-	os << tire.getIdealSlipAngle() * btScalar(180 / M_PI) << "\n";
-	os << "Slip: " << tire.getSlip() << " / ";
-	os << tire.getIdealSlip() << "\n";
-	return os;
-}
-
-void CarDynamics::DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
-{
-	out << std::fixed << std::setprecision(3);
-
-	if (p1)
-	{
-		out << "---Body---\n";
-		out << "Velocity: " << GetVelocity() << "\n";
-		out << "Position: " << GetPosition() << "\n";
-		out << "Center of mass: " << -GetCenterOfMassOffset() << "\n";
-		out << "Total mass: " << 1 / body->getInvMass() << "\n";
-		out << "VelocityL: " << body->getCenterOfMassTransform().getBasis().transpose() * GetVelocity() << "\n";
-		out << "\n";
-		fuel_tank.DebugPrint(out);
-		out << "\n";
-		engine.DebugPrint(out);
-		out << "\n";
-		clutch.DebugPrint(out);
-		out << "\n";
-		transmission.DebugPrint(out);
-		out << "\n";
-		if (drive == RWD)
-		{
-			out << "(rear)" << "\n";
-			differential_rear.DebugPrint(out);
-		}
-		else if (drive == FWD)
-		{
-			out << "(front)" << "\n";
-			differential_front.DebugPrint(out);
-		}
-		else if (drive == AWD)
-		{
-			out << "(center)" << "\n";
-			differential_center.DebugPrint(out);
-
-			out << "(front)" << "\n";
-			differential_front.DebugPrint(out);
-
-			out << "(rear)" << "\n";
-			differential_rear.DebugPrint(out);
-		}
-		out << "\n";
-	}
-
-	if (p2)
-	{
-		out << "(front left)" << "\n";
-		brake[FRONT_LEFT].DebugPrint(out);
-		out << "\n";
-		suspension[FRONT_LEFT]->DebugPrint(out);
-		out << "\n";
-		wheel[FRONT_LEFT].DebugPrint(out);
-		out << tire[FRONT_LEFT] << "\n";
-
-		out << "(rear left)" << "\n";
-		brake[REAR_LEFT].DebugPrint(out);
-		out << "\n";
-		suspension[REAR_LEFT]->DebugPrint(out);
-		out << "\n";
-		wheel[REAR_LEFT].DebugPrint(out);
-		out << tire[REAR_LEFT] << "\n";
-	}
-
-	if (p3)
-	{
-		out << "(front right)" << "\n";
-		brake[FRONT_RIGHT].DebugPrint(out);
-		out << "\n";
-		suspension[FRONT_RIGHT]->DebugPrint(out);
-		out << "\n";
-		wheel[FRONT_RIGHT].DebugPrint(out);
-		out << tire[FRONT_RIGHT] << "\n";
-
-		out << "(rear right)" << "\n";
-		brake[REAR_RIGHT].DebugPrint(out);
-		out << "\n";
-		suspension[REAR_RIGHT]->DebugPrint(out);
-		out << "\n";
-		wheel[REAR_RIGHT].DebugPrint(out);
-		out << tire[REAR_RIGHT] << "\n";
-	}
-
-	if (p4)
-	{
-		out << std::fixed << std::setprecision(3);
-		for (int i = 0; i != aerodevice.size(); ++i)
-		{
-			out << "---Aerodynamic Device---" << "\n";
-			out << "Drag: " << aerodevice[i].getDrag() << "\n";
-			out << "Lift: " << aerodevice[i].getLift() << "\n\n";
-		}
-	}
 }
 
 btVector3 CarDynamics::GetDownVector() const
