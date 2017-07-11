@@ -22,7 +22,6 @@
 
 #include "mathvector.h"
 
-#include <vector>
 #include <cassert>
 #include <cmath>
 #include <cstring> // memcpy
