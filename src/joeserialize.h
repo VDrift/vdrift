@@ -728,17 +728,12 @@ class TextOutputSerializer : public SerializerOutput
 		}
 
 		template <typename T>
-		bool WriteData(const std::string & name, const T & i, bool precise)
+		bool WriteData(const std::string & name, const T & i)
 		{
 			if (name != "*size") // these get automatically generated during input, so we don't need to bother outputting them
 			{
-				std::string n = TransformToFriendlyName(name);
 				PrintIndent();
-				out_ << n << " = ";
-				if (precise)
-					out_ << std::scientific << std::setprecision (20) << i << std::endl;
-				else
-					out_ << i << std::endl;
+				out_ << TransformToFriendlyName(name) << " = " << i << std::endl;
 			}
 			return true;
 		}
@@ -762,33 +757,36 @@ class TextOutputSerializer : public SerializerOutput
 		}
 
 	public:
-		TextOutputSerializer(std::ostream & newout) : out_(newout),indent_(0) {}
+		TextOutputSerializer(std::ostream & newout) : out_(newout), indent_(0)
+		{
+			out_ << std::scientific << std::setprecision (20);
+		}
 
 		using Serializer::Serialize;
 
 		virtual bool Serialize(const std::string & name, int & i)
 		{
-			return WriteData(name, i, false);
+			return WriteData(name, i);
 		}
 
 		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
-			return WriteData(name, i, false);
+			return WriteData(name, i);
 		}
 
 		virtual bool Serialize(const std::string & name, float & i)
 		{
-			return WriteData(name, i, true);
+			return WriteData(name, i);
 		}
 
 		virtual bool Serialize(const std::string & name, double & i)
 		{
-			return WriteData(name, i, true);
+			return WriteData(name, i);
 		}
 
 		virtual bool Serialize(const std::string & name, std::string & i)
 		{
-			return WriteData(name, Escape(i), false);
+			return WriteData(name, Escape(i));
 		}
 };
 
