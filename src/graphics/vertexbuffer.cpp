@@ -488,7 +488,7 @@ unsigned int VertexBuffer::WriteVertices(
 		if (vat_ptrs[j] == 0)
 			vat_sizes[j] = 0;
 	}
-	for (int j = 1; j < vat_count; ++j)
+	for (unsigned int j = 1; j < vat_count; ++j)
 	{
 		vat_offsets[j] = vat_offsets[j - 1] + vat_sizes[j - 1];
 	}
@@ -502,7 +502,7 @@ unsigned int VertexBuffer::WriteVertices(
 		for (unsigned int k = 0; k < vat_count; ++k)
 		{
 			const float * vat = (const float *)vat_ptrs[k] + j * vat_sizes[k];
-			for (int m = 0; m < vat_sizes[k]; ++m)
+			for (unsigned int m = 0; m < vat_sizes[k]; ++m)
 			{
 				v[vat_offsets[k] + m] = vat[m];
 			}
