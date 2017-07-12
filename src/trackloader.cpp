@@ -912,6 +912,7 @@ bool Track::Loader::LoadRoads()
 
 	int numroads = 0;
 	trackfile >> numroads;
+	data.roads.reserve(numroads);
 	for (int i = 0; i < numroads && trackfile; ++i)
 	{
 		data.roads.push_back(RoadStrip());
@@ -1097,23 +1098,17 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 			int roadid = lapraw[0];
 			int patchid = lapraw[1];
 
-			int curroad = 0;
-			for (const auto & road : data.roads)
-			{
-				if (curroad == roadid)
-				{
-					int num_patches = road.GetPatches().size();
-					assert(patchid < num_patches);
+			assert(roadid < data.roads.size());
+			auto & road = data.roads[roadid];
 
-					// adjust id for reverse case
-					if (data.reverse)
-						patchid = num_patches - patchid;
+			int num_patches = road.GetPatches().size();
+			assert(patchid < num_patches);
 
-					data.lap.push_back(&road.GetPatches()[patchid]);
-					break;
-				}
-				curroad++;
-			}
+			// adjust id for reverse case
+			if (data.reverse)
+				patchid = num_patches - patchid;
+
+			data.lap.push_back(&road.GetPatches()[patchid]);
 		}
 	}
 

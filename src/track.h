@@ -102,7 +102,7 @@ public:
 		return data.start_positions.size();
 	}
 
-	const std::list <RoadStrip> & GetRoadList() const
+	const std::vector <RoadStrip> & GetRoadList() const
 	{
 		return data.roads;
 	}
@@ -179,7 +179,7 @@ private:
 
 		// road information
 		std::vector<const RoadPatch*> lap;
-		std::list<RoadStrip> roads;
+		std::vector<RoadStrip> roads;
 		std::vector<std::pair<Vec3, Quat > > start_positions;
 
 		SceneNode racingline_node;

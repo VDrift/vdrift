@@ -30,6 +30,7 @@
 #include <iosfwd>
 #include <string>
 #include <list>
+#include <vector>
 
 class ContentManager;
 
@@ -45,7 +46,7 @@ public:
 	bool BuildMap(
 		const int screen_width,
 		const int screen_height,
-		const std::list <RoadStrip> & roads,
+		const std::vector <RoadStrip> & roads,
 		const std::string & trackname,
 		const std::string & texturepath,
 		ContentManager & content,

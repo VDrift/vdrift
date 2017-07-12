@@ -22,13 +22,6 @@
 #include "graphics/texture.h"
 #include "minmax.h"
 
-using std::endl;
-using std::string;
-using std::ostream;
-using std::list;
-using std::vector;
-using std::pair;
-
 TrackMap::TrackMap() :
 	map_width(256),
 	map_height(256),
@@ -52,7 +45,7 @@ void TrackMap::Unload()
 bool TrackMap::BuildMap(
 	const int screen_width,
 	const int screen_height,
-	const std::list <RoadStrip> & roads,
+	const std::vector <RoadStrip> & roads,
 	const std::string & trackname,
 	const std::string & texturepath,
 	ContentManager & content,
