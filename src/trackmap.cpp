@@ -239,63 +239,49 @@ bool TrackMap::BuildMap(
 	return true;
 }
 
-void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions)
+void TrackMap::Update(bool visible, unsigned player, const std::vector<Vec3> & carpositions)
 {
 	//only update car positions when the map is visible, so we get a slight speedup if the map is hidden
-	if (mapvisible)
+	if (visible)
 	{
-		auto car = carpositions.begin();
-		auto dot = dotlist.begin();
-		int count = 0;
-		while (car != carpositions.end())
-		{
-			//determine which texture to use
-			std::shared_ptr<Texture> tex = cardot0_focused;
-			if (!car->second)
-				tex = cardot1;
+		const unsigned carnum = carpositions.size();
+		const unsigned dotnum = dotlist.size();
 
+		for (unsigned i = carnum; i < dotnum; ++i)
+			mapnode.GetDrawList().twodim.erase(dotlist[i].GetDrawableHandle());
+
+		dotlist.resize(carpositions.size());
+
+		for (unsigned i = 0; i < carnum; ++i)
+		{
 			//find the coordinates of the dot
+			auto & carpos = carpositions[i];
 			Vec2 dotpos = map_min;
-			dotpos[0] += ((car->first[1] - track_min[0]) * map_scale + 1) * pixel_size[0];
-			dotpos[1] += ((car->first[0] - track_min[1]) * map_scale + 1) * pixel_size[1];
+			dotpos[0] += ((carpos[1] - track_min[0]) * map_scale + 1) * pixel_size[0];
+			dotpos[1] += ((carpos[0] - track_min[1]) * map_scale + 1) * pixel_size[1];
 			Vec2 corner1 = dotpos - dot_size;
 			Vec2 corner2 = dotpos + dot_size;
 
-			if (dot == dotlist.end())
+			auto tex = (i != player) ? cardot1 : cardot0_focused;
+			if (i < dotnum)
 			{
-				//need to insert a new dot
-				dotlist.push_back(CarDot());
-				dotlist.back().Init(mapnode, tex, corner1, corner2);
-				dot = dotlist.end();
-
-				//std::cout << count << ". inserting new dot: " << corner1 << " || " << corner2 << endl;
+				dotlist[i].Retexture(mapnode, tex);
+				dotlist[i].Reposition(corner1, corner2);
 			}
 			else
 			{
-				//update existing dot
-				dot->Retexture(mapnode, tex);
-				dot->Reposition(corner1, corner2);
-
-				//std::cout << count << ". reusing existing dot: " << corner1 << " || " << corner2 << endl;
-
-				dot++;
+				dotlist[i].Init(mapnode, tex, corner1, corner2);
 			}
-
-			car++;
-			count++;
 		}
-		for (auto i = dot; i != dotlist.end(); ++i)
-			mapnode.GetDrawList().twodim.erase(i->GetDrawableHandle());
-		dotlist.erase(dot,dotlist.end());
 	}
 
 	if (mapdraw.valid())
 	{
 		Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
-		mapdrawref.SetDrawEnable(mapvisible);
+		mapdrawref.SetDrawEnable(visible);
 	}
 	for (auto & dot : dotlist)
-		dot.SetVisible(mapnode, mapvisible);
+		dot.SetVisible(mapnode, visible);
 
 	/*for (auto & dot : dotlist)
 		dot.DebugPrint(std::cout);*/

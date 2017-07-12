@@ -29,7 +29,6 @@
 #include <memory>
 #include <iosfwd>
 #include <string>
-#include <list>
 #include <vector>
 
 class ContentManager;
@@ -55,8 +54,7 @@ public:
 	void Unload();
 
 	/// update the map with provided information for map visibility,
-	/// as well as a list of car positions and whether or not they're the player car
-	void Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions);
+	void Update(bool visible, unsigned player, const std::vector<Vec3> & carpositions);
 
 	SceneNode & GetNode() {return mapnode;}
 
@@ -158,7 +156,7 @@ private:
 			}
 	};
 
-	std::list <CarDot> dotlist;
+	std::vector<CarDot> dotlist;
 };
 
 #endif

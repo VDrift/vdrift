@@ -1051,16 +1051,12 @@ void Game::UpdateTimer()
 
 void Game::UpdateTrackMap()
 {
-	std::list <std::pair<Vec3, bool> > carpositions;
-	for (unsigned i = 0; i < unsigned(car_dynamics.size()); ++i)
+	std::vector<Vec3> positions(car_dynamics.size());
+	for (unsigned i = 0; i < positions.size(); ++i)
 	{
-		const CarDynamics & car = car_dynamics[i];
-		bool active = (i == camera_car_id);
-		Vec3 carpos = ToMathVector<float>(car.GetCenterOfMass());
-		carpositions.push_back(std::make_pair(carpos, active));
+		positions[i] = ToMathVector<float>(car_dynamics[i].GetCenterOfMass());
 	}
-
-	trackmap.Update(settings.GetTrackmap(), carpositions);
+	trackmap.Update(settings.GetTrackmap(), camera_car_id, positions);
 }
 
 void Game::ProcessGUIInputs()
