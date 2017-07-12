@@ -302,15 +302,15 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 }
 
 template <typename T>
-inline T min(const T a, const T b, const T c)
+inline T Min(T a, T b, T c)
 {
-	return std::min(a, std::min(b, c));
+	return Min(a, Min(b, c));
 }
 
 template <typename T>
-inline T max(const T a, const T b, const T c)
+inline T Max(T a, T b, T c)
 {
-	return std::max(a, std::max(b, c));
+	return Max(a, Max(b, c));
 }
 
 void TrackMap::RasterizeTriangle(
@@ -351,10 +351,10 @@ void TrackMap::RasterizeTriangle(
 	const int FDY31 = DY31 << 4;
 
 	// Bounding rectangle
-	int minx = (min(X1, X2, X3) + 0xF) >> 4;
-	int maxx = (max(X1, X2, X3) + 0xF) >> 4;
-	int miny = (min(Y1, Y2, Y3) + 0xF) >> 4;
-	int maxy = (max(Y1, Y2, Y3) + 0xF) >> 4;
+	int minx = (Min(X1, X2, X3) + 0xF) >> 4;
+	int maxx = (Max(X1, X2, X3) + 0xF) >> 4;
+	int miny = (Min(Y1, Y2, Y3) + 0xF) >> 4;
+	int maxy = (Max(Y1, Y2, Y3) + 0xF) >> 4;
 
 	// Block size, standard 8x8 (must be power of two)
 	const int q = 8;
