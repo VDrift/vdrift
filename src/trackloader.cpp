@@ -924,13 +924,15 @@ bool Track::Loader::LoadRoads()
 
 bool Track::Loader::CreateRacingLines()
 {
-	K1999 k1999data;
+	K1999 k1999;
 	for (auto & road : data.roads)
 	{
-		if (k1999data.LoadData(road))
+		// K1999 requires a closed circuit
+		if (road.GetClosed())
 		{
-			k1999data.CalcRaceLine();
-			k1999data.UpdateRoadStrip(road);
+			k1999.LoadData(road);
+			k1999.CalcRaceLine();
+			k1999.UpdateRoadStrip(road);
 			CreateRacingLine(road);
 		}
 	}

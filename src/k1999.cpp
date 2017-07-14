@@ -284,7 +284,7 @@ void K1999::CalcRaceLine()
 //VDrift specific functions below
 //
 
-bool K1999::LoadData(const RoadStrip & road)
+void K1999::LoadData(const RoadStrip & road)
 {
 	tx.clear();
 	ty.clear();
@@ -314,11 +314,6 @@ bool K1999::LoadData(const RoadStrip & road)
 
 		count++;
 	}
-
-	if (road.GetClosed()) //a closed circuit
-		return true;
-	else
-		return false;
 }
 
 void K1999::UpdateRoadStrip(RoadStrip & road)

@@ -59,7 +59,8 @@ private:
 #endif
 
 public:
-	bool LoadData(const RoadStrip & road);
+	// the road is expected to be closed
+	void LoadData(const RoadStrip & road);
 	void CalcRaceLine();
 	void UpdateRoadStrip(RoadStrip & road);
 };
