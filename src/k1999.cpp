@@ -298,8 +298,16 @@ void K1999::LoadData(const RoadStrip & road)
 	const std::vector<RoadPatch> & patchlist = road.GetPatches();
 	Divs = patchlist.size();
 
-	int count = 0;
+	tx.reserve(Divs);
+	ty.reserve(Divs);
+	tRInverse.reserve(Divs);
+	txLeft.reserve(Divs);
+	tyLeft.reserve(Divs);
+	txRight.reserve(Divs);
+	tyRight.reserve(Divs);
+	tLane.reserve(Divs);
 
+	int count = 0;
 	for (const auto & p : patchlist)
 	{
 		txLeft.push_back(p.GetPoint(3,0)[1]);
