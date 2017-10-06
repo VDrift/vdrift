@@ -200,12 +200,9 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	{
 		bytespersample = 1;
 	}
-
-	if (obtained.format != desired.format)
+	else if (obtained.format == AUDIO_S32 || obtained.format == AUDIO_F32)
 	{
-		error_output << "Obtained audio format isn't the same as the desired format, disabling sound." << std::endl;
-		Disable();
-		return false;
+		bytespersample = 4;
 	}
 
 	std::ostringstream dout;
@@ -216,11 +213,19 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	dout << "Channels: " << channels << std::endl;
 	dout << "Silence: " << (int) obtained.silence << std::endl;
 	dout << "Samples: " << samples << std::endl;
-	dout << "Size: " << (int) obtained.size << std::endl;
-	info_output << "Sound initialization information:" << std::endl << dout.str();
+	dout << "Size: " << (int) obtained.size;
+	info_output << dout.str() << std::endl;
+
+	if (obtained.format != desired.format)
+	{
+		error_output << "Obtained audio format doesn't match the desired format. Disabling sound." << std::endl;
+		Disable();
+		return false;
+	}
+
 	if (bytespersample != 2 || obtained.channels != desired.channels || obtained.freq != desired.freq)
 	{
-		error_output << "Sound interface did not create a 44.1kHz, 16 bit, stereo device as requested.  Disabling sound." << std::endl;
+		error_output << "Sound interface did not create a 44.1kHz, 16 bit, stereo device as requested. Disabling sound." << std::endl;
 		Disable();
 		return false;
 	}
