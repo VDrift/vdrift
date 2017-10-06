@@ -23,6 +23,7 @@
 #include "coordinatesystem.h"
 #include "tobullet.h"
 #include "k1999.h"
+#include "minmax.h"
 #include "content/contentmanager.h"
 #include "graphics/texture.h"
 #include "graphics/model.h"
@@ -1088,23 +1089,22 @@ bool Track::Loader::LoadStartPositions(const PTree & info)
 bool Track::Loader::LoadLapSections(const PTree & info)
 {
 	// get timing sectors
-	int lapmarkers = 0;
+	unsigned num_roads = data.roads.size();
+	unsigned lapmarkers = 0;
 	if (info.get("lap sequences", lapmarkers))
 	{
-		for (int l = 0; l < lapmarkers; l++)
+		for (unsigned l = 0; l < lapmarkers; l++)
 		{
-			std::vector<float> lapraw(3);
+			std::vector<unsigned> lapraw(2);
 			std::ostringstream lapname;
 			lapname << "lap sequence " << l;
 			info.get(lapname.str(), lapraw);
-			int roadid = lapraw[0];
-			int patchid = lapraw[1];
 
-			assert(roadid < data.roads.size());
+			unsigned roadid = Min(num_roads, lapraw[0]);
 			auto & road = data.roads[roadid];
 
-			int num_patches = road.GetPatches().size();
-			assert(patchid < num_patches);
+			unsigned num_patches = road.GetPatches().size();
+			unsigned patchid = Min(num_patches, lapraw[1]);
 
 			// adjust id for reverse case
 			if (data.reverse)
