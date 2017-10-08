@@ -119,8 +119,6 @@ private:
 
 	struct Sampler
 	{
-		static const int denom = 32768;
-		static const int max_gain_delta = (denom * 173) / 44100; // 256 samples from min to max gain
 		const SoundBuffer * buffer;
 		int samples_per_channel;
 		int sample_pos;
@@ -198,7 +196,7 @@ private:
 
 	void ProcessSamplerUpdate();
 
-	void ProcessSamplers(unsigned char *stream, int len);
+	void ProcessSamplers(unsigned char stream[], int len);
 
 	void ProcessSamplerRemove();
 
@@ -206,12 +204,11 @@ private:
 
 	void SetSourceChanges();
 
-	void Callback16bitStereo(void *sound, unsigned char *stream, int len);
+	void Callback16bitStereo(void * sound, unsigned char stream[], int len);
 
-	static void CallbackWrapper(void *sound, unsigned char *stream, int len);
+	static void CallbackWrapper(void * sound, unsigned char stream[], int len);
 
-	static void SampleAndAdvanceWithPitch16bit(
-		Sampler & sampler, int * chan1, int * chan2, int len);
+	static void SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int chan2[], int len);
 
 	static void AdvanceWithPitch(Sampler & sampler, int len);
 };
