@@ -216,16 +216,9 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	dout << "Size: " << (int) obtained.size;
 	info_output << dout.str() << std::endl;
 
-	if (obtained.format != desired.format)
+	if ((obtained.format != desired.format) || (obtained.channels != desired.channels))
 	{
-		error_output << "Obtained audio format doesn't match the desired format. Disabling sound." << std::endl;
-		Disable();
-		return false;
-	}
-
-	if (bytespersample != 2 || obtained.channels != desired.channels || obtained.freq != desired.freq)
-	{
-		error_output << "Sound interface did not create a 44.1kHz, 16 bit, stereo device as requested. Disabling sound." << std::endl;
+		error_output << "Sound interface did not create a 16 bit stereo device as requested. Disabling sound." << std::endl;
 		Disable();
 		return false;
 	}
@@ -491,7 +484,10 @@ void Sound::ProcessSources()
 
 		supdate[i].gain1 = volume * gain1 * Sampler::denom;
 		supdate[i].gain2 = volume * gain2 * Sampler::denom;
-		supdate[i].pitch = src.pitch * Sampler::denom;
+
+		auto info = src.buffer->GetInfo();
+		int base_pitch = Sampler::denom * info.frequency / deviceinfo.frequency;
+		supdate[i].pitch = src.pitch * base_pitch;
 	}
 
 	LimitActiveSources();
@@ -627,12 +623,16 @@ void Sound::ProcessSamplerAdd()
 	auto & sadd = samplers_update.getLast().sadd;
 	for (const auto & sa : sadd)
 	{
+		auto info = sa.buffer->GetInfo();
+		int base_pitch = Sampler::denom * info.frequency / deviceinfo.frequency;
+		int samples_per_channel = info.samples / info.channels;
+
 		Sampler smp;
 		smp.buffer = sa.buffer;
-		smp.samples_per_channel = smp.buffer->GetInfo().samples / smp.buffer->GetInfo().channels;
+		smp.samples_per_channel = samples_per_channel;
 		smp.sample_pos = sa.offset;
 		smp.sample_pos_remainder = 0;
-		smp.pitch = smp.denom;
+		smp.pitch = base_pitch;
 		smp.gain1 = 0;
 		smp.gain2 = 0;
 		smp.last_gain1 = 0;
