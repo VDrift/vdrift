@@ -210,7 +210,22 @@ bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_
 	}
 #endif
 
-	info = SoundInfo(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
+	unsigned int bytespersample = bits_per_sample / 8;
+	unsigned int samples = size / bytespersample;
+	if (sound_device_info.bytespersample == 4)
+	{
+		// convert to float
+		bytespersample = 4;
+		float * sound_buffer_float = new float[samples];
+		for (unsigned int i = 0; i < samples; i++)
+		{
+			sound_buffer_float[i] = ((short *)sound_buffer)[i] * (1.0f / 32767);
+		}
+		delete [] sound_buffer;
+		sound_buffer = (char*)sound_buffer_float;
+	}
+
+	info = SoundInfo(samples, sample_rate, channels, bytespersample);
 	loaded = true;
 	return true;
 }
@@ -229,30 +244,70 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 		return false;
 	}
 
+	int bytespersample = sound_device_info.bytespersample;
+	if (bytespersample != 2 && bytespersample != 4)
+	{
+		error_output << "Sound buffer with " << bytespersample << " bytes per sample not supported" << std::endl;
+		return false;
+	}
+
 	OggVorbis_File oggFile;
 	ov_open_callbacks(fp, &oggFile, NULL, 0, OV_CALLBACKS_DEFAULT);
 
 	vorbis_info * pInfo = ov_info(&oggFile, -1);
 	unsigned int samples = ov_pcm_total(&oggFile, -1);
-
-	int bytespersample = 2; // we want 16 bit samples
 	info = SoundInfo(samples * pInfo->channels, pInfo->rate, pInfo->channels, bytespersample);
 
 	// allocate space
-	unsigned int size = info.samples * info.channels * info.bytespersample;
+	unsigned int size = info.samples * info.bytespersample;
 	sound_buffer = new char[size];
 
-	int bitstream;
-	int endian = 0; // 0 for Little-Endian, 1 for Big-Endian
-	int wordsize = bytespersample;
-	int issigned = 1; // signed data
-
-	int bytes = 1;
-	unsigned int bufpos = 0;
-	while (bytes > 0)
+	if (bytespersample == 2)
 	{
-		bytes = ov_read(&oggFile, sound_buffer + bufpos, size - bufpos, endian, wordsize, issigned, &bitstream);
-		bufpos += bytes;
+		int bitstream;
+		int endian = 0; // 0 for Little-Endian, 1 for Big-Endian
+		int wordsize = 2; // 16 bit
+		int issigned = 1; // signed data
+		unsigned int bufpos = 0;
+		while (bufpos < size)
+		{
+			int bytes_read = ov_read(&oggFile, sound_buffer + bufpos, size - bufpos, endian, wordsize, issigned, &bitstream);
+			if (bytes_read <= 0)
+			{
+				error_output << "Error decoding " + filename << std::endl;
+				delete [] sound_buffer;
+				ov_clear(&oggFile);
+				return false;
+			}
+			bufpos += bytes_read;
+		}
+	}
+	else
+	{
+		int bitstream;
+		unsigned int bufpos = 0;
+		while (bufpos < samples)
+		{
+			float **pcm;
+			int samples_read = ov_read_float(&oggFile, &pcm, samples - bufpos, &bitstream);
+			if (samples_read <= 0)
+			{
+				error_output << "Error decoding " + filename << std::endl;
+				delete [] sound_buffer;
+				ov_clear(&oggFile);
+				return false;
+			}
+
+			// interleaving left and right channels
+			for (int i = 0; i < samples_read; i++)
+			{
+				int n = (bufpos + i) * 2;
+				sound_buffer[n] = pcm[0][i];
+				sound_buffer[n + 1] = pcm[1][i];
+			}
+
+			bufpos += samples_read;
+		}
 	}
 
 	// note: no need to call fclose(); ov_clear does it for us

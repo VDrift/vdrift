@@ -20,7 +20,7 @@
 #include "sound.h"
 #include "minmax.h"
 #include "coordinatesystem.h"
-#include <SDL2/SDL.h>
+#include <SDL2/SDL_audio.h>
 #include <algorithm>
 #include <cassert>
 
@@ -30,7 +30,7 @@
 #define FRACTIONBITS (15)
 #define FRACTIONONE  (1<<FRACTIONBITS)
 #define FRACTIONMASK (FRACTIONONE-1)
-#define MAXGAINDELTA ((FRACTIONONE * 173) / 44100) // 256 samples from min to max gain
+#define MAXGAINDELTA (FRACTIONONE * 173 / 44100) // 256 samples from min to max gain
 
 // add item to a compactifying vector
 template <class T>
@@ -200,12 +200,12 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	int frequency = obtained.freq;
 	int channels = obtained.channels;
 	int samples = obtained.samples;
-	int bytespersample = 2;
-	if (obtained.format == AUDIO_U8 || obtained.format == AUDIO_S8)
+	int bytespersample = 1;
+	if (obtained.format == AUDIO_S16SYS)
 	{
-		bytespersample = 1;
+		bytespersample = 2;
 	}
-	else if (obtained.format == AUDIO_S32 || obtained.format == AUDIO_F32)
+	else if (obtained.format == AUDIO_F32SYS)
 	{
 		bytespersample = 4;
 	}
@@ -221,9 +221,10 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	dout << "Size: " << (int) obtained.size;
 	info_output << dout.str() << std::endl;
 
-	if ((obtained.format != desired.format) || (obtained.channels != desired.channels))
+	if (((obtained.format != AUDIO_S16SYS) && (obtained.format != AUDIO_F32SYS)) ||
+		(obtained.channels != desired.channels))
 	{
-		error_output << "Sound interface did not create a 16 bit stereo device as requested. Disabling sound." << std::endl;
+		error_output << "Audio device has unsupported format or channel count. Disabling sound." << std::endl;
 		Disable();
 		return false;
 	}
@@ -231,7 +232,7 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	deviceinfo = SoundInfo(samples, frequency, channels, bytespersample);
 	log_error = &error_output;
 	initdone = true;
-	SetVolume(1.0);
+	SetVolume(1);
 
 	// enable sound, run callback
 	SDL_PauseAudio(false);
@@ -289,7 +290,6 @@ size_t Sound::AddSource(std::shared_ptr<SoundBuffer> buffer, float offset, bool 
 	ns.id = -1;
 	samplers_update.getFirst().sadd.push_back(ns);
 
-	//*log_error << "Add sound source: " << id << " " << buffer->GetName() << std::endl;
 	return id;
 }
 
@@ -375,14 +375,7 @@ void Sound::Update(bool pause)
 
 	// calculate sampler changes from sources
 	ProcessSources();
-/*
-	logso << "id: " << samplers_update.getFirst().id;
-	logso << " add: " << samplers_update.getFirst().sadd.size();
-	logso << " del: " << samplers_update.getFirst().sremove.size();
-	logso << " set: " << samplers_update.getFirst().sset.size();
-	logso << " sources: " << sources_num;
-	logso << std::endl;
-*/
+
 	size_t old_update_id = update_id;
 
 	// commit sampler changes to sound thread
@@ -461,10 +454,8 @@ void Sound::ProcessSources()
 				relvec = relvec * (1.0f / len);
 				(-listener_rot).RotateVector(relvec);
 				float xcoord = relvec.dot(Direction::Right) * 0.75f;
-				float pgain1 = xcoord;			// left attenuation
-				float pgain2 = -xcoord;			// right attenuation
-				if (pgain1 < 0) pgain1 = 0;
-				if (pgain2 < 0) pgain2 = 0;
+				float pgain1 = Max(xcoord, 0.0f);  // left attenuation
+				float pgain2 = Max(-xcoord, 0.0f); // right attenuation
 
 				gain1 = cgain * src.gain * (1 - pgain1);
 				gain2 = cgain * src.gain * (1 - pgain2);
@@ -562,7 +553,7 @@ void Sound::ProcessSamplerUpdate()
 	supdate.clear();
 }
 
-void Sound::ProcessSamplers(unsigned char stream[], int len)
+void Sound::ProcessSamplers16bit(unsigned char stream[], int len)
 {
 	// clear stream
 	memset(stream, 0, len);
@@ -572,9 +563,9 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 		return;
 
 	// init sampling buffers
-	int len4 = len / 4;
-	buffer1.resize(len4);
-	buffer2.resize(len4);
+	int samples = len / 4;
+	ibuffer[0].resize(samples);
+	ibuffer[1].resize(samples);
 
 	// run samplers
 	short * sstream = (short*)stream;
@@ -587,13 +578,13 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 
 		if (smp.gain1 | smp.gain2 | smp.last_gain1 | smp.last_gain2)
 		{
-			SampleAndAdvanceWithPitch16bit(smp, &buffer1[0], &buffer2[0], len4);
+			SampleAndAdvanceWithPitch16bit(smp, &ibuffer[0][0], &ibuffer[1][0], samples);
 
-			for (int n = 0; n < len4; ++n)
+			for (int n = 0; n < samples; ++n)
 			{
 				int pos = n * 2;
-				int val1 = sstream[pos] + buffer1[n];
-				int val2 = sstream[pos + 1] + buffer2[n];
+				int val1 = sstream[pos] + ibuffer[0][n];
+				int val2 = sstream[pos + 1] + ibuffer[1][n];
 
 				val1 = Clamp(val1, -32768, 32767);
 				val2 = Clamp(val2, -32768, 32767);
@@ -604,7 +595,57 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 		}
 		else
 		{
-			AdvanceWithPitch(smp, len4);
+			AdvanceWithPitch(smp, samples);
+		}
+
+		if (!smp.playing)
+			sources_stop.getLast().push_back(smp.id);
+	}
+}
+
+void Sound::ProcessSamplersFloat(unsigned char stream[], int len)
+{
+	// clear stream
+	memset(stream, 0, len);
+
+	// pause sampling
+	if (samplers_pause && !samplers_fade)
+		return;
+
+	// init sampling buffers
+	int samples = len / 8;
+	fbuffer[0].resize(samples);
+	fbuffer[1].resize(samples);
+
+	// run samplers
+	float * sstream = (float*)stream;
+	for (size_t i = 0; i < samplers_num; ++i)
+	{
+		Sampler & smp = samplers[i];
+
+		if (!smp.playing)
+			continue;
+
+		if (smp.gain1 | smp.gain2 | smp.last_gain1 | smp.last_gain2)
+		{
+			SampleAndAdvanceWithPitchFloat(smp, &fbuffer[0][0], &fbuffer[1][0], samples);
+
+			for (int n = 0; n < samples; ++n)
+			{
+				int pos = n * 2;
+				float val1 = sstream[pos] + fbuffer[0][n];
+				float val2 = sstream[pos + 1] + fbuffer[1][n];
+
+				val1 = Clamp(val1, -1.0f, 1.0f);
+				val2 = Clamp(val2, -1.0f, 1.0f);
+
+				sstream[pos] = val1;
+				sstream[pos + 1] = val2;
+			}
+		}
+		else
+		{
+			AdvanceWithPitch(smp, samples);
 		}
 
 		if (!smp.playing)
@@ -674,19 +715,30 @@ void Sound::Callback16bitStereo(void * myself, unsigned char stream[], int len)
 	assert(initdone);
 
 	GetSamplerChanges();
-/*
-	logsa << "id: " << samplers_update.getLast().id;
-	logsa << " add: " << samplers_update.getLast().sadd.size();
-	logsa << " del: " << samplers_update.getLast().sremove.size();
-	logsa << " set: " << samplers_update.getLast().sset.size();
-	logsa << " samplers: " << samplers_num;
-	logsa << std::endl;
-*/
+
 	ProcessSamplerAdd();
 
 	ProcessSamplerUpdate();
 
-	ProcessSamplers(stream, len);
+	ProcessSamplers16bit(stream, len);
+
+	ProcessSamplerRemove();
+
+	SetSourceChanges();
+}
+
+void Sound::CallbackFloatStereo(void * myself, unsigned char stream[], int len)
+{
+	assert(this == myself);
+	assert(initdone);
+
+	GetSamplerChanges();
+
+	ProcessSamplerAdd();
+
+	ProcessSamplerUpdate();
+
+	ProcessSamplersFloat(stream, len);
 
 	ProcessSamplerRemove();
 
@@ -695,7 +747,11 @@ void Sound::Callback16bitStereo(void * myself, unsigned char stream[], int len)
 
 void Sound::CallbackWrapper(void * sound, unsigned char stream[], int len)
 {
-	static_cast<Sound*>(sound)->Callback16bitStereo(sound, stream, len);
+	int bytespersample = static_cast<Sound*>(sound)->deviceinfo.bytespersample;
+	if (bytespersample == 2)
+		static_cast<Sound*>(sound)->Callback16bitStereo(sound, stream, len);
+	else if (bytespersample == 4)
+		static_cast<Sound*>(sound)->CallbackFloatStereo(sound, stream, len);
 }
 
 void Sound::SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int chan2[], int len)
@@ -752,14 +808,12 @@ void Sound::SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int c
 			int samp21 = buf[id2 + chaninc];
 
 			// interpolated sample at playback position
-			int val1 = (nr * samp20 + (FRACTIONONE - nr) * samp10) / FRACTIONONE;
-			int val2 = (nr * samp21 + (FRACTIONONE - nr) * samp11) / FRACTIONONE;
-			val1 = (val1 * sampler.last_gain1) / FRACTIONONE;
-			val2 = (val2 * sampler.last_gain2) / FRACTIONONE;
+			int val1 = samp10 + (samp20 - samp10) * nr / FRACTIONONE;
+			int val2 = samp11 + (samp21 - samp11) * nr / FRACTIONONE;
 
 			// fill output buffers
-			chan1[i] = val1;
-			chan2[i] = val2;
+			chan1[i] = val1 * sampler.last_gain1 / FRACTIONONE;
+			chan2[i] = val2 * sampler.last_gain2 / FRACTIONONE;
 
 			// advance playback position
 			nr += sampler.pitch;
@@ -768,6 +822,95 @@ void Sound::SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int c
 		}
 	}
 
+	sampler.sample_pos = ni;
+	sampler.sample_pos_remainder = nr;
+	if (!sampler.loop)
+	{
+		sampler.playing = (sampler.sample_pos < sampler.samples_per_channel);
+	}
+	else
+	{
+		sampler.sample_pos = sampler.sample_pos % sampler.samples_per_channel;
+	}
+}
+
+void Sound::SampleAndAdvanceWithPitchFloat(Sampler & sampler, float chan1[], float chan2[], int len)
+{
+	assert(len > 0);
+	assert(sampler.buffer);
+
+	// if not playing, fill output buffers with silence
+	if (!sampler.playing)
+	{
+		// should be dealt with before getting here
+		assert(0);
+		for (int i = 0; i < len; ++i)
+		{
+			chan1[i] = chan2[i] = 0;
+		}
+		return;
+	}
+
+	// start samlping
+	int chan = sampler.buffer->GetInfo().channels;
+	int samples = sampler.samples_per_channel * chan;
+	int chaninc = chan - 1;
+	int nr = sampler.sample_pos_remainder;
+	int ni = sampler.sample_pos;
+	const float * buf = (const float *)sampler.buffer->GetRawBuffer();
+
+	float gain1 = sampler.gain1 * (1.0f / FRACTIONONE);
+	float gain2 = sampler.gain2 * (1.0f / FRACTIONONE);
+	float last_gain1 = sampler.last_gain1 * (1.0f / FRACTIONONE);
+	float last_gain2 = sampler.last_gain2 * (1.0f / FRACTIONONE);
+	float max_gain_delta = MAXGAINDELTA * (1.0f / FRACTIONONE);
+
+	for (int i = 0; i < len; ++i)
+	{
+		// limit gain change rate
+		float gain_delta1 = gain1 - last_gain1;
+		float gain_delta2 = gain2 - last_gain2;
+		gain_delta1 = Clamp(gain_delta1, -max_gain_delta, max_gain_delta);
+		gain_delta2 = Clamp(gain_delta2, -max_gain_delta, max_gain_delta);
+		last_gain1 += gain_delta1;
+		last_gain2 += gain_delta2;
+
+		if (ni >= sampler.samples_per_channel && !sampler.loop)
+		{
+			// finish playing the buffer if looping is not enabled
+			chan1[i] = chan2[i] = 0;
+			sampler.playing = false;
+		}
+		else
+		{
+			// the sample to the left of the playback position, channel 0 and 1
+			int id1 = (ni * chan) % samples;
+			float samp10 = buf[id1];
+			float samp11 = buf[id1 + chaninc];
+
+			// the sample to the right of the playback position, channel 0 and 1
+			int id2 = (id1 + chan) % samples;
+			float samp20 = buf[id2];
+			float samp21 = buf[id2 + chaninc];
+
+			// interpolated sample at playback position
+			float f = nr * (1.0f / FRACTIONONE);
+			float val1 = samp10 + (samp20 - samp10) * f;
+			float val2 = samp11 + (samp21 - samp11) * f;
+
+			// fill output buffers
+			chan1[i] = val1 * last_gain1;
+			chan2[i] = val2 * last_gain2;
+
+			// advance playback position
+			nr += sampler.pitch;
+			ni += nr >> FRACTIONBITS;
+			nr &= FRACTIONMASK;
+		}
+	}
+
+	sampler.last_gain1 = last_gain1 * FRACTIONONE;
+	sampler.last_gain2 = last_gain2 * FRACTIONONE;
 	sampler.sample_pos = ni;
 	sampler.sample_pos_remainder = nr;
 	if (!sampler.loop)
