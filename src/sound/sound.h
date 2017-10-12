@@ -172,8 +172,7 @@ private:
 	bool sources_pause;
 
 	// sound thread state
-	std::vector<float> fbuffer[2];
-	std::vector<int> ibuffer[2];
+	std::vector<int> buffer[2];
 	std::vector<Sampler> samplers;
 	size_t samplers_num;
 	bool samplers_pause;
@@ -197,9 +196,8 @@ private:
 
 	void ProcessSamplerUpdate();
 
-	void ProcessSamplers16bit(unsigned char stream[], int len);
-
-	void ProcessSamplersFloat(unsigned char stream[], int len);
+	template <typename stream_type, typename buffer_type, int vmin, int vmax>
+	void ProcessSamplers(unsigned char stream[], int len);
 
 	void ProcessSamplerRemove();
 
@@ -207,15 +205,13 @@ private:
 
 	void SetSourceChanges();
 
-	void Callback16bitStereo(void * sound, unsigned char stream[], int len);
-
-	void CallbackFloatStereo(void * sound, unsigned char stream[], int len);
+	template <typename stream_type, typename buffer_type, int vmin, int vmax>
+	void CallbackStereo(void * sound, unsigned char stream[], int len);
 
 	static void CallbackWrapper(void * sound, unsigned char stream[], int len);
 
-	static void SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int chan2[], int len);
-
-	static void SampleAndAdvanceWithPitchFloat(Sampler & sampler, float chan1[], float chan2[], int len);
+	template <typename sample_type, typename buffer_type>
+	static void SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], int len);
 
 	static void AdvanceWithPitch(Sampler & sampler, int len);
 };

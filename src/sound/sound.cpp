@@ -553,7 +553,8 @@ void Sound::ProcessSamplerUpdate()
 	supdate.clear();
 }
 
-void Sound::ProcessSamplers16bit(unsigned char stream[], int len)
+template <typename stream_type, typename buffer_type, int vmin, int vmax>
+void Sound::ProcessSamplers(unsigned char stream[], int len)
 {
 	// clear stream
 	memset(stream, 0, len);
@@ -563,81 +564,32 @@ void Sound::ProcessSamplers16bit(unsigned char stream[], int len)
 		return;
 
 	// init sampling buffers
-	int samples = len / 4;
-	ibuffer[0].resize(samples);
-	ibuffer[1].resize(samples);
+	int samples = len / (2 * sizeof(stream_type));
+	buffer[0].resize(samples);
+	buffer[1].resize(samples);
 
 	// run samplers
-	short * sstream = (short*)stream;
+	auto sstream = (stream_type*)stream;
+	auto buffer0 = (buffer_type*)&buffer[0][0];
+	auto buffer1 = (buffer_type*)&buffer[1][0];
 	for (size_t i = 0; i < samplers_num; ++i)
 	{
 		Sampler & smp = samplers[i];
-
 		if (!smp.playing)
 			continue;
 
 		if (smp.gain1 | smp.gain2 | smp.last_gain1 | smp.last_gain2)
 		{
-			SampleAndAdvanceWithPitch16bit(smp, &ibuffer[0][0], &ibuffer[1][0], samples);
+			SampleAndAdvanceWithPitch<stream_type>(smp, buffer0, buffer1, samples);
 
 			for (int n = 0; n < samples; ++n)
 			{
 				int pos = n * 2;
-				int val1 = sstream[pos] + ibuffer[0][n];
-				int val2 = sstream[pos + 1] + ibuffer[1][n];
+				buffer_type val1 = sstream[pos] + buffer0[n];
+				buffer_type val2 = sstream[pos + 1] + buffer1[n];
 
-				val1 = Clamp(val1, -32768, 32767);
-				val2 = Clamp(val2, -32768, 32767);
-
-				sstream[pos] = val1;
-				sstream[pos + 1] = val2;
-			}
-		}
-		else
-		{
-			AdvanceWithPitch(smp, samples);
-		}
-
-		if (!smp.playing)
-			sources_stop.getLast().push_back(smp.id);
-	}
-}
-
-void Sound::ProcessSamplersFloat(unsigned char stream[], int len)
-{
-	// clear stream
-	memset(stream, 0, len);
-
-	// pause sampling
-	if (samplers_pause && !samplers_fade)
-		return;
-
-	// init sampling buffers
-	int samples = len / 8;
-	fbuffer[0].resize(samples);
-	fbuffer[1].resize(samples);
-
-	// run samplers
-	float * sstream = (float*)stream;
-	for (size_t i = 0; i < samplers_num; ++i)
-	{
-		Sampler & smp = samplers[i];
-
-		if (!smp.playing)
-			continue;
-
-		if (smp.gain1 | smp.gain2 | smp.last_gain1 | smp.last_gain2)
-		{
-			SampleAndAdvanceWithPitchFloat(smp, &fbuffer[0][0], &fbuffer[1][0], samples);
-
-			for (int n = 0; n < samples; ++n)
-			{
-				int pos = n * 2;
-				float val1 = sstream[pos] + fbuffer[0][n];
-				float val2 = sstream[pos + 1] + fbuffer[1][n];
-
-				val1 = Clamp(val1, -1.0f, 1.0f);
-				val2 = Clamp(val2, -1.0f, 1.0f);
+				val1 = Clamp<buffer_type>(val1, vmin, vmax);
+				val2 = Clamp<buffer_type>(val2, vmin, vmax);
 
 				sstream[pos] = val1;
 				sstream[pos + 1] = val2;
@@ -709,7 +661,8 @@ void Sound::SetSourceChanges()
 	SDL_UnlockMutex(source_lock);
 }
 
-void Sound::Callback16bitStereo(void * myself, unsigned char stream[], int len)
+template <typename stream_type, typename buffer_type, int vmin, int vmax>
+void Sound::CallbackStereo(void * myself, unsigned char stream[], int len)
 {
 	assert(this == myself);
 	assert(initdone);
@@ -720,25 +673,7 @@ void Sound::Callback16bitStereo(void * myself, unsigned char stream[], int len)
 
 	ProcessSamplerUpdate();
 
-	ProcessSamplers16bit(stream, len);
-
-	ProcessSamplerRemove();
-
-	SetSourceChanges();
-}
-
-void Sound::CallbackFloatStereo(void * myself, unsigned char stream[], int len)
-{
-	assert(this == myself);
-	assert(initdone);
-
-	GetSamplerChanges();
-
-	ProcessSamplerAdd();
-
-	ProcessSamplerUpdate();
-
-	ProcessSamplersFloat(stream, len);
+	ProcessSamplers<stream_type, buffer_type, vmin, vmax>(stream, len);
 
 	ProcessSamplerRemove();
 
@@ -749,27 +684,57 @@ void Sound::CallbackWrapper(void * sound, unsigned char stream[], int len)
 {
 	int bytespersample = static_cast<Sound*>(sound)->deviceinfo.bytespersample;
 	if (bytespersample == 2)
-		static_cast<Sound*>(sound)->Callback16bitStereo(sound, stream, len);
+	{
+		static_cast<Sound*>(sound)->CallbackStereo<short, int, -32768, 32767>(sound, stream, len);
+	}
 	else if (bytespersample == 4)
-		static_cast<Sound*>(sound)->CallbackFloatStereo(sound, stream, len);
+	{
+		static_cast<Sound*>(sound)->CallbackStereo<float, float, -1, 1>(sound, stream, len);
+	}
 }
 
-void Sound::SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int chan2[], int len)
+template <typename T0, typename T1>
+T0 Cast(T1 v);
+
+template <>
+inline float Cast<float, int>(int v)
+{
+	return v * (1.0f / FRACTIONONE);
+}
+
+template <>
+inline int Cast<int, float>(float v)
+{
+	return v * FRACTIONONE;
+}
+
+template <>
+inline int Cast<int, int>(int v)
+{
+	return v;
+}
+
+template <typename T>
+T Scale(T v, T s);
+
+template <>
+inline int Scale<int>(int v, int s)
+{
+	return v * s / FRACTIONONE;
+}
+
+template <>
+inline float Scale<float>(float v, float s)
+{
+	return v * s;
+}
+
+template <typename sample_type, typename buffer_type>
+void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], int len)
 {
 	assert(len > 0);
 	assert(sampler.buffer);
-
-	// if not playing, fill output buffers with silence
-	if (!sampler.playing)
-	{
-		// should be dealt with before getting here
-		assert(0);
-		for (int i = 0; i < len; ++i)
-		{
-			chan1[i] = chan2[i] = 0;
-		}
-		return;
-	}
+	assert(sampler.playing);
 
 	// start samlping
 	int chan = sampler.buffer->GetInfo().channels;
@@ -777,99 +742,19 @@ void Sound::SampleAndAdvanceWithPitch16bit(Sampler & sampler, int chan1[], int c
 	int chaninc = chan - 1;
 	int nr = sampler.sample_pos_remainder;
 	int ni = sampler.sample_pos;
-	const int16_t * buf = (const int16_t *)sampler.buffer->GetRawBuffer();
+
+	auto buf = (const sample_type *)sampler.buffer->GetRawBuffer();
+	auto gain1 = Cast<buffer_type>(sampler.gain1);
+	auto gain2 = Cast<buffer_type>(sampler.gain2);
+	auto last_gain1 = Cast<buffer_type>(sampler.last_gain1);
+	auto last_gain2 = Cast<buffer_type>(sampler.last_gain2);
+	auto max_gain_delta = Cast<buffer_type>(MAXGAINDELTA);
 
 	for (int i = 0; i < len; ++i)
 	{
 		// limit gain change rate
-		int gain_delta1 = sampler.gain1 - sampler.last_gain1;
-		int gain_delta2 = sampler.gain2 - sampler.last_gain2;
-		gain_delta1 = Clamp(gain_delta1, -MAXGAINDELTA, MAXGAINDELTA);
-		gain_delta2 = Clamp(gain_delta2, -MAXGAINDELTA, MAXGAINDELTA);
-		sampler.last_gain1 += gain_delta1;
-		sampler.last_gain2 += gain_delta2;
-
-		if (ni >= sampler.samples_per_channel && !sampler.loop)
-		{
-			// finish playing the buffer if looping is not enabled
-			chan1[i] = chan2[i] = 0;
-			sampler.playing = false;
-		}
-		else
-		{
-			// the sample to the left of the playback position, channel 0 and 1
-			int id1 = (ni * chan) % samples;
-			int samp10 = buf[id1];
-			int samp11 = buf[id1 + chaninc];
-
-			// the sample to the right of the playback position, channel 0 and 1
-			int id2 = (id1 + chan) % samples;
-			int samp20 = buf[id2];
-			int samp21 = buf[id2 + chaninc];
-
-			// interpolated sample at playback position
-			int val1 = samp10 + (samp20 - samp10) * nr / FRACTIONONE;
-			int val2 = samp11 + (samp21 - samp11) * nr / FRACTIONONE;
-
-			// fill output buffers
-			chan1[i] = val1 * sampler.last_gain1 / FRACTIONONE;
-			chan2[i] = val2 * sampler.last_gain2 / FRACTIONONE;
-
-			// advance playback position
-			nr += sampler.pitch;
-			ni += nr >> FRACTIONBITS;
-			nr &= FRACTIONMASK;
-		}
-	}
-
-	sampler.sample_pos = ni;
-	sampler.sample_pos_remainder = nr;
-	if (!sampler.loop)
-	{
-		sampler.playing = (sampler.sample_pos < sampler.samples_per_channel);
-	}
-	else
-	{
-		sampler.sample_pos = sampler.sample_pos % sampler.samples_per_channel;
-	}
-}
-
-void Sound::SampleAndAdvanceWithPitchFloat(Sampler & sampler, float chan1[], float chan2[], int len)
-{
-	assert(len > 0);
-	assert(sampler.buffer);
-
-	// if not playing, fill output buffers with silence
-	if (!sampler.playing)
-	{
-		// should be dealt with before getting here
-		assert(0);
-		for (int i = 0; i < len; ++i)
-		{
-			chan1[i] = chan2[i] = 0;
-		}
-		return;
-	}
-
-	// start samlping
-	int chan = sampler.buffer->GetInfo().channels;
-	int samples = sampler.samples_per_channel * chan;
-	int chaninc = chan - 1;
-	int nr = sampler.sample_pos_remainder;
-	int ni = sampler.sample_pos;
-	const float * buf = (const float *)sampler.buffer->GetRawBuffer();
-
-	float gain1 = sampler.gain1 * (1.0f / FRACTIONONE);
-	float gain2 = sampler.gain2 * (1.0f / FRACTIONONE);
-	float last_gain1 = sampler.last_gain1 * (1.0f / FRACTIONONE);
-	float last_gain2 = sampler.last_gain2 * (1.0f / FRACTIONONE);
-	float max_gain_delta = MAXGAINDELTA * (1.0f / FRACTIONONE);
-
-	for (int i = 0; i < len; ++i)
-	{
-		// limit gain change rate
-		float gain_delta1 = gain1 - last_gain1;
-		float gain_delta2 = gain2 - last_gain2;
+		auto gain_delta1 = gain1 - last_gain1;
+		auto gain_delta2 = gain2 - last_gain2;
 		gain_delta1 = Clamp(gain_delta1, -max_gain_delta, max_gain_delta);
 		gain_delta2 = Clamp(gain_delta2, -max_gain_delta, max_gain_delta);
 		last_gain1 += gain_delta1;
@@ -885,22 +770,22 @@ void Sound::SampleAndAdvanceWithPitchFloat(Sampler & sampler, float chan1[], flo
 		{
 			// the sample to the left of the playback position, channel 0 and 1
 			int id1 = (ni * chan) % samples;
-			float samp10 = buf[id1];
-			float samp11 = buf[id1 + chaninc];
+			buffer_type samp10 = buf[id1];
+			buffer_type samp11 = buf[id1 + chaninc];
 
 			// the sample to the right of the playback position, channel 0 and 1
 			int id2 = (id1 + chan) % samples;
-			float samp20 = buf[id2];
-			float samp21 = buf[id2 + chaninc];
+			buffer_type samp20 = buf[id2];
+			buffer_type samp21 = buf[id2 + chaninc];
 
 			// interpolated sample at playback position
-			float f = nr * (1.0f / FRACTIONONE);
-			float val1 = samp10 + (samp20 - samp10) * f;
-			float val2 = samp11 + (samp21 - samp11) * f;
+			auto f = Cast<buffer_type>(nr);
+			auto val1 = samp10 + Scale(samp20 - samp10, f);
+			auto val2 = samp11 + Scale(samp21 - samp11, f);
 
 			// fill output buffers
-			chan1[i] = val1 * last_gain1;
-			chan2[i] = val2 * last_gain2;
+			chan1[i] = Scale(val1, last_gain1);
+			chan2[i] = Scale(val2, last_gain2);
 
 			// advance playback position
 			nr += sampler.pitch;
@@ -909,10 +794,12 @@ void Sound::SampleAndAdvanceWithPitchFloat(Sampler & sampler, float chan1[], flo
 		}
 	}
 
-	sampler.last_gain1 = last_gain1 * FRACTIONONE;
-	sampler.last_gain2 = last_gain2 * FRACTIONONE;
+	sampler.last_gain1 = Cast<int>(last_gain1);
+	sampler.last_gain2 = Cast<int>(last_gain2);
 	sampler.sample_pos = ni;
 	sampler.sample_pos_remainder = nr;
+
+	// loop buffer
 	if (!sampler.loop)
 	{
 		sampler.playing = (sampler.sample_pos < sampler.samples_per_channel);
