@@ -141,9 +141,6 @@ Sound::Sound() :
 	sound_volume(0),
 	initdone(false),
 	disable(false),
-	set_pause(true),
-	sampler_lock(0),
-	source_lock(0),
 	max_active_sources(64),
 	sources_num(0),
 	update_id(0),
@@ -165,21 +162,12 @@ Sound::~Sound()
 {
 	if (initdone)
 		SDL_CloseAudio();
-
-	if (sampler_lock)
-		SDL_DestroyMutex(sampler_lock);
-
-	if (source_lock)
-		SDL_DestroyMutex(source_lock);
 }
 
 bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
 {
 	if (disable || initdone)
 		return false;
-
-	sampler_lock = SDL_CreateMutex();
-	source_lock = SDL_CreateMutex();
 
 	SDL_AudioSpec desired, obtained;
 
@@ -288,14 +276,14 @@ size_t Sound::AddSource(std::shared_ptr<SoundBuffer> buffer, float offset, bool 
 	ns.offset = offset * FRACTIONONE;
 	ns.loop = loop;
 	ns.id = -1;
-	samplers_update.getFirst().sadd.push_back(ns);
+	samplers_update.back().sadd.push_back(ns);
 
 	return id;
 }
 
 void Sound::RemoveSource(size_t id)
 {
-	samplers_update.getFirst().sremove.push_back(id);
+	samplers_update.back().sremove.push_back(id);
 	sources_remove.push_back(id);
 }
 
@@ -311,7 +299,7 @@ void Sound::ResetSource(size_t id)
 	ns.offset = src.offset * FRACTIONONE;
 	ns.loop = src.loop;
 	ns.id = idn;
-	samplers_update.getFirst().sadd.push_back(ns);
+	samplers_update.back().sadd.push_back(ns);
 }
 
 bool Sound::GetSourcePlaying(size_t id) const
@@ -363,10 +351,7 @@ void Sound::Update(bool pause)
 {
 	if (disable) return;
 
-	set_pause = pause;
-
-	// get source stop messages from sound thread
-	GetSourceChanges();
+	sources_pause = pause;
 
 	// process source stop messages
 	ProcessSourceStop();
@@ -388,19 +373,12 @@ void Sound::Update(bool pause)
 	}
 }
 
-void Sound::GetSourceChanges()
-{
-	SDL_LockMutex(source_lock);
-	if (!sources_stop.getSecond().empty())
-	{
-		sources_stop.swapFirst();
-	}
-	SDL_UnlockMutex(source_lock);
-}
-
 void Sound::ProcessSourceStop()
 {
-	auto & sstop = sources_stop.getFirst();
+	if (!sources_stop.swap_front())
+		return;
+
+	auto & sstop = sources_stop.front();
 	for (auto id : sstop)
 	{
 		auto idn = sources[id].id;
@@ -426,8 +404,8 @@ void Sound::ProcessSourceRemove()
 
 void Sound::ProcessSources()
 {
-	auto & supdate = samplers_update.getFirst().sset;
-	supdate.resize(sources_num);
+	auto & sset = samplers_update.back().sset;
+	sset.resize(sources_num);
 
 	sources_active.clear();
 	for (size_t i = 0; i < sources_num; ++i)
@@ -465,7 +443,7 @@ void Sound::ProcessSources()
 				gain1 = gain2 = src.gain;
 			}
 
-			int maxgain = std::max(gain1, gain2) * FRACTIONONE;
+			int maxgain = Max(gain1, gain2) * FRACTIONONE;
 			if (maxgain > 0)
 			{
 				SourceActive sa;
@@ -476,14 +454,14 @@ void Sound::ProcessSources()
 		}
 
 		// fade sound volume
-		float volume = set_pause ? 0 : sound_volume;
+		float volume = sources_pause ? 0 : sound_volume;
 
-		supdate[i].gain1 = volume * gain1 * FRACTIONONE;
-		supdate[i].gain2 = volume * gain2 * FRACTIONONE;
+		sset[i].gain1 = volume * gain1 * FRACTIONONE;
+		sset[i].gain2 = volume * gain2 * FRACTIONONE;
 
 		auto info = src.buffer->GetInfo();
 		int base_pitch = FRACTIONONE * info.frequency / deviceinfo.frequency;
-		supdate[i].pitch = src.pitch * base_pitch;
+		sset[i].pitch = src.pitch * base_pitch;
 	}
 
 	LimitActiveSources();
@@ -502,55 +480,50 @@ void Sound::LimitActiveSources()
 		sources_active.end());
 
 	// mute remaining sources
-	std::vector<SamplerSet> & supdate = samplers_update.getFirst().sset;
+	auto & sset = samplers_update.back().sset;
 	for (size_t i = max_active_sources; i < sources_active.size(); ++i)
 	{
-		supdate[sources_active[i].id].gain1 = 0;
-		supdate[sources_active[i].id].gain2 = 0;
+		sset[sources_active[i].id].gain1 = 0;
+		sset[sources_active[i].id].gain2 = 0;
 	}
 }
 
 void Sound::SetSamplerChanges()
 {
-	if (samplers_update.getFirst().empty())
+	auto & su = samplers_update.back();
+	if (su.empty())
 		return;
 
-	SDL_LockMutex(sampler_lock);
-	if (samplers_update.getSecond().empty())
-	{
-		samplers_update.getFirst().id = update_id++;
-		samplers_update.swapFirst();
-	}
-	sources_pause = set_pause;
-	SDL_UnlockMutex(sampler_lock);
+	su.pause = sources_pause;
+	su.id = update_id++;
+
+	samplers_update.swap_back();
 }
 
 void Sound::GetSamplerChanges()
 {
-	SDL_LockMutex(sampler_lock);
-	if (!samplers_update.getSecond().empty())
+	if (samplers_update.swap_front())
 	{
-		samplers_update.swapLast();
+		auto & su = samplers_update.front();
+		samplers_fade = (samplers_pause != su.pause);
+		samplers_pause = su.pause;
 	}
-	samplers_fade = (samplers_pause != sources_pause);
-	samplers_pause = sources_pause;
-	SDL_UnlockMutex(sampler_lock);
 }
 
 void Sound::ProcessSamplerUpdate()
 {
-	std::vector<SamplerSet> & supdate = samplers_update.getLast().sset;
-	if (supdate.empty())
+	auto & sset = samplers_update.front().sset;
+	if (sset.empty())
 		return;
 
-	assert(samplers_num == supdate.size());
+	assert(samplers_num == sset.size());
 	for (size_t i = 0; i < samplers_num; ++i)
 	{
-		samplers[i].gain1 = supdate[i].gain1;
-		samplers[i].gain2 = supdate[i].gain2;
-		samplers[i].pitch = supdate[i].pitch;
+		samplers[i].gain1 = sset[i].gain1;
+		samplers[i].gain2 = sset[i].gain2;
+		samplers[i].pitch = sset[i].pitch;
 	}
-	supdate.clear();
+	sset.clear();
 }
 
 template <typename stream_type, typename buffer_type, int vmin, int vmax>
@@ -562,6 +535,8 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 	// pause sampling
 	if (samplers_pause && !samplers_fade)
 		return;
+
+	auto & sstop = sources_stop.back();
 
 	// init sampling buffers
 	int samples = len / (2 * sizeof(stream_type));
@@ -601,13 +576,13 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 		}
 
 		if (!smp.playing)
-			sources_stop.getLast().push_back(smp.id);
+			sstop.push_back(smp.id);
 	}
 }
 
 void Sound::ProcessSamplerRemove()
 {
-	auto & sremove = samplers_update.getLast().sremove;
+	auto & sremove = samplers_update.front().sremove;
 	for (auto id : sremove)
 	{
 		assert(id < samplers.size());
@@ -618,7 +593,7 @@ void Sound::ProcessSamplerRemove()
 
 void Sound::ProcessSamplerAdd()
 {
-	auto & sadd = samplers_update.getLast().sadd;
+	auto & sadd = samplers_update.front().sadd;
 	for (const auto & sa : sadd)
 	{
 		auto info = sa.buffer->GetInfo();
@@ -653,12 +628,10 @@ void Sound::ProcessSamplerAdd()
 
 void Sound::SetSourceChanges()
 {
-	if (sources_stop.getLast().empty())
+	if (sources_stop.back().empty())
 		return;
 
-	SDL_LockMutex(source_lock);
-	sources_stop.swapLast();
-	SDL_UnlockMutex(source_lock);
+	sources_stop.swap_back();
 }
 
 template <typename stream_type, typename buffer_type, int vmin, int vmax>

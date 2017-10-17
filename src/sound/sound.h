@@ -30,8 +30,6 @@
 #include <iosfwd>
 #include <vector>
 
-struct SDL_mutex;
-
 class Sound
 {
 public:
@@ -94,7 +92,6 @@ private:
 	float sound_volume;
 	bool initdone;
 	bool disable;
-	bool set_pause;
 
 	// state structs
 	struct SourceActive
@@ -153,14 +150,9 @@ private:
 		std::vector<SamplerAdd> sadd;
 		std::vector<size_t> sremove;
 		size_t id;
+		bool pause;
 		bool empty() const;
 	};
-
-	// sound thread message system
-	TrippleBuffer<SamplersUpdate> samplers_update;
-	TrippleBuffer<std::vector<size_t> > sources_stop;
-	SDL_mutex * sampler_lock;
-	SDL_mutex * source_lock;
 
 	// sound sources state
 	std::vector<SourceActive> sources_active;
@@ -171,6 +163,10 @@ private:
 	size_t update_id;
 	bool sources_pause;
 
+	// sound thread message system
+	TrippleBuffer<SamplersUpdate> samplers_update;
+	TrippleBuffer<std::vector<size_t> > sources_stop;
+
 	// sound thread state
 	std::vector<int> buffer[2];
 	std::vector<Sampler> samplers;
@@ -179,8 +175,6 @@ private:
 	bool samplers_fade;
 
 	// main thread methods
-	void GetSourceChanges();
-
 	void ProcessSourceStop();
 
 	void ProcessSourceRemove();

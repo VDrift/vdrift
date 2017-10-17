@@ -20,7 +20,7 @@
 #ifndef _TRIPPLEBUFFER_H
 #define _TRIPPLEBUFFER_H
 
-#include <cassert>
+#include <atomic>
 
 template <class T>
 class TrippleBuffer
@@ -28,65 +28,81 @@ class TrippleBuffer
 public:
 	TrippleBuffer();
 
-	T & getFirst();
-	
-	T & getSecond();
-	
-	T & getLast();
+	// consumer interface
 
-	void swapFirst();
+	// get buffer for processing
+	T & front();
 
-	void swapLast();
+	// get next buffer for processing
+	bool swap_front();
+
+
+	// producer interface
+
+	// get buffer for modification
+	T & back();
+
+	// commit modified buffer
+	bool swap_back();
 
 private:
-	T buffer1, buffer2, buffer3;
-	T * buffer1p, * buffer2p, * buffer3p;
+	typedef char cache_line_pad_t[64];
+
+	struct Buffer
+	{
+		cache_line_pad_t pad;
+		T data;
+	};
+	Buffer buffer[3];
+
+	// consumer writes head
+	cache_line_pad_t pad_head;
+	std::atomic<unsigned> head;
+
+	// producer writes tail
+	cache_line_pad_t pad_tail;
+	std::atomic<unsigned> tail;
 };
 
 
 template <class T>
-inline TrippleBuffer<T>::TrippleBuffer()
+inline TrippleBuffer<T>::TrippleBuffer() : head(0), tail(1)
 {
-	buffer1p = &buffer1;
-	buffer2p = &buffer2;
-	buffer3p = &buffer3;
+	// ctor
 }
 
 template <class T>
-inline T & TrippleBuffer<T>::getFirst()
+inline T & TrippleBuffer<T>::front()
 {
-	return *buffer1p;
+	return buffer[head.load(std::memory_order_relaxed)].data;
 }
 
 template <class T>
-inline T & TrippleBuffer<T>::getSecond()
+inline bool TrippleBuffer<T>::swap_front()
 {
-	return *buffer2p;
+	auto head_next = (head.load(std::memory_order_relaxed) + 1) % 3;
+	if (tail.load(std::memory_order_acquire) != head_next) {
+		head.store(head_next, std::memory_order_release);
+		return true;
+	}
+	return false;
 }
 
 template <class T>
-inline T & TrippleBuffer<T>::getLast()
+inline T & TrippleBuffer<T>::back()
 {
-	return *buffer3p;
+	return buffer[tail.load(std::memory_order_relaxed)].data;
 }
 
 template <class T>
-inline void TrippleBuffer<T>::swapFirst()
+inline bool TrippleBuffer<T>::swap_back()
 {
-	std::swap(buffer1p, buffer2p);
-	assert(buffer1p != buffer2p);
-	assert(buffer2p != buffer3p);
-	assert(buffer3p != buffer1p);
-
-}
-
-template <class T>
-inline void TrippleBuffer<T>::swapLast()
-{
-	std::swap(buffer2p, buffer3p);
-	assert(buffer1p != buffer2p);
-	assert(buffer2p != buffer3p);
-	assert(buffer3p != buffer1p);
+	auto tail_next = (tail.load(std::memory_order_relaxed) + 1) % 3;
+	if (head.load(std::memory_order_acquire) != tail_next) {
+		tail.store(tail_next, std::memory_order_release);
+		return true;
+	}
+	return false;
 }
 
 #endif
