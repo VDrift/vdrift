@@ -268,7 +268,7 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 		int endian = 0; // 0 for Little-Endian, 1 for Big-Endian
 		int wordsize = 2; // 16 bit
 		int issigned = 1; // signed data
-		unsigned int bufpos = 0;
+		unsigned int bufpos = 0; // total bytes read
 		while (bufpos < size)
 		{
 			int bytes_read = ov_read(&oggFile, sound_buffer + bufpos, size - bufpos, endian, wordsize, issigned, &bitstream);
@@ -284,8 +284,9 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 	}
 	else
 	{
+		float * buffer = (float*)sound_buffer;
 		int bitstream;
-		unsigned int bufpos = 0;
+		unsigned int bufpos = 0; // total samples read
 		while (bufpos < samples)
 		{
 			float **pcm;
@@ -298,12 +299,19 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 				return false;
 			}
 
-			// interleaving left and right channels
-			for (int i = 0; i < samples_read; i++)
+			if (info.channels > 1)
 			{
-				int n = (bufpos + i) * 2;
-				sound_buffer[n] = pcm[0][i];
-				sound_buffer[n + 1] = pcm[1][i];
+				// interleaving left and right channels
+				for (int i = 0; i < samples_read; i++)
+				{
+					unsigned int n = (bufpos + i) * 2;
+					buffer[n] = pcm[0][i];
+					buffer[n + 1] = pcm[1][i];
+				}
+			}
+			else
+			{
+				memcpy(buffer + bufpos, pcm[0], samples_read * sizeof(float));
 			}
 
 			bufpos += samples_read;
