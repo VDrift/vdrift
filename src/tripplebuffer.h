@@ -46,22 +46,13 @@ public:
 	bool swap_back();
 
 private:
-	typedef char cache_line_pad_t[64];
-
-	struct Buffer
-	{
-		cache_line_pad_t pad;
-		T data;
-	};
-	Buffer buffer[3];
+	struct alignas(64) { T data; } buffer[3];
 
 	// consumer writes head
-	cache_line_pad_t pad_head;
-	std::atomic<unsigned> head;
+	alignas(64) std::atomic<unsigned> head;
 
 	// producer writes tail
-	cache_line_pad_t pad_tail;
-	std::atomic<unsigned> tail;
+	alignas(64) std::atomic<unsigned> tail;
 };
 
 
