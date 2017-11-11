@@ -136,7 +136,6 @@ bool Sound::SamplersUpdate::empty() const
 }
 
 Sound::Sound() :
-	log_error(0),
 	deviceinfo(0, 0, 0, 0),
 	sound_volume(0),
 	initdone(false),
@@ -220,7 +219,6 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	deviceinfo = SoundInfo(samples, frequency, channels, bytespersample);
 	buffer[0].reserve(samples);
 	buffer[1].reserve(samples);
-	log_error = &error_output;
 	initdone = true;
 	SetVolume(1);
 

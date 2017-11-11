@@ -83,7 +83,6 @@ public:
 	void Update(bool pause);
 
 private:
-	std::ostream * log_error;
 	SoundInfo deviceinfo;
 	Vec3 listener_pos;
 	Vec3 listener_vel;
