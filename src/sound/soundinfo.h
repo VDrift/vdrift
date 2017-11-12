@@ -20,11 +20,8 @@
 #ifndef SOUNDINFO_H
 #define SOUNDINFO_H
 
-#include <string>
-
 struct SoundInfo
 {
-	std::string name;
 	unsigned int samples;
 	unsigned int frequency;
 	unsigned char channels;
