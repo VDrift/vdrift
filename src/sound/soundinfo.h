@@ -21,7 +21,6 @@
 #define SOUNDINFO_H
 
 #include <string>
-#include <ostream>
 
 struct SoundInfo
 {
@@ -40,12 +39,13 @@ struct SoundInfo
 		//ctor
 	}
 
-	void DebugPrint(std::ostream & out) const
+	template <class Stream>
+	void DebugPrint(Stream & out) const
 	{
-		out << "Samples: " << samples << std::endl;
-		out << "Frequency: " << frequency << std::endl;
-		out << "Channels: " << channels << std::endl;
-		out << "Bits per sample: " << bytespersample*8 << std::endl;
+		out << "Samples: " << samples << "\n";
+		out << "Frequency: " << frequency << "\n";
+		out << "Channels: " << (unsigned)channels << "\n";
+		out << "Bits per sample: " << (unsigned)bytespersample*8 << "\n";
 	}
 
 	bool operator==(const SoundInfo & other) const

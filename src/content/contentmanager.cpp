@@ -19,6 +19,8 @@
 
 #include "contentmanager.h"
 
+#include <ostream>
+
 ContentManager::ContentManager(std::ostream & error) :
 	error(error)
 {
