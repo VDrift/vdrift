@@ -38,7 +38,7 @@ public:
 	~Sound();
 
 	// init sound device
-	bool Init(int buffersize, std::ostream & info, std::ostream & error);
+	bool Init(unsigned short buffersize, std::ostream & info, std::ostream & error);
 
 	// get device info
 	const SoundInfo & GetDeviceInfo() const;
@@ -116,14 +116,14 @@ private:
 	struct Sampler
 	{
 		const SoundBuffer * buffer;
-		int samples_per_channel;
-		int sample_pos;
-		int sample_pos_remainder;
-		int pitch;
-		int gain1;
-		int gain2;
-		int last_gain1;
-		int last_gain2;
+		unsigned samples_per_channel;
+		unsigned sample_pos;
+		unsigned sample_pos_remainder;
+		unsigned pitch;
+		unsigned gain1;
+		unsigned gain2;
+		unsigned last_gain1;
+		unsigned last_gain2;
 		bool playing;
 		bool loop;
 		size_t id;
@@ -133,14 +133,14 @@ private:
 	struct SamplerAdd
 	{
 		const SoundBuffer * buffer;
-		int offset;
+		unsigned offset;
 		bool loop;
 		int id;
 	};
 
 	struct SamplerSet
 	{
-		int gain1, gain2, pitch;
+		unsigned gain1, gain2, pitch;
 	};
 
 	struct SamplersUpdate
@@ -190,7 +190,7 @@ private:
 	void ProcessSamplerUpdate();
 
 	template <typename stream_type, typename buffer_type, int vmin, int vmax>
-	void ProcessSamplers(unsigned char stream[], int len);
+	void ProcessSamplers(unsigned char stream[], unsigned len);
 
 	void ProcessSamplerRemove();
 
@@ -204,9 +204,9 @@ private:
 	static void CallbackWrapper(void * sound, unsigned char stream[], int len);
 
 	template <typename sample_type, typename buffer_type>
-	static void SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], int len);
+	static void SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], unsigned len);
 
-	static void AdvanceWithPitch(Sampler & sampler, int len);
+	static void AdvanceWithPitch(Sampler & sampler, unsigned len);
 };
 
 #endif

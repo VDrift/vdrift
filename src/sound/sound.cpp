@@ -163,7 +163,7 @@ Sound::~Sound()
 		SDL_CloseAudio();
 }
 
-bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
+bool Sound::Init(unsigned short buffersize, std::ostream & info_output, std::ostream & error_output)
 {
 	if (disable || initdone)
 		return false;
@@ -184,10 +184,10 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 		return false;
 	}
 
-	int frequency = obtained.freq;
-	int channels = obtained.channels;
-	int samples = obtained.samples;
-	int bytespersample = 1;
+	unsigned frequency = obtained.freq;
+	unsigned channels = obtained.channels;
+	unsigned samples = obtained.samples;
+	unsigned bytespersample = 1;
 	if (obtained.format == AUDIO_S16SYS)
 	{
 		bytespersample = 2;
@@ -203,9 +203,9 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	dout << "Format: " << obtained.format << std::endl;
 	dout << "Bits per sample: " << bytespersample * 8 << std::endl;
 	dout << "Channels: " << channels << std::endl;
-	dout << "Silence: " << (int) obtained.silence << std::endl;
+	dout << "Silence: " << (unsigned)obtained.silence << std::endl;
 	dout << "Samples: " << samples << std::endl;
-	dout << "Size: " << (int) obtained.size;
+	dout << "Size: " << obtained.size;
 	info_output << dout.str() << std::endl;
 
 	if (((obtained.format != AUDIO_S16SYS) && (obtained.format != AUDIO_F32SYS)) ||
@@ -263,8 +263,8 @@ size_t Sound::AddSource(std::shared_ptr<SoundBuffer> buffer, float offset, bool 
 	src.position.Set(0, 0, 0);
 	src.velocity.Set(0, 0, 0);
 	src.offset = offset;
-	src.pitch = 1.0;
-	src.gain = 0.0;
+	src.pitch = 1;
+	src.gain = 0;
 	src.is3d = is3d;
 	src.playing = true;
 	src.loop = loop;
@@ -443,7 +443,7 @@ void Sound::ProcessSources()
 				gain1 = gain2 = src.gain;
 			}
 
-			int maxgain = Max(gain1, gain2) * FRACTIONONE;
+			unsigned maxgain = Max(gain1, gain2) * FRACTIONONE;
 			if (maxgain > 0)
 			{
 				SourceActive sa;
@@ -460,7 +460,7 @@ void Sound::ProcessSources()
 		sset[i].gain2 = volume * gain2 * FRACTIONONE;
 
 		auto info = src.buffer->GetInfo();
-		int base_pitch = FRACTIONONE * info.frequency / deviceinfo.frequency;
+		auto base_pitch = FRACTIONONE * info.frequency / deviceinfo.frequency;
 		sset[i].pitch = src.pitch * base_pitch;
 	}
 
@@ -527,7 +527,7 @@ void Sound::ProcessSamplerUpdate()
 }
 
 template <typename stream_type, typename buffer_type, int vmin, int vmax>
-void Sound::ProcessSamplers(unsigned char stream[], int len)
+void Sound::ProcessSamplers(unsigned char stream[], unsigned len)
 {
 	// clear stream
 	memset(stream, 0, len);
@@ -539,7 +539,7 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 	auto & sstop = sources_stop.back();
 
 	// init sampling buffers
-	int samples = len / (2 * sizeof(stream_type));
+	auto samples = len / (2 * sizeof(stream_type));
 	buffer[0].resize(samples);
 	buffer[1].resize(samples);
 
@@ -557,9 +557,9 @@ void Sound::ProcessSamplers(unsigned char stream[], int len)
 		{
 			SampleAndAdvanceWithPitch<stream_type>(smp, buffer0, buffer1, samples);
 
-			for (int n = 0; n < samples; ++n)
+			for (unsigned n = 0; n < samples; ++n)
 			{
-				int pos = n * 2;
+				unsigned pos = n * 2;
 				buffer_type val1 = sstream[pos] + buffer0[n];
 				buffer_type val2 = sstream[pos + 1] + buffer1[n];
 
@@ -597,8 +597,8 @@ void Sound::ProcessSamplerAdd()
 	for (const auto & sa : sadd)
 	{
 		auto info = sa.buffer->GetInfo();
-		int base_pitch = FRACTIONONE * info.frequency / deviceinfo.frequency;
-		int samples_per_channel = info.samples / info.channels;
+		auto base_pitch = FRACTIONONE * info.frequency / deviceinfo.frequency;
+		auto samples_per_channel = info.samples / info.channels;
 
 		Sampler smp;
 		smp.buffer = sa.buffer;
@@ -639,6 +639,7 @@ void Sound::CallbackStereo(void * myself, unsigned char stream[], int len)
 {
 	assert(this == myself);
 	assert(initdone);
+	assert(len > 0);
 
 	GetSamplerChanges();
 
@@ -655,7 +656,7 @@ void Sound::CallbackStereo(void * myself, unsigned char stream[], int len)
 
 void Sound::CallbackWrapper(void * sound, unsigned char stream[], int len)
 {
-	int bytespersample = static_cast<Sound*>(sound)->deviceinfo.bytespersample;
+	auto bytespersample = static_cast<Sound*>(sound)->deviceinfo.bytespersample;
 	if (bytespersample == 2)
 	{
 		static_cast<Sound*>(sound)->CallbackStereo<short, int, -32768, 32767>(sound, stream, len);
@@ -666,55 +667,31 @@ void Sound::CallbackWrapper(void * sound, unsigned char stream[], int len)
 	}
 }
 
-template <typename T0, typename T1>
-T0 Cast(T1 v);
+template <typename T0, typename T1> T0 Cast(T1 v);
+template <> inline float Cast<float, unsigned>(unsigned v) { return v * (1.0f / FRACTIONONE); }
+template <> inline float Cast<float, int>(int v) { return v * (1.0f / FRACTIONONE); }
+template <> inline unsigned Cast<unsigned, float>(float v) { return v * FRACTIONONE; }
+template <> inline int Cast<int, float>(float v) { return v * FRACTIONONE; }
+template <> inline unsigned Cast<unsigned, int>(int v) { return v; }
+template <> inline int Cast<int, unsigned>(unsigned v) { return v; }
+template <> inline int Cast<int, int>(int v) { return v; }
 
-template <>
-inline float Cast<float, int>(int v)
-{
-	return v * (1.0f / FRACTIONONE);
-}
-
-template <>
-inline int Cast<int, float>(float v)
-{
-	return v * FRACTIONONE;
-}
-
-template <>
-inline int Cast<int, int>(int v)
-{
-	return v;
-}
-
-template <typename T>
-T Scale(T v, T s);
-
-template <>
-inline int Scale<int>(int v, int s)
-{
-	return v * s / FRACTIONONE;
-}
-
-template <>
-inline float Scale<float>(float v, float s)
-{
-	return v * s;
-}
+template <typename T> T Scale(T v, T s);
+template <> inline int Scale<int>(int v, int s) { return v * s / FRACTIONONE; }
+template <> inline float Scale<float>(float v, float s) { return v * s; }
 
 template <typename sample_type, typename buffer_type>
-void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], int len)
+void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], unsigned len)
 {
-	assert(len > 0);
 	assert(sampler.buffer);
 	assert(sampler.playing);
 
 	// start samlping
-	int chan = sampler.buffer->GetInfo().channels;
-	int samples = sampler.samples_per_channel * chan;
-	int chaninc = chan - 1;
-	int nr = sampler.sample_pos_remainder;
-	int ni = sampler.sample_pos;
+	auto channels = sampler.buffer->GetInfo().channels;
+	auto chaninc = channels - 1;
+	auto samples = sampler.samples_per_channel * channels;
+	auto nr = sampler.sample_pos_remainder;
+	auto ni = sampler.sample_pos;
 
 	auto buf = (const sample_type *)sampler.buffer->GetRawBuffer();
 	auto gain1 = Cast<buffer_type>(sampler.gain1);
@@ -723,7 +700,7 @@ void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], bu
 	auto last_gain2 = Cast<buffer_type>(sampler.last_gain2);
 	auto max_gain_delta = Cast<buffer_type>(MAXGAINDELTA);
 
-	for (int i = 0; i < len; ++i)
+	for (unsigned i = 0; i < len; ++i)
 	{
 		// limit gain change rate
 		auto gain_delta1 = gain1 - last_gain1;
@@ -742,12 +719,12 @@ void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], bu
 		else
 		{
 			// the sample to the left of the playback position, channel 0 and 1
-			int id1 = (ni * chan) % samples;
+			auto id1 = (ni * channels) % samples;
 			buffer_type samp10 = buf[id1];
 			buffer_type samp11 = buf[id1 + chaninc];
 
 			// the sample to the right of the playback position, channel 0 and 1
-			int id2 = (id1 + chan) % samples;
+			auto id2 = (id1 + channels) % samples;
 			buffer_type samp20 = buf[id2];
 			buffer_type samp21 = buf[id2 + chaninc];
 
@@ -767,8 +744,8 @@ void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], bu
 		}
 	}
 
-	sampler.last_gain1 = Cast<int>(last_gain1);
-	sampler.last_gain2 = Cast<int>(last_gain2);
+	sampler.last_gain1 = Cast<unsigned>(last_gain1);
+	sampler.last_gain2 = Cast<unsigned>(last_gain2);
 	sampler.sample_pos = ni;
 	sampler.sample_pos_remainder = nr;
 
@@ -783,11 +760,11 @@ void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], bu
 	}
 }
 
-void Sound::AdvanceWithPitch(Sampler & sampler, int len)
+void Sound::AdvanceWithPitch(Sampler & sampler, unsigned len)
 {
 	// advance playback position
-	int nr = sampler.sample_pos_remainder;
-	int ni = sampler.sample_pos;
+	auto nr = sampler.sample_pos_remainder;
+	auto ni = sampler.sample_pos;
 	nr += sampler.pitch * len;
 	ni += nr >> FRACTIONBITS;
 	nr &= FRACTIONMASK;

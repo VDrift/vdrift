@@ -26,16 +26,16 @@
 struct SoundInfo
 {
 	std::string name;
-	int samples;
-	int frequency;
-	int bytespersample;
-	int channels;
+	unsigned int samples;
+	unsigned int frequency;
+	unsigned char channels;
+	unsigned char bytespersample;
 
-	SoundInfo(int numsamples, int freq, int chan, int bytespersamp) :
+	SoundInfo(unsigned int numsamples, unsigned int freq, unsigned char chan, unsigned char bytespersamp) :
 		samples(numsamples),
 		frequency(freq),
-		bytespersample(bytespersamp),
-		channels(chan)
+		channels(chan),
+		bytespersample(bytespersamp)
 	{
 		//ctor
 	}
