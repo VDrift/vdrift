@@ -361,16 +361,8 @@ void Sound::Update(bool pause)
 	// calculate sampler changes from sources
 	ProcessSources();
 
-	size_t old_update_id = update_id;
-
 	// commit sampler changes to sound thread
 	SetSamplerChanges();
-
-	// use update id to determine whether sampler updates have been comitted
-	if (old_update_id != update_id)
-	{
-		ProcessSourceRemove();
-	}
 }
 
 void Sound::ProcessSourceStop()
@@ -495,9 +487,13 @@ void Sound::SetSamplerChanges()
 		return;
 
 	su.pause = sources_pause;
-	su.id = update_id++;
+	su.id = update_id;
 
-	samplers_update.swap_back();
+	if (samplers_update.swap_back())
+	{
+		ProcessSourceRemove();
+		update_id++;
+	}
 }
 
 void Sound::GetSamplerChanges()
