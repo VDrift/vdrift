@@ -63,8 +63,8 @@ public:
 		const float vx[3],
 		const float vy[3],
 		unsigned color,
-		void * color_buffer,
-		int stride);
+		unsigned color_buffer[],
+		unsigned buffer_width);
 
 private:
 	// map texture size

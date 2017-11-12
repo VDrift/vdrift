@@ -101,7 +101,6 @@ bool TrackMap::BuildMap(
 	map_scale = Min(map_scale_w, map_scale_h);
 
 	std::vector<unsigned> pixels(map_width * map_height, 0);
-	const int stride = map_width * sizeof(unsigned);
 	const unsigned color = 0xffffffff;
 
 	for (const auto & road : roads)
@@ -127,8 +126,8 @@ bool TrackMap::BuildMap(
 			x[5] = x[0];
 			y[5] = y[0];
 
-			RasterizeTriangle(x, y, color, &pixels[0], stride);
-			RasterizeTriangle(x + 3, y + 3, color, &pixels[0], stride);
+			RasterizeTriangle(x, y, color, &pixels[0], map_width);
+			RasterizeTriangle(x + 3, y + 3, color, &pixels[0], map_width);
 		}
 	}
 /*
@@ -303,8 +302,8 @@ void TrackMap::RasterizeTriangle(
 	const float vx[3],
 	const float vy[3],
 	unsigned color,
-	void * color_buffer,
-	int stride)
+	unsigned color_buffer[],
+	unsigned buffer_width)
 {
 	// Triangle rasterizer (8x8 block) by Nicolas Capens
 	// see http://devmaster.net/posts/6145/advanced-rasterization
@@ -349,7 +348,7 @@ void TrackMap::RasterizeTriangle(
 	minx &= ~(q - 1);
 	miny &= ~(q - 1);
 
-	(char*&)color_buffer += miny * stride;
+	color_buffer += miny * buffer_width;
 
 	// Half-edge constants
 	int C1 = DY12 * X1 - DX12 * Y1;
@@ -394,7 +393,7 @@ void TrackMap::RasterizeTriangle(
 			// Skip block when outside an edge
 			if (a == 0x0 || b == 0x0 || c == 0x0) continue;
 
-			unsigned * buffer = (unsigned*)color_buffer;
+			unsigned * buffer = color_buffer;
 
 			// Accept whole block when totally covered
 			if (a == 0xF && b == 0xF && c == 0xF)
@@ -406,7 +405,7 @@ void TrackMap::RasterizeTriangle(
 						buffer[ix] = color;
 					}
 
-					(char*&)buffer += stride;
+					buffer += buffer_width;
 				}
 			}
 			else // Partially covered block
@@ -437,11 +436,11 @@ void TrackMap::RasterizeTriangle(
 					CY2 += FDX23;
 					CY3 += FDX31;
 
-					(char*&)buffer += stride;
+					buffer += buffer_width;
 				}
 			}
 		}
 
-		(char*&)color_buffer += q * stride;
+		color_buffer += q * buffer_width;
 	}
 }
