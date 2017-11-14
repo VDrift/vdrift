@@ -20,9 +20,6 @@
 #include "mathplane.h"
 #include "unittest.h"
 
-#include <iostream>
-using std::ostream;
-
 QT_TEST(mathplane_test)
 {
 	QT_CHECK_CLOSE(MathPlane <float> (0,1,0,0).DistanceToPoint(Vec3 (0,0,0)), 0.0f, 0.0001f);
