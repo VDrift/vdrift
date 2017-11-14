@@ -188,11 +188,6 @@ void DynamicsWorld::update(btScalar dt)
 	//CProfileManager::dumpAll();
 }
 
-void DynamicsWorld::debugPrint(std::ostream & out) const
-{
-	out << "Collision objects: " << getNumCollisionObjects() << std::endl;
-}
-
 void DynamicsWorld::solveConstraints(btContactSolverInfo& solverInfo)
 {
 	// todo: after fracture we should run the solver again for better realism

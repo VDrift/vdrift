@@ -22,8 +22,6 @@
 
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
 
-#include <iosfwd>
-
 class Track;
 class CollisionContact;
 class FractureBody;
@@ -63,8 +61,6 @@ public:
 	void update(btScalar dt);
 
 	void draw();
-
-	void debugPrint(std::ostream & out) const;
 
 protected:
 	struct ActiveCon
