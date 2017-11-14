@@ -130,10 +130,13 @@ private:
 			{
 				GetDrawable(topnode).SetDrawEnable(visible);
 			}
-			void DebugPrint(SceneNode & topnode, std::ostream & out) const
+			template <class Stream>
+			void DebugPrint(SceneNode & topnode, Stream & out) const
 			{
 				const Drawable & drawref = GetDrawable(topnode);
-				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetTexture0() << ", verts=" << drawref.GetVertArray() << std::endl;
+				out << &drawref << ": enable=" << drawref.GetDrawEnable()
+					<< ", tex=" << drawref.GetTexture0()
+					<< ", verts=" << drawref.GetVertArray() << "\n";
 			}
 			SceneNode::DrawableHandle & GetDrawableHandle()
 			{

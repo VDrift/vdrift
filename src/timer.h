@@ -50,8 +50,6 @@ public:
 
 	void UpdateDistance(const unsigned int carid, const double newdistance);
 
-	void DebugPrint(std::ostream & out) const;
-
 	float GetTime(unsigned int index) {assert(index<car.size());return car[index].GetTime();}
 
 	float GetLastLap(unsigned int index) {assert(index<car.size());return car[index].GetLastLap();}
@@ -104,6 +102,16 @@ public:
 			car[index].GetDriftScore().SetMaxAngle(angle);
 		if (speed > car[index].GetDriftScore().GetMaxSpeed())
 			car[index].GetDriftScore().SetMaxSpeed(speed);
+	}
+
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		for (unsigned int i = 0; i < car.size(); ++i)
+		{
+			out << i << ". ";
+			car[i].DebugPrint(out);
+		}
 	}
 
 private:
@@ -261,11 +269,12 @@ private:
 			return cartype;
 		}
 
-		void DebugPrint(std::ostream & out) const
+		template <class Stream>
+		void DebugPrint(Stream & out) const
 		{
 			out << "car=" << cartype << ", t=" << totaltime << ", tlap=" << time
 				<< ", last=" << lastlap << ", best=" << bestlap
-				<< ", lap=" << num_laps << std::endl;
+				<< ", lap=" << num_laps << "\n";
 		}
 
 		double GetTime() const

@@ -20,8 +20,6 @@
 #ifndef _TOGGLE_H
 #define _TOGGLE_H
 
-#include <iosfwd>
-
 class Toggle
 {
 public:
@@ -35,14 +33,68 @@ public:
 	bool GetImpulse() const;
 
 	void Clear();
-
-	void DebugPrint(std::ostream & out) const;
-
 	void Tick();
+
+	template <class Stream>
+	void DebugPrint(Stream & out) const;
 
 private:
 	bool state;
 	bool laststate;
 };
+
+
+inline Toggle::Toggle()
+{
+	Clear();
+}
+
+inline void Toggle::Set(bool nextstate)
+{
+	state = nextstate;
+}
+
+inline void Toggle::Set(const Toggle & other)
+{
+	state = other.GetState();
+	laststate = (!state && other.GetImpulseFalling()) || (state && !other.GetImpulseRising());
+}
+
+inline bool Toggle::GetState() const
+{
+	return state;
+}
+
+inline bool Toggle::GetImpulseRising() const
+{
+	return (state && !laststate);
+}
+
+inline bool Toggle::GetImpulseFalling() const
+{
+	return (!state && laststate);
+}
+
+inline bool Toggle::GetImpulse() const
+{
+	return (GetImpulseRising() || GetImpulseFalling());
+}
+
+inline void Toggle::Clear()
+{
+	state = false;
+	laststate = false;
+}
+
+inline void Toggle::Tick()
+{
+	laststate = state;
+}
+
+template <class Stream>
+inline void Toggle::DebugPrint(Stream & out) const
+{
+	out << "State: " << state << "  Last state: " << laststate << "\n";
+}
 
 #endif

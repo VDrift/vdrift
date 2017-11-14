@@ -121,15 +121,6 @@ void Timer::UpdateDistance(const unsigned int carid, const double newdistance)
 	car[carid].UpdateLapDistance(newdistance);
 }
 
-void Timer::DebugPrint(std::ostream & out) const
-{
-	for (unsigned int i = 0; i < car.size(); ++i)
-	{
-		out << i << ". ";
-		car[i].DebugPrint(out);
-	}
-}
-
 class Place
 {
 private:

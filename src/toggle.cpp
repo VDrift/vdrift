@@ -20,60 +20,6 @@
 #include "toggle.h"
 #include "unittest.h"
 
-using std::endl;
-
-Toggle::Toggle()
-{
-	Clear();
-}
-
-void Toggle::Set(bool nextstate)
-{
-	state = nextstate;
-}
-
-void Toggle::Set(const Toggle & other)
-{
-	state = other.GetState();
-	laststate = (!state && other.GetImpulseFalling()) || (state && !other.GetImpulseRising());
-}
-
-bool Toggle::GetState() const
-{
-	return state;
-}
-
-bool Toggle::GetImpulseRising() const
-{
-	return (state && !laststate);
-}
-
-bool Toggle::GetImpulseFalling() const
-{
-	return (!state && laststate);
-}
-
-bool Toggle::GetImpulse() const
-{
-	return (GetImpulseRising() || GetImpulseFalling());
-}
-
-void Toggle::Clear()
-{
-	state = false;
-	laststate = false;
-}
-
-void Toggle::DebugPrint(std::ostream & out) const
-{
-	out << "State: " << state << "  Last state: " << laststate << endl;
-}
-
-void Toggle::Tick()
-{
-	laststate = state;
-}
-
 QT_TEST(toggle_test)
 {
 	Toggle t;
