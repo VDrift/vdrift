@@ -54,7 +54,6 @@ src = Split("""
 		graphics/gl3v/glwrapper.cpp
 		graphics/gl3v/renderdimensions.cpp
 		graphics/gl3v/renderer.cpp
-		graphics/gl3v/rendermodel.cpp
 		graphics/gl3v/rendermodelext.cpp
 		graphics/gl3v/renderpass.cpp
 		graphics/gl3v/rendersampler.cpp

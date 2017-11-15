@@ -30,7 +30,7 @@
 /// The bare minimum required to draw geometry.
 struct RenderModel
 {
-	RenderModel(const RenderModelEntry & entry);
+	RenderModel(const RenderModelEntry & entry) : vao(entry.vao), elementCount(entry.elementCount) {};
 
 	GLuint vao;
 	int elementCount;
