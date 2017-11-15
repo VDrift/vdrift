@@ -60,7 +60,6 @@ src = Split("""
 		graphics/gl3v/rendersampler.cpp
 		graphics/gl3v/renderstate.cpp
 		graphics/gl3v/rendertextureentry.cpp
-		graphics/gl3v/renderuniformentry.cpp
 		graphics/gl3v/stringidmap.cpp
 		graphics/glcore.cpp
 		graphics/glutil.cpp
