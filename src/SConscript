@@ -56,7 +56,6 @@ src = Split("""
 		graphics/gl3v/rendermodelext.cpp
 		graphics/gl3v/renderpass.cpp
 		graphics/gl3v/renderstate.cpp
-		graphics/gl3v/stringidmap.cpp
 		graphics/glcore.cpp
 		graphics/glutil.cpp
 		graphics/graphics_config_condition.cpp

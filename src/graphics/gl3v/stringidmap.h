@@ -66,4 +66,67 @@ private:
 	StringId makeStringId(unsigned int id) const;
 };
 
+
+inline StringId::StringId() : id(0)
+{
+	// Constructor.
+}
+
+inline bool StringId::valid() const
+{
+	return id > 0;
+}
+
+inline bool StringId::operator== (const StringId other) const
+{
+	return id == other.id;
+}
+
+inline bool StringId::operator< (const StringId other) const
+{
+	return id < other.id;
+}
+
+inline bool StringIdMap::valid(StringId id)
+{
+	return id.valid();
+}
+
+inline StringId StringIdMap::addStringId(const std::string & str)
+{
+	auto i = idmap.find(str);
+	if (i != idmap.end())
+		return i->second;
+
+	StringId newId = makeStringId(idmap.size()+1);
+	idmap.insert(std::make_pair(str,newId));
+	stringmap.insert(std::make_pair(newId,str));
+	return newId;
+}
+
+inline StringId StringIdMap::getStringId(const std::string & str) const
+{
+	auto i = idmap.find(str);
+	if (i != idmap.end())
+		return i->second;
+
+	return StringId();
+}
+
+inline std::string StringIdMap::getString(StringId id) const
+{
+	auto i = stringmap.find(id);
+	if (i != stringmap.end())
+		return i->second;
+
+	return "";
+}
+
+inline StringId StringIdMap::makeStringId(unsigned int id) const
+{
+	StringId newId;
+	newId.id = id;
+	return newId;
+}
+
 #endif
