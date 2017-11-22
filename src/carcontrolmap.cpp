@@ -1085,8 +1085,7 @@ void CarControlMap::Control::DebugPrint(std::ostream & out) const
 {
 	out << type << " " << onetime << " " << pushdown << " " << keycode << " " <<
 		joynum << " " << joyaxis << " " << joyaxistype << " " << joytype << " " <<
-		mousetype << " " << mdir << " " << last_mouse_state << " " <<
-		deadzone << " " << exponent << " " << gain << std::endl;
+		mousetype << " " << mdir << " " << deadzone << " " << exponent << " " << gain << std::endl;
 }
 
 bool CarControlMap::Control::operator==(const Control & other) const
@@ -1143,8 +1142,7 @@ void CarControlMap::Control::ReadFrom(std::istream & in)
 	int newtype, newjoyaxistype, newjoytype, newmousetype, newmdir;
 	in >> newtype >> onetime >> pushdown >> keycode >>
 		joynum >> joyaxis >> newjoyaxistype >> newjoytype >>
-		newmousetype >> newmdir >> 	last_mouse_state >>
-		deadzone >> exponent >> gain;
+		newmousetype >> newmdir >> deadzone >> exponent >> gain;
 	type = TypeEnum(newtype);
 	joyaxistype = JoyAxisEnum(newjoyaxistype);
 	joytype = JoyTypeEnum(newjoytype);
@@ -1155,6 +1153,5 @@ void CarControlMap::Control::ReadFrom(std::istream & in)
 CarControlMap::Control::Control() :
 	type(UNKNOWN), onetime(true), pushdown(false), keycode(0),
 	joynum(0), joyaxis(0), joyaxistype(POSITIVE), joytype(JOYAXIS),
-	mousetype(MOUSEBUTTON), mdir(UP), last_mouse_state(false),
-	deadzone(0.0), exponent(1.0), gain(1.0)
+	mousetype(MOUSEBUTTON), mdir(UP), deadzone(0.0), exponent(1.0), gain(1.0)
 {}

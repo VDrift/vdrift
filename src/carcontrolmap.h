@@ -93,7 +93,6 @@ public:
 			LEFT,
 			RIGHT
 		} mdir;
-		bool last_mouse_state;
 
 		float deadzone;
 		float exponent;
