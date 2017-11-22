@@ -132,20 +132,13 @@ private:
 	/// max number of controls per input
 	static const size_t max_controls = 3;
 
-	/// used to stringify/destringify the CARINPUT enum
-	static const std::map <std::string, unsigned> carinput_stringmap;
-	static const std::vector<std::string> carinput_strings;
-
-	/// used to turn legacy key names from older vdrift releases into keycodes
-	static const std::map <std::string, int> keycode_stringmap;
-
-	static std::map <std::string, unsigned> InitCarInputStringMap();
-	static std::vector<std::string> InitCarInputStrings();
-	static std::map <std::string, int> InitKeycodeStringMap();
 
 	static const std::string & GetStringFromInput(const unsigned input);
+
 	static unsigned GetInputFromString(const std::string & str);
+
 	static const std::string & GetStringFromKeycode(const int code);
+
 	static int GetKeycodeFromString(const std::string & str);
 
 	void AddControl(Control newctrl, const std::string & inputname, std::ostream & error_output);
