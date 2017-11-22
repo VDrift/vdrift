@@ -1090,51 +1090,28 @@ void CarControlMap::Control::DebugPrint(std::ostream & out) const
 
 bool CarControlMap::Control::operator==(const Control & other) const
 {
-	Control me = *this;
-	Control them = other;
-
-	//don't care about certain flags
-	me.onetime = 1;
-	me.pushdown = 1;
-	me.deadzone = 0;
-	me.exponent = 1;
-	me.gain = 1;
-	them.onetime = 1;
-	them.pushdown = 1;
-	them.deadzone = 0;
-	them.exponent = 1;
-	them.gain = 1;
-
-	std::ostringstream mestr;
-	std::ostringstream themstr;
-	me.DebugPrint(mestr);
-	them.DebugPrint(themstr);
-
-	return (mestr.str() == themstr.str());
+	// don't care about certain flags
+	return type == other.type &&
+		keycode == other.keycode &&
+		joynum == other.joynum &&
+		joyaxis == other.joyaxis &&
+		joyaxistype == other.joyaxistype &&
+		joytype == other.joytype &&
+		mousetype == other.mousetype &&
+		mdir == other.mdir;
 }
 
 bool CarControlMap::Control::operator<(const Control & other) const
 {
-	Control me = *this;
-	Control them = other;
-
-	me.onetime = 1;
-	me.pushdown = 1;
-	me.deadzone = 0;
-	me.exponent = 1;
-	me.gain = 1;
-	them.onetime = 1;
-	them.pushdown = 1;
-	them.deadzone = 0;
-	them.exponent = 1;
-	them.gain = 1;
-
-	std::ostringstream mestr;
-	std::ostringstream themstr;
-	me.DebugPrint(mestr);
-	them.DebugPrint(themstr);
-
-	return (mestr.str() < themstr.str());
+	// don't care about certain flags
+	return type < other.type &&
+		keycode < other.keycode &&
+		joynum < other.joynum &&
+		joyaxis < other.joyaxis &&
+		joyaxistype < other.joyaxistype &&
+		joytype < other.joytype &&
+		mousetype < other.mousetype &&
+		mdir < other.mdir;
 }
 
 void CarControlMap::Control::ReadFrom(std::istream & in)
