@@ -32,16 +32,6 @@
 class EventSystem
 {
 public:
-	class ButtonState
-	{
-	public:
-		bool down; 	//button is down (false for up)
-		bool just_down; //button was just pressed
-		bool just_up;	//button was just released
-
-		ButtonState() : down(false), just_down(false), just_up(false) {}
-	};
-
 	class Joystick
 	{
 		public:
@@ -135,9 +125,9 @@ public:
 
 	void ProcessEvents();
 
-	ButtonState GetMouseButtonState(int id) const;
+	Toggle GetMouseButtonState(int id) const { return GetToggle <int> (mbutmap, id); }
 
-	ButtonState GetKeyState(SDL_Keycode id) const;
+	Toggle GetKeyState(SDL_Keycode id) const { return GetToggle <SDL_Keycode> (keymap, id); }
 
 	std::map <SDL_Keycode, Toggle> & GetKeyMap() {return keymap;}
 
@@ -252,18 +242,12 @@ private:
 	}
 
 	template <class T>
-	ButtonState GetToggle(const std::map <T, Toggle> & togglemap, const T & id) const
+	Toggle GetToggle(const std::map <T, Toggle> & togglemap, const T & id) const
 	{
-		ButtonState s;
-		s.down = s.just_down = s.just_up = false;
 		auto i = togglemap.find(id);
 		if (i != togglemap.end())
-		{
-			s.down = i->second.GetState();
-			s.just_down = i->second.GetImpulseRising();
-			s.just_up = i->second.GetImpulseFalling();
-		}
-		return s;
+			return i->second;
+		return Toggle();
 	}
 };
 

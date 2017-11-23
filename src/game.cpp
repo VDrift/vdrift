@@ -1064,8 +1064,8 @@ void Game::ProcessGUIInputs()
 	gui.ProcessInput(
 		eventsystem.GetMousePosition()[0] / (float)window.GetW(),
 		eventsystem.GetMousePosition()[1] / (float)window.GetH(),
-		eventsystem.GetMouseButtonState(1).down,
-		eventsystem.GetMouseButtonState(1).just_up,
+		eventsystem.GetMouseButtonState(1).GetState(),
+		eventsystem.GetMouseButtonState(1).GetImpulseFalling(),
 		car_controls_local.GetInput(GameInput::GUI_LEFT),
 		car_controls_local.GetInput(GameInput::GUI_RIGHT),
 		car_controls_local.GetInput(GameInput::GUI_UP),
@@ -1142,7 +1142,7 @@ bool Game::AssignControl()
 	// Check for mouse button inputs.
 	for (int i = 1; i < 4; ++i)
 	{
-		if (eventsystem.GetMouseButtonState(i).just_down)
+		if (eventsystem.GetMouseButtonState(i).GetImpulseRising())
 		{
 			controlgrab_control.type = CarControlMap::Control::MOUSE;
 			controlgrab_control.mousetype = CarControlMap::Control::MOUSEBUTTON;

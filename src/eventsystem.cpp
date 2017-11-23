@@ -179,16 +179,6 @@ void EventSystem::HandleKey(DirectionEnum dir, SDL_Keycode id)
 	HandleToggle <SDL_Keycode> (keymap, dir, id);
 }
 
-EventSystem::ButtonState EventSystem::GetMouseButtonState(int id) const
-{
-	return GetToggle <int> (mbutmap, id);
-}
-
-EventSystem::ButtonState EventSystem::GetKeyState(SDL_Keycode id) const
-{
-	return GetToggle <SDL_Keycode> (keymap, id);
-}
-
 vector <int> EventSystem::GetMousePosition() const
 {
 	vector <int> o;
@@ -247,58 +237,58 @@ QT_TEST(eventsystem_test)
 	{
 		//check key insertion
 		e.TestStim(EventSystem::STIM_INSERT_KEY_DOWN);
-		EventSystem::ButtonState tstate = e.GetKeyState(SDLK_t);
-		QT_CHECK(tstate.down && tstate.just_down && !tstate.just_up);
+		auto b = e.GetKeyState(SDLK_t);
+		QT_CHECK(b.GetState() && b.GetImpulseRising() && !b.GetImpulseFalling());
 
 		//check key aging
 		e.TestStim(EventSystem::STIM_AGE_KEYS);
-		tstate = e.GetKeyState(SDLK_t);
-		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetKeyState(SDLK_t);
+		QT_CHECK(b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 		e.TestStim(EventSystem::STIM_AGE_KEYS); //age again
-		tstate = e.GetKeyState(SDLK_t);
-		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetKeyState(SDLK_t);
+		QT_CHECK(b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 
 		//check key removal
 		e.TestStim(EventSystem::STIM_INSERT_KEY_UP);
-		tstate = e.GetKeyState(SDLK_t);
-		QT_CHECK(!tstate.down && !tstate.just_down && tstate.just_up);
+		b = e.GetKeyState(SDLK_t);
+		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && b.GetImpulseFalling());
 
 		//check key aging
 		e.TestStim(EventSystem::STIM_AGE_KEYS);
-		tstate = e.GetKeyState(SDLK_t);
-		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetKeyState(SDLK_t);
+		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 		e.TestStim(EventSystem::STIM_AGE_KEYS); //age again
-		tstate = e.GetKeyState(SDLK_t);
-		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetKeyState(SDLK_t);
+		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 	}
 
 	//mouse button stuff
 	{
 		//check button insertion
 		e.TestStim(EventSystem::STIM_INSERT_MBUT_DOWN);
-		EventSystem::ButtonState tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
-		QT_CHECK(tstate.down && tstate.just_down && !tstate.just_up);
+		auto b = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		QT_CHECK(b.GetState() && b.GetImpulseRising() && !b.GetImpulseFalling());
 
 		//check button aging
 		e.TestStim(EventSystem::STIM_AGE_MBUT);
-		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
-		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		QT_CHECK(b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 		e.TestStim(EventSystem::STIM_AGE_MBUT); //age again
-		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
-		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		QT_CHECK(b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 
 		//check button removal
 		e.TestStim(EventSystem::STIM_INSERT_MBUT_UP);
-		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
-		QT_CHECK(!tstate.down && !tstate.just_down && tstate.just_up);
+		b = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && b.GetImpulseFalling());
 
 		//check button aging
 		e.TestStim(EventSystem::STIM_AGE_MBUT);
-		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
-		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 		e.TestStim(EventSystem::STIM_AGE_MBUT); //age again
-		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
-		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
+		b = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 	}
 
 	//mouse motion stuff

@@ -612,7 +612,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 				}
 				else if (control.joytype == Control::JOYBUTTON)
 				{
-					Toggle button = eventsystem.GetJoyButton(control.joynum, control.keycode);
+					auto button = eventsystem.GetJoyButton(control.joynum, control.keycode);
 
 					if (control.onetime)
 					{
@@ -643,13 +643,13 @@ const std::vector <float> & CarControlMap::ProcessInput(
 			{
 				//cout << "type key" << std::endl;
 
-				EventSystem::ButtonState keystate = eventsystem.GetKeyState(SDL_Keycode(control.keycode));
+				auto key = eventsystem.GetKeyState(SDL_Keycode(control.keycode));
 
 				if (control.onetime)
 				{
-					if (control.pushdown && keystate.just_down)
+					if (control.pushdown && key.GetImpulseRising())
 						tempval = 1.0;
-					else if (!control.pushdown && keystate.just_up)
+					else if (!control.pushdown && key.GetImpulseFalling())
 						tempval = 1.0;
 					else
 						tempval = 0.0;
@@ -666,7 +666,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					}
 
 					//if (inputs[n->first] != keystate.down ? downval : upval) std::cout << "Key ramp: " << control.keycode << ", " << n->first << std::endl;
-					tempval = Ramp(lastinputs[n], keystate.down ? downval : upval, button_ramp, dt);
+					tempval = Ramp(lastinputs[n], key.GetState() ? downval : upval, button_ramp, dt);
 
 					handled = true;
 				}
@@ -679,13 +679,13 @@ const std::vector <float> & CarControlMap::ProcessInput(
 				{
 					//cout << "mousebutton" << std::endl;
 
-					EventSystem::ButtonState buttonstate = eventsystem.GetMouseButtonState(control.keycode);
+					auto button = eventsystem.GetMouseButtonState(control.keycode);
 
 					if (control.onetime)
 					{
-						if (control.pushdown && buttonstate.just_down)
+						if (control.pushdown && button.GetImpulseRising())
 							tempval = 1.0;
-						else if (!control.pushdown && buttonstate.just_up)
+						else if (!control.pushdown && button.GetImpulseFalling())
 							tempval = 1.0;
 						else
 							tempval = 0.0;
@@ -701,7 +701,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 							upval = 1.0;
 						}
 
-						tempval = Ramp(lastinputs[n], buttonstate.down ? downval : upval, button_ramp, dt);
+						tempval = Ramp(lastinputs[n], button.GetState() ? downval : upval, button_ramp, dt);
 						handled = true;
 					}
 				}
