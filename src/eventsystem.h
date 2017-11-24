@@ -125,9 +125,9 @@ public:
 
 	void ProcessEvents();
 
-	Toggle GetMouseButtonState(int id) const { return GetToggle <int> (mbutmap, id); }
+	Toggle GetMouseButtonState(int id) const { return GetToggle(mbutmap, id); }
 
-	Toggle GetKeyState(SDL_Keycode id) const { return GetToggle <SDL_Keycode> (keymap, id); }
+	Toggle GetKeyState(SDL_Keycode id) const { return GetToggle(keymap, id); }
 
 	std::map <SDL_Keycode, Toggle> & GetKeyMap() {return keymap;}
 
