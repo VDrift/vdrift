@@ -56,43 +56,32 @@ public:
 
 	struct Control
 	{
+		enum DeviceEnum
+		{
+			KEYBOARD = -1,
+			MOUSE = -2,
+			UNKNOWN = -16
+		};
+
+		enum MouseAxisEnum
+		{
+			MOUSEY = 0,
+			MOUSEX = 1
+		};
+
+		int device;	// joysticks, keyboard, mouse
+		int id;		// key, button, axis id
+
 		enum TypeEnum
 		{
-			KEY,
-			JOY,
-			MOUSE,
-			UNKNOWN
+			AXIS,
+			BUTTON,
+			HAT
 		} type;
+
+		bool negative;
 		bool onetime;
 		bool pushdown;
-		int keycode;
-
-		int joynum;
-		int joyaxis;
-		enum JoyAxisEnum
-		{
-			POSITIVE,
-			NEGATIVE
-		} joyaxistype;
-		enum JoyTypeEnum
-		{
-			JOYAXIS,
-			JOYBUTTON,
-			JOYHAT
-		} joytype;
-
-		enum MouseTypeEnum
-		{
-			MOUSEBUTTON,
-			MOUSEMOTION
-		} mousetype;
-		enum MouseDirectionEnum
-		{
-			UP,
-			DOWN,
-			LEFT,
-			RIGHT
-		} mdir;
 
 		float deadzone;
 		float exponent;

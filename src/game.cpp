@@ -1089,8 +1089,8 @@ bool Game::AssignControl()
 	{
 		if (key.second.GetImpulseRising())
 		{
-			controlgrab_control.type = CarControlMap::Control::KEY;
-			controlgrab_control.keycode = key.first;
+			controlgrab_control.device = CarControlMap::Control::KEYBOARD;
+			controlgrab_control.id = key.first;
 			car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
@@ -1104,10 +1104,9 @@ bool Game::AssignControl()
 		{
 			if (eventsystem.GetJoyButton(j, i).GetImpulseRising())
 			{
-				controlgrab_control.type = CarControlMap::Control::JOY;
-				controlgrab_control.joynum = j;
-				controlgrab_control.joytype = CarControlMap::Control::JOYBUTTON;
-				controlgrab_control.keycode = i;
+				controlgrab_control.device = j;
+				controlgrab_control.id = i;
+				controlgrab_control.type = CarControlMap::Control::BUTTON;
 				car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
@@ -1120,19 +1119,12 @@ bool Game::AssignControl()
 			assert(i < controlgrab_joystick_state[j].GetNumAxes());
 
 			float delta = eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i);
-			int axis = 0;
-			if (delta > 0.4f) axis = 1;
-			if (delta < -0.4f) axis = -1;
-			if (axis)
+			if (delta > 0.4f || delta < -0.4f)
 			{
-				controlgrab_control.type = CarControlMap::Control::JOY;
-				controlgrab_control.joytype = CarControlMap::Control::JOYAXIS;
-				controlgrab_control.joynum = j;
-				controlgrab_control.joyaxis = i;
-				if (axis > 0)
-					controlgrab_control.joyaxistype = CarControlMap::Control::POSITIVE;
-				else if (axis < 0)
-					controlgrab_control.joyaxistype = CarControlMap::Control::NEGATIVE;
+				controlgrab_control.device = j;
+				controlgrab_control.id = i;
+				controlgrab_control.type = CarControlMap::Control::AXIS;
+				controlgrab_control.negative = delta < 0;
 				car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
@@ -1144,9 +1136,9 @@ bool Game::AssignControl()
 	{
 		if (eventsystem.GetMouseButtonState(i).GetImpulseRising())
 		{
-			controlgrab_control.type = CarControlMap::Control::MOUSE;
-			controlgrab_control.mousetype = CarControlMap::Control::MOUSEBUTTON;
-			controlgrab_control.keycode = i;
+			controlgrab_control.device = CarControlMap::Control::MOUSE;
+			controlgrab_control.type = CarControlMap::Control::BUTTON;
+			controlgrab_control.id = i;
 			car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
@@ -1158,16 +1150,28 @@ bool Game::AssignControl()
 	int threshold = 200;
 	if (dx < -threshold || dx > threshold || dy < -threshold || dy > threshold)
 	{
-		controlgrab_control.type = CarControlMap::Control::MOUSE;
-		controlgrab_control.mousetype = CarControlMap::Control::MOUSEMOTION;
+		controlgrab_control.device = CarControlMap::Control::MOUSE;
+		controlgrab_control.type = CarControlMap::Control::AXIS;
 		if (dx < -threshold)
-			controlgrab_control.mdir = CarControlMap::Control::LEFT;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEX;
+			controlgrab_control.negative = true;
+		}
 		else if (dx > threshold)
-			controlgrab_control.mdir = CarControlMap::Control::RIGHT;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEX;
+			controlgrab_control.negative = false;
+		}
 		else if (dy < -threshold)
-			controlgrab_control.mdir = CarControlMap::Control::UP;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEY;
+			controlgrab_control.negative = true;
+		}
 		else if (dy > threshold)
-			controlgrab_control.mdir = CarControlMap::Control::DOWN;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEY;
+			controlgrab_control.negative = false;
+		}
 		car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 		return true;
 	}
@@ -3079,7 +3083,7 @@ void Game::SetControl(const std::string & value)
 	controlgrab_input = inputstr;
 	controlgrab_id = id;
 
-	if (controlgrab_control.type == CarControlMap::Control::UNKNOWN)
+	if (controlgrab_control.device == CarControlMap::Control::UNKNOWN)
 	{
 		// assign control
 		controlgrab_mouse_coords = std::make_pair(eventsystem.GetMousePosition()[0], eventsystem.GetMousePosition()[1]);
