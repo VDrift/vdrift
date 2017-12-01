@@ -56,20 +56,11 @@ public:
 
 	struct Control
 	{
-		enum DeviceEnum
-		{
-			KEYBOARD = -1,
-			MOUSE = -2,
-			UNKNOWN = -16
-		};
-
 		enum MouseAxisEnum
 		{
 			MOUSEY = 0,
 			MOUSEX = 1
 		};
-
-		int device;	// joysticks, keyboard, mouse
 		int id;		// key, button, axis id
 
 		enum TypeEnum
@@ -78,6 +69,15 @@ public:
 			BUTTON,
 			HAT
 		} type;
+
+		enum DeviceEnum
+		{
+			JOYSTICKS = 128,
+			MOUSE = 253,
+			KEYBOARD = 254,
+			UNKNOWN = 255
+		};
+		unsigned char device;	// joysticks, keyboard, mouse
 
 		bool negative;
 		bool onetime;

@@ -488,10 +488,10 @@ void CarControlMap::Save(Config & controls_config)
 			Config::iterator section;
 			controls_config.get(s.str(), section);
 			controls_config.set(section, "name", control_name);
-			if (control.device >= 0)
+			if (control.device < Control::JOYSTICKS)
 			{
 				controls_config.set(section, "type", "joy");
-				controls_config.set(section, "joy_index", control.device);
+				controls_config.set(section, "joy_index", (unsigned)control.device);
 
 				if (control.type == Control::AXIS)
 				{
@@ -572,7 +572,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 			bool handled = false;
 			float tempval = newval;
 
-			if (control.device >= 0)
+			if (control.device < Control::JOYSTICKS)
 			{
 				if (control.type == Control::AXIS)
 				{
@@ -1021,10 +1021,10 @@ std::string CarControlMap::Control::GetInfo() const
 		return s.str();
 	}
 
-	if (device >= 0)
+	if (device < JOYSTICKS)
 	{
 		std::ostringstream s;
-		s << "JOY" << device;
+		s << "JOY" << (unsigned)device;
 
 		if (type == AXIS)
 		{
@@ -1050,7 +1050,7 @@ std::string CarControlMap::Control::GetInfo() const
 
 void CarControlMap::Control::DebugPrint(std::ostream & out) const
 {
-	out << device << " " << id << " " << type << " " <<
+	out << id << " " << type << " " << (unsigned)device << " " <<
 		negative << " " << onetime << " " << pushdown << " " <<
 		deadzone << " " << exponent << " " << gain << std::endl;
 }
@@ -1058,32 +1058,32 @@ void CarControlMap::Control::DebugPrint(std::ostream & out) const
 bool CarControlMap::Control::operator==(const Control & other) const
 {
 	// don't care about certain flags
-	return device == other.device &&
-		id == other.id &&
+	return id == other.id &&
 		type == other.type &&
+		device == other.device &&
 		negative == other.negative;
 }
 
 bool CarControlMap::Control::operator<(const Control & other) const
 {
 	// don't care about certain flags
-	return device < other.device &&
-		id < other.id &&
+	return id < other.id &&
 		type < other.type &&
+		device < other.device &&
 		negative < other.negative;
 }
 
 void CarControlMap::Control::ReadFrom(std::istream & in)
 {
 	int newtype;
-	in >> device >> id >> newtype >>
+	in >> id >> newtype >> device >>
 		negative >> onetime >> pushdown >>
 		deadzone >> exponent >> gain;
 	type = TypeEnum(newtype);
 }
 
 CarControlMap::Control::Control() :
-	device(UNKNOWN), id(0), type(AXIS),
+	id(0), type(AXIS), device(UNKNOWN),
 	negative(false), onetime(true), pushdown(false),
 	deadzone(0), exponent(1), gain(1)
 {}
