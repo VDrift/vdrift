@@ -51,13 +51,13 @@ public:
 
 	void ComputeWheelTorques(btScalar driveshaft_torque);
 
-	const btScalar & GetSide1Torque() const;
+	btScalar GetSide1Torque() const;
 
-	const btScalar & GetSide2Torque() const;
+	btScalar GetSide2Torque() const;
 
-	const btScalar & GetSide1Speed() const;
+	btScalar GetSide1Speed() const;
 
-	const btScalar & GetSide2Speed() const;
+	btScalar GetSide2Speed() const;
 
 	btScalar GetFinalDrive() const;
 

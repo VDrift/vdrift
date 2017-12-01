@@ -78,22 +78,22 @@ void CarDifferential::ComputeWheelTorques(btScalar driveshaft_torque)
 	side2_torque = torque * torque_split + drag;
 }
 
-const btScalar & CarDifferential::GetSide1Torque() const
+btScalar CarDifferential::GetSide1Torque() const
 {
 	return side1_torque;
 }
 
-const btScalar & CarDifferential::GetSide2Torque() const
+btScalar CarDifferential::GetSide2Torque() const
 {
 	return side2_torque;
 }
 
-const btScalar & CarDifferential::GetSide1Speed() const
+btScalar CarDifferential::GetSide1Speed() const
 {
 	return side1_speed;
 }
 
-const btScalar & CarDifferential::GetSide2Speed() const
+btScalar CarDifferential::GetSide2Speed() const
 {
 	return side2_speed;
 }

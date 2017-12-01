@@ -60,9 +60,9 @@ public:
 
 	virtual ~CarSuspension() {}
 
-	const btScalar & GetAntiRoll() const {return info.anti_roll;}
+	btScalar GetAntiRoll() const {return info.anti_roll;}
 
-	const btScalar & GetMaxSteeringAngle() const {return info.steering_angle;}
+	btScalar GetMaxSteeringAngle() const {return info.steering_angle;}
 
 	/// wheel orientation relative to car
 	const btQuaternion & GetWheelOrientation() const {return orientation;}
@@ -74,16 +74,16 @@ public:
 	virtual btVector3 GetWheelPosition(btScalar displacement) = 0;
 
 	/// force acting onto wheel
-	const btScalar & GetWheelForce() const {return wheel_force;}
+	btScalar GetWheelForce() const {return wheel_force;}
 
 	/// suspension force acting onto car body
-	const btScalar & GetForce() const {return force;}
+	btScalar GetForce() const {return force;}
 
 	/// wheel overtravel
-	const btScalar & GetOvertravel() const {return overtravel;}
+	btScalar GetOvertravel() const {return overtravel;}
 
 	/// wheel displacement
-	const btScalar & GetDisplacement() const {return displacement;}
+	btScalar GetDisplacement() const {return displacement;}
 
 	/// displacement fraction: 0.0 fully extended, 1.0 fully compressed
 	btScalar GetDisplacementFraction() const {return displacement / info.travel;}

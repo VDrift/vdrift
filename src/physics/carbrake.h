@@ -82,7 +82,7 @@ class CarBrake
 			return torque;
 		}
 
-		void SetFriction(const btScalar & value)
+		void SetFriction(btScalar value)
 		{
 			friction = value;
 		}
@@ -92,12 +92,12 @@ class CarBrake
 			return friction;
 		}
 
-		void SetMaxPressure(const btScalar & value)
+		void SetMaxPressure(btScalar value)
 		{
 			max_pressure = value;
 		}
 
-		void SetRadius(const btScalar & value)
+		void SetRadius(btScalar value)
 		{
 			radius = value;
 		}
@@ -107,12 +107,12 @@ class CarBrake
 			return radius;
 		}
 
-		void SetArea(const btScalar & value)
+		void SetArea(btScalar value)
 		{
 			area = value;
 		}
 
-		void SetBias(const btScalar & value)
+		void SetBias(btScalar value)
 		{
 			bias = value;
 		}
@@ -122,13 +122,13 @@ class CarBrake
 			return brake_factor;
 		}
 
-		void SetHandbrake(const btScalar & value)
+		void SetHandbrake(btScalar value)
 		{
 			handbrake = value;
 		}
 
 		///ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
-		void SetHandbrakeFactor(const btScalar & value)
+		void SetHandbrakeFactor(btScalar value)
 		{
 			handbrake_factor = value;
 		}

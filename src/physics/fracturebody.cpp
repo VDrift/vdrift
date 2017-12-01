@@ -41,7 +41,7 @@ static inline void setConId(btCollisionShape & shape, int id)
 	shape.setUserPointer(cast<void*>(id + 1));
 }
 
-static inline btVector3 getPrincipalInertia(const btVector3 & p, const btScalar & m)
+static inline btVector3 getPrincipalInertia(const btVector3 & p, const btScalar m)
 {
 	return m * btVector3(
 		p.y() * p.y() + p.z() * p.z(),

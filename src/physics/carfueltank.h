@@ -36,12 +36,12 @@ public:
 		// ctor
 	}
 
-	void SetCapacity(const btScalar & value)
+	void SetCapacity(btScalar value)
 	{
 		capacity = value;
 	}
 
-	void SetDensity(const btScalar & value)
+	void SetDensity(btScalar value)
 	{
 		density = value;
 		mass = density * volume;
@@ -63,7 +63,7 @@ public:
 		return mass;
 	}
 
-	void SetVolume(const btScalar & value)
+	void SetVolume(btScalar value)
 	{
 		volume = value;
 		mass = density * volume;
