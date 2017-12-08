@@ -161,6 +161,37 @@ static bool LoadBrake(
 	return true;
 }
 
+static btScalar ComputeFrictionCoeff(btScalar r, btScalar w, btScalar ar, btScalar pt, btScalar fz)
+{
+	btScalar wt = (1.03f - 0.4f * ar) * w;
+	btScalar cf = 0.28f * btSqrt(wt * r * 2);
+	btScalar kz = 9.81f * (1E5 * pt * cf + 3450);
+	btScalar dz = fz / kz;
+	btScalar a = 0.3f * (dz + 2.25f * btSqrt(r * dz));
+	btScalar p = fz / (2 * a * wt);
+	btScalar mup = 100 * btPow(p, -1/3.0);
+	return mup;
+}
+
+static btScalar ComputeFrictionFactor(const PTree & cfg, const btVector3 & size)
+{
+	btScalar r0, w0, ar0, pt0, fz0;
+	if (!cfg.get("R0", r0)) return 1;
+	if (!cfg.get("W0", w0)) return 1;
+	if (!cfg.get("AR0", ar0)) return 1;
+	if (!cfg.get("PT0", pt0)) return 1;
+	if (!cfg.get("FZ0", fz0)) return 1;
+
+	btScalar w = size[0] * 0.001f;
+	btScalar ar = size[1] * 0.01f;
+	btScalar r = size[2] * 0.5f * 0.0254f + w * ar;
+
+	btScalar mu0 = ComputeFrictionCoeff(r0, w0, ar0, pt0, fz0);
+	btScalar mu1 = ComputeFrictionCoeff(r, w, ar, pt0, fz0);
+	btScalar cf = mu1 / mu0;
+	return cf;
+}
+
 #if defined(VDRIFTP)
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
@@ -231,6 +262,13 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	info.coefficients[CarTireInfo::RHY1] *= side_factor;
 	info.coefficients[CarTireInfo::RVY5] *= side_factor;
 
+	btScalar size_factor = 1;
+	btVector3 size;
+	if (cfg_wheel.get("tire.size", size))
+		size_factor = ComputeFrictionFactor(cfg, size);
+	info.coefficients[CarTireInfo::PDX1] *= size_factor;
+	info.coefficients[CarTireInfo::PDY1] *= size_factor;
+
 	tire.init(info);
 
 	return true;
@@ -294,6 +332,13 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 		side_factor = (facing != "left") ? 1 : -1;
 	info.lateral[13] *= side_factor;
 	info.lateral[14] *= side_factor;
+
+	btScalar size_factor = 1;
+	btVector3 size;
+	if (cfg_wheel.get("tire.size", size))
+		size_factor = ComputeFrictionFactor(cfg, size);
+	info.longitudinal[2] *= size_factor;
+	info.lateral[2] *= size_factor;
 
 	tire.init(info);
 
