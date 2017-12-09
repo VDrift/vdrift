@@ -165,7 +165,7 @@ static btScalar ComputeFrictionCoeff(btScalar r, btScalar w, btScalar ar, btScal
 {
 	btScalar wt = (1.03f - 0.4f * ar) * w;
 	btScalar cf = 0.28f * btSqrt(wt * r * 2);
-	btScalar kz = 9.81f * (1E5 * pt * cf + 3450);
+	btScalar kz = 9.81f * (1E5f * pt * cf + 3450);
 	btScalar dz = fz / kz;
 	btScalar a = 0.3f * (dz + 2.25f * btSqrt(r * dz));
 	btScalar p = fz / (2 * a * wt);
