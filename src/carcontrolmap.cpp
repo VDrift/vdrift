@@ -308,9 +308,10 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 		Control newctrl;
 		if (type == "joy")
 		{
-			newctrl.device = 0;
 			std::string joy_type;
-			if (!controls_config.get(i, "joy_index", newctrl.device, error_output)) continue;
+			int device = 0;
+			if (!controls_config.get(i, "joy_index", device, error_output)) continue;
+			newctrl.device = (unsigned char) device;
 			if (!controls_config.get(i, "joy_type", joy_type, error_output)) continue;
 
 			if (joy_type == "button")
