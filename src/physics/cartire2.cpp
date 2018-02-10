@@ -380,7 +380,7 @@ void CarTire2::findSigmaHatAlphaHat(
 		btScalar Fx = PacejkaFx(s, Fz, dFz, mu);
 		if (Fx > Fxmax)
 		{
-			output_sigmahat = btFabs(s);
+			output_sigmahat = s;
 			Fxmax = Fx;
 		}
 		else if (Fx < Fxmax && Fxmax > 0)
@@ -398,7 +398,7 @@ void CarTire2::findSigmaHatAlphaHat(
 		btScalar Fy = PacejkaFy(a, camber, Fz, dFz, mu, Dy, BCy, Shf);
 		if (Fy > Fymax)
 		{
-			output_alphahat = btFabs(a);
+			output_alphahat = a;
 			Fymax = Fy;
 		}
 		else if (Fy < Fymax && Fymax > 0)
