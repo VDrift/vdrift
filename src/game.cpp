@@ -20,7 +20,6 @@
 #include "game.h"
 #include "unittest.h"
 #include "definitions.h"
-#include "joepack.h"
 #include "matrix4.h"
 #include "physics/carwheelposition.h"
 #include "physics/tracksurface.h"
