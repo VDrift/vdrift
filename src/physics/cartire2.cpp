@@ -383,6 +383,10 @@ void CarTire2::findSigmaHatAlphaHat(
 			output_sigmahat = btFabs(s);
 			Fxmax = Fx;
 		}
+		else if (Fx < Fxmax && Fxmax > 0)
+		{
+			break;
+		}
 	}
 	btAssert(Fxmax > 0);
 
@@ -396,6 +400,10 @@ void CarTire2::findSigmaHatAlphaHat(
 		{
 			output_alphahat = btFabs(a);
 			Fymax = Fy;
+		}
+		else if (Fy < Fymax && Fymax > 0)
+		{
+			break;
 		}
 	}
 	btAssert(Fymax > 0);
