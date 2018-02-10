@@ -368,13 +368,14 @@ void CarTire2::findSigmaHatAlphaHat(
 	btScalar Fz = load;
 	btScalar Fz0 = nominal_load;
 	btScalar dFz = (Fz - Fz0) / Fz0;
-	btScalar camber = 0.0;
-	btScalar mu = 1.0;
+	btScalar camber = 0;
+	btScalar mu = 1;
 	btScalar Dy, BCy, Shf; // unused
 
-	btScalar Fxmax = 0.0;
-	btScalar smax = 2.0;
-	for (btScalar s = -smax; s < smax; s += 2 * smax / iterations)
+	btScalar Fxmax = 0;
+	btScalar smax = 1;
+	btScalar ds = smax / iterations;
+	for (btScalar s = 0; s < smax; s += ds)
 	{
 		btScalar Fx = PacejkaFx(s, Fz, dFz, mu);
 		if (Fx > Fxmax)
@@ -383,10 +384,12 @@ void CarTire2::findSigmaHatAlphaHat(
 			Fxmax = Fx;
 		}
 	}
+	btAssert(Fxmax > 0);
 
-	btScalar Fymax = 0.0;
-	btScalar amax = 30.0 * (M_PI / 180.0);
-	for (btScalar a = -amax; a < amax; a += 2 * amax / iterations)
+	btScalar Fymax = 0;
+	btScalar amax = 40 * (M_PI / 180.0);
+	btScalar da = amax / iterations;
+	for (btScalar a = 0; a < amax; a += da)
 	{
 		btScalar Fy = PacejkaFy(a, camber, Fz, dFz, mu, Dy, BCy, Shf);
 		if (Fy > Fymax)
@@ -395,6 +398,7 @@ void CarTire2::findSigmaHatAlphaHat(
 			Fymax = Fy;
 		}
 	}
+	btAssert(Fymax > 0);
 }
 
 void CarTire2::initSigmaHatAlphaHat()

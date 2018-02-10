@@ -191,7 +191,7 @@ private:
 		btScalar load,
 		btScalar & output_sigmahat,
 		btScalar & output_alphahat,
-		int iterations = 400);
+		int iterations = 200);
 
 	/// init sigma_hat, alpha_hat tables
 	void initSigmaHatAlphaHat();

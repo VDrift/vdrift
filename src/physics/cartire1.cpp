@@ -324,28 +324,34 @@ void CarTire1::findSigmaHatAlphaHat(
 	btScalar & output_alphahat,
 	int iterations)
 {
-	btScalar x, y, ymax, junk;
-	ymax = 0;
-	for (x = -2; x < 2; x += 4.0/iterations)
+	btScalar junk;
+	btScalar fmax = 0;
+	btScalar xmax = 1;
+	btScalar dx = xmax / iterations;
+	for (btScalar x = 0; x < xmax; x += dx)
 	{
-		y = PacejkaFx(x, load, 1.0, junk);
-		if (y > ymax)
+		btScalar f = PacejkaFx(x, load, 1, junk);
+		if (f > fmax)
 		{
 			output_sigmahat = x;
-			ymax = y;
+			fmax = f;
 		}
 	}
+	btAssert(fmax > 0);
 
-	ymax = 0;
-	for (x = -20; x < 20; x += 40.0/iterations)
+	fmax = 0;
+	xmax = 40;
+	dx = xmax / iterations;
+	for (btScalar x = 0; x < xmax; x += dx)
 	{
-		y = PacejkaFy(x, load, 0, 1.0, junk);
-		if (y > ymax)
+		btScalar f = PacejkaFy(x, load, 0, 1, junk);
+		if (f > fmax)
 		{
 			output_alphahat = x;
-			ymax = y;
+			fmax = f;
 		}
 	}
+	btAssert(fmax > 0);
 }
 
 void CarTire1::initSigmaHatAlphaHat(int tablesize)
