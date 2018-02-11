@@ -491,34 +491,29 @@ bool AiCarExperimental::Recover(const CarDynamics & car, float dt, const RoadPat
 		{
 			// Collision detected: we are probably trying to cross a wall.
 			// We need to drive backwards.
-			inputs[CarInput::REVERSE] = 1;
 			recover_time = 0.0f;
 			is_recovering = true;
 			return true;
 		}
-		else
-		{
-			// If there are no walls in front, just leave the recover mode.
-			inputs[CarInput::FIRST_GEAR] = 1;
-			is_recovering = false;
-			return false;
-		}
+
+		// If there are no walls in front, just leave the recover mode.
+		is_recovering = false;
+		return false;
 	}
-	else if (is_recovering)
-	{
-		// If car is driving and it is in recover mode, count the time since start of recover mode.
-		recover_time += dt;
-		if (recover_time > 3)
-		{
-			// Break to 0 after 3 secs of driving backwards.
-			// After breaking, it will trigger the "is_recovering = false" above and leave recover mode.
-			inputs[CarInput::THROTTLE] = 0;
-			inputs[CarInput::BRAKE] = 1;
-			return true;
-		}
-	}
+
 	// If car is still driving and it is not in recover mode, just do the usual stuff.
-	return false;
+	if (!is_recovering)
+		return false;
+
+	// If car is driving and it is in recover mode, count the time since start of recover mode.
+	recover_time += dt;
+	if (recover_time < 3)
+	{
+		// Drive backwards for 3 secs.
+		inputs[CarInput::THROTTLE] = 0;
+		inputs[CarInput::BRAKE] = 1;
+	}
+	return true;
 }
 
 void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
