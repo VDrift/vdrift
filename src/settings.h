@@ -177,6 +177,11 @@ public:
 		return view_distance;
 	}
 
+	bool GetSteeringAssist() const
+	{
+		return steering_assist;
+	}
+
 	bool GetAutoReverse() const
 	{
 		return autoreverse;
@@ -425,6 +430,7 @@ private:
 	bool joy200;
 	float speed_sensitivity;
 	float view_distance;
+	bool steering_assist;
 	bool autoreverse;
 	bool autoclutch;
 	bool autoshift;

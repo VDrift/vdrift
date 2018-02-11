@@ -75,7 +75,8 @@ public:
 	// move the car along z-axis until it is touching the ground
 	void AlignWithGround();
 
-	// fime: move into car input vector?
+	// fixme: move into car input vector?
+	void SetSteeringAssist(bool value);
 	void SetAutoReverse(bool value);
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
@@ -217,18 +218,7 @@ protected:
 	btScalar driveshaft_rpm;
 	btScalar tacho_rpm;
 
-	bool autoreverse;
-	bool autoclutch;
-	bool autoshift;
-	bool shifted;
-	int shift_gear;
-	btScalar remaining_shift_time;
-	btScalar clutch_value;
-	btScalar brake_value;
-
 	// traction control state
-	bool abs;
-	bool tcs;
 	std::vector<int> abs_active;
 	std::vector<int> tcs_active;
 
@@ -242,6 +232,20 @@ protected:
 	btScalar maxspeed;
 	btScalar feedback_scale;
 	btScalar feedback;
+
+	btScalar brake_value;
+	btScalar clutch_value;
+	btScalar remaining_shift_time;
+	int shift_gear;
+	bool shifted;
+
+	// assists
+	bool steering_assist;
+	bool autoreverse;
+	bool autoclutch;
+	bool autoshift;
+	bool abs;
+	bool tcs;
 
 	btVector3 GetDownVector() const;
 

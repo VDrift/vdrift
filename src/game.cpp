@@ -1785,13 +1785,24 @@ bool Game::LoadCar(
 
 	bool isai = !info.driver.empty();
 	if (isai)
+	{
 		ai.AddCar(carid, info.ailevel, info.driver);
-
-	car.SetAutoReverse(settings.GetAutoReverse() && !isai);
-	car.SetAutoClutch(settings.GetAutoClutch() || isai);
-	car.SetAutoShift(settings.GetAutoShift() || isai);
-	car.SetABS(settings.GetABS() || isai);
-	car.SetTCS(settings.GetTCS() || isai);
+		car.SetSteeringAssist(true);
+		car.SetAutoReverse(true);
+		car.SetAutoClutch(true);
+		car.SetAutoShift(true);
+		car.SetABS(true);
+		car.SetTCS(true);
+	}
+	else
+	{
+		car.SetSteeringAssist(settings.GetSteeringAssist());
+		car.SetAutoReverse(settings.GetAutoReverse());
+		car.SetAutoClutch(settings.GetAutoClutch());
+		car.SetAutoShift(settings.GetAutoShift());
+		car.SetABS(settings.GetABS());
+		car.SetTCS(settings.GetTCS());
+	}
 
 	info_output << "Car loading was successful: " << info.name << std::endl;
 
@@ -2331,6 +2342,7 @@ void Game::ProcessNewSettings()
 		car_dynamics[player_car_id].SetAutoClutch(settings.GetAutoClutch());
 		car_dynamics[player_car_id].SetAutoShift(settings.GetAutoShift());
 		car_dynamics[player_car_id].SetAutoReverse(settings.GetAutoReverse());
+		car_dynamics[player_car_id].SetSteeringAssist(settings.GetSteeringAssist());
 	}
 
 	sound.SetVolume(settings.GetSoundVolume());

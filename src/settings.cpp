@@ -64,6 +64,7 @@ Settings::Settings() :
 	joy200(false),
 	speed_sensitivity(1.0),
 	view_distance(1000.0),
+	steering_assist(true),
 	autoreverse(true),
 	autoclutch(true),
 	autoshift(true),
@@ -207,6 +208,7 @@ void Settings::Serialize(bool write, Config & config)
 
 	config.get("control", section);
 	Param(config, write, section, "speed_sens_steering", speed_sensitivity);
+	Param(config, write, section, "steering_assist", steering_assist);
 	Param(config, write, section, "autoreverse", autoreverse);
 	Param(config, write, section, "autoclutch", autoclutch);
 	Param(config, write, section, "autotrans", autoshift);

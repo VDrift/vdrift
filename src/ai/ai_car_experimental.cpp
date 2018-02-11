@@ -619,16 +619,12 @@ void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
 	else if (angle > 180 && angle <= 360)
 		angle = 360 - angle;
 
-	float optimum_range = car.GetTire(FRONT_LEFT).getIdealSlipAngle() * rad2deg;
-	angle = Clamp(angle, -optimum_range, optimum_range);
-
 	float steer_value = Clamp(angle / car.GetMaxSteeringAngle(), -1.0f, 1.0f);
 
-	assert(!std::isnan(steer_value));
-	if (is_recovering){
-		// If we are driving backwards, we need to invert steer direction.
+	// If we are driving backwards, we need to invert steer direction.
+	if (is_recovering)
 		steer_value = steer_value > 0 ? -1 : 1;
-	}
+
 	inputs[CarInput::STEER_RIGHT] = steer_value;
 }
 

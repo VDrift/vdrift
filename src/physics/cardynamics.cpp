@@ -747,6 +747,11 @@ void CarDynamics::AlignWithGround()
 	body->setLinearVelocity(btVector3(0, 0, 0));
 }
 
+void CarDynamics::SetSteeringAssist(bool value)
+{
+	steering_assist = value;
+}
+
 void CarDynamics::SetAutoReverse(bool value)
 {
 	autoreverse = value;
@@ -1784,8 +1789,22 @@ void CarDynamics::CalculateFrictionCoeffs(btScalar & mulon, btScalar & mulat) co
 	mulat = lat_friction / mg;
 }
 
-void CarDynamics::SetSteering(const btScalar value)
+void CarDynamics::SetSteering(btScalar value)
 {
+	if (steering_assist)
+	{
+		btScalar ideal_angle = tire[0].getIdealSlipAngle();
+		btScalar max_angle = suspension[0]->GetMaxSteeringAngle();
+		btScalar ideal_value = btScalar(180/M_PI) * ideal_angle / max_angle;
+
+		// transit to ideal value at 10 m/s (36km/h)
+		btScalar transition = Min(linear_velocity.length2() * 0.01f, 1.0f);
+		btScalar abs_value = std::abs(value);
+		btScalar max_value = abs_value + (ideal_value - abs_value) * transition;
+
+		value = Clamp(value, -max_value, max_value);
+	}
+
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		suspension[i]->SetSteering(value);
@@ -1919,16 +1938,6 @@ void CarDynamics::Init()
 	drive = NONE;
 	driveshaft_rpm = 0;
 	tacho_rpm = 0;
-	autoreverse = false;
-	autoclutch = true;
-	autoshift = false;
-	shifted = true;
-	shift_gear = 0;
-	remaining_shift_time = 0;
-	clutch_value = 1;
-	brake_value = 0;
-	abs = false;
-	tcs = false;
 	aero_lift_coeff = 0.1;
 	aero_drag_coeff = 0.3;
 	lon_friction_coeff = 1;
@@ -1937,6 +1946,17 @@ void CarDynamics::Init()
 	maxspeed = 0;
 	feedback_scale = 0;
 	feedback = 0;
+	brake_value = 0;
+	clutch_value = 1;
+	remaining_shift_time = 0;
+	shift_gear = 0;
+	shifted = true;
+	steering_assist = false;
+	autoreverse = false;
+	autoclutch = true;
+	autoshift = false;
+	abs = false;
+	tcs = false;
 
 	suspension.resize(WHEEL_POSITION_SIZE, 0);
 	wheel.resize(WHEEL_POSITION_SIZE);
