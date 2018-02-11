@@ -1783,8 +1783,7 @@ bool Game::LoadCar(
 		return false;
 	}
 
-	bool isai = !info.driver.empty();
-	if (isai)
+	if (!info.driver.empty())
 	{
 		ai.AddCar(carid, info.ailevel, info.driver);
 		car.SetSteeringAssist(true);
