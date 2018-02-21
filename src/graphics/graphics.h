@@ -108,16 +108,23 @@ public:
 	virtual ~Graphics() {}
 };
 
-static inline bool ContributionCull(Vec3 cam, float resy, Vec3 center, float radius)
+// todo: use camera fov and user provided pixel size threshold
+static inline float ContributionCullThreshold(float resy)
 {
 	// angular_size = 2 * radius / distance
 	// pixel_size = screen_height * angular_size / fov
 	// rough field-of-view estimation 90 deg -> pi/2
-	const float fov2 = M_PI_2 * M_PI_2;
-	const float pixel_threshold = 2;
-	float d2 = (center - cam).MagnitudeSquared();
-	float n = 2 * radius * resy;
-	return (n * n < fov2 * d2 * pixel_threshold);
+	// cull objects smaller that 2 pixels
+	const float fov = M_PI_2;
+	const float min_pixel_size = 2;
+	const float min_angular_size = min_pixel_size * fov / resy;
+	return min_angular_size * min_angular_size * 0.25f;
+}
+
+// cull_threshold = (min_angular_size / 2)^2
+static inline bool ContributionCull(Vec3 cam, float cull_threshold, Vec3 center, float radius)
+{
+	return radius * radius < (center - cam).MagnitudeSquared() * cull_threshold;
 }
 
 #endif

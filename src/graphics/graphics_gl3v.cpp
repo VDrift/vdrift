@@ -429,10 +429,11 @@ void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, st
 {
 	if (frustum && enableContributionCull)
 	{
+		float ct = ContributionCullThreshold(h);
 		for (auto d : drawables)
 		{
 			if (!frustum->Cull(d->GetCenter(), d->GetRadius()) &&
-				!ContributionCull(camPos, h, d->GetCenter(), d->GetRadius()))
+				!ContributionCull(camPos, ct, d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
@@ -464,12 +465,12 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
 
 	const std::vector <Drawable*> & drawables = queryResults;
-
 	if (frustum && enableContributionCull)
 	{
+		float ct = ContributionCullThreshold(h);
 		for (auto d : drawables)
 		{
-			if (!ContributionCull(camPos, h, d->GetCenter(), d->GetRadius()))
+			if (!ContributionCull(camPos, ct, d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
