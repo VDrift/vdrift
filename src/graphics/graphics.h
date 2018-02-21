@@ -108,5 +108,17 @@ public:
 	virtual ~Graphics() {}
 };
 
+static inline bool ContributionCull(Vec3 cam, float resy, Vec3 center, float radius)
+{
+	// angular_size = 2 * radius / distance
+	// pixel_size = screen_height * angular_size / fov
+	// rough field-of-view estimation 90 deg -> pi/2
+	const float fov2 = M_PI_2 * M_PI_2;
+	const float pixel_threshold = 2;
+	float d2 = (center - cam).MagnitudeSquared();
+	float n = 2 * radius * resy;
+	return (n * n < fov2 * d2 * pixel_threshold);
+}
+
 #endif
 

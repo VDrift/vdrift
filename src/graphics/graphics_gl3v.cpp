@@ -424,23 +424,6 @@ static bool SortDraworder(Drawable * d1, Drawable * d2)
 	return (d1->GetDrawOrder() < d2->GetDrawOrder());
 }
 
-// returns true for cull, false for don't-cull
-static bool contributionCull(const Drawable * d, const Vec3 & cam)
-{
-	const Vec3 & obj = d->GetCenter();
-	float radius = d->GetRadius();
-	float dist2 = (obj - cam).MagnitudeSquared();
-	const float fov = 90; // rough field-of-view estimation
-	float numerator = 2*radius*fov;
-	const float pixelThreshold = 1;
-	//float pixels = numerator*numerator/dist2; // perspective divide (we square the numerator because we're using squared distance)
-	//if (pixels < pixelThreshold)
-	if (numerator*numerator < dist2*pixelThreshold)
-		return true;
-	else
-		return false;
-}
-
 // if frustum is NULL, don't do frustum or contribution culling
 void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
@@ -448,7 +431,8 @@ void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, st
 	{
 		for (auto d : drawables)
 		{
-			if (!frustum->Cull(d->GetCenter(), d->GetRadius()) && !contributionCull(d, camPos))
+			if (!frustum->Cull(d->GetCenter(), d->GetRadius()) &&
+				!ContributionCull(camPos, h, d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
@@ -485,7 +469,7 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 	{
 		for (auto d : drawables)
 		{
-			if (!contributionCull(d, camPos))
+			if (!ContributionCull(camPos, h, d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
