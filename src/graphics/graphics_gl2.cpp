@@ -183,24 +183,6 @@ static void AttachCubeSide(int i, FrameBufferObject & reflection_fbo, std::ostre
 	CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
-static bool Cull(const Frustum & f, const Drawable & d)
-{
-	const float radius = d.GetRadius();
-	Vec3 center = d.GetObjectCenter();
-	d.GetTransform().TransformVectorOut(center[0], center[1], center[2]);
-	for (int i = 0; i < 6; i++)
-	{
-		const float rd =
-			f.frustum[i][0] * center[0] +
-			f.frustum[i][1] * center[1] +
-			f.frustum[i][2] * center[2] +
-			f.frustum[i][3];
-		if (rd <= -radius)
-			return true;
-	}
-	return false;
-}
-
 GraphicsGL2::GraphicsGL2() :
 	initialized(false),
 	max_anisotropy(0),
@@ -1125,7 +1107,7 @@ void GraphicsGL2::CullScenePass(
 				// cull dynamic drawlist
 				for (const auto & drawable : *pass.dynamic_draw_lists[i])
 				{
-					if (!Cull(frustum, *drawable))
+					if (!frustum.Cull(drawable->GetCenter(), drawable->GetRadius()))
 						draw_list.drawables.push_back(drawable);
 				}
 			}

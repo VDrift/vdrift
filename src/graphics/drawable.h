@@ -47,13 +47,9 @@ public:
 	const Mat4 & GetTransform() const;
 	void SetTransform(const Mat4 & value);
 
-	/// bounding sphere center in local space
-	const Vec3 & GetObjectCenter() const;
-	void SetObjectCenter(const Vec3 & value);
-
-	/// bounding sphere radius
+	/// bounding sphere center and radius
+	const Vec3 & GetCenter() const;
 	float GetRadius() const;
-	void SetRadius(float value);
 
 	const Vec4 & GetColor() const;
 	void SetColor(float nr, float ng, float nb, float na);
@@ -134,7 +130,7 @@ inline const Mat4 & Drawable::GetTransform() const
 	return transform;
 }
 
-inline const Vec3 & Drawable::GetObjectCenter() const
+inline const Vec3 & Drawable::GetCenter() const
 {
 	return center;
 }

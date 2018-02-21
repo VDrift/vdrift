@@ -56,18 +56,14 @@ void Drawable::SetVertArray(const VertexArray * value)
 void Drawable::SetTransform(const Mat4 & value)
 {
 	transform = value;
+	if (model)
+	{
+		center = model->GetCenter();
+		transform.TransformVectorOut(center[0], center[1], center[2]);
+	}
 	uniforms_changed = true;
 }
 
-void Drawable::SetObjectCenter(const Vec3 & value)
-{
-	center = value;
-}
-
-void Drawable::SetRadius(float value)
-{
-	radius = value;
-}
 
 void Drawable::SetColor(float r, float g, float b, float a)
 {
@@ -162,6 +158,7 @@ RenderModelExt & Drawable::GenRenderModelData(const DrawableAttributes & draw_at
 void Drawable::SetModel(Model & newmodel)
 {
 	model = &newmodel;
-	center = newmodel.GetCenter();
 	radius = newmodel.GetRadius();
+	center = newmodel.GetCenter();
+	transform.TransformVectorOut(center[0], center[1], center[2]);
 }

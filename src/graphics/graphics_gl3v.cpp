@@ -427,7 +427,7 @@ static bool SortDraworder(Drawable * d1, Drawable * d2)
 // returns true for cull, false for don't-cull
 static bool contributionCull(const Drawable * d, const Vec3 & cam)
 {
-	const Vec3 & obj = d->GetObjectCenter();
+	const Vec3 & obj = d->GetCenter();
 	float radius = d->GetRadius();
 	float dist2 = (obj - cam).MagnitudeSquared();
 	const float fov = 90; // rough field-of-view estimation
@@ -441,52 +441,30 @@ static bool contributionCull(const Drawable * d, const Vec3 & cam)
 		return false;
 }
 
-// returns true for cull, false for don't-cull
-static bool frustumCull(const Drawable * d, const Frustum & frustum)
-{
-	float rd;
-	const float bound = d->GetRadius();
-	const Vec3 & center = d->GetObjectCenter();
-
-	for (int i=0; i<6; i++)
-	{
-		rd=frustum.frustum[i][0]*center[0]+
-				frustum.frustum[i][1]*center[1]+
-				frustum.frustum[i][2]*center[2]+
-				frustum.frustum[i][3];
-		if (rd < -bound)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 // if frustum is NULL, don't do frustum or contribution culling
 void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
 	if (frustum && enableContributionCull)
 	{
-		for (auto drawable : drawables)
+		for (auto d : drawables)
 		{
-			if (!frustumCull(drawable, *frustum) && !contributionCull(drawable, camPos))
-				out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			if (!frustum->Cull(d->GetCenter(), d->GetRadius()) && !contributionCull(d, camPos))
+				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 	else if (frustum)
 	{
-		for (auto drawable : drawables)
+		for (auto d : drawables)
 		{
-			if (!frustumCull(drawable, *frustum))
-				out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			if (!frustum->Cull(d->GetCenter(), d->GetRadius()))
+				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
-		for (auto drawable : drawables)
+		for (auto d : drawables)
 		{
-			out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 }
@@ -505,17 +483,17 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 
 	if (frustum && enableContributionCull)
 	{
-		for (auto drawable : drawables)
+		for (auto d : drawables)
 		{
-			if (!contributionCull(drawable, camPos))
-				out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			if (!contributionCull(d, camPos))
+				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
-		for (auto drawable : drawables)
+		for (auto d : drawables)
 		{
-			out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 }

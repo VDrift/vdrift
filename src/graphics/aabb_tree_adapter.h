@@ -33,11 +33,8 @@ public:
 
 	void push_back(T * drawable)
 	{
-		Vec3 objpos(drawable->GetObjectCenter());
-		drawable->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-		float radius = drawable->GetRadius();
 		Aabb <float> box;
-		box.SetFromSphere(objpos, radius);
+		box.SetFromSphere(drawable->GetCenter(), drawable->GetRadius());
 		spacetree.Add(drawable, box);
 	}
 
