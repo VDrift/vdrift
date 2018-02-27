@@ -29,8 +29,6 @@
 #include <algorithm>
 #include <cctype>
 
-#define enableContributionCull true
-
 GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	stringMap(map),
 	gl(vertex_buffer),
@@ -427,21 +425,13 @@ static bool SortDraworder(Drawable * d1, Drawable * d2)
 // if frustum is NULL, don't do frustum or contribution culling
 void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
-	if (frustum && enableContributionCull)
+	if (frustum)
 	{
 		float ct = ContributionCullThreshold(h);
 		for (auto d : drawables)
 		{
 			if (!frustum->Cull(d->GetCenter(), d->GetRadius()) &&
 				!ContributionCull(camPos, ct, d->GetCenter(), d->GetRadius()))
-				out.push_back(&d->GenRenderModelData(drawAttribs));
-		}
-	}
-	else if (frustum)
-	{
-		for (auto d : drawables)
-		{
-			if (!frustum->Cull(d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
@@ -460,15 +450,10 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 	static std::vector <Drawable*> queryResults;
 	queryResults.clear();
 	if (frustum)
-		adapter.Query(*frustum, queryResults);
-	else
-		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
-
-	const std::vector <Drawable*> & drawables = queryResults;
-	if (frustum && enableContributionCull)
 	{
+		adapter.Query(*frustum, queryResults);
 		float ct = ContributionCullThreshold(h);
-		for (auto d : drawables)
+		for (auto d : queryResults)
 		{
 			if (!ContributionCull(camPos, ct, d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
@@ -476,7 +461,8 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 	}
 	else
 	{
-		for (auto d : drawables)
+		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
+		for (auto d : queryResults)
 		{
 			out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
