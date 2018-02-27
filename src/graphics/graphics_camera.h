@@ -26,12 +26,10 @@ struct GraphicsCamera
 {
 	float fov;
 	float view_distance;
-	Vec3 pos;
-	Quat rot;
 	float w;
 	float h;
-
-	bool orthomode;
+	Vec3 pos;
+	Quat rot;
 	Vec3 orthomin;
 	Vec3 orthomax;
 
@@ -39,8 +37,7 @@ struct GraphicsCamera
 		fov(45),
 		view_distance(10000),
 		w(1),
-		h(1),
-		orthomode(false)
+		h(1)
 		{}
 };
 
@@ -57,16 +54,16 @@ inline Mat4 GetViewMatrix(const GraphicsCamera & c)
 inline Mat4 GetProjMatrix(const GraphicsCamera & c)
 {
 	Mat4 m;
-	if (c.orthomode)
-		m.SetOrthographic(c.orthomin[0], c.orthomax[0], c.orthomin[1], c.orthomax[1], c.orthomin[2], c.orthomax[2]);
-	else
+	if (c.fov > 0)
 		m.Perspective(c.fov, c.w / c.h, 0.1f, c.view_distance);
+	else
+		m.SetOrthographic(c.orthomin[0], c.orthomax[0], c.orthomin[1], c.orthomax[1], c.orthomin[2], c.orthomax[2]);
 	return m;
 }
 
 inline Mat4 GetProjMatrixInv(const GraphicsCamera & c)
 {
-	assert(!c.orthomode);
+	assert(c.fov > 0);
 	Mat4 m;
 	m.InvPerspective(c.fov, c.w / c.h, 0.1f, c.view_distance);
 	return m;

@@ -879,7 +879,7 @@ void GraphicsGL2::SetupCameras(
 		GraphicsCamera & cam = cameras["2d"];
 
 		// this is the glOrtho call we want: glOrtho( 0, 1, 1, 0, -1, 1 );
-		cam.orthomode = true;
+		cam.fov = 0;
 		cam.orthomin = Vec3(0, 1, -1);
 		cam.orthomax = Vec3(1, 0, 1);
 	}
@@ -920,7 +920,7 @@ void GraphicsGL2::SetupCameras(
 
 			GraphicsCamera & cam = cameras["shadows_"+shadow_names[i]];
 			cam = cameras["default"];
-			cam.orthomode = true;
+			cam.fov = 0;
 			cam.orthomin = -shadowbox;
 			cam.orthomax = shadowbox;
 			cam.pos = cam.pos + shadowoffset;
