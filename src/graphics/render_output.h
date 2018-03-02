@@ -40,6 +40,10 @@ public:
 
 	bool IsFBO() const;
 
+	int GetWidth() const;
+
+	int GetHeight() const;
+
 	void Begin(GraphicsState & glstate, std::ostream & error_output);
 
 	void End(GraphicsState & glstate, std::ostream & error_output);
@@ -50,5 +54,21 @@ private:
 	int fb_width;
 	int fb_height;
 };
+
+
+inline bool RenderOutput::IsFBO() const
+{
+	return !use_framebuffer;
+}
+
+inline int RenderOutput::GetWidth() const
+{
+	return use_framebuffer ? fb_width : fbo.GetWidth();
+}
+
+inline int RenderOutput::GetHeight() const
+{
+	return use_framebuffer ? fb_height : fbo.GetHeight();
+}
 
 #endif // _RENDER_OUTPUT_H

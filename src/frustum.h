@@ -24,6 +24,8 @@
 
 struct Frustum
 {
+	float frustum[6][4];
+
 	Frustum() {}
 
 	Frustum(const float cfrustum[][4])
@@ -108,24 +110,6 @@ struct Frustum
 				f[j] *= n;
 		}
 	}
-
-	template <class Vec3>
-	bool Cull(Vec3 center, float radius) const
-	{
-		for (int i = 0; i < 6; i++)
-		{
-			float distance =
-				frustum[i][0] * center[0] +
-				frustum[i][1] * center[1] +
-				frustum[i][2] * center[2] +
-				frustum[i][3];
-			if (distance < -radius)
-				return true;
-		}
-		return false;
-	}
-
-	float frustum[6][4];
 };
 
 #endif

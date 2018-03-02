@@ -19,6 +19,7 @@
 
 #include "aabb.h"
 #include "mathvector.h"
+#include "frustumcull.h"
 #include "unittest.h"
 
 static void distribute(float frustum[][4])
@@ -72,7 +73,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = 10;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(Frustum(plane)));
+		QT_CHECK(box1.Intersect(MakeFrustumCuller(plane)));
 	}
 	{
 		float plane[6][4];
@@ -81,7 +82,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = 0;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(Frustum(plane)));
+		QT_CHECK(box1.Intersect(MakeFrustumCuller(plane)));
 	}
 	{
 		float plane[6][4];
@@ -90,7 +91,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = -10;
 		distribute(plane);
-		QT_CHECK(!box1.Intersect(Frustum(plane)));
+		QT_CHECK(!box1.Intersect(MakeFrustumCuller(plane)));
 	}
 	{
 		float plane[6][4];
@@ -99,7 +100,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 0;
 		plane[0][3] = 10000;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(Frustum(plane)));
+		QT_CHECK(box1.Intersect(MakeFrustumCuller(plane)));
 	}
 	{
 		float plane[6][4];
@@ -108,6 +109,6 @@ QT_TEST(aabb_test)
 		plane[0][2] = 0;
 		plane[0][3] = -119;
 		distribute(plane);
-		QT_CHECK(!box1.Intersect(Frustum(plane)));
+		QT_CHECK(!box1.Intersect(MakeFrustumCuller(plane)));
 	}
 }

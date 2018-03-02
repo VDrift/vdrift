@@ -24,6 +24,7 @@
 #include "shader.h"
 #include "uniforms.h"
 #include "vertexattrib.h"
+#include "frustumcull.h"
 #include "sky.h"
 #include "tokenize.h"
 
@@ -1101,14 +1102,36 @@ void GraphicsGL2::CullScenePass(
 			draw_list.valid = true;
 			if (pass.cull)
 			{
-				// cull static drawlist
-				pass.static_draw_lists[i]->Query(frustum, draw_list.drawables);
-
-				// cull dynamic drawlist
-				for (const auto & drawable : *pass.dynamic_draw_lists[i])
+				if (cam->fov > 0)
 				{
-					if (!frustum.Cull(drawable->GetCenter(), drawable->GetRadius()))
-						draw_list.drawables.push_back(drawable);
+					float height = output.GetHeight();
+					float fov = cam->fov * float(M_PI/180);
+					float ct = ContributionCullThreshold(height, fov);
+					auto cull = MakeFrustumCullerPersp(frustum.frustum, cam->pos, ct);
+
+					// cull static drawlist
+					pass.static_draw_lists[i]->Query(cull, draw_list.drawables);
+
+					// cull dynamic drawlist
+					for (const auto & drawable : *pass.dynamic_draw_lists[i])
+					{
+						if (!cull(drawable->GetCenter(), drawable->GetRadius()))
+							draw_list.drawables.push_back(drawable);
+					}
+				}
+				else
+				{
+					auto cull = MakeFrustumCuller(frustum.frustum);
+
+					// cull static drawlist
+					pass.static_draw_lists[i]->Query(cull, draw_list.drawables);
+
+					// cull dynamic drawlist
+					for (const auto & drawable : *pass.dynamic_draw_lists[i])
+					{
+						if (!cull(drawable->GetCenter(), drawable->GetRadius()))
+							draw_list.drawables.push_back(drawable);
+					}
 				}
 			}
 			else

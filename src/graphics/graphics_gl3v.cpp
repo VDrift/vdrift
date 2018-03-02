@@ -20,6 +20,7 @@
 #include "graphics_gl3v.h"
 #include "scenenode.h"
 #include "joeserialize.h"
+#include "frustumcull.h"
 #include "utils.h"
 
 #include <unordered_map>
@@ -427,11 +428,11 @@ void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, st
 {
 	if (frustum)
 	{
-		float ct = ContributionCullThreshold(h);
+		float ct = ContributionCullThreshold(float(h));
+		auto cull = MakeFrustumCullerPersp(frustum->frustum, camPos, ct);
 		for (auto d : drawables)
 		{
-			if (!frustum->Cull(d->GetCenter(), d->GetRadius()) &&
-				!ContributionCull(camPos, ct, d->GetCenter(), d->GetRadius()))
+			if (!cull(d->GetCenter(), d->GetRadius()))
 				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
@@ -449,23 +450,21 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 {
 	static std::vector <Drawable*> queryResults;
 	queryResults.clear();
+
 	if (frustum)
 	{
-		adapter.Query(*frustum, queryResults);
-		float ct = ContributionCullThreshold(h);
-		for (auto d : queryResults)
-		{
-			if (!ContributionCull(camPos, ct, d->GetCenter(), d->GetRadius()))
-				out.push_back(&d->GenRenderModelData(drawAttribs));
-		}
+		float ct = ContributionCullThreshold(float(h));
+		auto cull = MakeFrustumCullerPersp(frustum->frustum, camPos, ct);
+		adapter.Query(cull, queryResults);
 	}
 	else
 	{
 		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
-		for (auto d : queryResults)
-		{
-			out.push_back(&d->GenRenderModelData(drawAttribs));
-		}
+	}
+
+	for (auto d : queryResults)
+	{
+		out.push_back(&d->GenRenderModelData(drawAttribs));
 	}
 }
 

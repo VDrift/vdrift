@@ -21,7 +21,6 @@
 #define _AABB_H
 
 #include "mathvector.h"
-#include "frustum.h"
 
 template <typename T>
 class Aabb
@@ -213,30 +212,10 @@ public:
 		return INTERSECT;
 	}
 
-	IntersectionEnum Intersect(const Frustum & frustum) const
+	template <typename Culler>
+	IntersectionEnum Intersect(const Culler & cull) const
 	{
-		float rd;
-		const float bound = radius;
-		//INTERSECTION intersection = IN; // assume we are fully in until we find an intersection
-		for (const auto & p : frustum.frustum)
-		{
-			rd = p[0] * center[0] + p[1] * center[1] + p[2] * center[2] + p[3];
-			if (rd < -bound)
-			{
-				// fully out
-				return OUT;
-			}
-
-			/*if (std::abs(rd) < bound)
-			{
-				// partially in
-				// we don't return here because we could still be fully out of another frustum plane
-				intersection = INTERSECT;
-			}*/
-		}
-
-		//return intersection;
-		return INTERSECT;
+		return cull(center, radius) ? OUT : INTERSECT;
 	}
 
 	IntersectionEnum Intersect(IntersectAlways /*always*/) const
