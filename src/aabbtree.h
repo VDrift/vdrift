@@ -263,16 +263,16 @@ private:
 
 		//find axis of maximum change, so we know where to split
 		Vec3 axismask(1,0,0);
-		Vec3 bboxsize = bbox.GetSize();
-		if (bboxsize[0] > bboxsize[1] && bboxsize[0] > bboxsize[2])
+		Vec3 extent = bbox.GetExtent();
+		if (extent[0] > extent[1] && extent[0] > extent[2])
 		{
 			axismask.Set(1,0,0);
 		}
-		else if (bboxsize[1] > bboxsize[0] && bboxsize[1] > bboxsize[2])
+		else if (extent[1] > extent[0] && extent[1] > extent[2])
 		{
 			axismask.Set(0,1,0);
 		}
-		else if (bboxsize[2] > bboxsize[1] && bboxsize[2] > bboxsize[0])
+		else if (extent[2] > extent[1] && extent[2] > extent[0])
 		{
 			axismask.Set(0,0,1);
 		}
