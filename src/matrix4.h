@@ -132,17 +132,19 @@ class Matrix4
 			data[14] += tz;
 		}
 
-		bool operator==(const Matrix4 <T> & other) {return Equals(other);}
-		bool operator!=(const Matrix4 <T> & other) {return !Equals(other);}
+		bool operator==(const Matrix4 <T> & other) const {return Equals(other);}
+		bool operator!=(const Matrix4 <T> & other) const {return !Equals(other);}
 
-		bool Equals(const Matrix4 <T> & other)
+		bool IsIdentity() const {return Equals(Matrix4());}
+
+		bool Equals(const Matrix4 <T> & other) const
 		{
-			return (memcmp(data,other.data,16*sizeof(T)) == 0); //high performance, but portability issues?
-			/*for (int i = 0; i < 16; i++)
+			// high performance, but portability issues?
+			//return (std::memcmp(data,other.data,16*sizeof(T)) == 0);
+			for (int i = 0; i < 16; i++)
 				if (data[i] != other.data[i])
 					return false;
-
-			return true;*/
+			return true;
 		}
 
 		void TransformVectorIn(float & x, float & y, float & z) const

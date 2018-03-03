@@ -25,6 +25,7 @@
 #include "uniforms.h"
 #include "vertexattrib.h"
 #include "frustumcull.h"
+#include "model.h"
 #include "sky.h"
 #include "tokenize.h"
 

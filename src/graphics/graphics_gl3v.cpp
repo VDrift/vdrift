@@ -21,6 +21,7 @@
 #include "scenenode.h"
 #include "joeserialize.h"
 #include "frustumcull.h"
+#include "model.h"
 #include "utils.h"
 
 #include <unordered_map>
