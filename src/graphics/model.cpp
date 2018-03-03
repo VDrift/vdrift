@@ -27,14 +27,12 @@
 static const std::string file_magic = "OGLVARRAYV01";
 
 Model::Model() :
-	radius(0),
 	generatedmetrics(false)
 {
 	// Constructor.
 }
 
 Model::Model(const std::string & filepath, std::ostream & error_output) :
-	radius(0),
 	generatedmetrics(false)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
@@ -143,54 +141,22 @@ void Model::GenMeshMetrics()
 		if (v[2] < minv[2]) minv[2] = v[2];
 	}
 
-	min.Set(minv[0], minv[1], minv[2]);
-	max.Set(maxv[0], maxv[1], maxv[2]);
-	radius = GetSize().Magnitude() * 0.5f + 0.001f;	// 0.001 margin
+	Vec3 min(minv[0], minv[1], minv[2]);
+	Vec3 max(maxv[0], maxv[1], maxv[2]);
 
+	aabb = Aabb<float>(min, max);
 	generatedmetrics = true;
-}
-
-Vec3 Model::GetSize() const
-{
-	return max - min;
-}
-
-Vec3 Model::GetCenter() const
-{
-	return (max + min) * 0.5f;
-}
-
-float Model::GetRadius() const
-{
-	RequireMetrics();
-	return radius;
 }
 
 void Model::Clear()
 {
 	ClearMeshData();
-	ClearMetrics();
-}
-
-const VertexArray & Model::GetVertexArray() const
-{
-	return varray;
+	generatedmetrics = false;
 }
 
 bool Model::Loaded() const
 {
 	return (varray.GetNumIndices() > 0);
-}
-
-void Model::RequireMetrics() const
-{
-	// Mesh metrics need to be generated before they can be queried.
-	assert(generatedmetrics);
-}
-
-void Model::ClearMetrics()
-{
-	generatedmetrics = false;
 }
 
 void Model::ClearMeshData()

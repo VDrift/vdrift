@@ -348,9 +348,8 @@ bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & bod
 		if (!shape)
 		{
 			// fall back to model bounding box
-			btVector3 size = ToBulletVector(model.GetSize());
-			shape = new btBoxShape(size * 0.5);
-			center = center + ToBulletVector(model.GetCenter());
+			shape = new btBoxShape(ToBulletVector(model.GetAabb().GetExtent()));
+			center = center + ToBulletVector(model.GetAabb().GetCenter());
 		}
 		if (compound)
 		{
@@ -831,7 +830,7 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 	if (object.skybox && data.vertical_tracking_skyboxes)
 	{
 		VertexArray va = object.model->GetVertexArray();
-		va.Translate(0, 0, -object.model->GetCenter()[2]);
+		va.Translate(0, 0, -object.model->GetAabb().GetCenter()[2]);
 		object.model->Load(va, error_output);
 	}
 

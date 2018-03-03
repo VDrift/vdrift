@@ -58,7 +58,7 @@ void Drawable::SetTransform(const Mat4 & value)
 	transform = value;
 	if (model)
 	{
-		center = model->GetCenter();
+		center = model->GetAabb().GetCenter();
 		transform.TransformVectorOut(center[0], center[1], center[2]);
 	}
 	uniforms_changed = true;
@@ -158,7 +158,7 @@ RenderModelExt & Drawable::GenRenderModelData(const DrawableAttributes & draw_at
 void Drawable::SetModel(Model & newmodel)
 {
 	model = &newmodel;
-	radius = newmodel.GetRadius();
-	center = newmodel.GetCenter();
+	radius = newmodel.GetAabb().GetRadius();
+	center = newmodel.GetAabb().GetCenter();
 	transform.TransformVectorOut(center[0], center[1], center[2]);
 }

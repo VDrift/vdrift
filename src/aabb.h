@@ -57,6 +57,11 @@ public:
 		return extent;
 	}
 
+	T GetRadius() const
+	{
+		return radius;
+	}
+
 	void SetFromSphere(const MathVector<T, 3> & ncenter, float nradius)
 	{
 		center = ncenter;
