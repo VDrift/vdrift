@@ -90,6 +90,7 @@ src = Split("""
 		gui/guiwidget.cpp
 		gui/guiwidgetlist.cpp
 		gui/text_draw.cpp
+		frustumcull.cpp
 		http.cpp
 		joepack.cpp
 		joeserialize.cpp
