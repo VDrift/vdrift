@@ -154,7 +154,7 @@ public:
 	template <typename Culler>
 	IntersectionEnum Intersect(const Culler & cull) const
 	{
-		return cull(center, radius) ? OUT : INTERSECT;
+		return cull(center, extent, radius) ? OUT : INTERSECT;
 	}
 
 	IntersectionEnum Intersect(IntersectAlways /*always*/) const

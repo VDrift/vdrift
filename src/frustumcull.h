@@ -31,8 +31,8 @@ static inline bool FrustumCull(T4 frustum[6], T3 center, T radius)
 {
 	for (int i = 0; i < 6; i++)
 	{
-		T * plane = frustum[i];
-		T distance = plane[0] * center[0] + plane[1] * center[1] + plane[2] * center[2] + plane[3];
+		auto plane = frustum[i];
+		auto distance = plane[0] * center[0] + plane[1] * center[1] + plane[2] * center[2] + plane[3];
 		if (radius < -distance)
 			return true;
 	}
@@ -46,8 +46,8 @@ static inline bool FrustumCull2(T4 frustum[6], T3 center, T radius2)
 {
 	for (int i = 0; i < 6; i++)
 	{
-		T * plane = frustum[i];
-		T distance = plane[0] * center[0] + plane[1] * center[1] + plane[2] * center[2] + plane[3];
+		auto plane = frustum[i];
+		auto distance = plane[0] * center[0] + plane[1] * center[1] + plane[2] * center[2] + plane[3];
 		if (radius2 > -std::abs(distance) * distance)
 			return true;
 	}
@@ -58,34 +58,18 @@ static inline bool FrustumCull2(T4 frustum[6], T3 center, T radius2)
 // Cull aabb against frustum planes
 // center = (min + max) / 2
 // extent = (max - min) / 2
-// frustumsign are precomputed sign vectors of frustum plane normals
 
-template <typename T4, typename T3, typename T>
-static inline bool FrustumCull(T4 frustum[6], T3 frustumsign[6], T3 center, T3 extent)
-{
-	for (int i = 0; i < 6; i++)
-	{
-		T * plane = frustum[i];
-		T3 normal(plane[0], plane[1], plane[2]);
-		T3 vertex = center + extent * frustumsign[i];
-		if (vertex.dot(normal) > -plane[3])
-			return true;
-	}
-	return false;
-}
-
-// Alternative variant using a flipsign function
-// flipsign(a, b) = copysign(a, a * b) -> xor sign bits
-
-template <typename T4, typename T3, typename T>
+template <typename T4, typename T3>
 static inline bool FrustumCull(T4 frustum[6], T3 center, T3 extent)
 {
 	for (int i = 0; i < 6; i++)
 	{
-		T * plane = frustum[i];
+		auto plane = frustum[i];
+		T3 vertex(center);
+		for (int j = 0; j < 3; j++)
+			vertex[j] += std::copysign(extent[j], plane[j]);
 		T3 normal(plane[0], plane[1], plane[2]);
-		T3 vertex = center + flipsign(extent, normal);
-		if (vertex.dot(normal) > -plane[3])
+		if (vertex.dot(normal) < -plane[3])
 			return true;
 	}
 	return false;
@@ -137,6 +121,12 @@ struct FrustumCuller
 	{
 		return FrustumCull(frustum, center, radius);
 	}
+
+	template <typename T3, typename T>
+	inline bool operator()(const T3 & center, const T3 & extent, T /*radius*/) const
+	{
+		return FrustumCull(frustum, center, extent);
+	}
 };
 
 template <typename T4>
@@ -161,6 +151,11 @@ struct FrustumCullerPersp
 	inline bool operator()(const T3 & center, T radius) const
 	{
 		return FrustumCull(frustum, center, radius) || ContributionCull(campos, cull_threshold, center, radius);
+	}
+
+	inline bool operator()(const T3 & center, const T3 & extent, T radius) const
+	{
+		return FrustumCull(frustum, center, extent) || ContributionCull(campos, cull_threshold, center, radius);
 	}
 };
 
