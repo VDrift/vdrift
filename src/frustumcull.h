@@ -65,11 +65,12 @@ static inline bool FrustumCull(T4 frustum[6], T3 center, T3 extent)
 	for (int i = 0; i < 6; i++)
 	{
 		auto plane = frustum[i];
-		T3 vertex(center);
-		for (int j = 0; j < 3; j++)
-			vertex[j] += std::copysign(extent[j], plane[j]);
+		T3 vertex(
+			std::copysign(extent[0], plane[0]),
+			std::copysign(extent[1], plane[1]),
+			std::copysign(extent[2], plane[2]));
 		T3 normal(plane[0], plane[1], plane[2]);
-		if (vertex.dot(normal) < -plane[3])
+		if ((center + vertex).dot(normal) < -plane[3])
 			return true;
 	}
 	return false;
