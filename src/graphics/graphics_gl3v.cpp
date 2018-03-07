@@ -339,7 +339,7 @@ void GraphicsGL3::SetupScene(
 		// examine the user-defined fields to find out which shadow matrix to send to a pass
 		for (const auto & passName : renderer.getPassNames())
 		{
-			std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
+			auto fields = renderer.getUserDefinedFields(passName);
 			auto field = fields.find(matrixName);
 			if (field != fields.end() && field->second == suffix)
 			{
@@ -596,7 +596,7 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 		// strip pass infos from the list that we pass to the renderer if they are disabled
 		for (int i = passInfos.size() - 1; i >= 0; i--)
 		{
-			std::map <std::string, std::string> & fields = passInfos[i].userDefinedFields;
+			auto & fields = passInfos[i].userDefinedFields;
 			auto field = fields.find("conditions");
 			if (field != fields.end())
 			{
@@ -622,7 +622,7 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 			// assign cameras to each pass
 			for (auto passName : renderer.getPassNames())
 			{
-				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
+				auto fields = renderer.getUserDefinedFields(passName);
 				auto field = fields.find("camera");
 				if (field != fields.end())
 					passNameToCameraName[stringMap.getString(passName)] = field->second;
