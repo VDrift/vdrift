@@ -499,7 +499,7 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 				std::string drawGroupString = stringMap.getString(drawGroupId);
 				std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupId);
 
-				std::vector <RenderModelExt*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
+				auto & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
 
 				// see if we have already generated this combination
 				if (cameraDrawGroupCombinationsGenerated.find(cameraDrawGroupKey) == cameraDrawGroupCombinationsGenerated.end())
@@ -521,19 +521,14 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 					}
 
 					// assemble dynamic entries
-					reseatable_reference <PtrVector <Drawable> > dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
+					auto dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
 					if (dynamicDrawablesPtr)
-					{
-						const std::vector <Drawable*> & dynamicDrawables = *dynamicDrawablesPtr;
-						AssembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
-					}
+						AssembleDrawList(*dynamicDrawablesPtr, outDrawList, frustumPtr, lastCameraPosition);
+
 					// assemble static entries
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
+					auto staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
 					if (staticDrawablesPtr)
-					{
-						const AabbTreeNodeAdapter <Drawable> & staticDrawables = *staticDrawablesPtr;
-						AssembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
-					}
+						AssembleDrawList(*staticDrawablesPtr, outDrawList, frustumPtr, lastCameraPosition);
 
 					// if it's requesting the full screen rect draw group, feed it our special drawable
 					if (drawGroupString == "full screen rect")
