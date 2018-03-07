@@ -507,23 +507,17 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 					// we need to generate this combination
 
 					// extract frustum information
-					RenderUniform proj, view;
-					bool doCull = true;
-					/*if (getCameraForPass(passName).empty())
-					{
-						doCull = false;
-					}
-					else*/
-					{
-						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
-						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
-					}
 					Frustum frustum;
 					Frustum * frustumPtr = NULL;
-					if (doCull)
+					if (!getCameraForPass(passName).empty())
 					{
-						frustum.Extract(&proj.data[0], &view.data[0]);
-						frustumPtr = &frustum;
+						RenderUniform proj, view;
+						if (renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view) &&
+							renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj))
+						{
+							frustum.Extract(&proj.data[0], &view.data[0]);
+							frustumPtr = &frustum;
+						}
 					}
 
 					// assemble dynamic entries
@@ -531,10 +525,8 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 					if (dynamicDrawablesPtr)
 					{
 						const std::vector <Drawable*> & dynamicDrawables = *dynamicDrawablesPtr;
-						//AssembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
-						AssembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+						AssembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
 					}
-
 					// assemble static entries
 					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
 					if (staticDrawablesPtr)
