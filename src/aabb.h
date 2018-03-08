@@ -128,13 +128,18 @@ public:
 		}
 
 		// separating axis
-		s = ray.dir.dot(d);
-		for (int i = 0; i < 3; i++)
-		{
-			auto e = ray.dir[i] * s;
-			if (std::abs(d[i] - e) > extent[i])
-				return OUT;
-		}
+		auto c = ray.dir.cross(d);
+		auto a = ray.dir;
+		a.absify();
+
+		if (std::abs(c[0]) > extent[1] * a[2] + extent[2] * a[1])
+			return OUT;
+
+		if (std::abs(c[1]) > extent[0] * a[2] + extent[2] * a[0])
+			return OUT;
+
+		if (std::abs(c[2]) > extent[0] * a[1] + extent[1] * a[0])
+			return OUT;
 
 		return INTERSECT;
 	}
