@@ -103,9 +103,9 @@ class Matrix3
 
 		void Set(const Matrix3 <T> & other) {Set(other.data);}
 
-		bool operator==(const Matrix3 <T> & other) {return Equals(other);}
+		bool operator==(const Matrix3 <T> & other) const {return Equals(other);}
 
-		bool Equals(const Matrix3 <T> & other)
+		bool Equals(const Matrix3 <T> & other) const
 		{
 			//return (memcmp(data,other.data,9*sizeof(T)) == 0); //high performance, but portability issues?
 			for (int i = 0; i < 9; i++)
