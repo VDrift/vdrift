@@ -26,7 +26,7 @@ enum WheelPosition
 	FRONT_RIGHT = 1,
 	REAR_LEFT = 2,
 	REAR_RIGHT = 3,
-	WHEEL_POSITION_SIZE
+	WHEEL_COUNT
 };
 
 #endif

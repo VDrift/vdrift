@@ -62,6 +62,10 @@ public:
 
 	btScalar GetAntiRoll() const {return info.anti_roll;}
 
+	btScalar GetStiffness() const {return info.spring_constant;}
+
+	btScalar GetDamping() const {return info.bounce;}
+
 	btScalar GetMaxSteeringAngle() const {return info.steering_angle;}
 
 	/// wheel orientation relative to car
@@ -72,12 +76,6 @@ public:
 
 	/// displacement: fraction of suspension travel
 	virtual btVector3 GetWheelPosition(btScalar displacement) = 0;
-
-	/// force acting onto wheel
-	btScalar GetWheelForce() const {return wheel_force;}
-
-	/// suspension force acting onto car body
-	btScalar GetForce() const {return force;}
 
 	/// wheel overtravel
 	btScalar GetOvertravel() const {return overtravel;}
@@ -99,16 +97,11 @@ public:
 	/// update displacement, simulate wheel rebound to limit negative delta
 	void UpdateDisplacement(btScalar displacement_delta, btScalar dt);
 
-	/// compute suspension and wheel contact forces
-	void UpdateForces(btScalar roll_delta, btScalar dt);
-
 	template <class Stream>
 	void DebugPrint(Stream & out) const
 	{
 		out << "---Suspension---" << "\n";
 		out << "Displacement: " << displacement << "\n";
-		out << "Spring Force: " << spring_force << "\n";
-		out << "Damping Force: " << damp_force << "\n";
 		out << "Steering angle: " << steering_angle * btScalar(180 / M_PI) << "\n";
 	}
 
@@ -118,7 +111,6 @@ public:
 		_SERIALIZE_(s, steering_angle);
 		_SERIALIZE_(s, displacement);
 		_SERIALIZE_(s, last_displacement);
-		_SERIALIZE_(s, force);
 		return true;
 	}
 
@@ -137,15 +129,11 @@ protected:
 	btQuaternion orientation;
 	btVector3 position;
 	btScalar steering_angle;
-	btScalar spring_force;
-	btScalar damp_force;
-	btScalar force;
 
 	// wheel
 	btScalar overtravel;
 	btScalar displacement;
 	btScalar last_displacement;
-	btScalar wheel_force;
 	btScalar wheel_contact;
 
 	void Init(const CarSuspensionInfo & info);

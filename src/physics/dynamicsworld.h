@@ -58,6 +58,8 @@ public:
 		const btCollisionObject * caster,
 		CollisionContact & contact) const;
 
+	btScalar getTimeStep() const { return timeStep; };
+
 	void update(btScalar dt);
 
 	void draw();

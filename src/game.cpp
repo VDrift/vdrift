@@ -2505,11 +2505,11 @@ void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			float squeal = car.GetTireSquealAmount(WheelPosition(i));
-			if (squeal > 0)
+			float squeal = car.GetTireSqueal(WheelPosition(i));
+			if (squeal > 0.8f)
 			{
 				btVector3 p = car.GetWheelContact(WheelPosition(i)).GetPosition();
-				tire_smoke.AddParticle(ToMathVector<float>(p), 0.5);
+				tire_smoke.AddParticle(ToMathVector<float>(p), 0.5f);
 			}
 		}
 	}

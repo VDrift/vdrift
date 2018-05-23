@@ -109,7 +109,6 @@ src = Split("""
 		particle.cpp
 		pathmanager.cpp
 		performance_testing.cpp
-		physics/cardifferential.cpp
 		physics/cardynamics.cpp
 		physics/carengine.cpp
 		physics/carsuspension.cpp

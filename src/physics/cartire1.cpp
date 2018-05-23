@@ -114,14 +114,11 @@ btVector3 CarTire1::getForce(
 btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
-	btScalar rolling_resistance = rolling_resistance_lin * resistance_factor;
+	btScalar resistance = rolling_resistance_lin * resistance_factor;
 
 	// heat due to tire deformation increases rolling resistance
 	// approximate by quadratic function
-	rolling_resistance += velocity * velocity * rolling_resistance_quad;
-
-	// rolling resistance direction
-	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
+	resistance += velocity * velocity * rolling_resistance_quad;
 
 	return resistance;
 }

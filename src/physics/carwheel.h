@@ -80,27 +80,23 @@ public:
 
 	void SetInertia(btScalar value)
 	{
+		shaft.inertia = value;
 		shaft.inv_inertia = 1 / value;
 	}
 
 	btScalar GetInertia() const
 	{
-		return 1 / shaft.inv_inertia;
+		return shaft.inertia;
+	}
+
+	DriveShaft & GetShaft()
+	{
+		return shaft;
 	}
 
 	void Integrate(btScalar dt)
 	{
 		shaft.integrate(dt);
-	}
-
-	btScalar GetTorque(btScalar new_angvel, btScalar dt) const
-	{
-		return shaft.getMomentum(new_angvel) / dt;
-	}
-
-	void SetTorque(btScalar torque, btScalar dt)
-	{
-		shaft.applyMomentum(torque * dt);
 	}
 
 	template <class Stream>

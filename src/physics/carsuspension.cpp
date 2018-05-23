@@ -49,13 +49,9 @@ CarSuspension::CarSuspension() :
 	orientation(orientation_ext),
 	position(0, 0, 0),
 	steering_angle(0),
-	spring_force(0),
-	damp_force(0),
-	force(0),
 	overtravel(0),
 	displacement(0),
 	last_displacement(0),
-	wheel_force(0),
 	wheel_contact(0)
 {
 	// ctor
@@ -116,11 +112,14 @@ void CarSuspension::SetDisplacement(btScalar value)
 }
 
 void CarSuspension::UpdateDisplacement(btScalar displacement_delta, btScalar dt)
-{
+{/*
 	wheel_contact = 1;
 	if (displacement_delta < 0)
 	{
 		// simulate wheel rebound (ignoring relative chassis acceleration)
+		btScalar spring_force = displacement * info.spring_constant;
+		btScalar damping_force = displacement_delta / dt * info.rebound;
+		btScalar force = spring_force + damping_force;
 		btScalar new_delta = -btScalar(0.5) * info.inv_mass * force * dt * dt;
 		btScalar old_delta = displacement - last_displacement;
 		if (old_delta < 0)
@@ -130,25 +129,8 @@ void CarSuspension::UpdateDisplacement(btScalar displacement_delta, btScalar dt)
 			displacement_delta = new_delta;
 			wheel_contact = 0;
 		}
-	}
+	}*/
 	SetDisplacement(displacement + displacement_delta);
-}
-
-void CarSuspension::UpdateForces(btScalar roll_delta, btScalar dt)
-{
-	btScalar displacement_delta = displacement - last_displacement;
-	btScalar velocity = displacement_delta / dt;
-	btScalar damp_factor = info.damper_factors.Interpolate(btFabs(velocity));
-	btScalar damping_constant = (displacement_delta < 0) ? info.rebound : info.bounce;
-	damp_force = velocity * damping_constant * damp_factor;
-
-	btScalar spring_factor = info.spring_factors.Interpolate(displacement);
-	spring_force = displacement * info.spring_constant * spring_factor;
-
-	btScalar anti_roll_force = info.anti_roll * roll_delta;
-	force = spring_force + damp_force + anti_roll_force;
-
-	wheel_force = (force * wheel_contact > 0) ? force : 0;
 }
 
 class BasicSuspension : public CarSuspension

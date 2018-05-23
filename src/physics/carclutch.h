@@ -77,6 +77,11 @@ public:
 		return max_torque;
 	}
 
+	btScalar GetTorque() const
+	{
+		return max_torque * position;
+	}
+
 	btScalar GetTorque(btScalar n_engine_speed, btScalar n_drive_speed)
 	{
 		engine_speed = n_engine_speed;

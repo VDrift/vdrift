@@ -187,8 +187,12 @@ public:
 		out_of_gas = value;
 	}
 
-	/// calculate torque acting on crankshaft, update engine angular velocity
-	btScalar Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt);
+	DriveShaft & GetShaft()
+	{
+		return shaft;
+	}
+
+	void Update(btScalar dt);
 
 	template <class Stream>
 	void DebugPrint(Stream & out) const
@@ -196,7 +200,6 @@ public:
 		out << "---Engine---" << "\n";
 		out << "Throttle position: " << throttle_position << "\n";
 		out << "Combustion torque: " << combustion_torque << "\n";
-		out << "Clutch torque: " << -clutch_torque << "\n";
 		out << "Friction torque: " << friction_torque << "\n";
 		out << "Total torque: " << GetTorque() << "\n";
 		out << "RPM: " << GetRPM() << "\n";
@@ -209,7 +212,6 @@ public:
 	{
 		_SERIALIZE_(s, shaft.ang_velocity);
 		_SERIALIZE_(s, throttle_position);
-		_SERIALIZE_(s, clutch_torque);
 		_SERIALIZE_(s, out_of_gas);
 		_SERIALIZE_(s, rev_limit_exceeded);
 		return true;
@@ -221,7 +223,6 @@ private:
 	DriveShaft shaft;
 	btScalar combustion_torque;
 	btScalar friction_torque;
-	btScalar clutch_torque;
 
 	btScalar throttle_position;
 	btScalar nos_boost_factor;

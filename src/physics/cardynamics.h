@@ -32,6 +32,8 @@
 #include "carwheelposition.h"
 #include "aerodevice.h"
 #include "collision_contact.h"
+#include "wheelconstraint.h"
+#include "driveline.h"
 #include "motionstate.h"
 #include "macros.h"
 
@@ -108,7 +110,6 @@ public:
 	CollisionContact & GetWheelContact(WheelPosition wp);
 
 	// body
-	const btVector3 & GetWheelVelocity(WheelPosition wp) const;
 	const btVector3 & GetCenterOfMass() const;
 	const btVector3 & GetVelocity() const;
 	btScalar GetInvMass() const;
@@ -148,7 +149,7 @@ public:
 
 	btScalar GetFeedback() const;
 
-	btScalar GetTireSquealAmount(WheelPosition i) const;
+	btScalar GetTireSqueal(WheelPosition i) const;
 
 	// Maxumum speed for a curve with given radius and friction coefficient
 	btScalar GetMaxSpeed(btScalar radius, btScalar friction) const;
@@ -185,42 +186,42 @@ public:
 		int index1);
 
 protected:
+	enum DiffEnum { DIFF_FRONT, DIFF_REAR, DIFF_CENTER, DIFF_COUNT };
+	enum DriveEnum { NONE, FWD, RWD, AWD };
+
 	DynamicsWorld * world;
 	FractureBody * body;
 
 	// body state
 	btTransform transform;
-	btVector3 linear_velocity;
-	btVector3 angular_velocity;
 	btAlignedObjectArray<MotionState> motion_state;
+	btAlignedObjectArray<AeroDevice> aerodevice;
 
 	// driveline state
 	CarEngine engine;
 	CarFuelTank fuel_tank;
 	CarClutch clutch;
 	CarTransmission transmission;
-	CarDifferential differential_front;
-	CarDifferential differential_rear;
-	CarDifferential differential_center;
-	btAlignedObjectArray<CarBrake> brake;
-	btAlignedObjectArray<CarWheel> wheel;
-	btAlignedObjectArray<CarTire> tire;
-	btAlignedObjectArray<CarSuspension*> suspension;
-	btAlignedObjectArray<AeroDevice> aerodevice;
+	CarDifferential differential[DIFF_COUNT];
+	CarBrake brake[WHEEL_COUNT];
+	CarWheel wheel[WHEEL_COUNT];
+	CarTire tire[WHEEL_COUNT];
+	CarSuspension* suspension[WHEEL_COUNT];
+	WheelConstraint wheel_constraint[WHEEL_COUNT];
+	Driveline driveline;
 
 	// wheel contact state
-	btAlignedObjectArray<CollisionContact> wheel_contact;
-	btAlignedObjectArray<btVector3> wheel_velocity;
-	btAlignedObjectArray<btVector3> wheel_position;
-	btAlignedObjectArray<btQuaternion> wheel_orientation;
-
-	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
-	btScalar driveshaft_rpm;
-	btScalar tacho_rpm;
+	CollisionContact wheel_contact[WHEEL_COUNT];
+	btVector3 wheel_position[WHEEL_COUNT];
+	btScalar wheel_velocity[WHEEL_COUNT][3];
 
 	// traction control state
-	std::vector<int> abs_active;
-	std::vector<int> tcs_active;
+	bool abs_active[WHEEL_COUNT];
+	bool tcs_active[WHEEL_COUNT];
+
+	DriveEnum drive;
+	btScalar driveshaft_rpm;
+	btScalar tacho_rpm;
 
 	// cached coeffs used by CaculateMaxSpeed, GetMaxSpeed and GetBrakeDistance
 	btScalar aero_lift_coeff;
@@ -249,17 +250,11 @@ protected:
 
 	btVector3 GetDownVector() const;
 
-	btQuaternion LocalToWorld(const btQuaternion & local) const;
-
-	void UpdateWheelVelocity();
-
 	void UpdateWheelTransform();
 
-	void ApplyEngineTorqueToBody(btVector3 & torque);
+	void ApplyAerodynamics(btScalar dt);
 
-	void ApplyAerodynamicsToBody(btVector3 & force, btVector3 & torque);
-
-	void ComputeSuspensionDisplacement(int i, btScalar dt);
+	void UpdateSuspension(int i, btScalar dt);
 
 	// do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
 	void DoTCS(int i);
@@ -267,28 +262,30 @@ protected:
 	// do anti-lock brake system calculations and modify the brake force if necessary
 	void DoABS(int i);
 
-	void ApplySuspensionForceToBody(int i, btScalar dt, btVector3 & force, btVector3 & torque);
-
-	btVector3 ComputeTireFrictionForce(int i, btScalar normal_force, btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation);
-
-	void ApplyWheelForces(int i, btScalar dt, btScalar wheel_drive_torque, btVector3 & force, btVector3 & torque);
-
-	void ApplyForces(btScalar dt, const btVector3 & force, const btVector3 & torque);
-
-	void Tick(btScalar dt, const btVector3 & force, const btVector3 & torque);
+	void Tick(btScalar dt);
 
 	void UpdateWheelContacts();
 
-	void InterpolateWheelContacts();
+	void InitDriveline2(btScalar dt);
 
-	// update engine, return wheel drive torque
-	void UpdateDriveline(btScalar drive_torque[], btScalar dt);
+	void InitDriveline4(btScalar dt);
 
-	// calculate wheel drive torque
-	void CalculateDriveTorque(btScalar drive_torque[], btScalar clutch_torque);
+	void SetupDriveline2(btScalar dt);
 
-	// calculate driveshaft speed given wheel angular velocity
-	btScalar CalculateDriveshaftSpeed();
+	void SetupDriveline4(btScalar dt);
+
+	void SetupMotorJoints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
+
+	void SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
+
+	void ApplyWheelContactDrag(btScalar dt);
+
+	void ApplyRollingResistance(int i);
+
+	void UpdateWheelConstraints(btScalar rdt, btScalar sdt);
+
+	// run driveline constraint solver
+	void UpdateDriveline(btScalar dt);
 
 	// calculate throttle, clutch, gear
 	void UpdateTransmission(btScalar dt);
@@ -380,28 +377,6 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		clutch.DebugPrint(out);
 		out << "\n";
 		transmission.DebugPrint(out);
-		out << "\n";
-		if (drive == RWD)
-		{
-			out << "(rear)" << "\n";
-			differential_rear.DebugPrint(out);
-		}
-		else if (drive == FWD)
-		{
-			out << "(front)" << "\n";
-			differential_front.DebugPrint(out);
-		}
-		else if (drive == AWD)
-		{
-			out << "(center)" << "\n";
-			differential_center.DebugPrint(out);
-
-			out << "(front)" << "\n";
-			differential_front.DebugPrint(out);
-
-			out << "(rear)" << "\n";
-			differential_rear.DebugPrint(out);
-		}
 		out << "\n";
 	}
 
@@ -511,35 +486,27 @@ inline bool Serializex(Serializer & s, btRigidBody & b)
 template <class Serializer>
 inline bool CarDynamics::Serialize(Serializer & s)
 {
+	_SERIALIZEX_(s, *(btRigidBody*)body);
+	_SERIALIZEX_(s, transform);
 	_SERIALIZE_(s, engine);
 	_SERIALIZE_(s, clutch);
 	_SERIALIZE_(s, transmission);
-	_SERIALIZE_(s, differential_front);
-	_SERIALIZE_(s, differential_rear);
-	_SERIALIZE_(s, differential_center);
 	_SERIALIZE_(s, fuel_tank);
-	_SERIALIZE_(s, abs);
-	_SERIALIZE_(s, abs_active);
-	_SERIALIZE_(s, tcs);
-	_SERIALIZE_(s, tcs_active);
 	_SERIALIZE_(s, clutch_value);
 	_SERIALIZE_(s, remaining_shift_time);
 	_SERIALIZE_(s, shift_gear);
 	_SERIALIZE_(s, shifted);
 	_SERIALIZE_(s, autoshift);
-	_SERIALIZEX_(s, *(btRigidBody*)body);
-	_SERIALIZEX_(s, transform);
-	_SERIALIZEX_(s, linear_velocity);
-	_SERIALIZEX_(s, angular_velocity);
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	_SERIALIZE_(s, abs);
+	_SERIALIZE_(s, tcs);
+	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
+		_SERIALIZEX_(s, wheel_position[i]);
+		_SERIALIZE_(s, *suspension[i]);
 		_SERIALIZE_(s, wheel[i]);
 		_SERIALIZE_(s, brake[i]);
-		//_SERIALIZE_(s, tire[i]);
-		_SERIALIZE_(s, *suspension[i]);
-		_SERIALIZEX_(s, wheel_velocity[i]);
-		_SERIALIZEX_(s, wheel_position[i]);
-		_SERIALIZEX_(s, wheel_orientation[i]);
+		_SERIALIZE_(s, abs_active[i]);
+		_SERIALIZE_(s, tcs_active[i]);
 	}
 	return true;
 }
