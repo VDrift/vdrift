@@ -84,7 +84,7 @@ struct ClutchJoint
 	btScalar solve(btScalar velocity_error, btScalar load)
 	{
 		btScalar limit = impulse_limit + load_coeff * load;
-		btScalar lambda = -(velocity_error + softness * impulse)* inertia;
+		btScalar lambda = -(velocity_error + softness * impulse) * inertia;
 		btScalar impulse_old = impulse;
 		impulse = Clamp(impulse + lambda, -limit, limit);
 		return impulse - impulse_old;
@@ -205,8 +205,9 @@ struct Driveline
 		btScalar velocity_error = shaft[0]->ang_velocity - velocity * gear_ratio;
 		btScalar impulse = clutch[0].solve(velocity_error);
 		// not really physically correct torque splitting between front and rear
-		btScalar impulse1 = (btScalar(-0.5) * torque_split) * (impulse * gear_ratio);
-		btScalar impulse2 = (btScalar(-0.5) * (1 - torque_split)) * (impulse * gear_ratio);
+		btScalar impulse0 = btScalar(-0.5) * (impulse * gear_ratio);
+		btScalar impulse1 = impulse0 * torque_split;
+		btScalar impulse2 = impulse0 - impulse1;
 		shaft[0]->applyImpulse(impulse);
 		shaft[1]->applyImpulse(impulse1);
 		shaft[2]->applyImpulse(impulse1);
