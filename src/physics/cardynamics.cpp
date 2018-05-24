@@ -714,7 +714,7 @@ void CarDynamics::SetPosition(const btVector3 & position)
 	body->translate(position - body->getCenterOfMassPosition());
 	transform.setOrigin(position);
 	for (int i = 0; i < WHEEL_COUNT; ++i)
-		wheel_position[i] = transform.getBasis() * suspension[i]->GetWheelPosition();
+		wheel_position[i] = transform.getBasis() * (suspension[i]->GetWheelPosition() + GetCenterOfMassOffset());
 }
 
 void CarDynamics::AlignWithGround()
@@ -1494,7 +1494,7 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	{
 		UpdateSuspension(i, dt);
 		wheel_orientation[i] = transform.getBasis() * btMatrix3x3(suspension[i]->GetWheelOrientation());
-		wheel_position[i] = transform.getBasis() * suspension[i]->GetWheelPosition();
+		wheel_position[i] = transform.getBasis() * (suspension[i]->GetWheelPosition() + GetCenterOfMassOffset());
 	}
 
 	SetupWheelConstraints(wheel_orientation, dt);
