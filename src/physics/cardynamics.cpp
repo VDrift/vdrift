@@ -1218,9 +1218,9 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 			DoABS(i);
 	}
 
-	engine.Update(dt);
-
 	UpdateTransmission(dt);
+
+	engine.Update(dt);
 
 	ApplyAerodynamics(dt);
 
