@@ -96,7 +96,7 @@ public:
 		return info.redline;
 	}
 
-	btScalar GetIdle() const
+	btScalar GetIdleThrottle() const
 	{
 		return info.idle_throttle;
 	}
