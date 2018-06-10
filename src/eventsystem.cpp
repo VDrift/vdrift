@@ -104,6 +104,34 @@ void EventSystem::BeginFrame()
 	RecordFPS(1/dt);
 }
 
+template <class Joystick>
+inline void SetHatButton(Joystick & joystick, unsigned buttonoffset, uint8_t hatvalue, bool state)
+{
+	if (hatvalue & SDL_HAT_UP)
+		joystick.SetButton(buttonoffset + 0, state);
+	if (hatvalue & SDL_HAT_RIGHT)
+		joystick.SetButton(buttonoffset + 1, state);
+	if (hatvalue & SDL_HAT_DOWN)
+		joystick.SetButton(buttonoffset + 2, state);
+	if (hatvalue & SDL_HAT_LEFT)
+		joystick.SetButton(buttonoffset + 3, state);
+}
+
+template <class Joystick>
+inline void HandleHat(Joystick & joystick, uint8_t hatid, uint8_t hatvalue)
+{
+	assert(hatid < joystick.GetNumHats());
+	auto newvalue = hatvalue;
+	auto oldvalue = joystick.GetHat(hatid);
+	if (newvalue != oldvalue)
+	{
+		auto buttonoffset = joystick.GetNumButtons() - (joystick.GetNumHats() - hatid) * 4;
+		SetHatButton(joystick, buttonoffset, oldvalue, false);
+		SetHatButton(joystick, buttonoffset, newvalue, true);
+		joystick.SetHat(hatid, newvalue);
+	}
+}
+
 void EventSystem::ProcessEvents()
 {
 	SDL_Event event;
@@ -143,6 +171,8 @@ void EventSystem::ProcessEvents()
 			joysticks[event.jbutton.which].SetButton(event.jbutton.button, false);
 			break;
 		case SDL_JOYHATMOTION:
+			assert(size_t(event.jhat.which) < joysticks.size());
+			HandleHat(joysticks[event.jhat.which], event.jhat.hat, event.jhat.value);
 			break;
 		case SDL_JOYAXISMOTION:
 			assert(size_t(event.jaxis.which) < joysticks.size()); //ensure the event came from a known joystick

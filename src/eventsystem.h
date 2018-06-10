@@ -34,24 +34,11 @@ class EventSystem
 public:
 	class Joystick
 	{
-		public:
-			class HatPosition
-			{
-				public:
-					HatPosition() : centered(true), up(false), right(false), down(false), left(false) {}
-
-					bool centered;
-					bool up;
-					bool right;
-					bool down;
-					bool left;
-			};
-
 		private:
 			SDL_Joystick * sdl_joyptr;
 			std::vector <float> axis;
 			std::vector <Toggle> button;
-			std::vector <HatPosition> hat;
+			std::vector <uint8_t> hat;
 
 		public:
 			Joystick() : sdl_joyptr(NULL) {}
@@ -59,13 +46,15 @@ public:
 			Joystick(SDL_Joystick * ptr, int numaxes, int numbuttons, int numhats) : sdl_joyptr(ptr)
 			{
 				axis.resize(numaxes, 0);
-				button.resize(numbuttons);
+				button.resize(numbuttons + numhats * 4);
 				hat.resize(numhats);
 			}
 
 			int GetNumAxes() const {return axis.size();}
 
 			int GetNumButtons() const {return button.size();}
+
+			int GetNumHats() const {return hat.size();}
 
 			void AgeToggles()
 			{
@@ -75,35 +64,43 @@ public:
 				}
 			}
 
-			void SetAxis(unsigned int axisid, float newval)
+			void SetAxis(unsigned int id, float val)
 			{
-				assert (axisid < axis.size());
-				axis[axisid] = newval;
+				assert (id < axis.size());
+				axis[id] = val;
 			}
 
-			float GetAxis(unsigned int axisid) const
+			float GetAxis(unsigned int id) const
 			{
-				//assert (axisid < axis.size()); //don't want to assert since this could be due to a control file misconfiguration
-				if (axisid >= axis.size())
-					return 0.0;
-				else
-					return axis[axisid];
+				if (id < axis.size())
+					return axis[id];
+				return 0;
 			}
 
-			Toggle GetButton(unsigned int buttonid) const
+			Toggle GetButton(unsigned int id) const
 			{
-				//don't want to assert since this could be due to a control file misconfiguration
-
-				if (buttonid >= button.size())
-					return Toggle();
-				else
-					return button[buttonid];
+				// don't want to assert since this could be due to a control file misconfiguration
+				if (id < button.size())
+					return button[id];
+				return Toggle();
 			}
 
 			void SetButton(unsigned int id, bool state)
 			{
 				assert (id < button.size());
 				button[id].Set(state);
+			}
+
+			uint8_t GetHat(unsigned int id) const
+			{
+				assert (id < hat.size());
+				return hat[id];
+			}
+
+			void SetHat(unsigned int id, uint8_t state)
+			{
+				assert (id < hat.size());
+				hat[id] = state;
 			}
 	};
 
