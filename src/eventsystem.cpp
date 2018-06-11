@@ -134,18 +134,17 @@ inline void HandleHat(Joystick & joystick, uint8_t hatid, uint8_t hatvalue)
 
 void EventSystem::ProcessEvents()
 {
-	SDL_Event event;
-
-	AgeToggles <SDL_Keycode> (keymap);
-	AgeToggles <int> (mbutmap);
+	AgeToggles(keymap);
+	AgeToggles(mbutmap);
 	for (auto & joystick : joysticks)
 	{
 		joystick.AgeToggles();
 	}
 
-	while ( SDL_PollEvent( &event ) )
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
 	{
-		switch( event.type )
+		switch (event.type)
 		{
 		case SDL_MOUSEMOTION:
 			HandleMouseMotion(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
@@ -200,13 +199,13 @@ void EventSystem::HandleMouseButton(DirectionEnum dir, int id)
 {
 	//std::cout << "Mouse button " << id << ", " << (dir==DOWN) << endl;
 	//mbutmap[id].Tick();
-	HandleToggle <int> (mbutmap, dir, id);
+	HandleToggle(mbutmap, dir, id);
 }
 
 void EventSystem::HandleKey(DirectionEnum dir, SDL_Keycode id)
 {
 	//if (dir == DOWN) std::cout << "Key #" << (int)id << " pressed" << endl;
-	HandleToggle <SDL_Keycode> (keymap, dir, id);
+	HandleToggle(keymap, dir, id);
 }
 
 vector <int> EventSystem::GetMousePosition() const
@@ -231,11 +230,11 @@ void EventSystem::TestStim(StimEnum stim)
 {
 	if (stim == STIM_AGE_KEYS)
 	{
-		AgeToggles <SDL_Keycode> (keymap);
+		AgeToggles(keymap);
 	}
 	if (stim == STIM_AGE_MBUT)
 	{
-		AgeToggles <int> (mbutmap);
+		AgeToggles(mbutmap);
 	}
 	if (stim == STIM_INSERT_KEY_DOWN)
 	{

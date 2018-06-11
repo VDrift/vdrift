@@ -208,13 +208,6 @@ private:
 
 	void HandleMouseMotion(int x, int y, int xrel, int yrel);
 
-	template <class T>
-	void HandleToggle(std::map <T, Toggle> & togglemap, const DirectionEnum dir, const T & id)
-	{
-		togglemap[id].Tick();
-		togglemap[id].Set(dir == DOWN);
-	}
-
 	void HandleMouseButton(DirectionEnum dir, int id);
 
 	void HandleKey(DirectionEnum dir, SDL_Keycode id);
@@ -223,28 +216,34 @@ private:
 
 	void HandleQuit() {quit = true;}
 
-	template <class T>
-	void AgeToggles(std::map <T, Toggle> & togglemap)
-	{
-		std::list <typename std::map<T, Toggle>::iterator> todel;
-		for (auto i = togglemap.begin(); i != togglemap.end(); ++i)
-		{
-			i->second.Tick();
-			if (!i->second.GetState() && !i->second.GetImpulseFalling())
-				todel.push_back(i);
-		}
-
-		for (auto i : todel)
-			togglemap.erase(i);
-	}
-
-	template <class T>
-	Toggle GetToggle(const std::map <T, Toggle> & togglemap, const T & id) const
+	template <class ToggleMap, typename T>
+	Toggle GetToggle(const ToggleMap & togglemap, const T & id) const
 	{
 		auto i = togglemap.find(id);
 		if (i != togglemap.end())
 			return i->second;
 		return Toggle();
+	}
+
+	template <class ToggleMap, typename T>
+	void HandleToggle(ToggleMap & togglemap, const DirectionEnum dir, const T & id)
+	{
+		togglemap[id].Tick();
+		togglemap[id].Set(dir == DOWN);
+	}
+
+	template <class ToggleMap>
+	void AgeToggles(ToggleMap & togglemap)
+	{
+		auto i = togglemap.begin();
+		while (i != togglemap.end())
+		{
+			i->second.Tick();
+			if (!i->second.GetState() && !i->second.GetImpulseFalling())
+				togglemap.erase(i++);
+			else
+				i++;
+		}
 	}
 };
 
