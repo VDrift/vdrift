@@ -55,15 +55,9 @@ static inline float Ramp(float start, float end, float button_ramp, float dt)
 static inline float ApplyDeadzone(float dz, float val)
 {
 	if (std::abs(val) < dz)
-		val = 0;
-	else
-	{
-		if (val < 0)
-			val = (val + dz) * (1 / (1 - dz));
-		else
-			val = (val - dz) * (1 / (1 - dz));
-	}
-	return val;
+		return 0;
+
+	return (val - std::copysign(dz, val)) * (1 / (1 - dz));
 }
 
 static inline float ApplyGain(float gain, float val)
@@ -555,6 +549,30 @@ void CarControlMap::Save(Config & controls_config)
 	}
 }
 
+template <class Control>
+float HandleAxis(const Control & control, float val)
+{
+	if (control.negative)
+		val = -val;
+
+	val = ApplyDeadzone(control.deadzone, val);
+	val = ApplyGain(control.gain, val);
+
+	float absval = ApplyExponent(control.exponent, std::abs(val));
+	val = std::copysign(absval, val);
+
+	return val;
+}
+
+template <class Control>
+float HandleButton(const Control & control, Toggle button, float lastinput, float button_ramp, float dt)
+{
+	if (control.onetime)
+		return control.pushdown ? button.GetImpulseRising() : button.GetImpulseFalling();
+
+	return Ramp(lastinput, control.pushdown ? button.GetState() : !button.GetState(), button_ramp, dt);
+}
+
 const std::vector <float> & CarControlMap::ProcessInput(
 	const std::string & joytype, const EventSystem & eventsystem,
 	float dt, bool joy_200, float carms, float speedsens,
@@ -566,186 +584,53 @@ const std::vector <float> & CarControlMap::ProcessInput(
 
 	for (size_t n = 0; n < controls.size(); ++n)
 	{
-		float newval = 0.0;
-
+		float newval = 0;
 		for (const auto & control : controls[n])
 		{
-			bool handled = false;
 			float tempval = newval;
-
 			if (control.device < Control::JOYSTICKS)
 			{
 				if (control.type == Control::AXIS)
 				{
 					float val = eventsystem.GetJoyAxis(control.device, control.id);
-					if (control.negative)
-						val = -val;
-					val = ApplyDeadzone(control.deadzone,val);
-					val = ApplyGain(control.gain,val);
-
-					float absval = val;
-					bool neg = false;
-					if (val < 0)
-					{
-						absval = -val;
-						neg = true;
-					}
-					val = ApplyExponent(control.exponent,absval);
-					if (neg)
-						val = -val;
-
-					tempval = val;
-					handled = true;
+					tempval = HandleAxis(control, val);
 				}
 				else if (control.type == Control::BUTTON)
 				{
 					auto button = eventsystem.GetJoyButton(control.device, control.id);
-
-					if (control.onetime)
-					{
-						if (control.pushdown && button.GetImpulseRising())
-							tempval = 1.0;
-						else if (!control.pushdown && button.GetImpulseFalling())
-							tempval = 1.0;
-						else
-							tempval = 0.0;
-						handled = true;
-					}
-					else
-					{
-						float downval = 1.0;
-						float upval = 0.0;
-						if (!control.pushdown)
-						{
-							downval = 0.0;
-							upval = 1.0;
-						}
-
-						tempval = Ramp(lastinputs[n], button.GetState() ? downval : upval, button_ramp, dt);
-						handled = true;
-					}
-				}
-			}
-			else if (control.device == Control::KEYBOARD)
-			{
-				//cout << "type key" << std::endl;
-
-				auto key = eventsystem.GetKeyState(SDL_Keycode(control.id));
-
-				if (control.onetime)
-				{
-					if (control.pushdown && key.GetImpulseRising())
-						tempval = 1.0;
-					else if (!control.pushdown && key.GetImpulseFalling())
-						tempval = 1.0;
-					else
-						tempval = 0.0;
-					handled = true;
-				}
-				else
-				{
-					float downval = 1.0;
-					float upval = 0.0;
-					if (!control.pushdown)
-					{
-						downval = 0.0;
-						upval = 1.0;
-					}
-
-					//if (inputs[n->first] != keystate.down ? downval : upval) std::cout << "Key ramp: " << control.keycode << ", " << n->first << std::endl;
-					tempval = Ramp(lastinputs[n], key.GetState() ? downval : upval, button_ramp, dt);
-
-					handled = true;
+					tempval = HandleButton(control, button, lastinputs[n], button_ramp, dt);
 				}
 			}
 			else if (control.device == Control::MOUSE)
 			{
-				//cout << "type mouse" << std::endl;
-
-				if (control.type == Control::BUTTON)
+				if (control.type == Control::AXIS)
 				{
-					//cout << "mousebutton" << std::endl;
-
-					auto button = eventsystem.GetMouseButtonState(control.id);
-
-					if (control.onetime)
-					{
-						if (control.pushdown && button.GetImpulseRising())
-							tempval = 1.0;
-						else if (!control.pushdown && button.GetImpulseFalling())
-							tempval = 1.0;
-						else
-							tempval = 0.0;
-						handled = true;
-					}
-					else
-					{
-						float downval = 1.0;
-						float upval = 0.0;
-						if (!control.pushdown)
-						{
-							downval = 0.0;
-							upval = 1.0;
-						}
-
-						tempval = Ramp(lastinputs[n], button.GetState() ? downval : upval, button_ramp, dt);
-						handled = true;
-					}
-				}
-				else if (control.type == Control::AXIS)
-				{
-					//cout << "mousemotion" << std::endl;
-
 					std::vector <int> pos = eventsystem.GetMousePosition();
-					//std::cout << pos[0] << "," << pos[1] << std::endl;
-
 					float xval = (pos[0]-screenw/2.0)/(screenw/4.0);
 					float yval = (pos[1]-screenh/2.0)/(screenh/4.0);
-					xval = Clamp(xval, -1.0f, 1.0f);
-					yval = Clamp(yval, -1.0f, 1.0f);
-
-					float val = 0;
-
-					if (control.id == Control::MOUSEY)
-						val = control.negative ? -yval : yval;
-					else if (control.id == Control::MOUSEX)
-						val = control.negative ? -xval : xval;
-
-					val = Clamp(val, 0.0f, 1.0f);
-					val = ApplyDeadzone(control.deadzone,val);
-					val = ApplyGain(control.gain,val);
-					val = Clamp(val, 0.0f, 1.0f);
-
-					float absval = val;
-					bool neg = false;
-					if (val < 0)
-					{
-						absval = -val;
-						neg = true;
-					}
-					val = ApplyExponent(control.exponent,absval);
-					if (neg)
-						val = -val;
-
-					tempval = Clamp(val, 0.0f, 1.0f);
-
-					//cout << val << std::endl;
-
-					handled = true;
+					float val = (control.id == Control::MOUSEY) ? yval : xval;
+					val = Clamp(val, -1.0f, 1.0f);
+					tempval = HandleAxis(control, val);
+				}
+				else if (control.type == Control::BUTTON)
+				{
+					auto button = eventsystem.GetMouseButtonState(control.id);
+					tempval = HandleButton(control, button, lastinputs[n], button_ramp, dt);
 				}
 				//else cout << "mouse???" << std::endl;
+			}
+			else if (control.device == Control::KEYBOARD)
+			{
+				auto button = eventsystem.GetKeyState(SDL_Keycode(control.id));
+				tempval = HandleButton(control, button, lastinputs[n], button_ramp, dt);
 			}
 			//else cout << "type invalid" << std::endl;
 
 			if (tempval > newval)
 				newval = tempval;
-
-			assert(handled);
 		}
 
 		inputs[n] = Clamp(newval, 0.0f, 1.0f);
-
-		//std::cout << "New input value: " << inputs[n->first] << std::endl;
 	}
 
 	if (hgateshifter)
