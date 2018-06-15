@@ -923,12 +923,6 @@ std::string CarControlMap::Control::GetInfo() const
 			s << "BTN" << id;
 			return s.str();
 		}
-
-		if (type == HAT)
-		{
-			s << "HAT" << id;
-			return s.str();
-		}
 	}
 
 	return invalid;

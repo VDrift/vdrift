@@ -66,8 +66,7 @@ public:
 		enum TypeEnum
 		{
 			AXIS,
-			BUTTON,
-			HAT
+			BUTTON
 		} type;
 
 		enum DeviceEnum
