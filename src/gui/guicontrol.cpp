@@ -66,18 +66,17 @@ void GuiControl::Signal(Event ev)
 	{
 		if (m_signalv[SELECTX].connected())
 		{
-			float sx = (m_focusx - m_xmin) / (m_xmax - m_xmin);
-			sx = Clamp(sx, 0.0f, 1.0f);
+			float v = (m_focusx - m_xmin) / (m_xmax - m_xmin);
 			std::ostringstream s;
-			s << sx;
+			s << Clamp(v, 0.0f, 1.0f);
 			m_signalv[SELECTX](s.str());
 		}
 
 		if (m_signalv[SELECTY].connected())
 		{
-			float sy = (m_focusy - m_ymin) / (m_ymax - m_ymin);
+			float v = (m_focusy - m_ymin) / (m_ymax - m_ymin);
 			std::ostringstream s;
-			s << sy;
+			s << Clamp(v, 0.0f, 1.0f);
 			m_signalv[SELECTY](s.str());
 		}
 	}
