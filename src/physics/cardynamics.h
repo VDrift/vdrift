@@ -308,6 +308,9 @@ protected:
 	// car mass fraction at front wheels
 	btScalar CalculateFrontMassRatio() const;
 
+	// car lateral grip balance, yaw torque fraction at front wheels
+	btScalar CalculateGripBalance() const;
+
 	// total aerodynamic lift and drag coefficients
 	void CalculateAerodynamicCoeffs(btScalar & cl, btScalar & cd) const;
 

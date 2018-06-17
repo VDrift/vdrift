@@ -109,10 +109,18 @@ void PerformanceTesting::Test(
 	}
 
 	btVector3 cm = -car.GetCenterOfMassOffset();
-	info_output << carname << " Summary:\n"
-		<< "Mass including driver and fuel: " << 1 / car.GetInvMass() << " kg\n"
-		<< "Center of mass: " << cm[0] << ", " << cm[1] << ", " << cm[2] << " m\n"
-		<< "Estimated top speed: " << ConvertToMPH(car.GetMaxSpeedMPS()) << " MPH" << std::endl;
+	std::vector<float> specs = car.GetSpecs();
+	info_output << carname << " specs\n"
+		<< "Drive: " << (specs[1] == 1 ? "FWD\n" : (specs[1] == 2 ? "RWD\n" : "AWD\n"))
+		<< "Top speed: " << int(ConvertToMPH(specs[0])) << " mph\n"
+		<< "Displacement: " << int(specs[2] * 1E6f) << " cc\n"
+		<< "Power: " << int(specs[3] * 1.341E-3f) << " hp\n"
+		<< "Torque: " << int(specs[4]) << " Nm\n"
+		<< "Mass: " << int(specs[5]) << " kg\n"
+		<< "Mass front: " << specs[6]*100<< " %\n"
+		<< "Grip balance front: " << specs[7]*100 << " %\n"
+		<< "Center of mass: " << cm[0] << ", " << cm[1] << ", " << cm[2] << " m"
+		<< std::endl;
 
 	std::ostringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);

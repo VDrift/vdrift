@@ -1046,16 +1046,16 @@ btScalar CarDynamics::GetBrakeDistance(btScalar initial_speed, btScalar final_sp
 
 std::vector<float> CarDynamics::GetSpecs() const
 {
-	std::vector<float> specs;
-	specs.reserve(7);
-	specs.push_back(maxspeed);
-	specs.push_back(float(int(drive)));
-	specs.push_back(engine.GetDisplacement());
-	specs.push_back(engine.GetMaxPower());
-	specs.push_back(engine.GetMaxTorque());
-	specs.push_back(1 / body->getInvMass());
-	specs.push_back(CalculateFrontMassRatio());
-	return specs;
+	return std::vector<float>{
+		maxspeed,
+		float(int(drive)),
+		engine.GetDisplacement(),
+		engine.GetMaxPower(),
+		engine.GetMaxTorque(),
+		1 / body->getInvMass(),
+		CalculateFrontMassRatio(),
+		CalculateGripBalance()
+	};
 }
 
 btVector3 CarDynamics::GetDownVector() const
@@ -1722,8 +1722,23 @@ btScalar CarDynamics::CalculateFrontMassRatio() const
 {
 	btScalar dr = GetCenterOfMassOffset()[1];
 	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
-	btScalar r2 = suspension[3]->GetWheelPosition()[1] + dr;
+	btScalar r2 = suspension[2]->GetWheelPosition()[1] + dr;
 	return r2 / (r2 - r1);
+}
+
+btScalar CarDynamics::CalculateGripBalance() const
+{
+	btScalar dr = GetCenterOfMassOffset()[1];
+	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
+	btScalar r2 = suspension[2]->GetWheelPosition()[1] + dr;
+	btScalar m = 1 / body->getInvMass();
+	btScalar m1 = m * r2 / (r2 - r1);
+	btScalar m2 = m - m1;
+	btScalar f1 = tire[0].getMaxFy(m1 * gravity * 0.5f, 0);
+	btScalar f2 = tire[2].getMaxFy(m2 * gravity * 0.5f, 0);
+	btScalar t1 = f1 * r1;
+	btScalar t2 = f2 * r2;
+	return -t1 / (t2 - t1);
 }
 
 void CarDynamics::CalculateAerodynamicCoeffs(btScalar & cl, btScalar & cd) const
