@@ -48,29 +48,21 @@ void GuiControlList::Signal(Event ev)
 {
 	if (ev == MOVEUP)
 	{
-		unsigned col, row;
-		GetElemPos(m_active_element, col, row);
 		int n = m_vertical ? m_active_element - 1 : m_active_element - m_cols;
 		SetActiveElement(n);
 	}
 	else if (ev == MOVEDOWN)
 	{
-		unsigned col, row;
-		GetElemPos(m_active_element, col, row);
 		int n = m_vertical ? m_active_element + 1 : m_active_element + m_cols;
 		SetActiveElement(n);
 	}
 	else if (ev == MOVELEFT)
 	{
-		unsigned col, row;
-		GetElemPos(m_active_element, col, row);
 		int n = m_vertical ? m_active_element - m_rows : m_active_element - 1;
 		SetActiveElement(n);
 	}
 	else if (ev == MOVERIGHT)
 	{
-		unsigned col, row;
-		GetElemPos(m_active_element, col, row);
 		int n = m_vertical ? m_active_element + m_rows : m_active_element + 1;
 		SetActiveElement(n);
 	}
