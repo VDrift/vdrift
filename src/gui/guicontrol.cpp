@@ -73,7 +73,7 @@ void GuiControl::Signal(Event ev)
 			m_signalv[SELECTX](s.str());
 		}
 
-		if (m_signalv[SELECTX].connected())
+		if (m_signalv[SELECTY].connected())
 		{
 			float sy = (m_focusy - m_ymin) / (m_ymax - m_ymin);
 			std::ostringstream s;
