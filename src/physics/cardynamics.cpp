@@ -357,23 +357,23 @@ static bool LoadWheel(const PTree & cfg, CarWheel & wheel, std::ostream & error_
 	btScalar tire_radius = tire_size[2] * 0.5f * 0.0254f + tire_width * tire_aspect_ratio;
 
 	// calculate mass, inertia from dimensions
-	btScalar tire_thickness = 0.05;
-	btScalar tire_density = 8E3;
+	btScalar tire_thickness = 0.02;
+	btScalar tire_density = 1000; // rubber
 
 	btScalar rim_radius = tire_radius - tire_width * tire_aspect_ratio;
 	btScalar rim_width = tire_width;
 	btScalar rim_thickness = 0.01;
-	btScalar rim_density = 3E5;
+	btScalar rim_density = 2700; // aluminium
 
-	btScalar tire_volume = btScalar(M_PI) * tire_width * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
-	btScalar rim_volume = btScalar(M_PI) * rim_width * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
+	btScalar tire_volume = btScalar(M_PI) * tire_width * tire_thickness * (2 * tire_radius  - tire_thickness);
+	btScalar rim_volume = btScalar(M_PI) * rim_width * rim_thickness * (2 * rim_radius - rim_thickness);
 	btScalar tire_mass = tire_density * tire_volume;
 	btScalar rim_mass = rim_density * rim_volume;
 	btScalar tire_inertia = tire_mass * tire_radius * tire_radius;
 	btScalar rim_inertia = rim_mass * rim_radius * rim_radius;
 
 	btScalar mass = tire_mass + rim_mass;
-	btScalar inertia = (tire_inertia + rim_inertia) * 2;	// scale inertia fixme
+	btScalar inertia = (tire_inertia + rim_inertia) * 2;	// inertia scaled by 2 fixme
 
 	// override mass, inertia
 	cfg.get("inertia", inertia);
