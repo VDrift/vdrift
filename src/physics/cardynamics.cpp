@@ -1135,39 +1135,26 @@ void CarDynamics::DoTCS(int i)
 
 void CarDynamics::DoABS(int i)
 {
-	//only active if brakes commanded past threshold
-	btScalar brakesetting = brake[i].GetBrakeFactor();
-	if (brakesetting > btScalar(0.1))
+	// only active if brakes commanded past threshold and speed exceeds 4 m/s
+	if (brake[i].GetBrakeFactor() > btScalar(0.1) &&
+		body->getLinearVelocity().length2() > 16)
 	{
-		btScalar maxspeed = 0;
-		for (int i2 = 0; i2 < WHEEL_COUNT; i2++)
-		{
-			if (wheel[WheelPosition(i2)].GetAngularVelocity() > maxspeed)
-				maxspeed = wheel[WheelPosition(i2)].GetAngularVelocity();
-		}
+		btScalar slip = -tire[i].getSlip();
+		btScalar slip_angle = tire[i].getSlipAngle();
+		btScalar slip_ideal = tire[i].getIdealSlip() * CosPi2(slip_angle);
+		btScalar slip_engage = slip_ideal * btScalar(1.0);
+		btScalar slip_disengage = slip_ideal * btScalar(0.5);
 
-		//don't engage ABS if all wheels are moving slowly
-		if (maxspeed > 6)
-		{
-			btScalar sp = tire[i].getIdealSlip();
-			btScalar error = - tire[i].getSlip() - sp;
-			btScalar thresholdeng = 0;
-			btScalar thresholddis = -sp * btScalar(0.5);
-
-			if (error > thresholdeng && ! abs_active[i])
-				abs_active[i] = true;
-
-			if (error < thresholddis && abs_active[i])
-				abs_active[i] = false;
-		}
-		else
+		if (slip > slip_engage)
+			abs_active[i] = true;
+		else if (slip < slip_disengage)
 			abs_active[i] = false;
+
+		if (abs_active[i])
+			brake[i].SetBrakeFactor(0);
 	}
 	else
 		abs_active[i] = false;
-
-	if (abs_active[i])
-		brake[i].SetBrakeFactor(0);
 }
 
 // even triangle wave with a period and amplitude of 1
