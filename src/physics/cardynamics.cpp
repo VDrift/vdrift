@@ -36,6 +36,7 @@
 #include <cmath>
 
 static const btScalar gravity = 9.81;
+static const int substeps = 10;
 
 static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
@@ -373,7 +374,7 @@ static bool LoadWheel(const PTree & cfg, CarWheel & wheel, std::ostream & error_
 	btScalar rim_inertia = rim_mass * rim_radius * rim_radius;
 
 	btScalar mass = tire_mass + rim_mass;
-	btScalar inertia = (tire_inertia + rim_inertia) * 2;	// inertia scaled by 2 fixme
+	btScalar inertia = tire_inertia + rim_inertia;
 
 	// override mass, inertia
 	cfg.get("inertia", inertia);
@@ -652,9 +653,9 @@ bool CarDynamics::Load(
 	}
 
 	if (drive == AWD)
-		InitDriveline4(world.getTimeStep());
+		InitDriveline4(world.getTimeStep() / substeps);
 	else
-		InitDriveline2(world.getTimeStep());
+		InitDriveline2(world.getTimeStep() / substeps);
 
 	transform.setRotation(rotation);
 	transform.setOrigin(position);
@@ -1104,7 +1105,7 @@ void CarDynamics::ApplyAerodynamics(btScalar dt)
 	body->applyTorqueImpulse(wind_torque * dt);
 }
 
-void CarDynamics::DoTCS(int i)
+void CarDynamics::ApplyTCS(int i)
 {
 	// only active if throttle commanded past threshold
 	btScalar gas = engine.GetThrottle();
@@ -1133,7 +1134,7 @@ void CarDynamics::DoTCS(int i)
 		tcs_active[i] = false;
 }
 
-void CarDynamics::DoABS(int i)
+void CarDynamics::ApplyABS(int i)
 {
 	// only active if brakes commanded past threshold and speed exceeds 4 m/s
 	if (brake[i].GetBrakeFactor() > btScalar(0.1) &&
@@ -1196,13 +1197,13 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 	if (tcs)
 	{
 		for (int i = 0; i < WHEEL_COUNT; ++i)
-			DoTCS(i);
+			ApplyTCS(i);
 	}
 
 	if (abs)
 	{
 		for (int i = 0; i < WHEEL_COUNT; ++i)
-			DoABS(i);
+			ApplyABS(i);
 	}
 
 	UpdateTransmission(dt);
@@ -1264,6 +1265,7 @@ void CarDynamics::InitDriveline2(btScalar dt)
 	driveline.clutch[1].decel_factor = diff.anti_slip_torque_deceleration_factor;
 	driveline.clutch[1].impulse_limit = diff.anti_slip * dt;
 
+	driveline.clutch_count = 2;
 	driveline.computeDiffInertia2();
 }
 
@@ -1290,33 +1292,30 @@ void CarDynamics::InitDriveline4(btScalar dt)
 		driveline.clutch[i].impulse_limit = diff.anti_slip * dt;
 	}
 
-	driveline.torque_split =  differential[DIFF_CENTER].torque_split;
+	driveline.clutch_count = 4;
+	driveline.torque_split = differential[DIFF_CENTER].torque_split;
 	driveline.computeDiffInertia4();
 }
 
 void CarDynamics::SetupDriveline2(btScalar dt)
 {
+	driveline.clutch[0].impulse_limit = clutch.GetTorque() * dt;
+
+	// TODO: recaclculation only needed when gear_ratio changes
 	auto & diff = differential[(drive == FWD) ? DIFF_FRONT : DIFF_REAR];
 	driveline.gear_ratio = transmission.GetCurrentGearRatio() * diff.final_drive;
 	driveline.computeDriveInertia2();
-
-	driveline.clutch[0].impulse_limit = clutch.GetTorque() * dt;
-	driveline.clutch[0].impulse = 0;
-	driveline.clutch[1].impulse = 0;
 }
 
 void CarDynamics::SetupDriveline4(btScalar dt)
 {
+	driveline.clutch[0].impulse_limit = clutch.GetTorque() * dt;
+
+	// TODO: recaclculation only needed when gear_ratio changes
 	driveline.gear_ratio = transmission.GetCurrentGearRatio() *
 		differential[DIFF_CENTER].final_drive *
 		differential[DIFF_REAR].final_drive;
 	driveline.computeDriveInertia4();
-
-	driveline.clutch[0].impulse_limit = clutch.GetTorque() * dt;
-	driveline.clutch[0].impulse = 0;
-	driveline.clutch[1].impulse = 0;
-	driveline.clutch[2].impulse = 0;
-	driveline.clutch[3].impulse = 0;
 }
 
 void CarDynamics::SetupMotorJoints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt)
@@ -1326,7 +1325,6 @@ void CarDynamics::SetupMotorJoints(const btMatrix3x3 wheel_orientation[WHEEL_COU
 	m.shaft = &engine.GetShaft();
 	m.target_velocity = engine.GetTorque() > 0 ? 100000 : 0;
 	m.impulse_limit = btFabs(engine.GetTorque()) * dt;
-	m.impulse = 0;
 	m.computeInertia(*body, body->getWorldTransform().getBasis().getColumn(0));
 
 	for (int i = 0; i < WHEEL_COUNT; ++i)
@@ -1338,7 +1336,6 @@ void CarDynamics::SetupMotorJoints(const btMatrix3x3 wheel_orientation[WHEEL_COU
 			m.shaft = &wheel[i].GetShaft();
 			m.target_velocity = 0;
 			m.impulse_limit = torque * dt;
-			m.impulse = 0;
 			m.computeInertia(*body, wheel_orientation[i].getColumn(0));
 		}
 	}
@@ -1472,8 +1469,9 @@ void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
 
 void CarDynamics::UpdateDriveline(btScalar dt)
 {
-	const unsigned solver_steps = 10;
-	const unsigned solver_iterations = 4;
+	const int solver_iterations = 4;
+	const btScalar sdt = dt / substeps;
+	const btScalar rdt = 1 / dt;
 
 	UpdateWheelContacts();
 	btMatrix3x3 wheel_orientation[WHEEL_COUNT];
@@ -1485,7 +1483,9 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	}
 
 	SetupWheelConstraints(wheel_orientation, dt);
-	for (unsigned n = 0; n < solver_iterations; ++n)
+
+	// presolve suspension
+	for (int n = 0; n < solver_iterations; ++n)
 	{
 		for (int i = 0; i < WHEEL_COUNT; ++i)
 			wheel_constraint[i].solveSuspension();
@@ -1495,20 +1495,19 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 		ApplyRollingResistance(i);
 
-	SetupMotorJoints(wheel_orientation, dt);
+	SetupMotorJoints(wheel_orientation, sdt);
 	if (drive != AWD)
-		SetupDriveline2(dt);
+		SetupDriveline2(sdt);
 	else
-		SetupDriveline4(dt);
+		SetupDriveline4(sdt);
 
 	// solve driveline
-	const btScalar rdt = 1 / dt;
-	const btScalar sdt = dt * btScalar(1.0 / solver_steps);
-	for (unsigned n = 0; n < solver_steps; ++n)
+	for (int n = 0; n < substeps; ++n)
 	{
 		UpdateWheelConstraints(rdt, sdt);
 
-		for (unsigned n = 0; n < solver_iterations; ++n)
+		driveline.clearImpulses();
+		for (int m = 0; m < solver_iterations; ++m)
 		{
 			if (drive != AWD)
 				driveline.solve2(*body);

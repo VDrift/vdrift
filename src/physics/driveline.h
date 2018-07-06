@@ -108,11 +108,21 @@ struct Driveline
 	DriveShaft * shaft[5];	// engine and wheels
 	MotorJoint motor[5];	// engine and brakes
 	ClutchJoint clutch[4];	// transmission and differential clutches
-	btScalar gear_ratio; 	// transmission * differential gear ratio
+	btScalar gear_ratio;	// transmission * differential gear ratio
 	btScalar torque_split;	// center differential torque split
 	unsigned motor_count;	// active motor joints
+	unsigned clutch_count;	// active clutch joints
 
-	Driveline() : gear_ratio(0), torque_split(0), motor_count(0) {}
+	Driveline() : gear_ratio(0), torque_split(0), motor_count(0), clutch_count(0) {}
+
+	void clearImpulses()
+	{
+		for (unsigned i = 0; i < motor_count; ++i)
+			motor[i].impulse = 0;
+
+		for (unsigned i = 0; i < clutch_count; ++i)
+			clutch[i].impulse = 0;
+	}
 
 	void computeInertia2()
 	{

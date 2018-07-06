@@ -256,11 +256,11 @@ protected:
 
 	void UpdateSuspension(int i, btScalar dt);
 
-	// do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
-	void DoTCS(int i);
+	// run traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
+	void ApplyTCS(int i);
 
-	// do anti-lock brake system calculations and modify the brake force if necessary
-	void DoABS(int i);
+	// run anti-lock brake system calculations and modify the brake force if necessary
+	void ApplyABS(int i);
 
 	void Tick(btScalar dt);
 
