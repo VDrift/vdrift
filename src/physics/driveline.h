@@ -34,6 +34,17 @@ struct MotorJoint
 	btScalar impulse_limit;
 	btScalar impulse;
 
+	MotorJoint() :
+		shaft(0),
+		inv_body_inertia(0,0,0),
+		joint_inertia(0),
+		target_velocity(0),
+		impulse_limit(0),
+		impulse(0)
+	{
+		// ctor
+	}
+
 	void computeInertia(btRigidBody & body, const btVector3 & shaft_axis)
 	{
 		inv_body_inertia = body.getInvInertiaTensorWorld() * shaft_axis;
@@ -60,6 +71,17 @@ struct ClutchJoint
 	btScalar decel_factor;	// 0 lock only when accelerating, 1 lock always
 	btScalar impulse_limit;	// speed sensitive clutch limit
 	btScalar impulse;
+
+	ClutchJoint() :
+		inertia(0),
+		softness(0),
+		load_coeff(0),
+		decel_factor(0),
+		impulse_limit(0),
+		impulse(0)
+	{
+		// ctor
+	}
 
 	// returns clamped velocity error correction impulse
 	btScalar solve(btScalar velocity_error)
