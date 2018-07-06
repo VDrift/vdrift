@@ -270,11 +270,9 @@ protected:
 
 	void InitDriveline4(btScalar dt);
 
-	void SetupDriveline2(btScalar dt);
+	void UpdateDrivelineGearRatio();
 
-	void SetupDriveline4(btScalar dt);
-
-	void SetupMotorJoints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
+	void SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
 
 	void SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
 

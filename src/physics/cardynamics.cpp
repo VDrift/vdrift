@@ -1297,29 +1297,28 @@ void CarDynamics::InitDriveline4(btScalar dt)
 	driveline.computeDiffInertia4();
 }
 
-void CarDynamics::SetupDriveline2(btScalar dt)
+void CarDynamics::UpdateDrivelineGearRatio()
+{
+	if (drive != AWD)
+	{
+		driveline.gear_ratio = transmission.GetCurrentGearRatio() *
+			differential[(drive == FWD) ? DIFF_FRONT : DIFF_REAR].final_drive;
+		driveline.computeDriveInertia2();
+	}
+	else
+	{
+		// assume rear final drive is equal to front final dirve
+		driveline.gear_ratio = transmission.GetCurrentGearRatio() *
+			differential[DIFF_CENTER].final_drive *
+			differential[DIFF_REAR].final_drive;
+		driveline.computeDriveInertia4();
+	}
+}
+
+void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt)
 {
 	driveline.clutch[0].impulse_limit = clutch.GetTorque() * dt;
 
-	// TODO: recaclculation only needed when gear_ratio changes
-	auto & diff = differential[(drive == FWD) ? DIFF_FRONT : DIFF_REAR];
-	driveline.gear_ratio = transmission.GetCurrentGearRatio() * diff.final_drive;
-	driveline.computeDriveInertia2();
-}
-
-void CarDynamics::SetupDriveline4(btScalar dt)
-{
-	driveline.clutch[0].impulse_limit = clutch.GetTorque() * dt;
-
-	// TODO: recaclculation only needed when gear_ratio changes
-	driveline.gear_ratio = transmission.GetCurrentGearRatio() *
-		differential[DIFF_CENTER].final_drive *
-		differential[DIFF_REAR].final_drive;
-	driveline.computeDriveInertia4();
-}
-
-void CarDynamics::SetupMotorJoints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt)
-{
 	unsigned motor_count = 0;
 	auto & m = driveline.motor[motor_count++];
 	m.shaft = &engine.GetShaft();
@@ -1495,11 +1494,7 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 		ApplyRollingResistance(i);
 
-	SetupMotorJoints(wheel_orientation, sdt);
-	if (drive != AWD)
-		SetupDriveline2(sdt);
-	else
-		SetupDriveline4(sdt);
+	SetupDriveline(wheel_orientation, sdt);
 
 	// solve driveline
 	for (int n = 0; n < substeps; ++n)
@@ -1562,6 +1557,7 @@ void CarDynamics::UpdateTransmission(btScalar dt)
 	{
 		shifted = true;
 		transmission.Shift(shift_gear);
+		UpdateDrivelineGearRatio();
 	}
 
 	if (autoclutch)
