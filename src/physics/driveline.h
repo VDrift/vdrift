@@ -31,6 +31,7 @@ struct MotorJoint
 	btVector3 inv_body_inertia;
 	btScalar joint_inertia;
 	btScalar target_velocity;
+	btScalar impulse_limit_delta;
 	btScalar impulse_limit;
 	btScalar impulse;
 
@@ -39,6 +40,7 @@ struct MotorJoint
 		inv_body_inertia(0,0,0),
 		joint_inertia(0),
 		target_velocity(0),
+		impulse_limit_delta(0),
 		impulse_limit(0),
 		impulse(0)
 	{
@@ -69,14 +71,16 @@ struct ClutchJoint
 	btScalar softness;		// slip speed sensitivity, from no damping to max damping(lock): [0, 1]
 	btScalar load_coeff;	// clutch driveshaft torque sensitivity
 	btScalar decel_factor;	// 0 lock only when accelerating, 1 lock always
+	btScalar impulse_limit_delta;	// impulse limit interpolation value
 	btScalar impulse_limit;	// speed sensitive clutch limit
-	btScalar impulse;
+	btScalar impulse;		// accumulated clutch impulse
 
 	ClutchJoint() :
 		inertia(0),
 		softness(0),
 		load_coeff(0),
 		decel_factor(0),
+		impulse_limit_delta(0),
 		impulse_limit(0),
 		impulse(0)
 	{
@@ -144,6 +148,15 @@ struct Driveline
 
 		for (unsigned i = 0; i < clutch_count; ++i)
 			clutch[i].impulse = 0;
+	}
+
+	void updateImpulseLimits()
+	{
+		for (unsigned i = 0; i < motor_count; ++i)
+			motor[i].impulse_limit += motor[i].impulse_limit_delta;
+
+		for (unsigned i = 0; i < clutch_count; ++i)
+			clutch[i].impulse_limit += clutch[i].impulse_limit_delta;
 	}
 
 	void computeInertia2()
