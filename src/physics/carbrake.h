@@ -21,6 +21,7 @@
 #define _CARBRAKE_H
 
 #include "LinearMath/btScalar.h"
+#include "minmax.h"
 #include "macros.h"
 
 class CarBrake
@@ -70,16 +71,16 @@ class CarBrake
 			brake_factor = newfactor;
 		}
 
+		btScalar GetMaxTorque() const
+		{
+			return bias * (max_pressure * area) * (friction * radius);
+		}
+
 		///brake torque magnitude
 		btScalar GetTorque()
 		{
-			assert(handbrake_factor != -1);
-			btScalar brake = brake_factor > handbrake * handbrake_factor ? brake_factor : handbrake * handbrake_factor;
-			btScalar pressure = brake * bias * max_pressure;
-			btScalar normal = pressure * area;
-			btScalar torque = friction * normal * radius;
-			lasttorque = torque;
-			return torque;
+			lasttorque = GetMaxTorque() * Max(brake_factor, handbrake * handbrake_factor);
+			return lasttorque;
 		}
 
 		void SetFriction(btScalar value)
