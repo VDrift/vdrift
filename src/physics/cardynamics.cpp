@@ -75,24 +75,23 @@ static bool LoadTransmission(
 	CarTransmission & transmission,
 	std::ostream & error_output)
 {
-	btScalar shift_time = 0;
-	btScalar ratio;
-	int gears;
-
-	const PTree * cfg_trans;
+	const PTree * cfg_trans = 0;
+	int gears = 0;
 	if (!cfg.get("transmission", cfg_trans, error_output)) return false;
 	if (!cfg_trans->get("gears", gears, error_output)) return false;
+
+	std::vector<btScalar> ratios(2 + gears, 0);
+	if (!cfg_trans->get("gear-ratio-r", ratios[0], error_output)) return false;
 	for (int i = 0; i < gears; ++i)
 	{
 		std::ostringstream s;
-		s << "gear-ratio-" << i+1;
-		if (!cfg_trans->get(s.str(), ratio, error_output)) return false;
-		transmission.SetGearRatio(i+1, ratio);
+		s << "gear-ratio-" << i + 1;
+		if (!cfg_trans->get(s.str(), ratios[i + 2], error_output)) return false;
 	}
-	if (!cfg_trans->get("gear-ratio-r", ratio, error_output)) return false;
-	cfg_trans->get("shift-time", shift_time);
+	transmission.SetGears(ratios, gears, 1);
 
-	transmission.SetGearRatio(-1, ratio);
+	btScalar shift_time = 0;
+	cfg_trans->get("shift-time", shift_time);
 	transmission.SetShiftTime(shift_time);
 
 	return true;
