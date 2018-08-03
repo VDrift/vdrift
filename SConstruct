@@ -70,11 +70,11 @@ elif sys.platform == 'darwin':
     opts.Add('SDK', 'the path to an SDK directory', '')
 
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#src', '#tools/osx/Frameworks', '#tools/osx/Frameworks/SDL.framework/Headers'],
+        CPPPATH = ['#src', '#vdrift-mac/Frameworks', '#vdrift-mac/Frameworks/SDL2.framework/Headers', '#vdrift-mac/Libraries'],
         CCFLAGS = ['-std=c++11', '-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
-        FRAMEWORKPATH = ['tools/osx/Frameworks/'],
+        FRAMEWORKPATH = ['vdrift-mac/Frameworks/'],
         FRAMEWORKS = [ 'OpenGL' ],
         options = opts)
 

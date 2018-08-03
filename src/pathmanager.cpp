@@ -76,7 +76,10 @@ void PathManager::Init(std::ostream & info_output, std::ostream & error_output)
 		else
 			data_directory = DATA_DIR;
 #elif __APPLE__
-		data_directory = get_mac_data_dir();
+		{
+			extern char * get_mac_data_dir (void);
+			data_directory = get_mac_data_dir();
+		}
 #else
 		data_directory = "data";
 #endif
