@@ -48,12 +48,45 @@ Windows
 
             vdrift-win\premake4 vs2010
 
-OS X
+OS X / macOS
 ----
 
+There are two ways to compile on macOS:
+1. Xcode
+2. scons
+
+In both cases, you must clone [vdrift-mac](https://github.com/VDrift/vdrift-mac.git) in `vdrift` directory:
+
+        git clone https://github.com/VDrift/vdrift-mac.git
+
+and checkout the svn `data` repositoy in `vdrift` folder (almost 3.4G):
+
+        svn checkout https://svn.code.sf.net/p/vdrift/code/vdrift-data data
+
+Than you can compile and run `vdrift` opening with `Xcode` the project: `vdrift-mac/vdrift.xcodeproj`
+or compiling using `scons`.
+
+### Using `Xcode`
 The VDrift OS X project requires [Xcode](http://developer.apple.com/xcode/) 3.2 or later. The latest version is free on the [Mac App Store](http://itunes.apple.com/us/app/xcode/id422352214?mt=12&ls=1).
 
 Open **vdrift/vdrift-mac/vdrift.xcodeproj** and in Xcode 4 or higher click Product -&gt; Build, otherwise hit Build -&gt; Build.
+More details in [vdrift-mac](https://github.com/VDrift/vdrift-mac.git)
+
+### Using `scons`
+Compiling using `scons`, is a little bit tedious for macOS, but anyway, it an be done in similar way it's explained below for [Ubuntu](#ubuntu); install the dependencies using `brew`.
+For example:
+
+        brew install scons
+
+After the first compilation, you must copy two libraries from `vdrift-mac/Libraries` to `build/vdrift-mac.app/Contents/Framewors`:
+
+        cp vdrift-mac/Libraries/libiconv.2.dylib build/vdrift.app/Contents/Frameworks/
+        cp vdrift-mac/Libraries/libintl.8.dylib build/vdrift.app//Contents/Frameworks/
+
+and then `data` directory into `build` folder, you checked out before in `vdrift` folder.
+
+Finally:
+        open build/vdrift.app
 
 Linux
 -----
