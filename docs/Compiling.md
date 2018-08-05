@@ -63,7 +63,7 @@ and checkout the svn `data` repositoy in `vdrift` folder (almost 3.4G):
 
         svn checkout https://svn.code.sf.net/p/vdrift/code/vdrift-data data
 
-Than you can compile and run `vdrift` opening with `Xcode` the project: `vdrift-mac/vdrift.xcodeproj`
+Then you can compile and run `vdrift` opening with `Xcode` the project: `vdrift-mac/vdrift.xcodeproj`
 or compiling using `scons`.
 
 ### Using `Xcode`
@@ -73,7 +73,7 @@ Open **vdrift/vdrift-mac/vdrift.xcodeproj** and in Xcode 4 or higher click Produ
 More details in [vdrift-mac](https://github.com/VDrift/vdrift-mac.git)
 
 ### Using `scons`
-Compiling using `scons`, is a little bit tedious for macOS, but anyway, it an be done in similar way it's explained below for [Ubuntu](#ubuntu); install the dependencies using `brew`.
+Compiling using `scons`, is a little bit tedious for macOS, but anyway, it can be done in similar way it's explained below for [Ubuntu](#ubuntu); install the dependencies using `brew`.
 For example:
 
         brew install scons
