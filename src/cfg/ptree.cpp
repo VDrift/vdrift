@@ -47,7 +47,7 @@ QT_TEST(ptree)
 	QT_CHECK_EQUAL(err.str(), "");
 
 	QT_CHECK(troot->get("bla", str, err) == false);
-	std::string err_test = "test.cfg.root.bla not found.\n";
+	std::string err_test = ".test.cfg.root.bla not found.\n";
 	QT_CHECK_EQUAL(err.str(), err_test);
 
 	ptree.get("root.child.ipsum", str, err);
