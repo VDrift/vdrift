@@ -74,11 +74,4 @@ QT_TEST(ptree)
 	read_inf(inf, inftree);
 	write_inf(inftree, inf_test);
 	QT_CHECK_EQUAL(inf.str(), inf_test.str());
-
-	PTree xmltree;
-	std::stringstream xml, xml_test;
-	write_xml(ptree, xml);
-	read_xml(xml, xmltree);
-	write_xml(xmltree, xml_test);
-	QT_CHECK_EQUAL(xml.str(), xml_test.str());
 }

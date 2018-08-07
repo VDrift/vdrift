@@ -33,7 +33,6 @@ src = Split("""
 		cfg/ptree.cpp
 		cfg/ptree_inf.cpp
 		cfg/ptree_ini.cpp
-		cfg/ptree_xml.cpp
 		containeralgorithm.cpp
 		content/configfactory.cpp
 		content/contentmanager.cpp
