@@ -93,19 +93,6 @@ key2
 void read_inf(std::istream & in, PTree & p, Include * inc = 0);
 void write_inf(const PTree & p, std::ostream & out);
 
-/*
-<!-- xml format -->
-<key1>value1</key1>
-<key2>
-    <key3>
-		<key4>value4</key4>
-	</key3>
-    <key5>value5</key5>
-</key2>
-*/
-void read_xml(std::istream & in, PTree & p, Include * inc = 0);
-void write_xml(const PTree & p, std::ostream & out);
-
 /// property tree class
 /// key and values are stored as strings
 class PTree

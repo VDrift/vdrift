@@ -189,6 +189,7 @@ class Serializer
 				{
 					std::ostringstream itemname;
 					itemname << "*item" << count;
+					++count;
 					if (!this->Serialize(itemname.str(), i)) return false;
 				}
 			}
