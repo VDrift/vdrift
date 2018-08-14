@@ -628,8 +628,8 @@ bool CarDynamics::Load(
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
 
 		if (!CarSuspension::Load(cfg_wheel, wheel[i].GetMass(), suspension[i], error)) return false;
-		if (suspension[i]->GetMaxSteeringAngle() > maxangle)
-			maxangle = suspension[i]->GetMaxSteeringAngle();
+		if (suspension[i].GetMaxSteeringAngle() > maxangle)
+			maxangle = suspension[i].GetMaxSteeringAngle();
 
 		btScalar mass = wheel[i].GetMass();
 		btScalar width = wheel[i].GetWidth();
@@ -683,12 +683,12 @@ bool CarDynamics::Load(
 	btScalar m = 1 / body->getInvMass();
 	btScalar m1 = m * CalculateFrontMassRatio();
 	btScalar m2 = m - m1;
-	btScalar d1 = suspension[0]->GetDisplacement(m1 * gravity / 2);
-	btScalar d2 = suspension[3]->GetDisplacement(m2 * gravity / 2);
-	suspension[0]->SetDisplacement(d1);
-	suspension[1]->SetDisplacement(d1);
-	suspension[2]->SetDisplacement(d2);
-	suspension[3]->SetDisplacement(d2);
+	btScalar d1 = suspension[0].GetDisplacement(m1 * gravity / 2);
+	btScalar d2 = suspension[3].GetDisplacement(m2 * gravity / 2);
+	suspension[0].SetDisplacement(d1);
+	suspension[1].SetDisplacement(d1);
+	suspension[2].SetDisplacement(d2);
+	suspension[3].SetDisplacement(d2);
 	up_offset -= up * Max(d1, d2);
 
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
@@ -715,7 +715,7 @@ void CarDynamics::SetPosition(const btVector3 & position)
 	body->translate(position - body->getCenterOfMassPosition());
 	transform.setOrigin(position);
 	for (int i = 0; i < WHEEL_COUNT; ++i)
-		wheel_position[i] = transform.getBasis() * (suspension[i]->GetWheelPosition() + GetCenterOfMassOffset());
+		wheel_position[i] = transform.getBasis() * (suspension[i].GetWheelPosition() + GetCenterOfMassOffset());
 }
 
 void CarDynamics::AlignWithGround()
@@ -898,7 +898,7 @@ const btQuaternion & CarDynamics::GetWheelOrientation(WheelPosition wp) const
 
 btQuaternion CarDynamics::GetUprightOrientation(WheelPosition wp) const
 {
-	return GetOrientation(0) * suspension[wp]->GetWheelOrientation();
+	return GetOrientation(0) * suspension[wp].GetWheelOrientation();
 }
 
 unsigned CarDynamics::GetNumBodies() const
@@ -1080,10 +1080,10 @@ void CarDynamics::UpdateWheelTransform()
 	{
 		if (body->getChildBody(i)->isInWorld()) continue;
 
-		btQuaternion rot = suspension[i]->GetWheelOrientation();
-		rot *= btQuaternion(Direction::right, -wheel[i].GetRotation());
-		btVector3 pos = suspension[i]->GetWheelPosition() + GetCenterOfMassOffset();
-		body->setChildTransform(i, btTransform(rot, pos));
+		btQuaternion r = suspension[i].GetWheelOrientation();
+		r *= btQuaternion(Direction::right, -wheel[i].GetRotation());
+		btVector3 p = suspension[i].GetWheelPosition() + GetCenterOfMassOffset();
+		body->setChildTransform(i, btTransform(r, p));
 	}
 }
 
@@ -1185,7 +1185,7 @@ void CarDynamics::UpdateSuspension(int i, btScalar dt)
 		bump = btScalar(0.5) * surface.bumpAmplitude * sx * sy;
 	}
 	btScalar displacement_delta = 2 * wheel[i].GetRadius() - wheel_contact[i].GetDepth() + bump;
-	suspension[i]->UpdateDisplacement(displacement_delta, dt);
+	suspension[i].UpdateDisplacement(displacement_delta, dt);
 }
 
 // executed as last function(after integration) in bullet singlestepsimulation
@@ -1333,8 +1333,8 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 	for (int i = 0; i < WHEEL_COUNT; i+=2)
 	{
 		// calculate anti-roll contribution to stiffness
-		auto & s0 = *suspension[i];
-		auto & s1 = *suspension[i+1];
+		auto & s0 = suspension[i];
+		auto & s1 = suspension[i+1];
 		btScalar d0 = s0.GetDisplacement();
 		btScalar d1 = s1.GetDisplacement();
 		btScalar d = d0 - d1;
@@ -1351,7 +1351,7 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		auto & s = *suspension[i];
+		auto & s = suspension[i];
 		btScalar displacement = s.GetDisplacement();
 		btScalar overtravel = s.GetOvertravel();
 		btScalar stiffness = s.GetStiffness() + antiroll[i];
@@ -1398,7 +1398,7 @@ void CarDynamics::ApplyWheelContactDrag(btScalar dt)
 	btVector3 total_torque_impulse(0, 0, 0);
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		if (suspension[i]->GetDisplacement() > 0)
+		if (suspension[i].GetDisplacement() > 0)
 		{
 			btVector3 velocity = body->getVelocityInLocalPoint(wheel_position[i]);
 			velocity -= velocity.dot(wheel_contact[i].GetNormal()) * wheel_contact[i].GetNormal();
@@ -1462,8 +1462,8 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		UpdateSuspension(i, dt);
-		wheel_orientation[i] = transform.getBasis() * btMatrix3x3(suspension[i]->GetWheelOrientation());
-		wheel_position[i] = transform.getBasis() * (suspension[i]->GetWheelPosition() + GetCenterOfMassOffset());
+		wheel_orientation[i] = transform.getBasis() * btMatrix3x3(suspension[i].GetWheelOrientation());
+		wheel_position[i] = transform.getBasis() * (suspension[i].GetWheelPosition() + GetCenterOfMassOffset());
 	}
 
 	SetupWheelConstraints(wheel_orientation, dt);
@@ -1689,16 +1689,16 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 btScalar CarDynamics::CalculateFrontMassRatio() const
 {
 	btScalar dr = GetCenterOfMassOffset()[1];
-	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
-	btScalar r2 = suspension[2]->GetWheelPosition()[1] + dr;
+	btScalar r1 = suspension[0].GetWheelPosition()[1] + dr;
+	btScalar r2 = suspension[2].GetWheelPosition()[1] + dr;
 	return r2 / (r2 - r1);
 }
 
 btScalar CarDynamics::CalculateGripBalance() const
 {
 	btScalar dr = GetCenterOfMassOffset()[1];
-	btScalar r1 = suspension[0]->GetWheelPosition()[1] + dr;
-	btScalar r2 = suspension[2]->GetWheelPosition()[1] + dr;
+	btScalar r1 = suspension[0].GetWheelPosition()[1] + dr;
+	btScalar r2 = suspension[2].GetWheelPosition()[1] + dr;
 	btScalar m = 1 / body->getInvMass();
 	btScalar m1 = m * r2 / (r2 - r1);
 	btScalar m2 = m - m1;
@@ -1742,7 +1742,7 @@ void CarDynamics::SetSteering(btScalar value)
 	if (steering_assist)
 	{
 		btScalar ideal_angle = tire[0].getIdealSlipAngle();
-		btScalar max_angle = suspension[0]->GetMaxSteeringAngle();
+		btScalar max_angle = suspension[0].GetMaxSteeringAngle();
 		btScalar ideal_value = btScalar(180/M_PI) * ideal_angle / max_angle;
 
 		// transit to ideal value at 10 m/s (36km/h)
@@ -1755,7 +1755,7 @@ void CarDynamics::SetSteering(btScalar value)
 
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		suspension[i]->SetSteering(value);
+		suspension[i].SetSteering(value);
 	}
 }
 
@@ -1863,12 +1863,6 @@ void CarDynamics::Clear()
 	delete body;
 	body = 0;
 
-	for (int i = 0; i < WHEEL_COUNT; ++i)
-	{
-		delete suspension[i];
-		suspension[i] = 0;
-	}
-
 	for (int i = 0; i < aerodevice.size(); ++i)
 	{
 		delete static_cast<AeroDeviceFracture*>(aerodevice[i].GetUserPointer());
@@ -1908,7 +1902,6 @@ void CarDynamics::Init()
 		wheel_velocity[i][0] = 0;
 		wheel_velocity[i][1] = 0;
 		wheel_velocity[i][2] = 0;
-		suspension[i] = 0;
 		abs_active[i] = 0;
 		tcs_active[i] = 0;
 	}

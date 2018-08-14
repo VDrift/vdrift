@@ -141,7 +141,7 @@ public:
 	// get the maximum steering angle in degrees
 	btScalar GetMaxSteeringAngle() const;
 
-	const CarSuspension & GetSuspension(WheelPosition pos) const {return *suspension[pos];}
+	const CarSuspension & GetSuspension(WheelPosition pos) const {return suspension[pos];}
 
 	const btVector3 & GetCenterOfMassOffset() const;
 
@@ -206,7 +206,7 @@ protected:
 	CarBrake brake[WHEEL_COUNT];
 	CarWheel wheel[WHEEL_COUNT];
 	CarTire tire[WHEEL_COUNT];
-	CarSuspension* suspension[WHEEL_COUNT];
+	CarSuspension suspension[WHEEL_COUNT];
 	WheelConstraint wheel_constraint[WHEEL_COUNT];
 	Driveline driveline;
 
@@ -386,7 +386,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		out << "(front left)" << "\n";
 		brake[FRONT_LEFT].DebugPrint(out);
 		out << "\n";
-		suspension[FRONT_LEFT]->DebugPrint(out);
+		suspension[FRONT_LEFT].DebugPrint(out);
 		out << "\n";
 		wheel[FRONT_LEFT].DebugPrint(out);
 		out << tire[FRONT_LEFT] << "\n";
@@ -394,7 +394,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		out << "(rear left)" << "\n";
 		brake[REAR_LEFT].DebugPrint(out);
 		out << "\n";
-		suspension[REAR_LEFT]->DebugPrint(out);
+		suspension[REAR_LEFT].DebugPrint(out);
 		out << "\n";
 		wheel[REAR_LEFT].DebugPrint(out);
 		out << tire[REAR_LEFT] << "\n";
@@ -405,7 +405,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		out << "(front right)" << "\n";
 		brake[FRONT_RIGHT].DebugPrint(out);
 		out << "\n";
-		suspension[FRONT_RIGHT]->DebugPrint(out);
+		suspension[FRONT_RIGHT].DebugPrint(out);
 		out << "\n";
 		wheel[FRONT_RIGHT].DebugPrint(out);
 		out << tire[FRONT_RIGHT] << "\n";
@@ -413,7 +413,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		out << "(rear right)" << "\n";
 		brake[REAR_RIGHT].DebugPrint(out);
 		out << "\n";
-		suspension[REAR_RIGHT]->DebugPrint(out);
+		suspension[REAR_RIGHT].DebugPrint(out);
 		out << "\n";
 		wheel[REAR_RIGHT].DebugPrint(out);
 		out << tire[REAR_RIGHT] << "\n";
@@ -503,7 +503,7 @@ inline bool CarDynamics::Serialize(Serializer & s)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		_SERIALIZEX_(s, wheel_position[i]);
-		_SERIALIZE_(s, *suspension[i]);
+		_SERIALIZE_(s, suspension[i]);
 		_SERIALIZE_(s, wheel[i]);
 		_SERIALIZE_(s, brake[i]);
 		_SERIALIZE_(s, abs_active[i]);
