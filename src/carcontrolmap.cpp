@@ -310,8 +310,8 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 
 			if (joy_type == "button")
 			{
-				newctrl.type = Control::BUTTON;
 				newctrl.id = 0;
+				newctrl.analog = false;
 				newctrl.pushdown = false;
 				newctrl.onetime = false;
 				if (!controls_config.get(i, "joy_button", newctrl.id, error_output)) continue;
@@ -320,7 +320,6 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 			}
 			else if (joy_type == "axis")
 			{
-				newctrl.type = Control::AXIS;
 				int joy_axis = 0;
 				std::string axis_type;
 				float deadzone = 0.0;
@@ -333,6 +332,7 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 				if (!controls_config.get(i, "gain", gain, error_output)) continue;
 
 				newctrl.id = joy_axis;
+				newctrl.analog = true;
 				if (axis_type == "positive")
 				{
 					newctrl.negative = false;
@@ -378,10 +378,10 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 			{
 				newctrl.id = SDL_Keycode(keycode);
 			}
+			newctrl.device = Control::KEYBOARD;
+			newctrl.analog = false;
 			newctrl.pushdown = key_down;
 			newctrl.onetime = key_once;
-			newctrl.device = Control::KEYBOARD;
-			newctrl.type = Control::BUTTON;
 		}
 		else if (type == "mouse")
 		{
@@ -391,7 +391,6 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 			controls_config.get(i, "mouse_type", type);
 			if (type == "button")
 			{
-				newctrl.type = Control::BUTTON;
 				int mouse_btn = 0;
 				bool mouse_btn_down = false;
 				bool mouse_btn_once = false;
@@ -399,13 +398,12 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 				controls_config.get(i, "down", mouse_btn_down);
 				controls_config.get(i, "once", mouse_btn_once);
 				newctrl.id = mouse_btn;
+				newctrl.analog = false;
 				newctrl.pushdown = mouse_btn_down;
 				newctrl.onetime = mouse_btn_once;
 			}
 			else if (type == "motion")
 			{
-				newctrl.type = Control::AXIS;
-
 				std::string mouse_direction;
 				controls_config.get(i, "mouse_motion", mouse_direction);
 				if (mouse_direction == "left")
@@ -432,7 +430,7 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 				{
 					error_output << "Error parsing controls, invalid mouse direction type " << mouse_direction << " in section " << i->first << std::endl;
 				}
-
+				newctrl.analog = true;
 				newctrl.deadzone=0;
 				newctrl.exponent=1;
 				newctrl.gain=1;
@@ -487,8 +485,7 @@ void CarControlMap::Save(Config & controls_config)
 			{
 				controls_config.set(section, "type", "joy");
 				controls_config.set(section, "joy_index", (unsigned)control.device);
-
-				if (control.type == Control::AXIS)
+				if (control.analog)
 				{
 					controls_config.set(section, "joy_type", "axis");
 					controls_config.set(section, "joy_axis", control.id);
@@ -497,7 +494,7 @@ void CarControlMap::Save(Config & controls_config)
 					controls_config.set(section, "exponent", control.exponent);
 					controls_config.set(section, "gain", control.gain);
 				}
-				else if (control.type == Control::BUTTON)
+				else
 				{
 					controls_config.set(section, "joy_type", "button");
 					controls_config.set(section, "joy_button", control.id);
@@ -516,14 +513,7 @@ void CarControlMap::Save(Config & controls_config)
 			else if (control.device == Control::MOUSE)
 			{
 				controls_config.set(section, "type", "mouse");
-				if (control.type == Control::BUTTON)
-				{
-					controls_config.set(section, "mouse_type", "button");
-					controls_config.set(section, "mouse_button", control.id);
-					controls_config.set(section, "once", control.onetime);
-					controls_config.set(section, "down", control.pushdown);
-				}
-				else if (control.type == Control::AXIS)
+				if (control.analog)
 				{
 					std::string direction = "invalid";
 					if (control.id == Control::MOUSEY)
@@ -541,6 +531,13 @@ void CarControlMap::Save(Config & controls_config)
 					controls_config.set(section, "deadzone", control.deadzone);
 					controls_config.set(section, "exponent", control.exponent);
 					controls_config.set(section, "gain", control.gain);
+				}
+				else
+				{
+					controls_config.set(section, "mouse_type", "button");
+					controls_config.set(section, "mouse_button", control.id);
+					controls_config.set(section, "once", control.onetime);
+					controls_config.set(section, "down", control.pushdown);
 				}
 			}
 
@@ -590,12 +587,12 @@ const std::vector <float> & CarControlMap::ProcessInput(
 			float tempval = newval;
 			if (control.device < Control::JOYSTICKS)
 			{
-				if (control.type == Control::AXIS)
+				if (control.analog)
 				{
 					float val = eventsystem.GetJoyAxis(control.device, control.id);
 					tempval = HandleAxis(control, val);
 				}
-				else if (control.type == Control::BUTTON)
+				else
 				{
 					auto button = eventsystem.GetJoyButton(control.device, control.id);
 					tempval = HandleButton(control, button, lastinputs[n], button_ramp, dt);
@@ -603,7 +600,7 @@ const std::vector <float> & CarControlMap::ProcessInput(
 			}
 			else if (control.device == Control::MOUSE)
 			{
-				if (control.type == Control::AXIS)
+				if (control.analog)
 				{
 					std::vector <int> pos = eventsystem.GetMousePosition();
 					float xval = (pos[0]-screenw/2.0)/(screenw/4.0);
@@ -612,12 +609,11 @@ const std::vector <float> & CarControlMap::ProcessInput(
 					val = Clamp(val, -1.0f, 1.0f);
 					tempval = HandleAxis(control, val);
 				}
-				else if (control.type == Control::BUTTON)
+				else
 				{
 					auto button = eventsystem.GetMouseButtonState(control.id);
 					tempval = HandleButton(control, button, lastinputs[n], button_ramp, dt);
 				}
-				//else cout << "mouse???" << std::endl;
 			}
 			else if (control.device == Control::KEYBOARD)
 			{
@@ -878,11 +874,6 @@ void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos,
 	}*/
 }
 
-bool CarControlMap::Control::IsAnalog() const
-{
-	return type == AXIS;
-}
-
 std::string CarControlMap::Control::GetInfo() const
 {
 	if (device == KEYBOARD)
@@ -895,15 +886,16 @@ std::string CarControlMap::Control::GetInfo() const
 		std::ostringstream s;
 		s << "MOUSE";
 
-		if (type == BUTTON)
-			s << id;
-		else if (type == AXIS)
+		if (analog)
 		{
 			if (id == MOUSEY)
 				s << (negative ? "UP" : "DOWN");
 			else
 				s << (negative ? "LEFT" : "RIGHT");
+			return s.str();
 		}
+
+		s << id;
 		return s.str();
 	}
 
@@ -912,17 +904,14 @@ std::string CarControlMap::Control::GetInfo() const
 		std::ostringstream s;
 		s << "JOY" << (unsigned)device;
 
-		if (type == AXIS)
+		if (analog)
 		{
 			s << "AXIS" << id << (negative ? "-" : "+");
 			return s.str();
 		}
 
-		if (type == BUTTON)
-		{
-			s << "BTN" << id;
-			return s.str();
-		}
+		s << "BTN" << id;
+		return s.str();
 	}
 
 	return invalid;
@@ -930,7 +919,7 @@ std::string CarControlMap::Control::GetInfo() const
 
 void CarControlMap::Control::DebugPrint(std::ostream & out) const
 {
-	out << id << " " << type << " " << (unsigned)device << " " <<
+	out << id << " " << (unsigned)device << " " << analog << " " <<
 		negative << " " << onetime << " " << pushdown << " " <<
 		deadzone << " " << exponent << " " << gain << std::endl;
 }
@@ -939,8 +928,8 @@ bool CarControlMap::Control::operator==(const Control & other) const
 {
 	// don't care about certain flags
 	return id == other.id &&
-		type == other.type &&
 		device == other.device &&
+		analog == other.analog &&
 		negative == other.negative;
 }
 
@@ -948,22 +937,20 @@ bool CarControlMap::Control::operator<(const Control & other) const
 {
 	// don't care about certain flags
 	return id < other.id &&
-		type < other.type &&
 		device < other.device &&
+		analog < other.analog &&
 		negative < other.negative;
 }
 
 void CarControlMap::Control::ReadFrom(std::istream & in)
 {
-	int newtype;
-	in >> id >> newtype >> device >>
+	in >> id >> device >> analog >>
 		negative >> onetime >> pushdown >>
 		deadzone >> exponent >> gain;
-	type = TypeEnum(newtype);
 }
 
 CarControlMap::Control::Control() :
-	id(0), type(AXIS), device(UNKNOWN),
+	id(0), device(UNKNOWN), analog(true),
 	negative(false), onetime(true), pushdown(false),
 	deadzone(0), exponent(1), gain(1)
 {}

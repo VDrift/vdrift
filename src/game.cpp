@@ -1105,7 +1105,7 @@ bool Game::AssignControl()
 			{
 				controlgrab_control.device = j;
 				controlgrab_control.id = i;
-				controlgrab_control.type = CarControlMap::Control::BUTTON;
+				controlgrab_control.analog = false;
 				car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
@@ -1122,7 +1122,7 @@ bool Game::AssignControl()
 			{
 				controlgrab_control.device = j;
 				controlgrab_control.id = i;
-				controlgrab_control.type = CarControlMap::Control::AXIS;
+				controlgrab_control.analog = true;
 				controlgrab_control.negative = delta < 0;
 				car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
@@ -1136,7 +1136,7 @@ bool Game::AssignControl()
 		if (eventsystem.GetMouseButtonState(i).GetImpulseRising())
 		{
 			controlgrab_control.device = CarControlMap::Control::MOUSE;
-			controlgrab_control.type = CarControlMap::Control::BUTTON;
+			controlgrab_control.analog = false;
 			controlgrab_control.id = i;
 			car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
@@ -1150,7 +1150,7 @@ bool Game::AssignControl()
 	if (dx < -threshold || dx > threshold || dy < -threshold || dy > threshold)
 	{
 		controlgrab_control.device = CarControlMap::Control::MOUSE;
-		controlgrab_control.type = CarControlMap::Control::AXIS;
+		controlgrab_control.analog = true;
 		if (dx < -threshold)
 		{
 			controlgrab_control.id = CarControlMap::Control::MOUSEX;
@@ -2759,7 +2759,7 @@ void Game::ApplyTrackUpdate()
 
 void Game::ActivateEditControlPage()
 {
-	if (controlgrab_control.IsAnalog())
+	if (controlgrab_control.analog)
 	{
 		// edit analog control
 		std::string control = controlgrab_control.GetInfo();

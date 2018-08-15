@@ -63,12 +63,6 @@ public:
 		};
 		int id;		// key, button, axis id
 
-		enum TypeEnum
-		{
-			AXIS,
-			BUTTON
-		} type;
-
 		enum DeviceEnum
 		{
 			JOYSTICKS = 128,
@@ -78,6 +72,7 @@ public:
 		};
 		unsigned char device;	// joysticks, keyboard, mouse
 
+		bool analog;
 		bool negative;
 		bool onetime;
 		bool pushdown;
@@ -85,8 +80,6 @@ public:
 		float deadzone;
 		float exponent;
 		float gain;
-
-		bool IsAnalog() const;
 
 		std::string GetInfo() const;
 
