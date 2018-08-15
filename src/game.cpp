@@ -1963,7 +1963,7 @@ void Game::SetGarageCar()
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
-	Vec3 offset(0.5, -3.0, 0.5);
+	Vec3 offset(0.5, -2.5, 0.5);
 	Vec3 pos = car_pos + offset;
 	Quat rot = LookAt(pos, car_pos, Direction::Up);
 	garage_camera.SetOffset(offset);
