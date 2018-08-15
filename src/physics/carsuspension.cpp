@@ -141,37 +141,46 @@ void CarSuspension::UpdateDisplacement(btScalar displacement_delta, btScalar dt)
 	SetDisplacement(displacement + displacement_delta);
 }
 
+struct Hinge
+{
+	btVector3 anchor;	///< the point that the wheels are rotated around as the suspension compresses
+	btVector3 arm;		///< anchor to wheel vector
+	btScalar length_2;	///< arm length squared
+	btScalar arm_norm;	///< 1 / arm length in hinge axis normal plane
+
+	Hinge() {}
+
+	Hinge(const btVector3 & hinge_anchor, const btVector3 & hinge_arm) :
+		anchor(hinge_anchor),
+		arm(hinge_arm),
+		length_2(hinge_arm.dot(hinge_arm)),
+		arm_norm(1 / std::sqrt(hinge_arm[0] * hinge_arm[0] + hinge_arm[1] * hinge_arm[1]))
+	{}
+
+	btVector3 Rotate(btScalar travel) const
+	{
+		btScalar t = arm[2] + travel;
+		assert(length_2 > t * t); // todo: limit travel to hinge arm length
+		btScalar s = arm_norm * std::sqrt(length_2 - t * t);
+		btVector3 arm_new(arm[0] * s, arm[1] * s, t);
+
+		return anchor + arm_new;
+	}
+};
+
 // Wishbone suspension with parralel upper and lower hinges
 struct BasicSuspension
 {
-	btVector3 hinge_anchor;		///< the point that the wheels are rotated around as the suspension compresses
-	btVector3 hinge_arm;		///< hinge_wheel - hinge_body
-	btScalar hinge_length_2;	///< hinge arm length squared
-	btScalar hinge_s;			///< 1 / hinge arm length in hinge axis normal plane
+	Hinge hinge;
 
-	BasicSuspension(
-		const btVector3 & wheel,
-		const btVector3 & hinge_body,
-		const btVector3 & hinge_wheel)
-	{
-		// as wheel offset is not affected by hinge rotation add it to hinge anchor
-		btVector3 wheel_offset = wheel - hinge_wheel;
-		hinge_anchor = hinge_body + wheel_offset;
-		hinge_arm = hinge_wheel - hinge_body;
-		hinge_length_2 = hinge_arm.dot(hinge_arm);
-		hinge_s = 1 / std::sqrt(hinge_arm[0] * hinge_arm[0] + hinge_arm[1] * hinge_arm[1]);
-	}
+	BasicSuspension(const btVector3 & wheel, const btVector3 & hinge_body, const btVector3 & hinge_wheel) :
+		hinge(wheel - (hinge_wheel - hinge_body), hinge_wheel - hinge_body)
+	{}
 
 	void GetWheelTransform(btScalar travel, btQuaternion & rotation, btVector3 & position) const
 	{
-		// rotate hinge
-		btScalar t = hinge_arm[2] + travel;
-		assert(hinge_length_2 > t * t); // todo: limit travel to hinge arm length
-		btScalar s = hinge_s * std::sqrt(hinge_length_2 - t * t);
-		btVector3 hinge_arm_new(hinge_arm[0] * s, hinge_arm[1] * s, t);
-
-		position = hinge_anchor + hinge_arm_new;
 		rotation = btQuaternion::getIdentity();
+		position = hinge.Rotate(travel);
 	}
 };
 
@@ -180,36 +189,24 @@ struct MacPhersonSuspension
 	btVector3 wheel_offset;		///< wheel - strut_wheel
 	btVector3 upright_top;		///< strut_body attachment point
 	btVector3 upright_axis;		///< (strut_body - strut_wheel).normalized()
-	btVector3 hinge_anchor;		///< hinge_body attachment point
-	btVector3 hinge_arm;		///< strut_wheel - hinge_body
-	btScalar hinge_length_2;	///< hinge arm length squared
-	btScalar hinge_s;			///< 1 / hinge arm length in hinge axis normal plane
+	Hinge hinge;
 
 	MacPhersonSuspension(
 		const btVector3 & wheel,
 		const btVector3 & strut_body,
 		const btVector3 & strut_wheel,
-		const btVector3 & hinge_body)
-	{
-		wheel_offset = wheel - strut_wheel;
-		upright_top = strut_body;
-		upright_axis = (strut_body - strut_wheel).normalized();
-		hinge_anchor = hinge_body;
-		hinge_arm = strut_wheel - hinge_body;
-		hinge_length_2 = hinge_arm.dot(hinge_arm);
-		hinge_s = 1 / std::sqrt(hinge_arm[0] * hinge_arm[0] + hinge_arm[1] * hinge_arm[1]);
-	}
+		const btVector3 & hinge_body) :
+		wheel_offset(wheel - strut_wheel),
+		upright_top(strut_body),
+		upright_axis((strut_body - strut_wheel).normalized()),
+		hinge(hinge_body, strut_wheel - hinge_body)
+	{}
 
 	void GetWheelTransform(btScalar travel, btQuaternion & rotation, btVector3 & position) const
 	{
-		// rotate hinge
-		btScalar t = hinge_arm[2] + travel;
-		assert(hinge_length_2 > t * t); // todo: limit travel to hinge arm length
-		btScalar s = hinge_s * std::sqrt(hinge_length_2 - t * t);
-		btVector3 hinge_arm_new(hinge_arm[0] * s, hinge_arm[1] * s, t);
+		btVector3 hinge_end = hinge.Rotate(travel);
 
 		// rotate upright
-		btVector3 hinge_end = hinge_anchor + hinge_arm;
 		btVector3 upright_axis_new = (upright_top - hinge_end).normalized();
 
 		rotation = shortestArcQuat(upright_axis, upright_axis_new);
@@ -221,14 +218,11 @@ struct WishboneSuspension
 {
 	btVector3 wheel_offset;
 	btVector3 upper_hinge_anchor;
-	btVector3 lower_hinge_anchor;
 	btVector3 upper_hinge_axis;
-	btVector3 lower_hinge_arm;
 	btVector3 upright_axis;
 	btScalar upright_length_2;
 	btScalar upper_hinge_length_2;
-	btScalar lower_hinge_length_2;
-	btScalar lower_hinge_s;
+	Hinge lower_hinge;
 
 	// hinges[upper, lower][chassis front, chassis rear, hub]
 	WishboneSuspension(const btVector3 & wheel, const btVector3 (&hinges)[2][3])
@@ -247,24 +241,16 @@ struct WishboneSuspension
 
 		wheel_offset = wheel - hinges[1][2];
 		upper_hinge_anchor = anchor[0];
-		lower_hinge_anchor = anchor[1];
 		upper_hinge_axis = axis[0];
-		lower_hinge_arm = arm[1];
 		upright_axis = upright.normalized();
 		upright_length_2 = upright.dot(upright);
 		upper_hinge_length_2 = arm[0].dot(arm[0]);
-		lower_hinge_length_2 = arm[1].dot(arm[1]);
-		lower_hinge_s = 1 / std::sqrt(lower_hinge_arm[0] * lower_hinge_arm[0] + lower_hinge_arm[1] * lower_hinge_arm[1]);
+		lower_hinge = Hinge(anchor[1], arm[1]);
 	}
 
 	void GetWheelTransform(btScalar travel, btQuaternion & rotation, btVector3 & position) const
 	{
-		// rotate lower hinge
-		btScalar t = lower_hinge_arm[2] + travel;
-		assert(lower_hinge_length_2 > t * t); // todo: limit travel to hinge arm length
-		btScalar s = lower_hinge_s * std::sqrt(lower_hinge_length_2 - t * t);
-		btVector3 lower_hinge_arm_new(lower_hinge_arm[0] * s, lower_hinge_arm[1] * s, t);
-		btVector3 lower_hinge_end = lower_hinge_anchor + lower_hinge_arm_new;
+		btVector3 lower_hinge_end = lower_hinge.Rotate(travel);
 
 		// rotate upright
 		// circle - circle intersection in upper hinge axis plane
