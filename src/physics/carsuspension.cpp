@@ -146,7 +146,7 @@ struct Hinge
 	btVector3 anchor;	///< the point that the wheels are rotated around as the suspension compresses
 	btVector3 arm;		///< anchor to wheel vector
 	btScalar length_2;	///< arm length squared
-	btScalar arm_norm;	///< 1 / arm length in hinge axis normal plane
+	btScalar norm_xy;	///< 1 / arm length in hinge axis normal plane
 
 	Hinge() {}
 
@@ -154,15 +154,15 @@ struct Hinge
 		anchor(hinge_anchor),
 		arm(hinge_arm),
 		length_2(hinge_arm.dot(hinge_arm)),
-		arm_norm(1 / std::sqrt(hinge_arm[0] * hinge_arm[0] + hinge_arm[1] * hinge_arm[1]))
+		norm_xy(1 / std::sqrt(hinge_arm[0] * hinge_arm[0] + hinge_arm[1] * hinge_arm[1]))
 	{}
 
 	btVector3 Rotate(btScalar travel) const
 	{
-		btScalar t = arm[2] + travel;
-		assert(length_2 > t * t); // todo: limit travel to hinge arm length
-		btScalar s = arm_norm * std::sqrt(length_2 - t * t);
-		btVector3 arm_new(arm[0] * s, arm[1] * s, t);
+		btScalar z = arm[2] + travel;
+		assert(length_2 > z * z); // todo: limit travel to hinge arm length
+		btScalar nxy = norm_xy * std::sqrt(length_2 - z * z);
+		btVector3 arm_new(arm[0] * nxy, arm[1] * nxy, z);
 
 		return anchor + arm_new;
 	}
