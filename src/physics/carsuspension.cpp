@@ -87,7 +87,7 @@ void CarSuspension::SetSteering(btScalar value)
 	btScalar angle = -value * info.steering_angle * deg2rad;
 	if (std::abs(angle) > btScalar(1E-9))
 	{
-		btScalar t = 1 / std::tan(angle) - tan_ackermann;
+		btScalar t = std::tan(btScalar(M_PI/2) - angle) - tan_ackermann;
 		steering_angle = std::copysign(btScalar(M_PI/2), t) - std::atan(t);
 		orientation_steer = btQuaternion(steering_axis, steering_angle);
 	}
