@@ -46,6 +46,11 @@ public:
 		points.clear();
 	}
 
+	void Reserve(size_t n)
+	{
+		points.reserve(n);
+	}
+
 	void AddPoint(const T x, const T y)
 	{
 		points.push_back(std::pair <T,T> (x,y));
@@ -74,10 +79,9 @@ public:
 		}
 
 		// Bisect to find the interval that distance is on.
-		size_t index;
 		while (high - low > 1)
 		{
-			index = (high + low) / 2;
+			size_t index = (high + low) / 2;
 			if (points[index].first > x)
 				high = index;
 			else
