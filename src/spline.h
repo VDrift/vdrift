@@ -36,7 +36,6 @@ private:
 	T first_slope;
 	T last_slope;
 	mutable bool derivs_calculated;
-	mutable T slope;
 
 	void Calculate() const
 	{
@@ -103,13 +102,12 @@ private:
 	}
 
 public:
-	Spline() : first_slope(0), last_slope(0), derivs_calculated(false), slope(0) {}
+	Spline() : first_slope(0), last_slope(0), derivs_calculated(false) {}
 
 	void Clear()
 	{
 		points.clear();
 		derivs_calculated = false;
-		slope = 0;
 	}
 
 	void AddPoint(const T x, const T y)
@@ -132,25 +130,18 @@ public:
 	T Interpolate(T x) const
 	{
 		if ( points.size() == 1 )
-		{
-			slope = 0;
 			return points [0].second;
-		}
 
-		// calculate() only needs to be called once for a given set of
-		// points.
+		// calculate() only needs to be called once for a given set of points.
 		if ( !derivs_calculated )
 			Calculate ();
 
-
+		// Bisect to find the interval that distance is on.
 		size_t low = 0;
 		size_t high = points.size () - 1;
-		size_t index;
-
-		// Bisect to find the interval that distance is on.
-		while ( ( high - low ) > 1 )
+		while ( high - low > 1 )
 		{
-			index = size_t ( ( high + low ) * T(0.5) );
+			size_t index = ( high + low ) / 2;
 			if ( points [index].first > x )
 				high = index;
 			else
@@ -167,12 +158,6 @@ public:
 		const T sq = diff * diff * T(1/6.0);
 		const T a2 = a * a;
 		const T b2 = b * b;
-
-		// Find the first derivitive.
-		slope =
-			( points [high].second - points [low].second ) /diff
-			- ( 3 * a2- 1 ) * T(1/6.0) * diff * second_deriv [low]
-			+ ( 3 * b2 - 1 ) * T(1/6.0) * diff * second_deriv [high];
 
 		// Return the interpolated value.
 		return a * points [low].second
