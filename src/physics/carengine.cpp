@@ -105,6 +105,7 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 
 	// set torque curve
 	torque_curve.Clear();
+	torque_curve.Reserve(torque.size() + (torque[0].first > stall_rpm) + (torque[torque.size() - 1].first < rpm_limit));
 	if (torque[0].first > stall_rpm)
 	{
 		btScalar dx = torque[1].first - torque[0].first;

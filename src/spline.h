@@ -111,6 +111,11 @@ public:
 		derivs_calculated = false;
 	}
 
+	void Reserve(size_t n)
+	{
+		points.reserve(n);
+	}
+
 	void AddPoint(const T x, const T y)
 	{
 		points.push_back(std::pair <T,T> (x,y));
