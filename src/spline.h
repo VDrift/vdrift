@@ -32,12 +32,12 @@ class Spline
 {
 private:
 	std::vector <std::pair <T, T> > points;
-	mutable std::vector <T> second_deriv;
+	std::vector <T> second_derivs;
 	T first_slope;
 	T last_slope;
-	mutable bool derivs_calculated;
+	bool derivs_calculated;
 
-	void Calculate() const
+	void CalculateDerivs()
 	{
 		size_t n = points.size ();
 		assert (n > 1);
@@ -85,12 +85,12 @@ private:
 		// Back-Substitution
 
 		// Solve for y"[N].
-		second_deriv.resize ( n );
-		second_deriv [n-1] = r [n-1] / b [n-1];
+		second_derivs.resize ( n );
+		second_derivs [n-1] = r [n-1] / b [n-1];
 		for ( int i = n - 2; i >= 0; i-- )
 		{
 			// Use the solution for y"[i+1] to find y"[i].
-			second_deriv [i] = ( r [i] - c [i] * second_deriv [i+1] ) / b [i];
+			second_derivs [i] = ( r [i] - c [i] * second_derivs [i+1] ) / b [i];
 		}
 
 		delete [] a;
@@ -107,6 +107,7 @@ public:
 	void Clear()
 	{
 		points.clear();
+		second_derivs.clear();
 		derivs_calculated = false;
 	}
 
@@ -114,8 +115,14 @@ public:
 	{
 		points.push_back(std::pair <T,T> (x,y));
 		derivs_calculated = false;
+	}
+
+	// call calculate after adding points to initialize spline
+	void Calculate()
+	{
 		PairSortFirst <T> sorter;
 		std::sort(points.begin(), points.end(), sorter);
+		CalculateDerivs();
 	}
 
 	std::pair<T, T> GetMaxY() const
@@ -129,12 +136,10 @@ public:
 
 	T Interpolate(T x) const
 	{
+		assert ( derivs_calculated );
+
 		if ( points.size() == 1 )
 			return points [0].second;
-
-		// calculate() only needs to be called once for a given set of points.
-		if ( !derivs_calculated )
-			Calculate ();
 
 		// Bisect to find the interval that distance is on.
 		size_t low = 0;
@@ -162,8 +167,8 @@ public:
 		// Return the interpolated value.
 		return a * points [low].second
 			+ b * points [high].second
-			+ a * ( a2 - 1 ) * sq * second_deriv [low]
-			+ b * ( b2 - 1 ) * sq * second_deriv [high];
+			+ a * ( a2 - 1 ) * sq * second_derivs [low]
+			+ b * ( b2 - 1 ) * sq * second_derivs [high];
 	}
 };
 

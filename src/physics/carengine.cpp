@@ -111,9 +111,6 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 		btScalar dy = torque[1].second - torque[0].second;
 		btScalar stall_torque = dy / dx * (stall_rpm - torque[0].first) + torque[0].second;
 		torque_curve.AddPoint(stall_rpm,  stall_torque);
-
-		error_output << "Torque curve begins above stall rpm.\n"
-			<< "Extrapolating to " << stall_rpm << ", " << stall_torque << std::endl;
 	}
 	for (const auto & tp : torque)
 	{
@@ -121,13 +118,14 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	}
 	if (torque[torque.size() - 1].first < rpm_limit)
 	{
-		btScalar r = torque[torque.size() - 1].first + 10000.0f;
-		btScalar t = 0.0f;
-		torque_curve.AddPoint(r , t);
-
-		error_output << "Torque curve ends below rpm limit.\n"
-			<< "Extrapolating to " << r << ", " << t << std::endl;
+		auto & t0 = torque[torque.size() - 2];
+		auto & t1 = torque[torque.size() - 1];
+		auto dx = t1.first - t0.first;
+		auto dy = t1.second - t0.second;
+		auto limit_torque = dy / dx * (rpm_limit - t0.first) + t0.second;
+		torque_curve.AddPoint(rpm_limit, limit_torque);
 	}
+	torque_curve.Calculate();
 
 	// calculate idle throttle position
 	for (idle_throttle = 0.0f; idle_throttle < 1.0f; idle_throttle += 0.01f)
