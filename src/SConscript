@@ -45,6 +45,7 @@ src = Split("""
 		eventsystem.cpp
 		forcefeedback.cpp
 		game.cpp
+		graphics/bcndecode.cpp
 		graphics/dds.cpp
 		graphics/drawable.cpp
 		graphics/fbobject.cpp
@@ -174,13 +175,13 @@ elif ( 'darwin' == sys.platform ):
     common_libs.append( 'BulletSoftBody' )
     common_libs.append( 'LinearMath' )
     common_libs.append( 'Ogg' )
-    
-    def batch_copy( target, source, env): 
+
+    def batch_copy( target, source, env):
         # Do a mini svn export... this funtion could possibly
-        # be useful in general ( as a builder ), but I don't 
-        # want to think about getting it cross-platform... 
+        # be useful in general ( as a builder ), but I don't
+        # want to think about getting it cross-platform...
         # win32 could use xcopy... but there are so many different
-        # versions of the tools below in circulation that 
+        # versions of the tools below in circulation that
         # testing would be difficult
         for tgt, src in zip( target, source ):
             src = str(src)
@@ -193,15 +194,15 @@ elif ( 'darwin' == sys.platform ):
         return [ template % x for x in items ]
 
     Alias( 'vdrift', [
-        local_env.ProcessTemplate( 
-            '%s/Info.plist' % pkgbase, 
+        local_env.ProcessTemplate(
+            '%s/Info.plist' % pkgbase,
             '%s/Info.plist' % pkgsrc ),
-        local_env.Command( 
-            '%s/Resources/${PRODUCT_NAME}.icns' % pkgbase, 
+        local_env.Command(
+            '%s/Resources/${PRODUCT_NAME}.icns' % pkgbase,
             '%s/icon.icns' % pkgsrc,
             Copy( '$TARGET', '$SOURCE') ),
         [ local_env.WorkingExport( '%s/Frameworks' % pkgbase, s ) for s in
-            build_list( '%s/Frameworks/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
+            build_list( '%s/Frameworks/%%s.framework' % pkgsrc, common_libs ) ] ] )
         #local_env.Command(
         #    build_list( '%s/Frameworks/%%s.framework' % pkgbase, common_libs  ),
         #    build_list( '%s/%%s.framework' % pkgsrc, common_libs ),

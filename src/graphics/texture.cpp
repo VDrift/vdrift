@@ -20,6 +20,7 @@
 #include "texture.h"
 #include "glcore.h"
 #include "glutil.h"
+#include "bcndecode.h"
 #include "dds.h"
 
 #ifdef __APPLE__
@@ -598,8 +599,20 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 		(const void*&)texdata, texlen,
 		format, width, height, levels))
 	{
+		error << "Failed ReadDDS " << path << std::endl;
 		return false;
 	}
+
+	// load texture
+	target = GL_TEXTURE_2D;
+
+	assert(!texid);
+	glGenTextures(1, &texid);
+	CheckForOpenGLErrors("Texture ID generation", error);
+
+	glBindTexture(GL_TEXTURE_2D, texid);
+
+	SetSampler(info, levels > 1);
 
 	// gl3 renderer expects srgb
 	unsigned iformat = format;
@@ -617,16 +630,15 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 			iformat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
 	}
 
-	// load texture
-	target = GL_TEXTURE_2D;
-
-	assert(!texid);
-	glGenTextures(1, &texid);
-	CheckForOpenGLErrors("Texture ID generation", error);
-
-	glBindTexture(GL_TEXTURE_2D, texid);
-
-	SetSampler(info, levels > 1);
+	// handle the case s3tc is not supported
+	std::vector<char> cdata;
+	unsigned cformat = info.srgb ? GL_SRGB8_ALPHA8 : GL_RGBA;
+	unsigned ctype = 0;
+	switch (format) {
+		case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT: ctype = 1; break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT: ctype = 2; break;
+		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT: ctype = 3; break;
+	}
 
 	const char * idata = texdata;
 	unsigned blocklen = 16 * texlen / (width * height);
@@ -637,14 +649,28 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	{
 		if (format == GL_BGR || format == GL_BGRA)
 		{
-			// fixme: support compression here?
 			ilen = iw * ih * blocklen / 16;
 			glTexImage2D(GL_TEXTURE_2D, i, iformat, iw, ih, 0, format, GL_UNSIGNED_BYTE, idata);
 		}
 		else
 		{
 			ilen = std::max(1u, iw / 4) * std::max(1u, ih / 4) * blocklen;
-			glCompressedTexImage2D(GL_TEXTURE_2D, i, iformat, iw, ih, 0, ilen, idata);
+			if (GLC_EXT_texture_compression_s3tc)
+			{
+				glCompressedTexImage2D(GL_TEXTURE_2D, i, iformat, iw, ih, 0, ilen, idata);
+			}
+			else
+			{
+				cdata.resize(iw * ih * 4);
+				if (BcnDecode(&cdata[0], cdata.size(), idata, ilen, iw, ih, ctype, 0, 0) < 0)
+				{
+					error << "Failed BcnDecode " << path << std::endl;
+					glBindTexture(GL_TEXTURE_2D, 0);
+					Unload();
+					return false;
+				}
+				glTexImage2D(GL_TEXTURE_2D, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, &cdata[0]);
+			}
 		}
 		CheckForOpenGLErrors("Texture creation", error);
 
