@@ -610,7 +610,7 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Texture ID generation", error);
 
-	glBindTexture(GL_TEXTURE_2D, texid);
+	glBindTexture(target, texid);
 
 	SetSampler(info, levels > 1);
 
@@ -650,14 +650,14 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 		if (format == GL_BGR || format == GL_BGRA)
 		{
 			ilen = iw * ih * blocklen / 16;
-			glTexImage2D(GL_TEXTURE_2D, i, iformat, iw, ih, 0, format, GL_UNSIGNED_BYTE, idata);
+			glTexImage2D(target, i, iformat, iw, ih, 0, format, GL_UNSIGNED_BYTE, idata);
 		}
 		else
 		{
 			ilen = std::max(1u, iw / 4) * std::max(1u, ih / 4) * blocklen;
 			if (GLC_EXT_texture_compression_s3tc)
 			{
-				glCompressedTexImage2D(GL_TEXTURE_2D, i, iformat, iw, ih, 0, ilen, idata);
+				glCompressedTexImage2D(target, i, iformat, iw, ih, 0, ilen, idata);
 			}
 			else
 			{
@@ -665,11 +665,11 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 				if (BcnDecode(&cdata[0], cdata.size(), idata, ilen, iw, ih, ctype, 0, 0) < 0)
 				{
 					error << "Failed BcnDecode " << path << std::endl;
-					glBindTexture(GL_TEXTURE_2D, 0);
+					glBindTexture(target, 0);
 					Unload();
 					return false;
 				}
-				glTexImage2D(GL_TEXTURE_2D, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, &cdata[0]);
+				glTexImage2D(target, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, &cdata[0]);
 			}
 		}
 		CheckForOpenGLErrors("Texture creation", error);
@@ -681,7 +681,7 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 
 	// force mipmaps for GL3
 	if (levels == 1 && GLC_ARB_framebuffer_object)
-		glGenerateMipmap(GL_TEXTURE_2D);
+		glGenerateMipmap(target);
 
 	return true;
 }
