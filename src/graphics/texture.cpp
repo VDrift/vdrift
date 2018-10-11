@@ -593,15 +593,15 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 		faces = 6;
 		itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	}
+	const char * idata = texdata;
+	const unsigned blocklen = 16 * texlen / (width * height);
 	for (unsigned j = 0; j < faces; ++j)
 	{
-		const char * idata = texdata;
-		unsigned blocklen = 16 * texlen / (width * height);
-		unsigned ilen = texlen;
 		unsigned iw = width;
 		unsigned ih = height;
 		for (unsigned i = 0; i < levels; ++i)
 		{
+			unsigned ilen;
 			if (format == GL_BGR || format == GL_BGRA)
 			{
 				ilen = iw * ih * blocklen / 16;
