@@ -170,48 +170,29 @@ static void GetTextureFormat(
 
 static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 {
-	if (info.repeatu)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	else
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	unsigned int target = info.cube ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
 
-	if (info.repeatv)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	else
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	unsigned int wraps = info.repeatu ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+	unsigned int wrapt = info.repeatv ? GL_REPEAT : GL_CLAMP_TO_EDGE;
 
-	if (info.mipmap)
-	{
-		if (info.nearest)
-		{
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-		}
-		// automatic mipmap generation fallback
-		if (!hasmiplevels && info.mipmap && !GLC_ARB_framebuffer_object)
-			glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-	}
-	else
-	{
-		if (info.nearest)
-		{
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-		}
-		else
-		{
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-		}
-	}
+	unsigned int magfilter = info.nearest ? GL_NEAREST : GL_LINEAR;
+	unsigned int minfilter = info.nearest ?
+		(info.mipmap ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST) :
+		(info.mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+
+	glTexParameteri(target, GL_TEXTURE_WRAP_S, wraps);
+	glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapt);
+	glTexParameteri(target, GL_TEXTURE_WRAP_R, wrapt); // set to the same value as v here
+
+	glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minfilter);
+	glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magfilter);
+
+	// automatic mipmap generation fallback
+	if (!hasmiplevels && info.mipmap && !GLC_ARB_framebuffer_object)
+		glTexParameteri(target, GL_GENERATE_MIPMAP, GL_TRUE);
 
 	if (info.anisotropy > 1)
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
+		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 }
 
 Texture::Texture()
@@ -336,21 +317,21 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	CheckForOpenGLErrors("Texture ID generation", error);
 
 	// setup texture
-	glBindTexture(GL_TEXTURE_2D, texid);
+	glBindTexture(target, texid);
 	SetSampler(info);
 
 	int internalformat, format;
 	GetTextureFormat(surface, info, internalformat, format);
 
 	// upload texture data
-	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, pixels);
+	glTexImage2D(target, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, pixels);
 	CheckForOpenGLErrors("Texture creation", error);
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
 	// In the GL3 renderer the sampler decides whether or not to do mip filtering,
 	// so we conservatively make mipmaps available for all textures.
 	if (GLC_ARB_framebuffer_object)
-		glGenerateMipmap(GL_TEXTURE_2D);
+		glGenerateMipmap(target);
 
 	SDL_FreeSurface(surface);
 
@@ -379,21 +360,8 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Cubemap ID generation", error);
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texid);
-
-	// set sampler
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	if (info.mipmap)
-	{
-		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-		// automatic mipmap generation fallback
-		if (!GLC_ARB_framebuffer_object)
-			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
-	}
+	glBindTexture(target, texid);
+	SetSampler(info);
 
 	width = surface->w / 3;
 	height = surface->h / 4;
@@ -471,7 +439,7 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	}
 
 	if (info.mipmap && GLC_ARB_framebuffer_object)
-		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		glGenerateMipmap(target);
 
 	CheckForOpenGLErrors("Cubemap creation", error);
 
@@ -487,35 +455,22 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		return LoadCubeVerticalCross(path, info, error);
 	}
 
-	std::string cubefiles[6];
-	cubefiles[0] = path+"-xp.png";
-	cubefiles[1] = path+"-xn.png";
-	cubefiles[2] = path+"-yn.png";
-	cubefiles[3] = path+"-yp.png";
-	cubefiles[4] = path+"-zn.png";
-	cubefiles[5] = path+"-zp.png";
-
 	target = GL_TEXTURE_CUBE_MAP;
 
 	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Cubemap texture ID generation", error);
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texid);
+	glBindTexture(target, texid);
+	SetSampler(info);
 
-	const GLenum targetparam[] = {
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-		GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-		GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-	};
+	std::string sides[6] = {"-xp.png", "-xn.png", "-yp.png", "-yn.png", "-zp.png", "-zn.png"};
+	unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	for (int i = 0; i < 6; ++i)
 	{
-		SDL_Surface * surface = IMG_Load(cubefiles[i].c_str());
+		SDL_Surface * surface = IMG_Load((path + sides[i]).c_str());
 		if (!surface)
 		{
-			error << "Error loading texture file: " + path + " (" + cubefiles[i] + ")" << std::endl;
+			error << "Error loading texture file: " + path + " (" + sides[i] + ")" << std::endl;
 			error << IMG_GetError() << std::endl;
 			return false;
 		}
@@ -546,22 +501,15 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 				format = GL_RGBA;
 				break;
 			default:
-				error << "Texture has unknown format: " + path + " (" + cubefiles[i] + ")" << std::endl;
+				error << "Texture has unknown format: " + path + " (" + sides[i] + ")" << std::endl;
 				return false;
 				break;
 		}
 
-		// Create MipMapped Texture
-		glTexImage2D(targetparam[i], 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
+		glTexImage2D(itarget++, 0, format, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
 
 		SDL_FreeSurface(surface);
 	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	CheckForOpenGLErrors("Cubemap creation", error);
 
@@ -597,21 +545,19 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	if (!ReadDDS(
 		(void*)&data[0], length,
 		(const void*&)texdata, texlen,
-		format, width, height, levels))
+		format, target,
+		width, height, levels))
 	{
 		error << "Failed ReadDDS " << path << std::endl;
 		return false;
 	}
 
 	// load texture
-	target = GL_TEXTURE_2D;
-
 	assert(!texid);
 	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Texture ID generation", error);
 
 	glBindTexture(target, texid);
-
 	SetSampler(info, levels > 1);
 
 	// gl3 renderer expects srgb
@@ -640,43 +586,54 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 		case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT: ctype = 3; break;
 	}
 
-	const char * idata = texdata;
-	unsigned blocklen = 16 * texlen / (width * height);
-	unsigned ilen = texlen;
-	unsigned iw = width;
-	unsigned ih = height;
-	for (unsigned i = 0; i < levels; ++i)
+	unsigned faces = 1;
+	unsigned itarget = target;
+	if (target == GL_TEXTURE_CUBE_MAP)
 	{
-		if (format == GL_BGR || format == GL_BGRA)
+		faces = 6;
+		itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+	}
+	for (unsigned j = 0; j < faces; ++j)
+	{
+		const char * idata = texdata;
+		unsigned blocklen = 16 * texlen / (width * height);
+		unsigned ilen = texlen;
+		unsigned iw = width;
+		unsigned ih = height;
+		for (unsigned i = 0; i < levels; ++i)
 		{
-			ilen = iw * ih * blocklen / 16;
-			glTexImage2D(target, i, iformat, iw, ih, 0, format, GL_UNSIGNED_BYTE, idata);
-		}
-		else
-		{
-			ilen = std::max(1u, iw / 4) * std::max(1u, ih / 4) * blocklen;
-			if (GLC_EXT_texture_compression_s3tc)
+			if (format == GL_BGR || format == GL_BGRA)
 			{
-				glCompressedTexImage2D(target, i, iformat, iw, ih, 0, ilen, idata);
+				ilen = iw * ih * blocklen / 16;
+				glTexImage2D(itarget, i, iformat, iw, ih, 0, format, GL_UNSIGNED_BYTE, idata);
 			}
 			else
 			{
-				cdata.resize(iw * ih * 4);
-				if (BcnDecode(&cdata[0], cdata.size(), idata, ilen, iw, ih, ctype, 0, 0) < 0)
+				ilen = std::max(1u, iw / 4) * std::max(1u, ih / 4) * blocklen;
+				if (GLC_EXT_texture_compression_s3tc)
 				{
-					error << "Failed BcnDecode " << path << std::endl;
-					glBindTexture(target, 0);
-					Unload();
-					return false;
+					glCompressedTexImage2D(itarget, i, iformat, iw, ih, 0, ilen, idata);
 				}
-				glTexImage2D(target, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, &cdata[0]);
+				else
+				{
+					cdata.resize(iw * ih * 4);
+					if (BcnDecode(&cdata[0], cdata.size(), idata, ilen, iw, ih, ctype, 0, 0) < 0)
+					{
+						error << "Failed BcnDecode " << path << std::endl;
+						glBindTexture(target, 0);
+						Unload();
+						return false;
+					}
+					glTexImage2D(itarget, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, &cdata[0]);
+				}
 			}
-		}
-		CheckForOpenGLErrors("Texture creation", error);
+			CheckForOpenGLErrors("Texture creation", error);
 
-		idata += ilen;
-		iw = std::max(1u, iw / 2);
-		ih = std::max(1u, ih / 2);
+			idata += ilen;
+			iw = std::max(1u, iw / 2);
+			ih = std::max(1u, ih / 2);
+		}
+		itarget++;
 	}
 
 	// force mipmaps for GL3
