@@ -205,38 +205,39 @@ static void GetCubeVerticalCrossFace(
 		{2, 1},	{0, 1},	{1, 0},	{1, 2},	{1, 1},	{1, 3}
 	};
 
-	unsigned bytespp = surface->format->BytesPerPixel;
 	int offsetx = layout[i].facex * width;
 	int offsety = layout[i].facey * height;
+	unsigned char bytespp = surface->format->BytesPerPixel;
+	int skip = (surface->w - width) * bytespp;
+	const char * src = (const char *)(surface->pixels);
+	char * dst = cubeface;
 	if (i < 5)
 	{
-		for (unsigned yi = 0; yi < height; yi++)
+		src += (offsety * surface->w + offsetx) * bytespp;
+		for (unsigned y = 0; y < height; y++)
 		{
-			for (unsigned xi = 0; xi < width; xi++)
+			for (unsigned x = 0; x < width * bytespp; x++)
 			{
-				for (unsigned ci = 0; ci < bytespp; ci++)
-				{
-					int idx1 = (yi + offsety) * surface->w * bytespp + (xi + offsetx) * bytespp + ci;
-					int idx2 = yi * width * bytespp + xi * bytespp + ci;
-					cubeface[idx2] = ((char *)(surface->pixels))[idx1];
-				}
+				*dst++ = *src++;
 			}
+			src += skip;
 		}
 	}
 	else
 	{
-		// special case for negative z
-		for (unsigned yi = 0; yi < height; yi++)
+		// special case for negative z, rotate 180 deg
+		src += ((offsety + height - 1) * surface->w + (offsetx + width - 1)) * bytespp;
+		for (unsigned y = 0; y < height; y++)
 		{
-			for (unsigned xi = 0; xi < width; xi++)
+			for (unsigned x = 0; x < width; x++)
 			{
-				for (unsigned ci = 0; ci < bytespp; ci++)
+				for (unsigned char c = 0; c < bytespp; c++)
 				{
-					int idx1 = ((height - yi - 1) + offsety) * surface->w * bytespp + (width - xi - 1 + offsetx) * bytespp + ci;
-					int idx2 = yi * width * bytespp + xi * bytespp + ci;
-					cubeface[idx2] = ((char *)(surface->pixels))[idx1];
+					*dst++ = *src++;
 				}
+				src -= 2 * bytespp;
 			}
+			src -= skip;
 		}
 	}
 }
