@@ -195,6 +195,52 @@ static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 }
 
+// i = 0..6, cube face +x, -x, +y, -y, +z, -z
+// cubeface[width * height * bytespp]
+static void GetCubeVerticalCrossFace(
+	unsigned i, const SDL_Surface * surface,
+	char cubeface[], unsigned width, unsigned height)
+{
+	const struct {unsigned facex; unsigned facey;} layout[] = {
+		{2, 1},	{0, 1},	{1, 0},	{1, 2},	{1, 1},	{1, 3}
+	};
+
+	unsigned bytespp = surface->format->BytesPerPixel;
+	int offsetx = layout[i].facex * width;
+	int offsety = layout[i].facey * height;
+	if (i < 5)
+	{
+		for (unsigned yi = 0; yi < height; yi++)
+		{
+			for (unsigned xi = 0; xi < width; xi++)
+			{
+				for (unsigned ci = 0; ci < bytespp; ci++)
+				{
+					int idx1 = (yi + offsety) * surface->w * bytespp + (xi + offsetx) * bytespp + ci;
+					int idx2 = yi * width * bytespp + xi * bytespp + ci;
+					cubeface[idx2] = ((char *)(surface->pixels))[idx1];
+				}
+			}
+		}
+	}
+	else
+	{
+		// special case for negative z
+		for (unsigned yi = 0; yi < height; yi++)
+		{
+			for (unsigned xi = 0; xi < width; xi++)
+			{
+				for (unsigned ci = 0; ci < bytespp; ci++)
+				{
+					int idx1 = ((height - yi - 1) + offsety) * surface->w * bytespp + (width - xi - 1 + offsetx) * bytespp + ci;
+					int idx2 = yi * width * bytespp + xi * bytespp + ci;
+					cubeface[idx2] = ((char *)(surface->pixels))[idx1];
+				}
+			}
+		}
+	}
+}
+
 Texture::Texture()
 {
 	// ctor
@@ -389,51 +435,13 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	height = surface->h / 4;
 
 	// upload texture
+	unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	unsigned bytespp = surface->format->BytesPerPixel;
-	std::vector<unsigned char> cubeface(width * height * bytespp);
-	const struct {GLenum target; unsigned offsetx; unsigned offsety;} layout[] = {
-		{GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, height},		// left
-		{GL_TEXTURE_CUBE_MAP_POSITIVE_X, width*2, height},	// right
-		{GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, width, height*2},	// bottom
-		{GL_TEXTURE_CUBE_MAP_POSITIVE_Y, width, 0},			// top
-		{GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, width, height*3},	// back
-		{GL_TEXTURE_CUBE_MAP_POSITIVE_Z, width, height}		// front
-	};
+	std::vector<char> face(width * height * bytespp);
 	for (int i = 0; i < 6; ++i)
 	{
-		int offsetx = layout[i].offsetx;
-		int offsety = layout[i].offsety;
-		if (i == 4) //special case for negative z
-		{
-			for (unsigned yi = 0; yi < height; yi++)
-			{
-				for (unsigned xi = 0; xi < width; xi++)
-				{
-					for (unsigned ci = 0; ci < bytespp; ci++)
-					{
-						int idx1 = ((height - yi - 1) + offsety) * surface->w * bytespp + (width - xi - 1 + offsetx) * bytespp + ci;
-						int idx2 = yi * width * bytespp + xi * bytespp + ci;
-						cubeface[idx2] = ((unsigned char *)(surface->pixels))[idx1];
-					}
-				}
-			}
-		}
-		else
-		{
-			for (unsigned yi = 0; yi < height; yi++)
-			{
-				for (unsigned xi = 0; xi < width; xi++)
-				{
-					for (unsigned ci = 0; ci < bytespp; ci++)
-					{
-						int idx1 = (yi + offsety) * surface->w * bytespp + (xi + offsetx) * bytespp + ci;
-						int idx2 = yi * width * bytespp + xi * bytespp + ci;
-						cubeface[idx2] = ((unsigned char *)(surface->pixels))[idx1];
-					}
-				}
-			}
-		}
-		glTexImage2D(layout[i].target, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, &cubeface[0]);
+		GetCubeVerticalCrossFace(i, surface, &face[0], width, height);
+		glTexImage2D(itarget + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, &face[0]);
 	}
 
 	if (info.mipmap && GLC_ARB_framebuffer_object)
