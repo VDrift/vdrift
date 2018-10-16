@@ -254,7 +254,6 @@ Texture::~Texture()
 
 bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
-
 	if (texid)
 	{
 		error << "Tried to double load texture " << path << std::endl;
@@ -367,11 +366,11 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	glBindTexture(target, texid);
 	SetSampler(info);
 
-	int internalformat, format;
-	GetTextureFormat(surface, info, internalformat, format);
+	int iformat, format;
+	GetTextureFormat(surface, info, iformat, format);
 
 	// upload texture data
-	glTexImage2D(target, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, pixels);
+	glTexImage2D(target, 0, iformat, w, h, 0, format, GL_UNSIGNED_BYTE, pixels);
 	CheckForOpenGLErrors("Texture creation", error);
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
@@ -402,28 +401,6 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 		return false;
 	}
 
-	// detect channels
-	int format = GL_RGB;
-	switch (surface->format->BytesPerPixel)
-	{
-		case 1:
-			format = GL_RED;
-			break;
-		case 2:
-			format = GL_RG;
-			break;
-		case 3:
-			format = GL_RGB;
-			break;
-		case 4:
-			format = GL_RGBA;
-			break;
-		default:
-			error << "Texture has unknown format: " << path << std::endl;
-			return false;
-			break;
-	}
-
 	target = GL_TEXTURE_CUBE_MAP;
 
 	glGenTextures(1, &texid);
@@ -431,6 +408,9 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 
 	glBindTexture(target, texid);
 	SetSampler(info);
+
+	int iformat, format;
+	GetTextureFormat(surface, info, iformat, format);
 
 	width = surface->w / 3;
 	height = surface->h / 4;
@@ -442,7 +422,7 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	for (int i = 0; i < 6; ++i)
 	{
 		GetCubeVerticalCrossFace(i, surface, &face[0], width, height);
-		glTexImage2D(itarget + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, &face[0]);
+		glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, &face[0]);
 	}
 
 	if (info.mipmap && GLC_ARB_framebuffer_object)
@@ -470,28 +450,6 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		return false;
 	}
 
-	// detect channels
-	int format = GL_RGB;
-	switch (surface->format->BytesPerPixel)
-	{
-		case 1:
-			format = GL_RED;
-			break;
-		case 2:
-			format = GL_RG;
-			break;
-		case 3:
-			format = GL_RGB;
-			break;
-		case 4:
-			format = GL_RGBA;
-			break;
-		default:
-			error << "Texture has unknown format: " << path << std::endl;
-			return false;
-			break;
-	}
-
 	// check dimensions
 	if (surface->w * 6 != surface->h)
 	{
@@ -509,12 +467,15 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 	glBindTexture(target, texid);
 	SetSampler(info);
 
+	int iformat, format;
+	GetTextureFormat(surface, info, iformat, format);
+
 	const unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	const unsigned ilen = width * height * surface->format->BytesPerPixel;
 	const char * idata = (const char *)surface->pixels;
 	for (int i = 0; i < 6; ++i)
 	{
-		glTexImage2D(itarget + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, idata);
+		glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, idata);
 		idata += ilen;
 	}
 	CheckForOpenGLErrors("Cubemap creation", error);
