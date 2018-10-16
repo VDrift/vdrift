@@ -197,7 +197,8 @@ static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 
 // i = 0..6, cube face +x, -x, +y, -y, +z, -z
 // cubeface[width * height * bytespp]
-static void GetCubeVerticalCrossFace(
+// returns &cubeface[0]
+static char * GetCubeVerticalCrossFace(
 	unsigned i, const SDL_Surface * surface,
 	char cubeface[], unsigned width, unsigned height)
 {
@@ -240,6 +241,7 @@ static void GetCubeVerticalCrossFace(
 			src -= skip;
 		}
 	}
+	return cubeface;
 }
 
 Texture::Texture()
@@ -391,57 +393,8 @@ void Texture::Unload()
 	texid = 0;
 }
 
-bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error)
-{
-	SDL_Surface * surface = IMG_Load(path.c_str());
-	if (!surface)
-	{
-		error << "Error loading texture file: " + path << std::endl;
-		error << IMG_GetError() << std::endl;
-		return false;
-	}
-
-	target = GL_TEXTURE_CUBE_MAP;
-
-	glGenTextures(1, &texid);
-	CheckForOpenGLErrors("Cubemap ID generation", error);
-
-	glBindTexture(target, texid);
-	SetSampler(info);
-
-	int iformat, format;
-	GetTextureFormat(surface, info, iformat, format);
-
-	width = surface->w / 3;
-	height = surface->h / 4;
-
-	// upload texture
-	unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-	unsigned bytespp = surface->format->BytesPerPixel;
-	std::vector<char> face(width * height * bytespp);
-	for (int i = 0; i < 6; ++i)
-	{
-		GetCubeVerticalCrossFace(i, surface, &face[0], width, height);
-		glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, &face[0]);
-	}
-
-	if (info.mipmap && GLC_ARB_framebuffer_object)
-		glGenerateMipmap(target);
-
-	CheckForOpenGLErrors("Cubemap creation", error);
-
-	SDL_FreeSurface(surface);
-
-	return true;
-}
-
 bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
-	if (info.verticalcross)
-	{
-		return LoadCubeVerticalCross(path, info, error);
-	}
-
 	SDL_Surface * surface = IMG_Load(path.c_str());
 	if (!surface)
 	{
@@ -450,14 +403,23 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		return false;
 	}
 
-	// check dimensions
-	if (surface->w * 6 != surface->h)
+	// get dimensions
+	unsigned wtiles = 1;
+	unsigned htiles = 6;
+	if (info.verticalcross)
 	{
-		error << "Error loading cubemap. Expected image height " << surface->w * 6 << " got " << surface->h << std::endl;
+		wtiles = 3;
+		htiles = 4;
+	}
+	width = surface->w / wtiles;
+	height = surface->h / htiles;
+	if (width * wtiles != (unsigned)surface->w || height * htiles != (unsigned)surface->h)
+	{
+		error << "Expected cubemap width x height "
+			<< width << "*" << wtiles << " x " << height << "*" << htiles
+			<< " got " << surface->w << " x " << surface->h << std::endl;
 		return false;
 	}
-	width = surface->w;
-	height = surface->h / 6;
 
 	target = GL_TEXTURE_CUBE_MAP;
 
@@ -472,11 +434,16 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 
 	const unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	const unsigned ilen = width * height * surface->format->BytesPerPixel;
-	const char * idata = (const char *)surface->pixels;
+	std::vector<char> face(info.verticalcross ? ilen : 0); // verticalcross face buffer
 	for (int i = 0; i < 6; ++i)
 	{
+		const char * idata;
+		if (info.verticalcross)
+			idata = GetCubeVerticalCrossFace(i, surface, &face[0], width, height);
+		else
+			idata = (const char *)surface->pixels + ilen * i;
+
 		glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, idata);
-		idata += ilen;
 	}
 	CheckForOpenGLErrors("Cubemap creation", error);
 
