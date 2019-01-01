@@ -1090,6 +1090,7 @@ bool Game::AssignControl()
 		{
 			controlgrab_control.device = CarControlMap::Control::KEYBOARD;
 			controlgrab_control.id = key.first;
+			controlgrab_control.analog = false;
 			car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
