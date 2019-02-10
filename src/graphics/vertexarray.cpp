@@ -75,31 +75,31 @@ VertexArray VertexArray::operator+ (const VertexArray & v) const
 void VertexArray::GetColors(const unsigned char * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = colors.size();
-	output_array_pointer = colors.empty() ? NULL : &colors[0];
+	output_array_pointer = colors.empty() ? NULL : colors.data();
 }
 
 void VertexArray::GetTexCoords(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = texcoords.size();
-	output_array_pointer = texcoords.empty() ? NULL : &texcoords[0];
+	output_array_pointer = texcoords.empty() ? NULL : texcoords.data();
 }
 
 void VertexArray::GetNormals(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = normals.size();
-	output_array_pointer = normals.empty() ? NULL : &normals[0];
+	output_array_pointer = normals.empty() ? NULL : normals.data();
 }
 
 void VertexArray::GetVertices(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = vertices.size();
-	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
+	output_array_pointer = vertices.empty() ? NULL : vertices.data();
 }
 
 void VertexArray::GetFaces(const unsigned * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = faces.size();
-	output_array_pointer = faces.empty() ? NULL : &faces[0];
+	output_array_pointer = faces.empty() ? NULL : faces.data();
 }
 
 void VertexArray::SetColors(const unsigned char array[], unsigned count, unsigned offset)

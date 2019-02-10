@@ -1057,7 +1057,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 	std::vector <GLenum> drawBuffers(maxAttachments, GL_NONE);
 	for (int i = 0; i < drawAttachments; i++)
 		drawBuffers[i] = GL_COLOR_ATTACHMENT0+i;
-	gl.DrawBuffers(drawBuffers.size(), &drawBuffers[0]);
+	gl.DrawBuffers(drawBuffers.size(), drawBuffers.data());
 
 	// TODO: Re-use these from a common pool?
 	// Create a depth renderbuffer if we have no depth attachment.

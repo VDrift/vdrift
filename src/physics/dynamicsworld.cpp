@@ -148,6 +148,7 @@ bool DynamicsWorld::castRay(
 			if (track)
 			{
 				const std::vector<TrackSurface> & surfaces = track->GetSurfaces();
+				assert(!surfaces.empty());
 				if (ts < &surfaces[0] || ts > &surfaces[surfaces.size() - 1])
 					ts = NULL;
 				assert(ts);

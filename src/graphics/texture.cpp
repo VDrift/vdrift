@@ -346,9 +346,9 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 
 		SampleDownAvg(
 			bytespp, w, h, pitch, pixels,
-			wd, hd, wd * bytespp, &pixelsd[0]);
+			wd, hd, wd * bytespp, pixelsd.data());
 
-		pixels = &pixelsd[0];
+		pixels = pixelsd.data();
 		pitch = wd * bytespp;
 		w = wd;
 		h = hd;
@@ -439,7 +439,7 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 	{
 		const char * idata;
 		if (info.verticalcross)
-			idata = GetCubeVerticalCrossFace(i, surface, &face[0], width, height);
+			idata = GetCubeVerticalCrossFace(i, surface, face.data(), width, height);
 		else
 			idata = (const char *)surface->pixels + ilen * i;
 
@@ -470,7 +470,7 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 
 	// read file into memory
 	std::vector<char> data(length);
-	file.read(&data[0], length);
+	file.read(data.data(), length);
 
 	// load dds
 	const char * texdata(0);
@@ -478,7 +478,7 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	unsigned format(0);
 	unsigned levels(0);
 	if (!ReadDDS(
-		(void*)&data[0], length,
+		(void*)data.data(), length,
 		(const void*&)texdata, texlen,
 		format, target,
 		width, height, levels))
@@ -552,14 +552,14 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 				else
 				{
 					cdata.resize(iw * ih * 4);
-					if (BcnDecode(&cdata[0], cdata.size(), idata, ilen, iw, ih, ctype, 0, 0) < 0)
+					if (BcnDecode(cdata.data(), cdata.size(), idata, ilen, iw, ih, ctype, 0, 0) < 0)
 					{
 						error << "Failed BcnDecode " << path << std::endl;
 						glBindTexture(target, 0);
 						Unload();
 						return false;
 					}
-					glTexImage2D(itarget, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, &cdata[0]);
+					glTexImage2D(itarget, i, cformat, iw, ih, 0, cformat, GL_UNSIGNED_BYTE, cdata.data());
 				}
 			}
 			CheckForOpenGLErrors("Texture creation", error);

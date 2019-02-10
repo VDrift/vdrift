@@ -383,14 +383,14 @@ void GraphicsGL2::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(screen_quad);
 	nodes.push_back(&quad_node);
 
-	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
+	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size());
 
 	screen_quad = quad_node.GetDrawList().twodim.get(d);
 }
 
 void GraphicsGL2::BindStaticVertexData(std::vector<SceneNode*> nodes)
 {
-	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
+	vertex_buffer.SetStaticVertexData(nodes.data(), nodes.size());
 }
 
 void GraphicsGL2::AddDynamicNode(SceneNode & node)

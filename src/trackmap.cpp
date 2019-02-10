@@ -126,8 +126,8 @@ bool TrackMap::BuildMap(
 			x[5] = x[0];
 			y[5] = y[0];
 
-			RasterizeTriangle(x, y, color, &pixels[0], map_width);
-			RasterizeTriangle(x + 3, y + 3, color, &pixels[0], map_width);
+			RasterizeTriangle(x, y, color, pixels.data(), map_width);
+			RasterizeTriangle(x + 3, y + 3, color, pixels.data(), map_width);
 		}
 	}
 /*
@@ -135,7 +135,7 @@ bool TrackMap::BuildMap(
 	// horizontal blur 3x3
 	for (int y = 1; y < map_height - 1; ++y)
 	{
-		unsigned * line = &pixels[0] + y * map_width;
+		unsigned * line = pixels.data() + y * map_width;
 		unsigned p = line[0];
 		for (int x = 1; x < map_width - 1; ++x)
 		{
@@ -150,9 +150,9 @@ bool TrackMap::BuildMap(
 	std::vector<unsigned> linep(map_width, 0);
 	for (int y = 1; y < map_height - 1; ++y)
 	{
-		unsigned * line0 = &pixels[0] + (y - 1) * map_width;
-		unsigned * line1 = &pixels[0] + y * map_width;
-		unsigned * line2 = &pixels[0] + (y + 1) * map_width;
+		unsigned * line0 = pixels.data() + (y - 1) * map_width;
+		unsigned * line1 = pixels.data() + y * map_width;
+		unsigned * line2 = pixels.data() + (y + 1) * map_width;
 		for (int x = 1; x < map_width - 1; ++x)
 		{
 			//unsigned v = (line0[x] + (line1[x] << 1) + line2[x]) >> 2;
@@ -201,7 +201,7 @@ bool TrackMap::BuildMap(
 	}
 
 	TextureInfo texinfo;
-	texinfo.data = (unsigned char*)&pixels[0];
+	texinfo.data = (unsigned char*)pixels.data();
 	texinfo.width = map_width;
 	texinfo.height = map_height;
 	texinfo.bytespp = sizeof(unsigned);

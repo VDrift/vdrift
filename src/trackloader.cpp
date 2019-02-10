@@ -1014,9 +1014,9 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 		// set vertex array
 		vertex_array.Clear();
 		vertex_array.Add(
-			&faces[0], faces.size(),
-			&vertices[0], vertices.size(),
-			&texcoords[0], texcoords.size());
+			faces.data(), faces.size(),
+			vertices.data(), vertices.size(),
+			texcoords.data(), texcoords.size());
 
 		// create model
 		std::shared_ptr<Model> model(new Model());

@@ -541,8 +541,8 @@ void Sound::ProcessSamplers(unsigned char stream[], unsigned len)
 
 	// run samplers
 	auto sstream = (stream_type*)stream;
-	auto buffer0 = (buffer_type*)&buffer[0][0];
-	auto buffer1 = (buffer_type*)&buffer[1][0];
+	auto buffer0 = (buffer_type*)buffer[0].data();
+	auto buffer1 = (buffer_type*)buffer[1].data();
 	for (size_t i = 0; i < samplers_num; ++i)
 	{
 		Sampler & smp = samplers[i];
