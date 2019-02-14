@@ -50,6 +50,8 @@ class CarBrake
 			max_pressure(4e6),
 			radius(0.14),
 			area(0.015),
+			bias(1),
+			handbrake(1),
 			brake_factor(0),
 			handbrake_factor(0),
 			lasttorque(0)
