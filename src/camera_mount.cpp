@@ -50,13 +50,11 @@ void CameraMount::Update(const Vec3 & newpos, const Quat & newdir, float dt)
 
 	Vec3 vel = pos - position;
 	effect = (vel.Magnitude() - 0.02f) * 25;
-	if (effect < 0) effect = 0;
-	else if (effect > 1) effect = 1;
+	effect = Clamp(effect, 0.0f, 1.0f);
 
 	float bumpdiff = randgen.Get();
 	float power = std::pow(bumpdiff, 32.0f);
-	if (power < 0) power = 0;
-	else if (power > 0.2f) power = 0.2f;
+	power = Clamp(power, 0.0f, 0.2f);
 	float veleffect = Min(std::pow(vel.Magnitude() * (2 - stiffness), 3.0f), 1.0f);
 	float bumpimpulse = power * 130 * veleffect;
 
@@ -80,8 +78,7 @@ void CameraMount::UpdatePosition(const Vec3 & newpos)
 	maxdp = maxdp * 1 / (stiffness + 1);
 	for (int i = 0; i < 3; i++)
 	{
-		if (dp[i] > maxdp[i]) dp[i] = maxdp[i];
-		if (dp[i] < -maxdp[i]) dp[i] = -maxdp[i];
+		dp[i] = Clamp(dp[i], -maxdp[i], maxdp[i]);
 	}
 	dp[1] *= 0.5f;
 

@@ -41,7 +41,7 @@ class RenderUniformVector
 		RenderUniformVector(const T * newData, size_type newSize) {Set(newData, newSize);}
 		RenderUniformVector(const std::vector <T> & other)
 		{
-			Set(&other[0],other.size());
+			Set(other.data(), other.size());
 		}
 
 		iterator begin() {return &data[0];}

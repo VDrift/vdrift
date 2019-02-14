@@ -292,7 +292,7 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 
 		frame.faces.resize(num_faces);
 
-		BinaryRead ( &frame.faces[0], sizeof ( JoeFace ), num_faces, m_FilePointer, pack );
+		BinaryRead ( frame.faces.data(), sizeof ( JoeFace ), num_faces, m_FilePointer, pack );
 		CorrectEndian ( frame.faces );
 
 		BinaryRead ( &frame.num_verts, sizeof ( unsigned int ), 1, m_FilePointer, pack );
@@ -306,11 +306,11 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 		frame.normals.resize(frame.num_normals);
 		frame.texcoords.resize(frame.num_texcoords);
 
-		BinaryRead ( &frame.verts[0], sizeof ( JoeVertex ), frame.num_verts, m_FilePointer, pack );
+		BinaryRead ( frame.verts.data(), sizeof ( JoeVertex ), frame.num_verts, m_FilePointer, pack );
 		CorrectEndian ( frame.verts );
-		BinaryRead ( &frame.normals[0], sizeof ( JoeVertex ), frame.num_normals, m_FilePointer, pack );
+		BinaryRead ( frame.normals.data(), sizeof ( JoeVertex ), frame.num_normals, m_FilePointer, pack );
 		CorrectEndian ( frame.normals );
-		BinaryRead ( &frame.texcoords[0], sizeof ( JoeTexCoord ), frame.num_texcoords, m_FilePointer, pack );
+		BinaryRead ( frame.texcoords.data(), sizeof ( JoeTexCoord ), frame.num_texcoords, m_FilePointer, pack );
 		CorrectEndian ( frame.texcoords );
 
 		// there seem to be models without texcoords like ct/glass.joe, why???
@@ -419,9 +419,9 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 
 	//assign to our mesh
 	varray.Add(
-		&v_faces[0], v_faces.size(),
-		&v_vertices[0], v_vertices.size(),
-		&v_texcoords[0], v_texcoords.size(),
-		&v_normals[0], v_normals.size());
+		v_faces.data(), v_faces.size(),
+		v_vertices.data(), v_vertices.size(),
+		v_texcoords.data(), v_texcoords.size(),
+		v_normals.data(), v_normals.size());
 }
 

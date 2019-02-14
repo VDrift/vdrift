@@ -32,13 +32,12 @@ class Spline
 {
 private:
 	std::vector <std::pair <T, T> > points;
-	mutable std::vector <T> second_deriv;
+	std::vector <T> second_derivs;
 	T first_slope;
 	T last_slope;
-	mutable bool derivs_calculated;
-	mutable T slope;
+	bool derivs_calculated;
 
-	void Calculate() const
+	void CalculateDerivs()
 	{
 		size_t n = points.size ();
 		assert (n > 1);
@@ -86,12 +85,12 @@ private:
 		// Back-Substitution
 
 		// Solve for y"[N].
-		second_deriv.resize ( n );
-		second_deriv [n-1] = r [n-1] / b [n-1];
+		second_derivs.resize ( n );
+		second_derivs [n-1] = r [n-1] / b [n-1];
 		for ( int i = n - 2; i >= 0; i-- )
 		{
 			// Use the solution for y"[i+1] to find y"[i].
-			second_deriv [i] = ( r [i] - c [i] * second_deriv [i+1] ) / b [i];
+			second_derivs [i] = ( r [i] - c [i] * second_derivs [i+1] ) / b [i];
 		}
 
 		delete [] a;
@@ -103,21 +102,32 @@ private:
 	}
 
 public:
-	Spline() : first_slope(0), last_slope(0), derivs_calculated(false), slope(0) {}
+	Spline() : first_slope(0), last_slope(0), derivs_calculated(false) {}
 
 	void Clear()
 	{
 		points.clear();
+		second_derivs.clear();
 		derivs_calculated = false;
-		slope = 0;
+	}
+
+	void Reserve(size_t n)
+	{
+		points.reserve(n);
 	}
 
 	void AddPoint(const T x, const T y)
 	{
 		points.push_back(std::pair <T,T> (x,y));
 		derivs_calculated = false;
+	}
+
+	// call calculate after adding points to initialize spline
+	void Calculate()
+	{
 		PairSortFirst <T> sorter;
 		std::sort(points.begin(), points.end(), sorter);
+		CalculateDerivs();
 	}
 
 	std::pair<T, T> GetMaxY() const
@@ -131,26 +141,17 @@ public:
 
 	T Interpolate(T x) const
 	{
+		assert ( derivs_calculated );
+
 		if ( points.size() == 1 )
-		{
-			slope = 0;
 			return points [0].second;
-		}
-
-		// calculate() only needs to be called once for a given set of
-		// points.
-		if ( !derivs_calculated )
-			Calculate ();
-
-
-		size_t low = 0;
-		size_t high = points.size () - 1;
-		size_t index;
 
 		// Bisect to find the interval that distance is on.
-		while ( ( high - low ) > 1 )
+		size_t low = 0;
+		size_t high = points.size () - 1;
+		while ( high - low > 1 )
 		{
-			index = size_t ( ( high + low ) * T(0.5) );
+			size_t index = ( high + low ) / 2;
 			if ( points [index].first > x )
 				high = index;
 			else
@@ -168,17 +169,11 @@ public:
 		const T a2 = a * a;
 		const T b2 = b * b;
 
-		// Find the first derivitive.
-		slope =
-			( points [high].second - points [low].second ) /diff
-			- ( 3 * a2- 1 ) * T(1/6.0) * diff * second_deriv [low]
-			+ ( 3 * b2 - 1 ) * T(1/6.0) * diff * second_deriv [high];
-
 		// Return the interpolated value.
 		return a * points [low].second
 			+ b * points [high].second
-			+ a * ( a2 - 1 ) * sq * second_deriv [low]
-			+ b * ( b2 - 1 ) * sq * second_deriv [high];
+			+ a * ( a2 - 1 ) * sq * second_derivs [low]
+			+ b * ( b2 - 1 ) * sq * second_derivs [high];
 	}
 };
 

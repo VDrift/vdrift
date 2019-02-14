@@ -105,15 +105,13 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 
 	// set torque curve
 	torque_curve.Clear();
+	torque_curve.Reserve(torque.size() + (torque[0].first > stall_rpm) + (torque[torque.size() - 1].first < rpm_limit));
 	if (torque[0].first > stall_rpm)
 	{
 		btScalar dx = torque[1].first - torque[0].first;
 		btScalar dy = torque[1].second - torque[0].second;
 		btScalar stall_torque = dy / dx * (stall_rpm - torque[0].first) + torque[0].second;
 		torque_curve.AddPoint(stall_rpm,  stall_torque);
-
-		error_output << "Torque curve begins above stall rpm.\n"
-			<< "Extrapolating to " << stall_rpm << ", " << stall_torque << std::endl;
 	}
 	for (const auto & tp : torque)
 	{
@@ -121,13 +119,14 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 	}
 	if (torque[torque.size() - 1].first < rpm_limit)
 	{
-		btScalar r = torque[torque.size() - 1].first + 10000.0f;
-		btScalar t = 0.0f;
-		torque_curve.AddPoint(r , t);
-
-		error_output << "Torque curve ends below rpm limit.\n"
-			<< "Extrapolating to " << r << ", " << t << std::endl;
+		auto & t0 = torque[torque.size() - 2];
+		auto & t1 = torque[torque.size() - 1];
+		auto dx = t1.first - t0.first;
+		auto dy = t1.second - t0.second;
+		auto limit_torque = dy / dx * (rpm_limit - t0.first) + t0.second;
+		torque_curve.AddPoint(rpm_limit, limit_torque);
 	}
+	torque_curve.Calculate();
 
 	// calculate idle throttle position
 	for (idle_throttle = 0.0f; idle_throttle < 1.0f; idle_throttle += 0.01f)
@@ -175,10 +174,10 @@ CarEngine::CarEngine()
 void CarEngine::Init(const CarEngineInfo & info)
 {
 	this->info = info;
+	shaft.inertia = info.inertia;
 	shaft.inv_inertia = 1 / info.inertia;
 	combustion_torque = 0;
 	friction_torque = 0;
-	clutch_torque = 0;
 
 	throttle_position = 0;
 	nos_boost_factor = 0;
@@ -188,79 +187,42 @@ void CarEngine::Init(const CarEngineInfo & info)
 	stalled = false;
 }
 
-btScalar CarEngine::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt)
+void CarEngine::Update(btScalar dt)
 {
 	btScalar rpm = GetRPM();
+	stalled = rpm < info.stall_rpm;
 
-	clutch_torque = clutch_drag;
-
-	btScalar torque_limit = shaft.getMomentum(clutch_angvel) / dt;
-	if ((clutch_torque > 0 && clutch_torque > torque_limit) ||
-		(clutch_torque < 0 && clutch_torque < torque_limit))
-	{
-		clutch_torque = torque_limit;
-	}
-
-	stalled = (rpm < info.stall_rpm);
-
-	//make sure the throttle is at least idling
+	// make sure the throttle is at least idling
 	btScalar idle_position = info.idle_throttle + info.idle_throttle_slope * (rpm - info.start_rpm);
 	if (throttle_position < idle_position)
 		throttle_position = idle_position;
 
-	//engine drive torque
+	// engine drive torque
 	btScalar rev_limit = info.rpm_limit;
 	if (rev_limit_exceeded)
-		rev_limit -= 100.0; //tweakable
+		rev_limit -= 100; // tweakable
 	rev_limit_exceeded = rpm > rev_limit;
 
-	combustion_torque = info.GetTorque(throttle_position, rpm);
-
-	//nitrous injection
-	if (nos_mass > 0 && nos_boost_factor > 0)
+	combustion_torque = 0;
+	if (!(out_of_gas || rev_limit_exceeded || stalled))
 	{
-		btScalar boost = nos_boost_factor * info.nos_boost;
-		combustion_torque += boost / shaft.ang_velocity;
+		combustion_torque = info.GetTorque(throttle_position, rpm);
 
-		btScalar fuel_consumed = boost * info.fuel_rate * dt;
-		btScalar nos_consumed = info.nos_fuel_ratio * fuel_consumed;
-		nos_mass = btMax(btScalar(0), nos_mass - nos_consumed);
+		// nitrous injection
+		if (nos_mass > 0 && nos_boost_factor > 0)
+		{
+			btScalar boost = nos_boost_factor * info.nos_boost;
+			combustion_torque += boost / shaft.ang_velocity;
+
+			btScalar fuel_consumed = boost * info.fuel_rate * dt;
+			btScalar nos_consumed = info.nos_fuel_ratio * fuel_consumed;
+			nos_mass = btMax(btScalar(0), nos_mass - nos_consumed);
+		}
 	}
-
-	if (out_of_gas || rev_limit_exceeded || stalled)
-		combustion_torque = 0.0;
 
 	friction_torque = info.GetFrictionTorque(throttle_position, rpm);
 
-	//try to model the static friction of the engine
+	// try to model the static friction of the engine
 	if (stalled)
-		friction_torque *= 2;
-
-	btScalar total_torque = combustion_torque + friction_torque + clutch_torque;
-	shaft.applyMomentum(total_torque * dt);
-
-	return clutch_torque;
-}
-
-void CarEngine::DebugPrint(std::ostream & out) const
-{
-	out << "---Engine---" << "\n";
-	out << "Throttle position: " << throttle_position << "\n";
-	out << "Combustion torque: " << combustion_torque << "\n";
-	out << "Clutch torque: " << -clutch_torque << "\n";
-	out << "Friction torque: " << friction_torque << "\n";
-	out << "Total torque: " << GetTorque() << "\n";
-	out << "RPM: " << GetRPM() << "\n";
-	out << "Rev limit exceeded: " << rev_limit_exceeded << "\n";
-	out << "Running: " << !stalled << "\n";
-}
-
-bool CarEngine::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s, shaft.ang_velocity);
-	_SERIALIZE_(s, throttle_position);
-	_SERIALIZE_(s, clutch_torque);
-	_SERIALIZE_(s, out_of_gas);
-	_SERIALIZE_(s, rev_limit_exceeded);
-	return true;
+		friction_torque *= 10;
 }

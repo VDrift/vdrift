@@ -21,6 +21,9 @@
 #include "quaternion.h"
 #include "unittest.h"
 
+#include <cstring> // std::memcpy
+#include <map>
+
 VertexArray::VertexArray() :
 	format(VertexFormat::P3)
 {
@@ -55,10 +58,10 @@ VertexArray VertexArray::operator+ (const VertexArray & v) const
 
 	COMBINEVECTORS(vertices);
 
-	const int offset = vertices.size() / 3;
+	const unsigned offset = vertices.size() / 3;
 	out.faces.reserve(faces.size() + v.faces.size());
 	out.faces.insert(out.faces.end(), faces.begin(), faces.end());
-	for (unsigned int face : v.faces)
+	for (unsigned face : v.faces)
 	{
 		out.faces.push_back(face + offset);
 	}
@@ -69,39 +72,39 @@ VertexArray VertexArray::operator+ (const VertexArray & v) const
 	return out;
 }
 
-void VertexArray::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetColors(const unsigned char * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = colors.size();
-	output_array_pointer = colors.empty() ? NULL : &colors[0];
+	output_array_pointer = colors.empty() ? NULL : colors.data();
 }
 
-void VertexArray::GetTexCoords(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetTexCoords(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = texcoords.size();
-	output_array_pointer = texcoords.empty() ? NULL : &texcoords[0];
+	output_array_pointer = texcoords.empty() ? NULL : texcoords.data();
 }
 
-void VertexArray::GetNormals(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetNormals(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = normals.size();
-	output_array_pointer = normals.empty() ? NULL : &normals[0];
+	output_array_pointer = normals.empty() ? NULL : normals.data();
 }
 
-void VertexArray::GetVertices(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetVertices(const float * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = vertices.size();
-	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
+	output_array_pointer = vertices.empty() ? NULL : vertices.data();
 }
 
-void VertexArray::GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetFaces(const unsigned * & output_array_pointer, unsigned & output_array_num) const
 {
 	output_array_num = faces.size();
-	output_array_pointer = faces.empty() ? NULL : &faces[0];
+	output_array_pointer = faces.empty() ? NULL : faces.data();
 }
 
-void VertexArray::SetColors(const unsigned char array[], size_t count, size_t offset)
+void VertexArray::SetColors(const unsigned char array[], unsigned count, unsigned offset)
 {
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	// Tried to assign values that aren't in sets of 4
 	assert(size % 4 == 0);
@@ -110,32 +113,26 @@ void VertexArray::SetColors(const unsigned char array[], size_t count, size_t of
 		colors.resize(size);
 
 	unsigned char * myarray = &(colors[offset]);
-	for (size_t i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(unsigned char) * count);
 }
 
-void VertexArray::SetTexCoords(const float array[], size_t count, size_t offset)
+void VertexArray::SetTexCoords(const float array[], unsigned count, unsigned offset)
 {
 	// Tried to assign values that aren't in sets of 2
 	assert(count % 2 == 0);
 
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	if (size != texcoords.size())
 		texcoords.resize(size);
 
 	float * myarray = &(texcoords[offset]);
-	for (size_t i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(float) * count);
 }
 
-void VertexArray::SetNormals(const float array[], size_t count, size_t offset)
+void VertexArray::SetNormals(const float array[], unsigned count, unsigned offset)
 {
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	// Tried to assign values that aren't in sets of 3
 	assert(size % 3 == 0);
@@ -144,15 +141,12 @@ void VertexArray::SetNormals(const float array[], size_t count, size_t offset)
 		normals.resize(size);
 
 	float * myarray = &(normals[offset]);
-	for (size_t i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(float) * count);
 }
 
-void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
+void VertexArray::SetVertices(const float array[], unsigned count, unsigned offset)
 {
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	// Tried to assign values that aren't in sets of 3
 	assert(size % 3 == 0);
@@ -161,35 +155,32 @@ void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
 		vertices.resize(size);
 
 	float * myarray = &(vertices[offset]);
-	for (size_t i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
+	std::memcpy(myarray, array, sizeof(float) * count);
 }
 
-void VertexArray::SetFaces(const unsigned int array[], size_t count, size_t offset, size_t idoffset)
+void VertexArray::SetFaces(const unsigned int array[], unsigned count, unsigned offset, unsigned idoffset)
 {
 	// Tried to assign values that aren't in sets of 3
 	assert (count % 3 == 0);
 
-	size_t size = offset + count;
+	unsigned size = offset + count;
 
 	if (size != faces.size())
 		faces.resize(size);
 
 	unsigned int * myarray = &(faces[offset]);
-	for (size_t i = 0; i < count; ++i)
+	for (unsigned i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i] + idoffset;
 	}
 }
 
 void VertexArray::Add(
-	const unsigned int newfaces[], int newfacecount,
-	const float newvert[], int newvertcount,
-	const float newtco[], int newtcocount,
-	const float newnorm[], int newnormcount ,
-	const unsigned char newcol[], int newcolcount)
+	const unsigned newfaces[], unsigned newfacecount,
+	const float newvert[], unsigned newvertcount,
+	const float newtco[], unsigned newtcocount,
+	const float newnorm[], unsigned newnormcount ,
+	const unsigned char newcol[], unsigned newcolcount)
 {
 	SetFaces(newfaces, newfacecount, faces.size(), vertices.size() / 3);
 	SetVertices(newvert, newvertcount, vertices.size());
@@ -664,15 +655,6 @@ void VertexArray::FixWindingOrder()
 	}
 }
 
-bool VertexArray::Serialize(joeserialize::Serializer & s)
-{
-	_SERIALIZE_(s,vertices);
-	_SERIALIZE_(s,normals);
-	//_SERIALIZE_(s,colors); fixme
-	_SERIALIZE_(s,texcoords);
-	_SERIALIZE_(s,faces);
-	return true;
-}
 /* fixme
 QT_TEST(vertexarray_test)
 {
@@ -798,7 +780,7 @@ QT_TEST(vertexarray_buldfromfaces_test)
 
 	const float * tempfloat(NULL);
 	const unsigned int * tempint(NULL);
-	int tempnum;
+	unsigned int tempnum;
 
 	varray.GetNormals(tempfloat, tempnum);
 	QT_CHECK(tempfloat != NULL);

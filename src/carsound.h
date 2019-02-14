@@ -57,10 +57,10 @@ public:
 private:
 	CrashDetection crashdetection;
 	std::vector<EngineSoundInfo> enginesounds;
-	unsigned tiresqueal[WHEEL_POSITION_SIZE];
-	unsigned tirebump[WHEEL_POSITION_SIZE];
-	unsigned grasssound[WHEEL_POSITION_SIZE];
-	unsigned gravelsound[WHEEL_POSITION_SIZE];
+	unsigned tiresqueal[WHEEL_COUNT];
+	unsigned tirebump[WHEEL_COUNT];
+	unsigned grasssound[WHEEL_COUNT];
+	unsigned gravelsound[WHEEL_COUNT];
 	unsigned crashsound;
 	unsigned gearsound;
 	unsigned brakesound;

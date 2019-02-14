@@ -29,23 +29,23 @@ class CarDynamics;
 class AiCar
 {
 public:
-	AiCar(const CarDynamics * car, float difficulty);
+	AiCar(unsigned carid, float difficulty);
 
 	virtual ~AiCar();
 
-	const CarDynamics * GetCar() const;
+	unsigned GetCarId() const;
 
 	const std::vector<float> & GetInputs() const;
 
-	virtual void Update(float dt, const CarDynamics cars[], const int cars_num) = 0;
+	virtual void Update(float dt, const CarDynamics cars[], const unsigned cars_num) = 0;
 
 	/// This is optional for drawing debug stuff.
 	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.
 	virtual void Visualize();
 
 protected:
-	const CarDynamics * car;
-	float difficulty;
+	const unsigned carid;
+	const float difficulty;
 
 	/// Contains the car inputs, which is the output of the AI.
 	/// The vector is indexed by CARINPUT values.
@@ -53,8 +53,8 @@ protected:
 };
 
 
-inline AiCar::AiCar(const CarDynamics * car, float difficulty) :
-	car(car),
+inline AiCar::AiCar(unsigned carid, float difficulty) :
+	carid(carid),
 	difficulty(difficulty),
 	inputs(CarInput::INVALID, 0.0)
 {
@@ -66,9 +66,9 @@ inline AiCar::~AiCar()
 	// dtor
 }
 
-inline const CarDynamics * AiCar::GetCar() const
+inline unsigned AiCar::GetCarId() const
 {
-	return car;
+	return carid;
 }
 
 inline const std::vector<float> & AiCar::GetInputs() const

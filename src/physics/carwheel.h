@@ -21,14 +21,10 @@
 #define _CARWHEEL_H
 
 #include "driveshaft.h"
-#include "joeserialize.h"
 #include "macros.h"
-
-#include <iostream>
 
 class CarWheel
 {
-friend class joeserialize::Serializer;
 public:
 	CarWheel() : radius(0.3), width(0.2), mass(20) {}
 
@@ -84,12 +80,18 @@ public:
 
 	void SetInertia(btScalar value)
 	{
+		shaft.inertia = value;
 		shaft.inv_inertia = 1 / value;
 	}
 
 	btScalar GetInertia() const
 	{
-		return 1 / shaft.inv_inertia;
+		return shaft.inertia;
+	}
+
+	DriveShaft & GetShaft()
+	{
+		return shaft;
 	}
 
 	void Integrate(btScalar dt)
@@ -97,23 +99,15 @@ public:
 		shaft.integrate(dt);
 	}
 
-	btScalar GetTorque(btScalar new_angvel, btScalar dt) const
-	{
-		return shaft.getMomentum(new_angvel) / dt;
-	}
-
-	void SetTorque(btScalar torque, btScalar dt)
-	{
-		shaft.applyMomentum(torque * dt);
-	}
-
-	void DebugPrint(std::ostream & out) const
+	template <class Stream>
+	void DebugPrint(Stream & out) const
 	{
 		out << "---Wheel---" << "\n";
 		out << "RPM: " << GetRPM() << "\n";
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, shaft.ang_velocity);
 		_SERIALIZE_(s, shaft.angle);

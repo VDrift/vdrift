@@ -20,6 +20,8 @@
 #include "graphics_gl3v.h"
 #include "scenenode.h"
 #include "joeserialize.h"
+#include "frustumcull.h"
+#include "model.h"
 #include "utils.h"
 
 #include <unordered_map>
@@ -28,8 +30,6 @@
 #include <map>
 #include <algorithm>
 #include <cctype>
-
-#define enableContributionCull true
 
 GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	stringMap(map),
@@ -144,14 +144,14 @@ void GraphicsGL3::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(fullscreenquad);
 	nodes.push_back(&quad_node);
 
-	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
+	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size());
 
 	fullscreenquad = quad_node.GetDrawList().twodim.get(d);
 }
 
 void GraphicsGL3::BindStaticVertexData(std::vector<SceneNode*> nodes)
 {
-	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
+	vertex_buffer.SetStaticVertexData(nodes.data(), nodes.size());
 }
 
 void GraphicsGL3::AddDynamicNode(SceneNode & node)
@@ -339,7 +339,7 @@ void GraphicsGL3::SetupScene(
 		// examine the user-defined fields to find out which shadow matrix to send to a pass
 		for (const auto & passName : renderer.getPassNames())
 		{
-			std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
+			auto fields = renderer.getUserDefinedFields(passName);
 			auto field = fields.find(matrixName);
 			if (field != fields.end() && field->second == suffix)
 			{
@@ -424,69 +424,24 @@ static bool SortDraworder(Drawable * d1, Drawable * d2)
 	return (d1->GetDrawOrder() < d2->GetDrawOrder());
 }
 
-// returns true for cull, false for don't-cull
-static bool contributionCull(const Drawable * d, const Vec3 & cam)
-{
-	const Vec3 & obj = d->GetObjectCenter();
-	float radius = d->GetRadius();
-	float dist2 = (obj - cam).MagnitudeSquared();
-	const float fov = 90; // rough field-of-view estimation
-	float numerator = 2*radius*fov;
-	const float pixelThreshold = 1;
-	//float pixels = numerator*numerator/dist2; // perspective divide (we square the numerator because we're using squared distance)
-	//if (pixels < pixelThreshold)
-	if (numerator*numerator < dist2*pixelThreshold)
-		return true;
-	else
-		return false;
-}
-
-// returns true for cull, false for don't-cull
-static bool frustumCull(const Drawable * d, const Frustum & frustum)
-{
-	float rd;
-	const float bound = d->GetRadius();
-	const Vec3 & center = d->GetObjectCenter();
-
-	for (int i=0; i<6; i++)
-	{
-		rd=frustum.frustum[i][0]*center[0]+
-				frustum.frustum[i][1]*center[1]+
-				frustum.frustum[i][2]*center[2]+
-				frustum.frustum[i][3];
-		if (rd < -bound)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 // if frustum is NULL, don't do frustum or contribution culling
 void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
-	if (frustum && enableContributionCull)
+	if (frustum)
 	{
-		for (auto drawable : drawables)
+		float ct = ContributionCullThreshold(float(h));
+		auto cull = MakeFrustumCullerPersp(frustum->frustum, camPos, ct);
+		for (auto d : drawables)
 		{
-			if (!frustumCull(drawable, *frustum) && !contributionCull(drawable, camPos))
-				out.push_back(&drawable->GenRenderModelData(drawAttribs));
-		}
-	}
-	else if (frustum)
-	{
-		for (auto drawable : drawables)
-		{
-			if (!frustumCull(drawable, *frustum))
-				out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			if (!cull(d->GetCenter(), d->GetRadius()))
+				out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 	else
 	{
-		for (auto drawable : drawables)
+		for (auto d : drawables)
 		{
-			out.push_back(&drawable->GenRenderModelData(drawAttribs));
+			out.push_back(&d->GenRenderModelData(drawAttribs));
 		}
 	}
 }
@@ -496,27 +451,21 @@ void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 {
 	static std::vector <Drawable*> queryResults;
 	queryResults.clear();
+
 	if (frustum)
-		adapter.Query(*frustum, queryResults);
-	else
-		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
-
-	const std::vector <Drawable*> & drawables = queryResults;
-
-	if (frustum && enableContributionCull)
 	{
-		for (auto drawable : drawables)
-		{
-			if (!contributionCull(drawable, camPos))
-				out.push_back(&drawable->GenRenderModelData(drawAttribs));
-		}
+		float ct = ContributionCullThreshold(float(h));
+		auto cull = MakeFrustumCullerPersp(frustum->frustum, camPos, ct);
+		adapter.Query(cull, queryResults);
 	}
 	else
 	{
-		for (auto drawable : drawables)
-		{
-			out.push_back(&drawable->GenRenderModelData(drawAttribs));
-		}
+		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
+	}
+
+	for (auto d : queryResults)
+	{
+		out.push_back(&d->GenRenderModelData(drawAttribs));
 	}
 }
 
@@ -550,7 +499,7 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 				std::string drawGroupString = stringMap.getString(drawGroupId);
 				std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupId);
 
-				std::vector <RenderModelExt*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
+				auto & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
 
 				// see if we have already generated this combination
 				if (cameraDrawGroupCombinationsGenerated.find(cameraDrawGroupKey) == cameraDrawGroupCombinationsGenerated.end())
@@ -558,41 +507,28 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & /*error_output*/)
 					// we need to generate this combination
 
 					// extract frustum information
-					RenderUniform proj, view;
-					bool doCull = true;
-					/*if (getCameraForPass(passName).empty())
-					{
-						doCull = false;
-					}
-					else*/
-					{
-						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
-						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
-					}
 					Frustum frustum;
 					Frustum * frustumPtr = NULL;
-					if (doCull)
+					if (!getCameraForPass(passName).empty())
 					{
-						frustum.Extract(&proj.data[0], &view.data[0]);
-						frustumPtr = &frustum;
+						RenderUniform proj, view;
+						if (renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view) &&
+							renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj))
+						{
+							frustum.Extract(&proj.data[0], &view.data[0]);
+							frustumPtr = &frustum;
+						}
 					}
 
 					// assemble dynamic entries
-					reseatable_reference <PtrVector <Drawable> > dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
+					auto dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
 					if (dynamicDrawablesPtr)
-					{
-						const std::vector <Drawable*> & dynamicDrawables = *dynamicDrawablesPtr;
-						//AssembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
-						AssembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
-					}
+						AssembleDrawList(*dynamicDrawablesPtr, outDrawList, frustumPtr, lastCameraPosition);
 
 					// assemble static entries
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
+					auto staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
 					if (staticDrawablesPtr)
-					{
-						const AabbTreeNodeAdapter <Drawable> & staticDrawables = *staticDrawablesPtr;
-						AssembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
-					}
+						AssembleDrawList(*staticDrawablesPtr, outDrawList, frustumPtr, lastCameraPosition);
 
 					// if it's requesting the full screen rect draw group, feed it our special drawable
 					if (drawGroupString == "full screen rect")
@@ -660,7 +596,7 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 		// strip pass infos from the list that we pass to the renderer if they are disabled
 		for (int i = passInfos.size() - 1; i >= 0; i--)
 		{
-			std::map <std::string, std::string> & fields = passInfos[i].userDefinedFields;
+			auto & fields = passInfos[i].userDefinedFields;
 			auto field = fields.find("conditions");
 			if (field != fields.end())
 			{
@@ -686,7 +622,7 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 			// assign cameras to each pass
 			for (auto passName : renderer.getPassNames())
 			{
-				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(passName);
+				auto fields = renderer.getUserDefinedFields(passName);
 				auto field = fields.find("camera");
 				if (field != fields.end())
 					passNameToCameraName[stringMap.getString(passName)] = field->second;

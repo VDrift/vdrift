@@ -22,13 +22,6 @@
 #include "graphics/texture.h"
 #include "minmax.h"
 
-using std::endl;
-using std::string;
-using std::ostream;
-using std::list;
-using std::vector;
-using std::pair;
-
 TrackMap::TrackMap() :
 	map_width(256),
 	map_height(256),
@@ -52,7 +45,7 @@ void TrackMap::Unload()
 bool TrackMap::BuildMap(
 	const int screen_width,
 	const int screen_height,
-	const std::list <RoadStrip> & roads,
+	const std::vector <RoadStrip> & roads,
 	const std::string & trackname,
 	const std::string & texturepath,
 	ContentManager & content,
@@ -72,7 +65,7 @@ bool TrackMap::BuildMap(
 	{
 		for (const auto & curp : road.GetPatches())
 		{
-			const Bezier & b = curp.GetPatch();
+			const RoadPatch & b = curp;
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
@@ -108,18 +101,16 @@ bool TrackMap::BuildMap(
 	map_scale = Min(map_scale_w, map_scale_h);
 
 	std::vector<unsigned> pixels(map_width * map_height, 0);
-	const int stride = map_width * sizeof(unsigned);
 	const unsigned color = 0xffffffff;
 
 	for (const auto & road : roads)
 	{
 		for (const auto & p : road.GetPatches())
 		{
-			const Bezier & b = p.GetPatch();
-			const Vec3 & bl = b.GetBL();
-			const Vec3 & br = b.GetBR();
-			const Vec3 & fl = b.GetFL();
-			const Vec3 & fr = b.GetFR();
+			const Vec3 & bl = p.GetBL();
+			const Vec3 & br = p.GetBR();
+			const Vec3 & fl = p.GetFL();
+			const Vec3 & fr = p.GetFR();
 
 			float x[6], y[6];
 			x[2] = (bl[1] - track_min[0]) * map_scale + 1;
@@ -135,8 +126,8 @@ bool TrackMap::BuildMap(
 			x[5] = x[0];
 			y[5] = y[0];
 
-			RasterizeTriangle(x, y, color, &pixels[0], stride);
-			RasterizeTriangle(x + 3, y + 3, color, &pixels[0], stride);
+			RasterizeTriangle(x, y, color, pixels.data(), map_width);
+			RasterizeTriangle(x + 3, y + 3, color, pixels.data(), map_width);
 		}
 	}
 /*
@@ -144,7 +135,7 @@ bool TrackMap::BuildMap(
 	// horizontal blur 3x3
 	for (int y = 1; y < map_height - 1; ++y)
 	{
-		unsigned * line = &pixels[0] + y * map_width;
+		unsigned * line = pixels.data() + y * map_width;
 		unsigned p = line[0];
 		for (int x = 1; x < map_width - 1; ++x)
 		{
@@ -159,9 +150,9 @@ bool TrackMap::BuildMap(
 	std::vector<unsigned> linep(map_width, 0);
 	for (int y = 1; y < map_height - 1; ++y)
 	{
-		unsigned * line0 = &pixels[0] + (y - 1) * map_width;
-		unsigned * line1 = &pixels[0] + y * map_width;
-		unsigned * line2 = &pixels[0] + (y + 1) * map_width;
+		unsigned * line0 = pixels.data() + (y - 1) * map_width;
+		unsigned * line1 = pixels.data() + y * map_width;
+		unsigned * line2 = pixels.data() + (y + 1) * map_width;
 		for (int x = 1; x < map_width - 1; ++x)
 		{
 			//unsigned v = (line0[x] + (line1[x] << 1) + line2[x]) >> 2;
@@ -210,7 +201,7 @@ bool TrackMap::BuildMap(
 	}
 
 	TextureInfo texinfo;
-	texinfo.data = (unsigned char*)&pixels[0];
+	texinfo.data = (unsigned char*)pixels.data();
 	texinfo.width = map_width;
 	texinfo.height = map_height;
 	texinfo.bytespp = sizeof(unsigned);
@@ -247,86 +238,72 @@ bool TrackMap::BuildMap(
 	return true;
 }
 
-void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions)
+void TrackMap::Update(bool visible, unsigned player, const std::vector<Vec3> & carpositions)
 {
 	//only update car positions when the map is visible, so we get a slight speedup if the map is hidden
-	if (mapvisible)
+	if (visible)
 	{
-		auto car = carpositions.begin();
-		auto dot = dotlist.begin();
-		int count = 0;
-		while (car != carpositions.end())
-		{
-			//determine which texture to use
-			std::shared_ptr<Texture> tex = cardot0_focused;
-			if (!car->second)
-				tex = cardot1;
+		const unsigned carnum = carpositions.size();
+		const unsigned dotnum = dotlist.size();
 
+		for (unsigned i = carnum; i < dotnum; ++i)
+			mapnode.GetDrawList().twodim.erase(dotlist[i].GetDrawableHandle());
+
+		dotlist.resize(carpositions.size());
+
+		for (unsigned i = 0; i < carnum; ++i)
+		{
 			//find the coordinates of the dot
+			auto & carpos = carpositions[i];
 			Vec2 dotpos = map_min;
-			dotpos[0] += ((car->first[1] - track_min[0]) * map_scale + 1) * pixel_size[0];
-			dotpos[1] += ((car->first[0] - track_min[1]) * map_scale + 1) * pixel_size[1];
+			dotpos[0] += ((carpos[1] - track_min[0]) * map_scale + 1) * pixel_size[0];
+			dotpos[1] += ((carpos[0] - track_min[1]) * map_scale + 1) * pixel_size[1];
 			Vec2 corner1 = dotpos - dot_size;
 			Vec2 corner2 = dotpos + dot_size;
 
-			if (dot == dotlist.end())
+			auto tex = (i != player) ? cardot1 : cardot0_focused;
+			if (i < dotnum)
 			{
-				//need to insert a new dot
-				dotlist.push_back(CarDot());
-				dotlist.back().Init(mapnode, tex, corner1, corner2);
-				dot = dotlist.end();
-
-				//std::cout << count << ". inserting new dot: " << corner1 << " || " << corner2 << endl;
+				dotlist[i].Retexture(mapnode, tex);
+				dotlist[i].Reposition(corner1, corner2);
 			}
 			else
 			{
-				//update existing dot
-				dot->Retexture(mapnode, tex);
-				dot->Reposition(corner1, corner2);
-
-				//std::cout << count << ". reusing existing dot: " << corner1 << " || " << corner2 << endl;
-
-				dot++;
+				dotlist[i].Init(mapnode, tex, corner1, corner2);
 			}
-
-			car++;
-			count++;
 		}
-		for (auto i = dot; i != dotlist.end(); ++i)
-			mapnode.GetDrawList().twodim.erase(i->GetDrawableHandle());
-		dotlist.erase(dot,dotlist.end());
 	}
 
 	if (mapdraw.valid())
 	{
 		Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
-		mapdrawref.SetDrawEnable(mapvisible);
+		mapdrawref.SetDrawEnable(visible);
 	}
 	for (auto & dot : dotlist)
-		dot.SetVisible(mapnode, mapvisible);
+		dot.SetVisible(mapnode, visible);
 
 	/*for (auto & dot : dotlist)
 		dot.DebugPrint(std::cout);*/
 }
 
 template <typename T>
-inline T min(const T a, const T b, const T c)
+inline T Min(T a, T b, T c)
 {
-	return std::min(a, std::min(b, c));
+	return Min(a, Min(b, c));
 }
 
 template <typename T>
-inline T max(const T a, const T b, const T c)
+inline T Max(T a, T b, T c)
 {
-	return std::max(a, std::max(b, c));
+	return Max(a, Max(b, c));
 }
 
 void TrackMap::RasterizeTriangle(
 	const float vx[3],
 	const float vy[3],
 	unsigned color,
-	void * color_buffer,
-	int stride)
+	unsigned color_buffer[],
+	unsigned buffer_width)
 {
 	// Triangle rasterizer (8x8 block) by Nicolas Capens
 	// see http://devmaster.net/posts/6145/advanced-rasterization
@@ -359,10 +336,10 @@ void TrackMap::RasterizeTriangle(
 	const int FDY31 = DY31 << 4;
 
 	// Bounding rectangle
-	int minx = (min(X1, X2, X3) + 0xF) >> 4;
-	int maxx = (max(X1, X2, X3) + 0xF) >> 4;
-	int miny = (min(Y1, Y2, Y3) + 0xF) >> 4;
-	int maxy = (max(Y1, Y2, Y3) + 0xF) >> 4;
+	int minx = (Min(X1, X2, X3) + 0xF) >> 4;
+	int maxx = (Max(X1, X2, X3) + 0xF) >> 4;
+	int miny = (Min(Y1, Y2, Y3) + 0xF) >> 4;
+	int maxy = (Max(Y1, Y2, Y3) + 0xF) >> 4;
 
 	// Block size, standard 8x8 (must be power of two)
 	const int q = 8;
@@ -371,7 +348,7 @@ void TrackMap::RasterizeTriangle(
 	minx &= ~(q - 1);
 	miny &= ~(q - 1);
 
-	(char*&)color_buffer += miny * stride;
+	color_buffer += miny * buffer_width;
 
 	// Half-edge constants
 	int C1 = DY12 * X1 - DX12 * Y1;
@@ -416,7 +393,7 @@ void TrackMap::RasterizeTriangle(
 			// Skip block when outside an edge
 			if (a == 0x0 || b == 0x0 || c == 0x0) continue;
 
-			unsigned * buffer = (unsigned*)color_buffer;
+			unsigned * buffer = color_buffer;
 
 			// Accept whole block when totally covered
 			if (a == 0xF && b == 0xF && c == 0xF)
@@ -428,7 +405,7 @@ void TrackMap::RasterizeTriangle(
 						buffer[ix] = color;
 					}
 
-					(char*&)buffer += stride;
+					buffer += buffer_width;
 				}
 			}
 			else // Partially covered block
@@ -459,11 +436,11 @@ void TrackMap::RasterizeTriangle(
 					CY2 += FDX23;
 					CY3 += FDX31;
 
-					(char*&)buffer += stride;
+					buffer += buffer_width;
 				}
 			}
 		}
 
-		(char*&)color_buffer += q * stride;
+		color_buffer += q * buffer_width;
 	}
 }

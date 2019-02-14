@@ -35,20 +35,6 @@ std::ostream & operator << (std::ostream &os, const Bezier & b)
 	return os;
 }
 
-Bezier::Bezier()
-{
-	next_patch = NULL;
-	turn = 0;
-	dist_from_start = 0;
-	length = 0;
-	have_racingline = false;
-}
-
-Bezier::~Bezier()
-{
- // dtor
-}
-
 Aabb <float> Bezier::GetAABB() const
 {
 	float maxv[3] = {-1E38, -1E38, -1E38};
@@ -76,58 +62,27 @@ Aabb <float> Bezier::GetAABB() const
 
 void Bezier::SetFromCorners(const Vec3 & fl, const Vec3 & fr, const Vec3 & bl, const Vec3 & br)
 {
-	center = (fl + fr + bl + br) * 0.25f;
-
-	float rf = std::max((fl - center).MagnitudeSquared(), (fr - center).MagnitudeSquared());
-	float rb = std::max((bl - center).MagnitudeSquared(), (br - center).MagnitudeSquared());
-	radius = std::sqrt(std::max(rf, rb));
-
-	//assign corners
+	// assign corners
 	points[0][0] = fl;
 	points[0][3] = fr;
-	points[3][3] = br;
 	points[3][0] = bl;
+	points[3][3] = br;
 
-	//calculate intermediate front and back points
-	Vec3 temp = fr - fl;
-	if (temp.MagnitudeSquared() < 1E-8f)
-	{
-		points[0][1] = fl;
-		points[0][2] = fl;
-	}
-	else
-	{
-		points[0][1] = fl + temp * (1/3.f);
-		points[0][2] = fl + temp * (2/3.f);
-	}
+	// calculate intermediate front and back points
+	Vec3 t = (fr - fl) * (1/3.f);
+	points[0][1] = fl + t;
+	points[0][2] = fr - t;
 
-	temp = br - bl;
-	if (temp.MagnitudeSquared() < 1E-8f)
-	{
-		points[3][1] = bl;
-		points[3][2] = bl;
-	}
-	else
-	{
-		points[3][1] = bl + temp * (1/3.f);
-		points[3][2] = bl + temp * (2/3.f);
-	}
+	t = (br - bl) * (1/3.f);
+	points[3][1] = bl + t;
+	points[3][2] = br - t;
 
-
-	//calculate intermediate left and right points
+	// calculate intermediate left and right points
 	for (int i = 0; i < 4; i++)
 	{
-		temp = points[3][i] - points[0][i];
-		if (temp.MagnitudeSquared() > 1E-8f)
-		{
-			points[1][i] = points[0][i] + temp * (1/3.f);
-			points[2][i] = points[0][i] + temp * (2/3.f);
-		}
-		else
-		{
-			points[1][i] = points[0][i];
-			points[2][i] = points[0][i];
-		}
+		t = (points[3][i] - points[0][i]) * (1/3.f);
+		points[1][i] = points[0][i] + t;
+		points[2][i] = points[3][i] - t;
 	}
 
 	//CheckForProblems();
@@ -273,93 +228,6 @@ void Bezier::FitMidPoint(Vec3 p[])
 	p[2] = pm;
 }
 
-void Bezier::Attach(Bezier & other, bool reverse)
-{
-	/*if (!reverse)
-	{
-		//move the other patch to the location of this patch and force its
-		// intermediate points into a nice grid layout
-		other.SetFromCorners(other.points[0][0], other.points[0][3], points[0][0], points[0][3]);
-
-		for (int x = 0; x < 4; x++)
-		{
-			//slope points in the forward direction
-			Vec3 slope = other.points[0][x] - points[3][x];
-			if (slope.Magnitude() > 0.0001)
-				slope = slope.Normalize();
-
-			float otherlen = (other.points[0][x] - other.points[3][x]).Magnitude();
-			float mylen = (points[0][x] - points[3][x]).Magnitude();
-
-			float meanlen = (otherlen + mylen)/2.0;
-			float leglen = meanlen / 3.0;
-
-			if (slope.Magnitude() > 0.0001)
-			{
-				other.points[2][x] = other.points[3][x] + slope*leglen;
-				points[1][x] = points[0][x] + slope*(-leglen);
-			}
-			else
-			{
-				other.points[2][x] = other.points[3][x];
-				points[1][x] = points[0][x];
-			}
-		}
-	}*/
-
-	//CheckForProblems();
-
-	//store the pointer to next patch
-	next_patch = &other;
-
-	//calculate the track radius at the connection of this patch and next patch
-	Vec3 a = SurfCoord(0.5,0.0);
-	Vec3 b = SurfCoord(0.5,1.0);
-	Vec3 c = other.SurfCoord(0.5,1.0);
-
-	if (reverse)
-	{
-		a = SurfCoord(0.5,1.0);
-		b = SurfCoord(0.5,0.0);
-		c = other.SurfCoord(0.5,0.0);
-
-		//Reverse();
-	}
-
-	//racing_line = a;
-	Vec3 d1 = a - b;
-	Vec3 d2 = c - b;
-	float d1mag = d1.Magnitude();
-	float d2mag = d2.Magnitude();
-	float diff = d2mag - d1mag;
-	float dd = ((d1mag < 1E-4f) || (d2mag < 1E-4f)) ? 0 : d1.Normalize().dot(d2.Normalize());
-	float angle = std::acos((dd >= 1) ? 1 : (dd <= -1) ? -1 : dd);
-	float d1d2mag = d1mag + d2mag;
-	float alpha = (d1d2mag < 1E-4f) ? 0 : (float(M_PI) * diff + 2 * d1mag * angle) / d1d2mag * 0.5f;
-	if (std::abs(alpha - float(M_PI_2)) < 1E-3f)
-		track_radius = 10000;
-	else
-		track_radius = 0.5f * d1mag / std::cos(alpha);
-	if (d1mag < 1E-4f)
-		track_curvature = 0;
-	else
-		track_curvature = 2 * std::cos(alpha) / d1mag;
-
-	//determine it's a left or right turn at the connection
-	Vec3 d = d1.cross(d2);
-	if (std::abs(d[0]) < 0.1f && std::abs(d[1]) < 0.1f && std::abs(d[2]) < 0.1f)
-		turn = 0; //straight ahead
-	else if (d[1] > 0)
-		turn = -1; //left turn ahead
-	else
-		turn = 1; //right turn ahead
-
-	//calculate distance from start of the road
-	if (other.next_patch == NULL || reverse)
-		other.dist_from_start = dist_from_start + d1mag;
-	length = d1mag;
-}
-
 void Bezier::Reverse()
 {
 	Vec3 oldpoints[4][4];
@@ -431,30 +299,6 @@ Vec3 Bezier::SurfNorm(float px, float py) const
 	Vec3 n = -tx.cross(ty).Normalize();
 
 	return n;
-}
-
-Bezier & Bezier::CopyFrom(const Bezier &other)
-{
-	for (int x = 0; x < 4; x++)
-	{
-		for (int y = 0; y < 4; y++)
-		{
-			points[x][y] = other.points[x][y];
-		}
-	}
-
-	center = other.center;
-	radius = other.radius;
-	length = other.length;
-	dist_from_start = other.dist_from_start;
-	next_patch = other.next_patch;
-	track_radius = other.track_radius;
-	turn = other.turn;
-	track_curvature = other.track_curvature;
-	racing_line = other.racing_line;
-	have_racingline = other.have_racingline;
-
-	return *this;
 }
 
 void Bezier::ReadFrom(std::istream &openfile)

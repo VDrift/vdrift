@@ -35,6 +35,19 @@ T Atan(T x)
 }
 
 // |x| <= pi/2
+// max error: 9.2028470133065365e-6
+template <typename T>
+T CosPi2(T x)
+{
+    T s = x * x;
+    T p = T(-1.2712435011987822e-03);
+    p = T(+4.1493920348353308e-02) + p * s;
+    p = T(-4.9992746217057404e-01) + p * s;
+    p = 1 + p * s;
+    return p;
+}
+
+// |x| <= pi/2
 // max error: 1.0205878936686563e-6
 template <typename T>
 T SinPi2(T x)

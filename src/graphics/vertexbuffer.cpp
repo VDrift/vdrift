@@ -452,12 +452,12 @@ unsigned int VertexBuffer::WriteIndices(
 	std::vector<unsigned int> & index_buffer)
 {
 	const unsigned int * faces = 0;
-	int fn;
+	unsigned int fn;
 	va.GetFaces(faces, fn);
 
 	assert(icount + fn <= index_buffer.size());
 	unsigned int * ib = &index_buffer[icount];
-	for (int j = 0; j < fn; ++j)
+	for (unsigned int j = 0; j < fn; ++j)
 	{
 		ib[j] = faces[j] + vcount;
 	}
@@ -472,23 +472,23 @@ unsigned int VertexBuffer::WriteVertices(
 	std::vector<float> & vertex_buffer)
 {
 	// get vertices (fixme: use VertexFormat info here)
-	const int vat_count = 4;
+	const unsigned int vat_count = 4;
 	const void * vat_ptrs[4] = {0, 0, 0, 0};
-	int vn, nn, tn, cn;
+	unsigned int vn, nn, tn, cn;
 	va.GetVertices((const float *&)vat_ptrs[0], vn);
 	va.GetNormals((const float *&)vat_ptrs[1], nn);
 	va.GetTexCoords((const float *&)vat_ptrs[2], tn);
 	va.GetColors((const unsigned char *&)vat_ptrs[3], cn);
 
 	// calculate vertex element sizes and offsets in sizeof(float)
-	int vat_sizes[4] = {3, 3, 2, 1};
-	int vat_offsets[4] = {0, 3, 6, 8};
-	for (int j = 0; j < vat_count; ++j)
+	unsigned int vat_sizes[4] = {3, 3, 2, 1};
+	unsigned int vat_offsets[4] = {0, 3, 6, 8};
+	for (unsigned int j = 0; j < vat_count; ++j)
 	{
 		if (vat_ptrs[j] == 0)
 			vat_sizes[j] = 0;
 	}
-	for (int j = 1; j < vat_count; ++j)
+	for (unsigned int j = 1; j < vat_count; ++j)
 	{
 		vat_offsets[j] = vat_offsets[j - 1] + vat_sizes[j - 1];
 	}
@@ -496,13 +496,13 @@ unsigned int VertexBuffer::WriteVertices(
 	// fill vertices
 	assert((vcount + vn / 3) * vertex_size <= vertex_buffer.size());
 	float * vb = &vertex_buffer[vcount * vertex_size];
-	for (int j = 0; j < vn / 3 ; ++j)
+	for (unsigned int j = 0; j < vn / 3 ; ++j)
 	{
 		float * v = vb + j * vertex_size;
-		for (int k = 0; k < vat_count; ++k)
+		for (unsigned int k = 0; k < vat_count; ++k)
 		{
 			const float * vat = (const float *)vat_ptrs[k] + j * vat_sizes[k];
-			for (int m = 0; m < vat_sizes[k]; ++m)
+			for (unsigned int m = 0; m < vat_sizes[k]; ++m)
 			{
 				v[vat_offsets[k] + m] = vat[m];
 			}

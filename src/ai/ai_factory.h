@@ -20,14 +20,13 @@
 #ifndef _AI_FACTORY_H
 #define _AI_FACTORY_H
 
-class CarDynamics;
 class AiCar;
 
 /// Abstract Factory for the AI implementations
 class AiFactory
 {
 public:
-	virtual AiCar * Create(const CarDynamics * car, float difficulty) = 0;
+	virtual AiCar * Create(unsigned carid, float difficulty) = 0;
 
 	virtual ~AiFactory() {};
 };

@@ -17,12 +17,12 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _TIRE_H
-#define _TIRE_H
+#ifndef _CARTIRE2_H
+#define _CARTIRE2_H
 
 #include "LinearMath/btVector3.h"
 
-struct TireInfo
+struct CarTireInfo2
 {
 	/// tire coefficients enumerator
 	#define TIRE_COEFF_LIST \
@@ -71,31 +71,31 @@ struct TireInfo
 	btScalar roll_resistance_quad;	///< quadratic rolling resistance on a hard surface
 	btScalar roll_resistance_lin;	///< linear rolling resistance on a hard surface
 	btScalar tread;					///< 1.0 pure off-road tire, 0.0 pure road tire
-	TireInfo();						///< default constructor
+	CarTireInfo2();						///< default constructor
 };
 
-class Tire : private TireInfo
+class CarTire2 : private CarTireInfo2
 {
 public:
 	/// default constructor
-	Tire();
+	CarTire2();
 
 	/// init tire
-	void init(const TireInfo & info);
+	void init(const CarTireInfo2 & info);
 
 	/// get tire tread fraction
 	btScalar getTread() const;
 
 	/// normal_load: tire load in N
 	/// friction_coeff: contact surface friction coefficient
-	/// camber: wheel camber in rad, positive when tire top tilts to the right, viewed from rear
+	/// sin_camber: dot product of wheel axis and contact surface normal
 	/// rot_velocity: tire contact velocity (w * r)
 	/// lon_velocty: tire longitudinal velocity relative to surface
 	/// lat_velocty: tire lateral velocity relative to surface
 	btVector3 getForce(
 		btScalar normal_load,
 		btScalar friction_coeff,
-		btScalar camber,
+		btScalar sin_camber,
 		btScalar rot_velocity,
 		btScalar lon_velocty,
 		btScalar lat_velocity);
@@ -121,6 +121,8 @@ public:
 
 	/// load is the normal force in N, camber is in rad
 	btScalar getMaxFy(btScalar load, btScalar camber) const;
+
+	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
 private:
 	btScalar slip;				///< ratio of tire contact patch speed to road speed, minus one
@@ -189,7 +191,7 @@ private:
 		btScalar load,
 		btScalar & output_sigmahat,
 		btScalar & output_alphahat,
-		int iterations = 400);
+		int iterations = 200);
 
 	/// init sigma_hat, alpha_hat tables
 	void initSigmaHatAlphaHat();
@@ -197,47 +199,47 @@ private:
 
 // implementation
 
-inline btScalar Tire::getTread() const
+inline btScalar CarTire2::getTread() const
 {
 	return tread;
 }
 
-inline btScalar Tire::getSlip() const
+inline btScalar CarTire2::getSlip() const
 {
 	return slip;
 }
 
-inline btScalar Tire::getSlipAngle() const
+inline btScalar CarTire2::getSlipAngle() const
 {
 	return slip_angle;
 }
 
-inline btScalar Tire::getIdealSlip() const
+inline btScalar CarTire2::getIdealSlip() const
 {
 	return ideal_slip;
 }
 
-inline btScalar Tire::getIdealSlipAngle() const
+inline btScalar CarTire2::getIdealSlipAngle() const
 {
 	return ideal_slip_angle;
 }
 
-inline btScalar Tire::getFx() const
+inline btScalar CarTire2::getFx() const
 {
 	return fx;
 }
 
-inline btScalar Tire::getFy() const
+inline btScalar CarTire2::getFy() const
 {
 	return fy;
 }
 
-inline btScalar Tire::getMz() const
+inline btScalar CarTire2::getMz() const
 {
 	return mz;
 }
 
-inline btScalar Tire::getRollingResistance(
+inline btScalar CarTire2::getRollingResistance(
 	const btScalar velocity,
 	const btScalar resistance_factor) const
 {
@@ -256,4 +258,3 @@ inline btScalar Tire::getRollingResistance(
 }
 
 #endif
-

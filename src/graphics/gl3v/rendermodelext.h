@@ -62,4 +62,49 @@ private:
 	RenderCacheVector <std::vector <RenderUniform> > perPassUniformCache;	// Indexed by pass ID.
 };
 
+
+inline RenderModelExt::RenderModelExt() :
+	vao(0), elementCount(0), enabled(false)
+{
+	// ctor
+}
+
+inline RenderModelExt::RenderModelExt(const RenderModelEntry & m) :
+	vao(m.vao), elementCount(m.elementCount), enabled(m.elementCount > 0)
+{
+	// ctor
+}
+
+inline RenderModelExt::~RenderModelExt()
+{
+	// dtor
+}
+
+inline void RenderModelExt::draw(GLWrapper & gl) const
+{
+	gl.drawGeometry(vao, elementCount);
+}
+
+inline bool RenderModelExt::drawEnabled() const
+{
+	return enabled;
+}
+
+inline void RenderModelExt::setVertexArrayObject(GLuint newVao, unsigned int newElementCount)
+{
+	vao = newVao;
+	elementCount = newElementCount;
+	enabled = newElementCount > 0;
+}
+
+inline void RenderModelExt::clearTextureCache()
+{
+	perPassTextureCache.clear();
+}
+
+inline void RenderModelExt::clearUniformCache()
+{
+	perPassUniformCache.clear();
+}
+
 #endif

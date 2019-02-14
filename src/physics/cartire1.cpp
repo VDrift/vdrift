@@ -17,17 +17,15 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "cartire.h"
+#include "cartire1.h"
 #include "fastmath.h"
 #include "minmax.h"
 #include <cassert>
 
-#ifndef VDRIFTN
-
 static const btScalar deg2rad = M_PI / 180;
 static const btScalar rad2deg = 180 / M_PI;
 
-CarTireInfo::CarTireInfo() :
+CarTireInfo1::CarTireInfo1() :
 	longitudinal(11),
 	lateral(15),
 	aligning(18),
@@ -39,7 +37,7 @@ CarTireInfo::CarTireInfo() :
 	// ctor
 }
 
-CarTire::CarTire() :
+CarTire1::CarTire1() :
 	camber(0),
 	slide(0),
 	slip(0),
@@ -53,16 +51,16 @@ CarTire::CarTire() :
 	// ctor
 }
 
-void CarTire::init(const CarTireInfo & info)
+void CarTire1::init(const CarTireInfo1 & info)
 {
-	CarTireInfo::operator=(info);
+	CarTireInfo1::operator=(info);
 	initSigmaHatAlphaHat();
 }
 
-btVector3 CarTire::getForce(
+btVector3 CarTire1::getForce(
 	btScalar normal_force,
 	btScalar friction_coeff,
-	btScalar inclination,
+	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
 	btScalar lat_velocity)
@@ -72,22 +70,24 @@ btVector3 CarTire::getForce(
 		return btVector3(0, 0, 0);
 	}
 
-	// limit input
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
-	inclination = Clamp(inclination, btScalar(-0.1 * M_PI), btScalar(0.1 * M_PI));
+
+	// approximate asin(x) = x + x^3/6 for +-18 deg range
+	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
+	camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
 
 	// get ideal slip ratio
 	btScalar sigma_hat(0);
 	btScalar alpha_hat(0);
 	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
-	// gamma: positive when tire top tilts to the right, viewed from rear in deg
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
-	btScalar gamma = inclination * rad2deg;
-	btScalar denom = Max(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (rot_velocity - lon_velocity) / denom;
-	btScalar alpha = -Atan(lat_velocity / denom) * rad2deg;
+	// gamma: positive when tire top tilts to the right, viewed from rear in deg
+	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
+	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
+	btScalar gamma = camber * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
@@ -98,7 +98,6 @@ btVector3 CarTire::getForce(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	camber = inclination;
 	slide = sigma;
 	slip = alpha * deg2rad;
 	ideal_slide = sigma_hat;
@@ -112,22 +111,19 @@ btVector3 CarTire::getForce(
 	return btVector3(Fx, Fy, Mz);
 }
 
-btScalar CarTire::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
+btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
-	btScalar rolling_resistance = rolling_resistance_lin * resistance_factor;
+	btScalar resistance = rolling_resistance_lin * resistance_factor;
 
 	// heat due to tire deformation increases rolling resistance
 	// approximate by quadratic function
-	rolling_resistance += velocity * velocity * rolling_resistance_quad;
-
-	// rolling resistance direction
-	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
+	resistance += velocity * velocity * rolling_resistance_quad;
 
 	return resistance;
 }
 
-btScalar CarTire::getMaxFx(btScalar load) const
+btScalar CarTire1::getMaxFx(btScalar load) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 	btScalar Fz = load * btScalar(1E-3);
@@ -135,7 +131,7 @@ btScalar CarTire::getMaxFx(btScalar load) const
 	return D;
 }
 
-btScalar CarTire::getMaxFy(btScalar load, btScalar camber) const
+btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & a = lateral;
 	btScalar Fz = load * btScalar(1E-3);
@@ -145,7 +141,7 @@ btScalar CarTire::getMaxFy(btScalar load, btScalar camber) const
 	return D + Sv;
 }
 
-btScalar CarTire::getMaxMz(btScalar load, btScalar camber) const
+btScalar CarTire1::getMaxMz(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & c = aligning;
 	btScalar Fz = load * btScalar(1E-3);
@@ -155,7 +151,7 @@ btScalar CarTire::getMaxMz(btScalar load, btScalar camber) const
 	return -(D + Sv);
 }
 
-btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
+btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 
@@ -190,7 +186,7 @@ btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	return Fx;
 }
 
-btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
+btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
 {
 	const std::vector<btScalar> & a = lateral;
 
@@ -233,7 +229,7 @@ inline btScalar btCosAtan(btScalar x)
 	return btRecipSqrt(1 + x * x);
 }
 
-btScalar CarTire::PacejkaGx(btScalar sigma, btScalar alpha)
+btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha)
 {
 	const std::vector<btScalar> & p = combining;
 	btScalar B = p[2] * btCosAtan(p[3] * sigma);
@@ -241,7 +237,7 @@ btScalar CarTire::PacejkaGx(btScalar sigma, btScalar alpha)
 	return G;
 }
 
-btScalar CarTire::PacejkaGy(btScalar sigma, btScalar alpha)
+btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha)
 {
 	const std::vector<btScalar> & p = combining;
 	btScalar B = p[0] * btCosAtan(p[1] * alpha);
@@ -249,7 +245,7 @@ btScalar CarTire::PacejkaGy(btScalar sigma, btScalar alpha)
 	return G;
 }
 
-btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
+btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
 {
 	const std::vector<btScalar> & c = aligning;
 
@@ -286,7 +282,7 @@ btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	return Mz;
 }
 
-void CarTire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
+void CarTire1::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
 	assert(!sigma_hat.empty());
 	assert(!alpha_hat.empty());
@@ -319,37 +315,51 @@ void CarTire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) c
 	}
 }
 
-void CarTire::findSigmaHatAlphaHat(
+void CarTire1::findSigmaHatAlphaHat(
 	btScalar load,
 	btScalar & output_sigmahat,
 	btScalar & output_alphahat,
 	int iterations)
 {
-	btScalar x, y, ymax, junk;
-	ymax = 0;
-	for (x = -2; x < 2; x += 4.0/iterations)
+	btScalar junk;
+	btScalar fmax = 0;
+	btScalar xmax = 1;
+	btScalar dx = xmax / iterations;
+	for (btScalar x = 0; x < xmax; x += dx)
 	{
-		y = PacejkaFx(x, load, 1.0, junk);
-		if (y > ymax)
+		btScalar f = PacejkaFx(x, load, 1, junk);
+		if (f > fmax)
 		{
 			output_sigmahat = x;
-			ymax = y;
+			fmax = f;
+		}
+		else if (f < fmax && fmax > 0)
+		{
+			break;
 		}
 	}
+	btAssert(fmax > 0);
 
-	ymax = 0;
-	for (x = -20; x < 20; x += 40.0/iterations)
+	fmax = 0;
+	xmax = 40;
+	dx = xmax / iterations;
+	for (btScalar x = 0; x < xmax; x += dx)
 	{
-		y = PacejkaFy(x, load, 0, 1.0, junk);
-		if (y > ymax)
+		btScalar f = PacejkaFy(x, load, 0, 1, junk);
+		if (f > fmax)
 		{
 			output_alphahat = x;
-			ymax = y;
+			fmax = f;
+		}
+		else if (f < fmax && fmax > 0)
+		{
+			break;
 		}
 	}
+	btAssert(fmax > 0);
 }
 
-void CarTire::initSigmaHatAlphaHat(int tablesize)
+void CarTire1::initSigmaHatAlphaHat(int tablesize)
 {
 	btScalar HAT_LOAD = 0.5;
 	sigma_hat.resize(tablesize, 0);
@@ -359,5 +369,3 @@ void CarTire::initSigmaHatAlphaHat(int tablesize)
 		findSigmaHatAlphaHat((btScalar)(i+1)*HAT_LOAD, sigma_hat[i], alpha_hat[i]);
 	}
 }
-
-#endif

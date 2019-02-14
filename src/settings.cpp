@@ -63,8 +63,9 @@ Settings::Settings() :
 	joytype("joystick"),
 	joy200(false),
 	speed_sensitivity(1.0),
-	joystick_calibrated(false),
 	view_distance(1000.0),
+	steering_assist(true),
+	autoreverse(true),
 	autoclutch(true),
 	autoshift(true),
 	racingline(false),
@@ -200,7 +201,6 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "device_type", joytype);
 	Param(config, write, section, "two_hundred", joy200);
 	joy200 = false;
-	Param(config, write, section, "calibrated", joystick_calibrated);
 	Param(config, write, section, "ff_device", ff_device);
 	Param(config, write, section, "ff_gain", ff_gain);
 	Param(config, write, section, "ff_invert", ff_invert);
@@ -208,6 +208,8 @@ void Settings::Serialize(bool write, Config & config)
 
 	config.get("control", section);
 	Param(config, write, section, "speed_sens_steering", speed_sensitivity);
+	Param(config, write, section, "steering_assist", steering_assist);
+	Param(config, write, section, "autoreverse", autoreverse);
 	Param(config, write, section, "autoclutch", autoclutch);
 	Param(config, write, section, "autotrans", autoshift);
 	Param(config, write, section, "mousegrab", mousegrab);

@@ -29,7 +29,7 @@
 #include <memory>
 #include <iosfwd>
 #include <string>
-#include <list>
+#include <vector>
 
 class ContentManager;
 
@@ -45,7 +45,7 @@ public:
 	bool BuildMap(
 		const int screen_width,
 		const int screen_height,
-		const std::list <RoadStrip> & roads,
+		const std::vector <RoadStrip> & roads,
 		const std::string & trackname,
 		const std::string & texturepath,
 		ContentManager & content,
@@ -54,8 +54,7 @@ public:
 	void Unload();
 
 	/// update the map with provided information for map visibility,
-	/// as well as a list of car positions and whether or not they're the player car
-	void Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions);
+	void Update(bool visible, unsigned player, const std::vector<Vec3> & carpositions);
 
 	SceneNode & GetNode() {return mapnode;}
 
@@ -64,8 +63,8 @@ public:
 		const float vx[3],
 		const float vy[3],
 		unsigned color,
-		void * color_buffer,
-		int stride);
+		unsigned color_buffer[],
+		unsigned buffer_width);
 
 private:
 	// map texture size
@@ -131,10 +130,13 @@ private:
 			{
 				GetDrawable(topnode).SetDrawEnable(visible);
 			}
-			void DebugPrint(SceneNode & topnode, std::ostream & out) const
+			template <class Stream>
+			void DebugPrint(SceneNode & topnode, Stream & out) const
 			{
 				const Drawable & drawref = GetDrawable(topnode);
-				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetTexture0() << ", verts=" << drawref.GetVertArray() << std::endl;
+				out << &drawref << ": enable=" << drawref.GetDrawEnable()
+					<< ", tex=" << drawref.GetTexture0()
+					<< ", verts=" << drawref.GetVertArray() << "\n";
 			}
 			SceneNode::DrawableHandle & GetDrawableHandle()
 			{
@@ -157,7 +159,7 @@ private:
 			}
 	};
 
-	std::list <CarDot> dotlist;
+	std::vector<CarDot> dotlist;
 };
 
 #endif

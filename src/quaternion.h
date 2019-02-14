@@ -21,17 +21,13 @@
 #define _QUATERNION_H
 
 #include "mathvector.h"
-#include "joeserialize.h"
 
-#include <vector>
 #include <cassert>
 #include <cmath>
-#include <iostream>
 
 template <typename T>
 class Quaternion
 {
-friend class joeserialize::Serializer;
 private:
 	T v[4]; //x y z w
 
@@ -445,7 +441,8 @@ public:
 		return qout;
 	}
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		if (!s.Serialize("x",v[0])) return false;
 		if (!s.Serialize("y",v[1])) return false;
@@ -455,8 +452,8 @@ public:
 	}
 };
 
-template <typename T>
-std::ostream & operator << (std::ostream &os, const Quaternion <T> & v)
+template <typename T, class Stream>
+Stream & operator << (Stream & os, const Quaternion <T> & v)
 {
 	os << "x=" << v[0] << ", y=" << v[1] << ", z=" << v[2] << ", w=" << v[3];
 	return os;

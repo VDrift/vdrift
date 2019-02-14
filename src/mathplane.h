@@ -22,12 +22,9 @@
 
 #include "mathvector.h"
 
-#include <vector>
 #include <cassert>
 #include <cmath>
-#include <iostream>
-#include <cstring>
-#include <sstream>
+#include <cstring> // memcpy
 
 template <class T>
 class MathPlane
@@ -135,8 +132,8 @@ class MathPlane
 		}
 };
 
-template <typename T>
-std::ostream & operator << (std::ostream &os, const MathPlane <T> & v)
+template <typename T, class Stream>
+Stream & operator << (Stream & os, const MathPlane <T> & v)
 {
 	for (size_t i = 0; i < 3; i++)
 	{

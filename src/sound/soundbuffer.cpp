@@ -154,6 +154,13 @@ bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_
 	block_align = ENDIAN_SWAP_16(block_align);
 	bits_per_sample = ENDIAN_SWAP_16(bits_per_sample);
 
+	// Currently we only supper 16 bit samples
+	if (bits_per_sample != 16)
+	{
+		error_output << "Sound file with " << bits_per_sample << " bits per sample not supported" << std::endl;
+		return false;
+	}
+
 	// find data chunk
 	bool found_data_chunk = false;
 	long filepos = format_length + 4 + 4 + 4 + 4 + 4;
@@ -197,37 +204,29 @@ bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_
 	}
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	if (bits_per_sample == 16)
+	for (unsigned int i = 0; i < size / 2; i++)
 	{
-		for (unsigned int i = 0; i < size / 2; i++)
-		{
-			((short *)sound_buffer)[i] = ENDIAN_SWAP_16(((short *)sound_buffer)[i]);
-		}
-	}
-	else
-	{
-		error_output << "Sound file with " << bits_per_sample << " bits per sample not supported" << std::endl;
-		return false;
+		((short *)sound_buffer)[i] = ENDIAN_SWAP_16(((short *)sound_buffer)[i]);
 	}
 #endif
 
-	info = SoundInfo(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
-	loaded = true;
-
-	SoundInfo original_info(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
-	SoundInfo desired_info(original_info.samples, sound_device_info.frequency, original_info.channels, sound_device_info.bytespersample);
-	if (!(desired_info == original_info))
+	unsigned int bytespersample = bits_per_sample / 8;
+	unsigned int samples = size / bytespersample;
+	if (sound_device_info.bytespersample == 4)
 	{
-		error_output << "SOUND FORMAT:" << std::endl;
-		original_info.DebugPrint(error_output);
-
-		error_output << "DESIRED FORMAT:" << std::endl;
-		desired_info.DebugPrint(error_output);
-
-		error_output << "Sound file isn't in desired format: " << filename << std::endl;
-		return false;
+		// convert to float
+		bytespersample = 4;
+		float * sound_buffer_float = new float[samples];
+		for (unsigned int i = 0; i < samples; i++)
+		{
+			sound_buffer_float[i] = ((short *)sound_buffer)[i] * (1.0f / 32767);
+		}
+		delete [] sound_buffer;
+		sound_buffer = (char*)sound_buffer_float;
 	}
 
+	info = SoundInfo(samples, sample_rate, channels, bytespersample);
+	loaded = true;
 	return true;
 }
 
@@ -238,65 +237,90 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 
 	name = filename;
 
-	FILE *fp;
-
-	unsigned int samples;
-
-	fp = fopen(filename.c_str(), "rb");
-	if (fp)
+	FILE * fp = fopen(filename.c_str(), "rb");
+	if (!fp)
 	{
-		vorbis_info *pInfo;
-		OggVorbis_File oggFile;
+		error_output << "Can't open sound file: " + filename << std::endl;
+		return false;
+	}
 
-		ov_open_callbacks(fp, &oggFile, NULL, 0, OV_CALLBACKS_DEFAULT);
+	int bytespersample = sound_device_info.bytespersample;
+	if (bytespersample != 2 && bytespersample != 4)
+	{
+		error_output << "Sound buffer with " << bytespersample << " bytes per sample not supported" << std::endl;
+		return false;
+	}
 
-		pInfo = ov_info(&oggFile, -1);
+	OggVorbis_File oggFile;
+	ov_open_callbacks(fp, &oggFile, NULL, 0, OV_CALLBACKS_DEFAULT);
 
-		//I assume ogg is always 16-bit (2 bytes per sample) -Venzon
-		samples = ov_pcm_total(&oggFile,-1);
-		info = SoundInfo(samples*pInfo->channels, pInfo->rate, pInfo->channels, 2);
+	vorbis_info * pInfo = ov_info(&oggFile, -1);
+	unsigned int samples = ov_pcm_total(&oggFile, -1);
+	info = SoundInfo(samples * pInfo->channels, pInfo->rate, pInfo->channels, bytespersample);
 
-		SoundInfo desired_info(info.samples, sound_device_info.frequency, info.channels, sound_device_info.bytespersample);
+	// allocate space
+	unsigned int size = info.samples * info.bytespersample;
+	sound_buffer = new char[size];
 
-		if (!(desired_info == info))
-		{
-			error_output << "SOUND FORMAT:" << std::endl;
-			info.DebugPrint(error_output);
-			error_output << "DESIRED FORMAT:" << std::endl;
-			desired_info.DebugPrint(error_output);
-
-			error_output << "Sound file isn't in desired format: "+filename << std::endl;
-			ov_clear(&oggFile);
-			return false;
-		}
-
-		//allocate space
-		unsigned int size = info.samples*info.channels*info.bytespersample;
-		sound_buffer = new char[size];
+	if (bytespersample == 2)
+	{
 		int bitstream;
-		int endian = 0; //0 for Little-Endian, 1 for Big-Endian
-		int wordsize = 2; //again, assuming ogg is always 16-bits
-		int issigned = 1; //use signed data
-
-		int bytes = 1;
-		unsigned int bufpos = 0;
-		while (bytes > 0)
+		int endian = 0; // 0 for Little-Endian, 1 for Big-Endian
+		int wordsize = 2; // 16 bit
+		int issigned = 1; // signed data
+		unsigned int bufpos = 0; // total bytes read
+		while (bufpos < size)
 		{
-			bytes = ov_read(&oggFile, sound_buffer+bufpos, size-bufpos, endian, wordsize, issigned, &bitstream);
-			bufpos += bytes;
-			//cout << bytes << "...";
+			int bytes_read = ov_read(&oggFile, sound_buffer + bufpos, size - bufpos, endian, wordsize, issigned, &bitstream);
+			if (bytes_read <= 0)
+			{
+				error_output << "Error decoding " + filename << std::endl;
+				delete [] sound_buffer;
+				ov_clear(&oggFile);
+				return false;
+			}
+			bufpos += bytes_read;
 		}
-
-		loaded = true;
-
-		//note: no need to call fclose(); ov_clear does it for us
-		ov_clear(&oggFile);
-
-		return true;
 	}
 	else
 	{
-		error_output << "Can't open sound file: "+filename << std::endl;
-		return false;
+		float * buffer = (float*)sound_buffer;
+		int bitstream;
+		unsigned int bufpos = 0; // total samples read
+		while (bufpos < samples)
+		{
+			float **pcm;
+			int samples_read = ov_read_float(&oggFile, &pcm, samples - bufpos, &bitstream);
+			if (samples_read <= 0)
+			{
+				error_output << "Error decoding " + filename << std::endl;
+				delete [] sound_buffer;
+				ov_clear(&oggFile);
+				return false;
+			}
+
+			if (info.channels > 1)
+			{
+				// interleaving left and right channels
+				for (int i = 0; i < samples_read; i++)
+				{
+					unsigned int n = (bufpos + i) * 2;
+					buffer[n] = pcm[0][i];
+					buffer[n + 1] = pcm[1][i];
+				}
+			}
+			else
+			{
+				memcpy(buffer + bufpos, pcm[0], samples_read * sizeof(float));
+			}
+
+			bufpos += samples_read;
+		}
 	}
+
+	// note: no need to call fclose(); ov_clear does it for us
+	ov_clear(&oggFile);
+
+	loaded = true;
+	return true;
 }

@@ -23,12 +23,29 @@
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btQuaternion.h"
 #include "linearinterp.h"
-#include "joeserialize.h"
 #include "macros.h"
+#include "minmax.h"
 
 #include <iosfwd>
 
 class PTree;
+
+inline btVector3 Mix(btVector3 a, btVector3 b, btScalar t)
+{
+	return a + (b - a) * t;
+}
+
+// only correct for small angles between a and b
+inline btQuaternion Mix(btQuaternion a, btQuaternion b, btScalar t)
+{
+	/* large angle correction
+	btScalar d = a.dot(b);
+	assert(d > 0);
+	btScalar k = btScalar(0.931872) + d * (btScalar(-1.25654) + d * btScalar(0.331442));
+	t = t + t * (t - btScalar(0.5)) * (t - 1) * k;
+	*/
+	return (a + (b - a) * t).normalized();
+}
 
 struct CarSuspensionInfo
 {
@@ -49,9 +66,30 @@ struct CarSuspensionInfo
 	btScalar caster; ///< caster angle in degrees. sign convention depends on the side
 	btScalar toe; ///< toe angle in degrees. sign convention depends on the side
 
+	btQuaternion orientations[5];	// orientation samples [0, 1/3 travel, 2/3 travel, travel]
+	btVector3 positions[5];			// position samples
+
 	btScalar inv_mass; ///< 1 / unsprung mass
 
 	CarSuspensionInfo(); ///< default constructor makes an S2000-like car
+
+	void GetWheelTransform(btScalar displacement, btQuaternion & r, btVector3 & p) const
+	{
+		btScalar n = 4 * Clamp(displacement / travel, btScalar(0), btScalar(1));
+		int i = n;
+		int i1 = Min(4, i + 1);
+		btScalar f = n - i;
+		p = Mix(positions[i], positions[i1], f);
+		r = Mix(orientations[i], orientations[i1], f);
+	}
+
+	btVector3 GetWheelPosition(btScalar displacement) const
+	{
+		btQuaternion r;
+		btVector3 p;
+		GetWheelTransform(displacement, r, p);
+		return p;
+	}
 };
 
 class CarSuspension
@@ -61,9 +99,13 @@ public:
 
 	virtual ~CarSuspension() {}
 
-	const btScalar & GetAntiRoll() const {return info.anti_roll;}
+	btScalar GetAntiRoll() const {return info.anti_roll;}
 
-	const btScalar & GetMaxSteeringAngle() const {return info.steering_angle;}
+	btScalar GetStiffness() const {return info.spring_constant;}
+
+	btScalar GetDamping() const {return info.bounce;}
+
+	btScalar GetMaxSteeringAngle() const {return info.steering_angle;}
 
 	/// wheel orientation relative to car
 	const btQuaternion & GetWheelOrientation() const {return orientation;}
@@ -71,20 +113,13 @@ public:
 	/// wheel position relative to car
 	const btVector3 & GetWheelPosition() const {return position;}
 
-	/// displacement: fraction of suspension travel
-	virtual btVector3 GetWheelPosition(btScalar displacement) = 0;
-
-	/// force acting onto wheel
-	const btScalar & GetWheelForce() const {return wheel_force;}
-
-	/// suspension force acting onto car body
-	const btScalar & GetForce() const {return force;}
+	btVector3 GetWheelPosition(btScalar displacement) const {return info.GetWheelPosition(displacement);}
 
 	/// wheel overtravel
-	const btScalar & GetOvertravel() const {return overtravel;}
+	btScalar GetOvertravel() const {return overtravel;}
 
 	/// wheel displacement
-	const btScalar & GetDisplacement() const {return displacement;}
+	btScalar GetDisplacement() const {return displacement;}
 
 	/// displacement fraction: 0.0 fully extended, 1.0 fully compressed
 	btScalar GetDisplacementFraction() const {return displacement / info.travel;}
@@ -92,54 +127,54 @@ public:
 	btScalar GetDisplacement(btScalar force) const;
 
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
-	virtual void SetSteering(btScalar value);
+	void SetSteering(btScalar value);
 
 	/// override current displacement value
 	void SetDisplacement(btScalar value);
 
-	/// update displacement, simulate wheel rebound to limit negative delta
+	/// update wheel position and orientation due to displacement
+	/// simulate wheel rebound to limit negative delta
 	void UpdateDisplacement(btScalar displacement_delta, btScalar dt);
 
-	/// compute suspension and wheel contact forces
-	void UpdateForces(btScalar roll_delta, btScalar dt);
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Suspension---" << "\n";
+		out << "Displacement: " << displacement << "\n";
+		out << "Steering angle: " << steering_angle * btScalar(180 / M_PI) << "\n";
+	}
 
-	void DebugPrint(std::ostream & out) const;
-
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, steering_angle);
 		_SERIALIZE_(s, displacement);
 		_SERIALIZE_(s, last_displacement);
-		_SERIALIZE_(s, force);
 		return true;
 	}
 
 	static bool Load(
 		const PTree & cfg_wheel,
 		btScalar wheel_mass,
-		CarSuspension *& suspension,
+		CarSuspension & suspension,
 		std::ostream & error);
 
-	friend class joeserialize::Serializer;
-
 protected:
+	// constants
 	CarSuspensionInfo info;
-
-	// suspension
-	btQuaternion orientation_ext;
+	btQuaternion orientation_ext;	// toe and camber
 	btVector3 steering_axis;
+	btScalar tan_ackermann;
+
+	// state
+	btQuaternion orientation_steer;
 	btQuaternion orientation;
 	btVector3 position;
 	btScalar steering_angle;
-	btScalar spring_force;
-	btScalar damp_force;
-	btScalar force;
 
-	// wheel
 	btScalar overtravel;
 	btScalar displacement;
 	btScalar last_displacement;
-	btScalar wheel_force;
 	btScalar wheel_contact;
 
 	void Init(const CarSuspensionInfo & info);

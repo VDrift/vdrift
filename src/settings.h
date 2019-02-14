@@ -172,14 +172,19 @@ public:
 		return speed_sensitivity;
 	}
 
-	bool GetJoystickCalibrated() const
-	{
-		return joystick_calibrated;
-	}
-
 	float GetViewDistance() const
 	{
 		return view_distance;
+	}
+
+	bool GetSteeringAssist() const
+	{
+		return steering_assist;
+	}
+
+	bool GetAutoReverse() const
+	{
+		return autoreverse;
 	}
 
 	bool GetAutoClutch() const
@@ -424,8 +429,9 @@ private:
 	std::string joytype;
 	bool joy200;
 	float speed_sensitivity;
-	bool joystick_calibrated;
 	float view_distance;
+	bool steering_assist;
+	bool autoreverse;
 	bool autoclutch;
 	bool autoshift;
 	bool racingline;

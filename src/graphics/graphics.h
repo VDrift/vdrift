@@ -25,6 +25,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 class SceneNode;
 

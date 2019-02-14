@@ -20,15 +20,11 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include "graphics/texture.h"
-#include "graphics/vertexarray.h"
 #include "cfg/config.h"
-#include "gui/font.h"
 
 #include <ostream>
 #include <string>
 #include <vector>
-#include <map>
 
 class Timer
 {
@@ -54,33 +50,11 @@ public:
 
 	void UpdateDistance(const unsigned int carid, const double newdistance);
 
-	void DebugPrint(std::ostream & out) const;
+	float GetTime(unsigned int index) {assert(index<car.size());return car[index].GetTime();}
 
-	float GetPlayerTime() {assert(playercarindex<car.size());return car[playercarindex].GetTime();}
+	float GetLastLap(unsigned int index) {assert(index<car.size());return car[index].GetLastLap();}
 
-	float GetLastLap() {assert(playercarindex<car.size());return car[playercarindex].GetLastLap();}
-
-	float GetBestLap()
-	{
-		assert(playercarindex<car.size());
-		float curbestlap = car[playercarindex].GetBestLap();
-		float prevbest(0);
-		bool haveprevbest = trackrecords.get(car[playercarindex].GetCarType(), "sector 0", prevbest);
-		if (haveprevbest)
-		{
-			if (curbestlap == 0)
-				return prevbest;
-			else
-				if (prevbest < curbestlap)
-					return prevbest;
-				else
-					return curbestlap;
-		}
-		else
-			return curbestlap;
-	}
-
-	int GetPlayerCurrentLap() const {return GetCurrentLap(playercarindex);}
+	float GetBestLap(unsigned int index) {assert(index<car.size());return car[index].GetBestLap();}
 
 	int GetCurrentLap(unsigned int index) const {assert(index<car.size()); return car[index].GetCurrentLap();}
 
@@ -90,8 +64,6 @@ public:
 
 	///return the place (first element) out of total (second element)
 	std::pair <int, int> GetCarPlace(int index);
-
-	std::pair <int, int> GetPlayerPlace() {return GetCarPlace(playercarindex);}
 
 	float GetDriftScore(unsigned int index) const
 	{
@@ -132,6 +104,16 @@ public:
 			car[index].GetDriftScore().SetMaxSpeed(speed);
 	}
 
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		for (unsigned int i = 0; i < car.size(); ++i)
+		{
+			out << i << ". ";
+			car[i].DebugPrint(out);
+		}
+	}
+
 private:
 	class LapInfo;
 	std::vector <LapInfo> car;
@@ -141,41 +123,6 @@ private:
 	float pretime; //amount of time left in staging
 	unsigned int playercarindex; //the index for the player's car; defaults to zero
 	bool loaded;
-
-	class LapTime
-	{
-	private:
-		bool havetime;
-		double time;
-
-	public:
-		LapTime() {Reset();}
-		void Reset()
-		{
-			havetime = false;
-			time = 0;
-		}
-		bool HaveTime() const {return havetime;}
-		double GetTimeInSeconds() const {return time;}
-		///convert time in seconds into output min and secs
-		void GetTimeInMinutesSeconds(float & secs, int & min) const
-		{
-			min = (int) time / 60;
-			secs = time - min*60;
-		}
-		void Set(double newtime)
-		{
-			time = newtime;
-			havetime = true;
-		}
-		///only set the time if we don't have a time or if the new time is faster than the current time
-		void SetIfFaster(double newtime)
-		{
-			if (!havetime || newtime < time)
-				time = newtime;
-			havetime = true;
-		}
-	};
 
 	class DriftScore
 	{
@@ -268,30 +215,35 @@ private:
 	class LapInfo
 	{
 	private:
+		std::string cartype;
+		double bestlap; //best lap time for player & opponents
+		double lastlap; //last lap time for player & opponents
 		double time; //running time for this lap
-		LapTime lastlap; //last lap time for player & opponents
-		LapTime bestlap; //best lap time for player & opponents
 		double totaltime; //total time of a race for player & opponents
+		double lapdistance; //total track distance driven this lap in meters
 		int num_laps; //current lap
 		int sector;
-		std::string cartype;
-		double lapdistance; //total track distance driven this lap in meters
 		DriftScore driftscore;
 
-	public:
-		LapInfo(const std::string & newcartype) :
-			cartype(newcartype)
+		///only set the time if we don't have a time or if the new time is faster than the current time
+		static inline void SetIfFaster(double & time, double newtime)
 		{
-			Reset();
+			if (time == 0 || time > newtime)
+				time = newtime;
 		}
 
-		void Reset()
+	public:
+		LapInfo(const std::string & newcartype, double newbestlap=0) :
+			cartype(newcartype),
+			bestlap(newbestlap),
+			lastlap(0),
+			time(0),
+			totaltime(0),
+			lapdistance(0),
+			num_laps(0),
+			sector(-1)
 		{
-			time = totaltime = 0;
-			lastlap.Reset();
-			bestlap.Reset();
-			num_laps = 0;
-			sector = -1;
+			// ctor
 		}
 
 		void Tick(float dt)
@@ -303,8 +255,8 @@ private:
 		{
 			if (countit)
 			{
-				lastlap.Set(time);
-				bestlap.SetIfFaster(time);
+				lastlap = time;
+				SetIfFaster(bestlap, time);
 			}
 
 			totaltime += time;
@@ -317,11 +269,12 @@ private:
 			return cartype;
 		}
 
-		void DebugPrint(std::ostream & out) const
+		template <class Stream>
+		void DebugPrint(Stream & out) const
 		{
-			out << "car=" << cartype << ", t=" << totaltime << ", tlap=" << time << ", last=" <<
-				lastlap.GetTimeInSeconds() << ", best=" << bestlap.GetTimeInSeconds() <<
-				", lap=" << num_laps << std::endl;
+			out << "car=" << cartype << ", t=" << totaltime << ", tlap=" << time
+				<< ", last=" << lastlap << ", best=" << bestlap
+				<< ", lap=" << num_laps << "\n";
 		}
 
 		double GetTime() const
@@ -331,12 +284,12 @@ private:
 
 		double GetLastLap() const
 		{
-			return lastlap.GetTimeInSeconds();
+			return lastlap;
 		}
 
 		double GetBestLap() const
 		{
-			return bestlap.GetTimeInSeconds();
+			return bestlap;
 		}
 
 		int GetCurrentLap() const

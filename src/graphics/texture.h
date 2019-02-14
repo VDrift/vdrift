@@ -38,8 +38,6 @@ public:
 	void Unload();
 
 private:
-	bool LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error);
-
 	bool LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error);
 
 	bool LoadDDS(const std::string & path, const TextureInfo & info, std::ostream & error);

@@ -105,7 +105,7 @@ private:
 
 	void UpdateCars(float dt);
 
-	void ProcessCarInputs(const size_t carid);
+	void ProcessCarInputs();
 
 	/// Updates camera, call after physics update
 	void ProcessCameraInputs();
@@ -350,12 +350,13 @@ private:
 	CameraFree garage_camera;
 	Camera * active_camera;
 
-	std::pair <CarDynamics *, CarControlMap> carcontrols_local;
+	CarControlMap car_controls_local;
 	btAlignedObjectArray <CarDynamics> car_dynamics;
 	std::vector <CarGraphics> car_graphics;
 	std::vector <CarSound> car_sounds;
 	std::vector <CarInfo> car_info;
 	size_t player_car_id;
+	size_t camera_car_id;
 	size_t car_edit_id;
 	int race_laps;
 	bool practice;

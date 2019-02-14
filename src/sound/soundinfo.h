@@ -20,32 +20,29 @@
 #ifndef SOUNDINFO_H
 #define SOUNDINFO_H
 
-#include <string>
-#include <ostream>
-
 struct SoundInfo
 {
-	std::string name;
-	int samples;
-	int frequency;
-	int bytespersample;
-	int channels;
+	unsigned int samples;
+	unsigned int frequency;
+	unsigned char channels;
+	unsigned char bytespersample;
 
-	SoundInfo(int numsamples, int freq, int chan, int bytespersamp) :
+	SoundInfo(unsigned int numsamples, unsigned int freq, unsigned char chan, unsigned char bytespersamp) :
 		samples(numsamples),
 		frequency(freq),
-		bytespersample(bytespersamp),
-		channels(chan)
+		channels(chan),
+		bytespersample(bytespersamp)
 	{
 		//ctor
 	}
 
-	void DebugPrint(std::ostream & out) const
+	template <class Stream>
+	void DebugPrint(Stream & out) const
 	{
-		out << "Samples: " << samples << std::endl;
-		out << "Frequency: " << frequency << std::endl;
-		out << "Channels: " << channels << std::endl;
-		out << "Bits per sample: " << bytespersample*8 << std::endl;
+		out << "Samples: " << samples << "\n";
+		out << "Frequency: " << frequency << "\n";
+		out << "Channels: " << (unsigned)channels << "\n";
+		out << "Bits per sample: " << (unsigned)bytespersample*8 << "\n";
 	}
 
 	bool operator==(const SoundInfo & other) const

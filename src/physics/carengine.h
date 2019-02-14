@@ -23,7 +23,6 @@
 #include "driveshaft.h"
 #include "LinearMath/btVector3.h"
 #include "spline.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <iosfwd>
@@ -67,7 +66,6 @@ struct CarEngineInfo
 
 class CarEngine
 {
-friend class joeserialize::Serializer;
 public:
 	CarEngine();
 
@@ -98,7 +96,7 @@ public:
 		return info.redline;
 	}
 
-	btScalar GetIdle() const
+	btScalar GetIdleThrottle() const
 	{
 		return info.idle_throttle;
 	}
@@ -189,12 +187,35 @@ public:
 		out_of_gas = value;
 	}
 
-	/// calculate torque acting on crankshaft, update engine angular velocity
-	btScalar Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt);
+	DriveShaft & GetShaft()
+	{
+		return shaft;
+	}
 
-	void DebugPrint(std::ostream & out) const;
+	void Update(btScalar dt);
 
-	bool Serialize(joeserialize::Serializer & s);
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Engine---" << "\n";
+		out << "Throttle position: " << throttle_position << "\n";
+		out << "Combustion torque: " << combustion_torque << "\n";
+		out << "Friction torque: " << friction_torque << "\n";
+		out << "Total torque: " << GetTorque() << "\n";
+		out << "RPM: " << GetRPM() << "\n";
+		out << "Rev limit exceeded: " << rev_limit_exceeded << "\n";
+		out << "Running: " << !stalled << "\n";
+	}
+
+	template <class Serializer>
+	bool Serialize(Serializer & s)
+	{
+		_SERIALIZE_(s, shaft.ang_velocity);
+		_SERIALIZE_(s, throttle_position);
+		_SERIALIZE_(s, out_of_gas);
+		_SERIALIZE_(s, rev_limit_exceeded);
+		return true;
+	}
 
 private:
 	CarEngineInfo info;
@@ -202,7 +223,6 @@ private:
 	DriveShaft shaft;
 	btScalar combustion_torque;
 	btScalar friction_torque;
-	btScalar clutch_torque;
 
 	btScalar throttle_position;
 	btScalar nos_boost_factor;

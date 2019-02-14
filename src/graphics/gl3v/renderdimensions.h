@@ -20,7 +20,7 @@
 #ifndef _RENDERDIMENSIONS
 #define _RENDERDIMENSIONS
 
-#include <iosfwd>
+#include <cmath>
 
 class RenderDimensions
 {
@@ -39,7 +39,56 @@ private:
 	float origw, origh;
 	bool origMultiples;
 
-	friend std::ostream & operator<<(std::ostream & out, const RenderDimensions & dim);
+	template <class Stream>
+	friend Stream & operator<<(Stream & out, const RenderDimensions & dim);
 };
+
+
+inline RenderDimensions::RenderDimensions() :
+	width(0), height(0), origw(0), origh(0), origMultiples(false)
+{
+	// ctor
+}
+
+inline RenderDimensions::RenderDimensions(float w, float h) :
+	width(0), height(0), origw(w), origh(h), origMultiples(false)
+{
+	// ctor
+}
+
+inline RenderDimensions::RenderDimensions(float w, float h, bool mult) :
+	width(0), height(0), origw(w), origh(h), origMultiples(mult)
+{
+	// ctor
+}
+
+inline bool RenderDimensions::get(unsigned int w, unsigned int h, unsigned int & outw, unsigned int & outh)
+{
+	outw = (unsigned int)std::floor(origw);
+	outh = (unsigned int)std::floor(origh);
+	if (origMultiples)
+	{
+		outw = (unsigned int)std::floor(origw*w);
+		outh = (unsigned int)std::floor(origh*h);
+	}
+
+	if (outw != width || outh != height)
+	{
+		width = outw;
+		height = outh;
+		return true;
+	}
+	else
+		return false;
+}
+
+template <class Stream>
+inline Stream & operator<<(Stream & out, const RenderDimensions & dim)
+{
+	out << "currently " << dim.width << "x" << dim.height;
+	if (dim.origMultiples)
+		out << ", automatically scales to " << dim.origw << "x" << dim.origh << " times the framebuffer size";
+	return out;
+}
 
 #endif

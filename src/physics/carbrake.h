@@ -21,14 +21,11 @@
 #define _CARBRAKE_H
 
 #include "LinearMath/btScalar.h"
-#include "joeserialize.h"
+#include "minmax.h"
 #include "macros.h"
-
-#include <iostream>
 
 class CarBrake
 {
-	friend class joeserialize::Serializer;
 	private:
 		//constants (not actually declared as const because they can be changed after object creation)
 		btScalar friction; ///< sliding coefficient of friction for the brake pads on the rotor
@@ -60,7 +57,8 @@ class CarBrake
 			// ctor
 		}
 
-		void DebugPrint(std::ostream & out) const
+		template <class Stream>
+		void DebugPrint(Stream & out) const
 		{
 			out << "---Brake---" << "\n";
 			out << "Brake control: " << brake_factor << ", " << handbrake_factor << "\n";
@@ -73,19 +71,19 @@ class CarBrake
 			brake_factor = newfactor;
 		}
 
+		btScalar GetMaxTorque() const
+		{
+			return bias * (max_pressure * area) * (friction * radius);
+		}
+
 		///brake torque magnitude
 		btScalar GetTorque()
 		{
-			assert(handbrake_factor != -1);
-			btScalar brake = brake_factor > handbrake * handbrake_factor ? brake_factor : handbrake * handbrake_factor;
-			btScalar pressure = brake * bias * max_pressure;
-			btScalar normal = pressure * area;
-			btScalar torque = friction * normal * radius;
-			lasttorque = torque;
-			return torque;
+			lasttorque = GetMaxTorque() * Max(brake_factor, handbrake * handbrake_factor);
+			return lasttorque;
 		}
 
-		void SetFriction(const btScalar & value)
+		void SetFriction(btScalar value)
 		{
 			friction = value;
 		}
@@ -95,12 +93,12 @@ class CarBrake
 			return friction;
 		}
 
-		void SetMaxPressure(const btScalar & value)
+		void SetMaxPressure(btScalar value)
 		{
 			max_pressure = value;
 		}
 
-		void SetRadius(const btScalar & value)
+		void SetRadius(btScalar value)
 		{
 			radius = value;
 		}
@@ -110,12 +108,12 @@ class CarBrake
 			return radius;
 		}
 
-		void SetArea(const btScalar & value)
+		void SetArea(btScalar value)
 		{
 			area = value;
 		}
 
-		void SetBias(const btScalar & value)
+		void SetBias(btScalar value)
 		{
 			bias = value;
 		}
@@ -125,22 +123,23 @@ class CarBrake
 			return brake_factor;
 		}
 
-		bool Serialize(joeserialize::Serializer & s)
-		{
-			_SERIALIZE_(s, brake_factor);
-			_SERIALIZE_(s, handbrake_factor);
-			return true;
-		}
-
-		void SetHandbrake(const btScalar & value)
+		void SetHandbrake(btScalar value)
 		{
 			handbrake = value;
 		}
 
 		///ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
-		void SetHandbrakeFactor(const btScalar & value)
+		void SetHandbrakeFactor(btScalar value)
 		{
 			handbrake_factor = value;
+		}
+
+		template <class Serializer>
+		bool Serialize(Serializer & s)
+		{
+			_SERIALIZE_(s, brake_factor);
+			_SERIALIZE_(s, handbrake_factor);
+			return true;
 		}
 };
 

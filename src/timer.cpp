@@ -20,6 +20,7 @@
 #include "timer.h"
 #include "unittest.h"
 
+#include <list>
 #include <string>
 #include <sstream>
 
@@ -47,7 +48,9 @@ bool Timer::Load(const std::string & trackrecordspath, float stagingtime)
 
 int Timer::AddCar(const std::string & cartype)
 {
-	car.push_back(LapInfo(cartype));
+	float bestlap = 0;
+	trackrecords.get(cartype, "sector 0", bestlap);
+	car.push_back(LapInfo(cartype, bestlap));
 	return car.size()-1;
 }
 
@@ -116,15 +119,6 @@ void Timer::UpdateDistance(const unsigned int carid, const double newdistance)
 {
 	assert(carid < car.size());
 	car[carid].UpdateLapDistance(newdistance);
-}
-
-void Timer::DebugPrint(std::ostream & out) const
-{
-	for (unsigned int i = 0; i < car.size(); ++i)
-	{
-		out << i << ". ";
-		car[i].DebugPrint(out);
-	}
 }
 
 class Place

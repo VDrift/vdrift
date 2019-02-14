@@ -3,19 +3,10 @@ VDrift includes a very simple unit testing framework for C++ code. It is derived
 Running the Tests
 -----------------
 
-To run unit tests, the test executable must first be built.
+Unit tests are compiled by default. To execute run:
 
-### Building
-
-In the VDrift source root, run:
-
-    scons test
-
-### Executing
-
-The executable is called **vdrift-test** and is compiled to the **build/** directory in the root of the VDrift source tree. To run it, simply do:
-
-    build/vdrift-test
+* Ubuntu: `build/vdrift -test`
+* macOS: `build/vdrift.app/Contents/MacOS/vdrift -test`
 
 ### Results
 

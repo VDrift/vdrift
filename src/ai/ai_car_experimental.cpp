@@ -30,8 +30,6 @@
 #include <algorithm>
 #include <iostream>
 
-#define GRAVITY 9.81f
-
 //used to calculate brake value
 #define MAX_SPEED_DIFF 6.0f
 #define MIN_SPEED_DIFF 1.0f
@@ -53,27 +51,24 @@
 
 static const float rad2deg = 180 / M_PI;
 
-AiCar * AiCarExperimentalFactory::Create(const CarDynamics * car, float difficulty)
+AiCar * AiCarExperimentalFactory::Create(unsigned carid, float difficulty)
 {
-	return new AiCarExperimental(car, difficulty);
+	return new AiCarExperimental(carid, difficulty);
 }
 
-AiCarExperimental::AiCarExperimental(const CarDynamics * new_car, float new_difficulty) :
-	AiCar(new_car, new_difficulty),
-	longitude_mu(0.9f),
-	lateral_mu(0.9f),
+AiCarExperimental::AiCarExperimental(unsigned new_carid, float new_difficulty) :
+	AiCar(new_carid, new_difficulty),
 	last_patch(NULL),
-	use_racingline(true),
 	is_recovering(false),
 	recover_time(0.0f)
 {
-	assert(car);
+	// ctor
 }
 
 AiCarExperimental::~AiCarExperimental()
 {
 #ifdef VISUALIZE_AI_DEBUG
-	SceneNode & topnode  = car->GetNode();
+	SceneNode & topnode  = car.GetNode();
 	if (brakedraw.valid())
 	{
 		topnode.GetDrawList().normal_noblend.erase(brakedraw);
@@ -100,15 +95,15 @@ float AiCarExperimental::RateLimit(float old_value, float new_value, float rate_
 		return new_value;
 }
 
-void AiCarExperimental::Update(float dt, const CarDynamics cars[], const int cars_num)
+void AiCarExperimental::Update(float dt, const CarDynamics cars[], const unsigned cars_num)
 {
 	float lastThrottle = inputs[CarInput::THROTTLE];
 	float lastBreak = inputs[CarInput::BRAKE];
 	fill(inputs.begin(), inputs.end(), 0);
 
 	AnalyzeOthers(dt, cars, cars_num);
-	UpdateGasBrake();
-	UpdateSteer(dt);
+	UpdateGasBrake(cars[carid]);
+	UpdateSteer(cars[carid], dt);
 	float rateLimit = THROTTLE_RATE_LIMIT * dt;
 	inputs[CarInput::THROTTLE] = RateLimit(lastThrottle, inputs[CarInput::THROTTLE],
 		rateLimit, rateLimit);
@@ -117,40 +112,40 @@ void AiCarExperimental::Update(float dt, const CarDynamics cars[], const int car
 		rateLimit, rateLimit);
 }
 
-const Bezier * AiCarExperimental::GetCurrentPatch(const CarDynamics * c)
+const RoadPatch * AiCarExperimental::GetCurrentPatch(const CarDynamics & car)
 {
-	const Bezier * curr_patch = c->GetWheelContact(WheelPosition(0)).GetPatch();
+	const RoadPatch * curr_patch = car.GetWheelContact(WheelPosition(0)).GetPatch();
 	if (!curr_patch)
 	{
 		// let's try the other wheel
-		curr_patch = c->GetWheelContact(WheelPosition(1)).GetPatch();
+		curr_patch = car.GetWheelContact(WheelPosition(1)).GetPatch();
 		if (!curr_patch) return NULL;
 	}
 	return curr_patch;
 }
 
-Vec3 AiCarExperimental::GetPatchFrontCenter(const Bezier & patch)
+Vec3 AiCarExperimental::GetPatchFrontCenter(const RoadPatch & patch)
 {
 	return (patch.GetPoint(0,0) + patch.GetPoint(0,3)) * 0.5f;
 }
 
-Vec3 AiCarExperimental::GetPatchBackCenter(const Bezier & patch)
+Vec3 AiCarExperimental::GetPatchBackCenter(const RoadPatch & patch)
 {
 	return (patch.GetPoint(3,0) + patch.GetPoint(3,3)) * 0.5f;
 }
 
-Vec3 AiCarExperimental::GetPatchDirection(const Bezier & patch)
+Vec3 AiCarExperimental::GetPatchDirection(const RoadPatch & patch)
 {
 	return GetPatchFrontCenter(patch) - GetPatchBackCenter(patch);
 }
 
-Vec3 AiCarExperimental::GetPatchWidthVector(const Bezier & patch)
+Vec3 AiCarExperimental::GetPatchWidthVector(const RoadPatch & patch)
 {
 	return ((patch.GetPoint(0,0) + patch.GetPoint(3,0)) -
 			(patch.GetPoint(0,3) + patch.GetPoint(3,3))) * 0.5f;
 }
 
-float AiCarExperimental::GetPatchRadius(const Bezier & patch)
+float AiCarExperimental::GetPatchRadius(const RoadPatch & patch)
 {
 	if (patch.GetNextPatch() && patch.GetNextPatch()->GetNextPatch())
 	{
@@ -175,7 +170,7 @@ float AiCarExperimental::GetPatchRadius(const Bezier & patch)
 }
 
 ///trim the patch's width in-place
-void AiCarExperimental::TrimPatch(Bezier & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
+void AiCarExperimental::TrimPatch(RoadPatch & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
 {
 	Vec3 frontvector = (patch.GetPoint(0,3) - patch.GetPoint(0,0));
 	Vec3 backvector = (patch.GetPoint(3,3) - patch.GetPoint(3,0));
@@ -216,13 +211,12 @@ void AiCarExperimental::TrimPatch(Bezier & patch, float trimleft_front, float tr
 	patch.SetFromCorners(newfl, newfr, newbl, newbr);
 }
 
-Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingline)
+RoadPatch AiCarExperimental::RevisePatch(const RoadPatch * origpatch)
 {
-	Bezier patch = *origpatch;
+	RoadPatch patch = *origpatch;
 
 	//take into account the racing line
-	//use_racingline = false;
-	if (use_racingline && patch.GetNextPatch() && patch.HasRacingline())
+	if (patch.GetNextPatch() && patch.HasRacingline())
 	{
 		float widthfront = Min((patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,0)).Magnitude(),
 									 (patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,3)).Magnitude());
@@ -243,9 +237,9 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 		if (path_rev.first != car)
 		{
 			//compute relative info
-			Vec3 myvel = car->GetVelocity();
+			Vec3 myvel = car.GetVelocity();
 			Vec3 othervel = path_rev.first->GetVelocity();
-			(-car->GetOrientation()).RotateVector(myvel);
+			(-car.GetOrientation()).RotateVector(myvel);
 			(-path_rev.first->GetOrientation()).RotateVector(othervel);
 			float speed_diff = myvel.dot(throttle_axis) - othervel.dot(throttle_axis); //positive if other car is faster //actually positive if my car is faster, right?
 
@@ -286,7 +280,7 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 	return patch;
 }
 
-void AiCarExperimental::UpdateGasBrake()
+void AiCarExperimental::UpdateGasBrake(const CarDynamics & car)
 {
 #ifdef VISUALIZE_AI_DEBUG
 	brakelook.clear();
@@ -296,14 +290,12 @@ void AiCarExperimental::UpdateGasBrake()
 	float brake_value = 0.0;
 	float gas_value = 0.5;
 
-	if (car->GetEngine().GetRPM() < car->GetEngine().GetStallRPM())
+	if (car.GetEngine().GetRPM() < car.GetEngine().GetStallRPM())
 		inputs[CarInput::START_ENGINE] = 1;
 	else
 		inputs[CarInput::START_ENGINE] = 0;
 
-	CalcMu();
-
-	const Bezier * curr_patch_ptr = GetCurrentPatch(car);
+	const RoadPatch * curr_patch_ptr = GetCurrentPatch(car);
 	if (!curr_patch_ptr)
 	{
 		// if car is not on track, just let it roll
@@ -312,22 +304,23 @@ void AiCarExperimental::UpdateGasBrake()
 		return;
 	}
 
-	Bezier curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
+	RoadPatch curr_patch = RevisePatch(curr_patch_ptr);
 
 	const Vec3 patch_direction = GetPatchDirection(curr_patch).Normalize();
-	const Vec3 car_velocity = ToMathVector<float>(car->GetVelocity());
+	const Vec3 car_velocity = ToMathVector<float>(car.GetVelocity());
 	float currentspeed = car_velocity.dot(patch_direction);
 
 	// check speed against speed limit of current patch
 	float speed_limit = 0;
 	if (!curr_patch.GetNextPatch())
 	{
-		speed_limit = CalcSpeedLimit(&curr_patch, NULL, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude());
+		speed_limit = CalcSpeedLimit(car, &curr_patch, 0, 0);
 	}
 	else
 	{
-		Bezier next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
-		speed_limit = CalcSpeedLimit(&curr_patch, &next_patch, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude());
+		RoadPatch next_patch = RevisePatch(curr_patch.GetNextPatch());
+		float width = GetPatchWidthVector(*curr_patch_ptr).Magnitude();
+		speed_limit = CalcSpeedLimit(car, &curr_patch, &next_patch, width);
 	}
 	speed_limit *= difficulty;
 
@@ -357,10 +350,10 @@ void AiCarExperimental::UpdateGasBrake()
 	}
 
 	// check upto maxlookahead distance
-	float maxlookahead = CalcBrakeDist(currentspeed, 0, longitude_mu)+10;
+	float maxlookahead = car.GetBrakeDistance(currentspeed, 0, FRICTION_FACTOR_LONG) + 10;
 	float dist_checked = 0;
 	float brake_dist = 0;
-	Bezier patch_to_check = curr_patch;
+	RoadPatch patch_to_check = curr_patch;
 
 #ifdef VISUALIZE_AI_DEBUG
 	brakelook.push_back(patch_to_check);
@@ -368,7 +361,7 @@ void AiCarExperimental::UpdateGasBrake()
 
 	while (dist_checked < maxlookahead)
 	{
-		Bezier * unmodified_patch_to_check = patch_to_check.GetNextPatch();
+		RoadPatch * unmodified_patch_to_check = patch_to_check.GetNextPatch();
 
 		if (!patch_to_check.GetNextPatch())
 		{
@@ -379,7 +372,7 @@ void AiCarExperimental::UpdateGasBrake()
 		}
 		else
 		{
-			patch_to_check = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
+			patch_to_check = RevisePatch(patch_to_check.GetNextPatch());
 		}
 
 #ifdef VISUALIZE_AI_DEBUG
@@ -388,16 +381,17 @@ void AiCarExperimental::UpdateGasBrake()
 
 		if (!patch_to_check.GetNextPatch())
 		{
-			speed_limit = CalcSpeedLimit(&patch_to_check, NULL, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude());
+			speed_limit = CalcSpeedLimit(car, &patch_to_check, 0, 0);
 		}
 		else
 		{
-			Bezier next_patch = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
-			speed_limit = CalcSpeedLimit(&patch_to_check, &next_patch, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude());
+			RoadPatch next_patch = RevisePatch(patch_to_check.GetNextPatch());
+			float width = GetPatchWidthVector(*unmodified_patch_to_check).Magnitude();
+			speed_limit = CalcSpeedLimit(car, &patch_to_check, &next_patch, width);
 		}
 
 		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
-		brake_dist = CalcBrakeDist(currentspeed, speed_limit, longitude_mu) * 1.4f;
+		brake_dist = car.GetBrakeDistance(currentspeed, speed_limit, FRICTION_FACTOR_LONG) * 1.4f;
 		if (brake_dist > dist_checked)
 		{
 			brake_value = 1;
@@ -410,78 +404,35 @@ void AiCarExperimental::UpdateGasBrake()
 	inputs[CarInput::BRAKE] = brake_value;
 }
 
-void AiCarExperimental::CalcMu()
-{
-	const float tire_load = 0.25f * GRAVITY / car->GetInvMass();
-	float long_friction = 0;
-	float lat_friction = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		long_friction += car->GetTire(WheelPosition(i)).getMaxFx(tire_load);
-		lat_friction += car->GetTire(WheelPosition(i)).getMaxFy(tire_load, 0);
-	}
-	float long_mu = FRICTION_FACTOR_LONG * long_friction * car->GetInvMass() / GRAVITY;
-	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * car->GetInvMass() / GRAVITY;
-	if (!std::isnan(long_mu)) longitude_mu = long_mu;
-	if (!std::isnan(lat_mu)) lateral_mu = lat_mu;
-}
-
-float AiCarExperimental::CalcSpeedLimit(const Bezier  * patch, const Bezier * nextpatch, float friction, float extraradius=0)
+float AiCarExperimental::CalcSpeedLimit(
+	const CarDynamics & car,
+	const RoadPatch * patch,
+	const RoadPatch * nextpatch,
+	float extraradius)
 {
 	assert(patch);
 
-	//adjust the radius at corner exit to allow a higher speed.
-	//this will get the car to accelerate out of corner
-	//double track_width = GetPatchWidthVector(*patch).Magnitude();
-	float adjusted_radius = GetPatchRadius(*patch);
-	if (nextpatch)
+	// adjust the radius at corner exit to allow a higher speed.
+	// this will get the car to accelerate out of corner
+	float radius = GetPatchRadius(*patch);
+	if (nextpatch &&
+		GetPatchRadius(*nextpatch) > radius &&
+		radius > LOOKAHEAD_MIN_RADIUS)
 	{
-		if (GetPatchRadius(*nextpatch) > adjusted_radius &&
-			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
-		{
-			adjusted_radius += extraradius;
-		}
+		radius += extraradius;
 	}
-
-	//no downforce
-	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
-
-	//take into account downforce
-	float denom = (1 - Min(1.01f, adjusted_radius * -(car->GetAerodynamicDownforceCoefficient()) * friction * car->GetInvMass()));
-	float real = (friction * GRAVITY * adjusted_radius) / denom;
-	float v2 = 1000; //some really big number
-	if (real > 0)
-		v2 = std::sqrt(real);
-
-	//std::cout << v2 << ", " << sqrt(friction * GRAVITY * adjusted_radius) << ", " << GetPatchRadius(*patch) << ", " << acos((-GetPatchDirection(*patch)).Normalize().dot(GetPatchDirection(*patch->GetNextPatch()).Normalize()))*180.0/3.141593 << " --- " << -GetPatchDirection(*patch) << " --- " << GetPatchDirection(*patch->GetNextPatch()) << std::endl;
-
-	return v2;
+	return car.GetMaxSpeed(radius, FRICTION_FACTOR_LAT);
 }
 
-float AiCarExperimental::CalcBrakeDist(float current_speed, float allowed_speed, float friction)
+float AiCarExperimental::RayCastDistance(const CarDynamics & car, Vec3 direction, float max_length)
 {
-	if (allowed_speed < current_speed)
-	{
-		// equations used:
-		// mu * mass * gravity * distance = 0.5 * mass * (Initial_velocity^2 - Final_velocity^2)
-		// where distance is:
-		//  distance = (Initial_velocity^2 - Final_velocity^2) / (2 * mu * gravity)
-		return (current_speed * current_speed - allowed_speed * allowed_speed) / ( 2 * friction * GRAVITY);
-	}
-
-	// if allowed speed  is bigger then the current speed then break distance is 0
-	return 0;
-}
-
-float AiCarExperimental::RayCastDistance(Vec3 direction, float max_length)
-{
-	btVector3 pos = car->GetPosition();
-	btVector3 dir = car->LocalToWorld(ToBulletVector(direction)) - pos;
+	btVector3 pos = car.GetPosition();
+	btVector3 dir = car.LocalToWorld(ToBulletVector(direction)) - pos;
 
 	CollisionContact contact;
-	car->getDynamicsWorld()->castRay(
+	car.getDynamicsWorld()->castRay(
 		pos, dir, max_length,
-		&car->getCollisionObject(),
+		&car.getCollisionObject(),
 		contact);
 
 	float depth = contact.GetDepth();
@@ -497,104 +448,99 @@ float AiCarExperimental::RayCastDistance(Vec3 direction, float max_length)
 	return dist;
 }
 
-const Bezier * AiCarExperimental::GetNearestPatch(const Bezier * /*helper*/)
+const RoadPatch * AiCarExperimental::GetNearestPatch(const CarDynamics & car, const RoadPatch * /*helper*/)
 {
 	// At the moment this is very slow!
 	// TODO: Implement backward chaining for BEZIER, to just look around the helper if passed.
- 	const btVector3 c = car->GetPosition();
-	const Bezier * b_end = car->getDynamicsWorld()->GetSectorPatch(0);
-	const Bezier * b = b_end->GetNextPatch();
-	const Bezier * b_nearest = 0;
+ 	const btVector3 c = car.GetPosition();
+	const RoadPatch * p_end = car.getDynamicsWorld()->GetSectorPatch(0);
+	const RoadPatch * p = p_end->GetNextPatch();
+	const RoadPatch * p_nearest = 0;
 	float v_nearDist = 1000000.0f;
-	while(b != 0 && b != b_end)
+	while(p != 0 && p != p_end)
 	{
-		Vec3 v(b->GetPoint(2,2));
+		Vec3 v(p->GetPoint(2,2));
 		v[0] -= c[1];
 		v[2] -= c[0];
 		float dist = v[0]*v[0]+v[2]*v[2];
 		if(dist < v_nearDist){
 			v_nearDist = dist;
-			b_nearest = b;
+			p_nearest = p;
 
 		}
-		b = b->GetNextPatch();
+		p = p->GetNextPatch();
 	}
-	assert(b_nearest);
-	return b_nearest;
+	assert(p_nearest);
+	return p_nearest;
 }
 
-bool AiCarExperimental::Recover(float dt, const Bezier * /*patch*/)
+bool AiCarExperimental::Recover(const CarDynamics & car, float dt, const RoadPatch * /*patch*/)
 {
 	// Recover mode will basically detect walls on the front
 	// of the car, then go reverse if needed for 3 secs,
 	// then recheck if there is still a wall on the front. If there is no wall,
 	// break to zero speed and then switch to first gear back and leave recover mode.
-	if (car->GetVelocity().length2() < 1)
+	if (car.GetVelocity().length2() < 1)
 	{
 		//If the car is not moving, there may be a wall in the front.
 
 		//Cast ray towards front-middle
 		const float max_dist = 3;
-		float dist = RayCastDistance(Vec3(0, 1, 0), max_dist);
+		float dist = RayCastDistance(car, Vec3(0, 1, 0), max_dist);
 		if (dist < max_dist * 0.99f)
 		{
 			// Collision detected: we are probably trying to cross a wall.
 			// We need to drive backwards.
-			inputs[CarInput::REVERSE] = 1;
 			recover_time = 0.0f;
 			is_recovering = true;
 			return true;
 		}
-		else
-		{
-			// If there are no walls in front, just leave the recover mode.
-			inputs[CarInput::FIRST_GEAR] = 1;
-			is_recovering = false;
-			return false;
-		}
+
+		// If there are no walls in front, just leave the recover mode.
+		is_recovering = false;
+		return false;
 	}
-	else if (is_recovering)
-	{
-		// If car is driving and it is in recover mode, count the time since start of recover mode.
-		recover_time += dt;
-		if (recover_time > 3)
-		{
-			// Break to 0 after 3 secs of driving backwards.
-			// After breaking, it will trigger the "is_recovering = false" above and leave recover mode.
-			inputs[CarInput::THROTTLE] = 0;
-			inputs[CarInput::BRAKE] = 1;
-			return true;
-		}
-	}
+
 	// If car is still driving and it is not in recover mode, just do the usual stuff.
-	return false;
+	if (!is_recovering)
+		return false;
+
+	// If car is driving and it is in recover mode, count the time since start of recover mode.
+	recover_time += dt;
+	if (recover_time < 3)
+	{
+		// Drive backwards for 3 secs.
+		inputs[CarInput::THROTTLE] = 0;
+		inputs[CarInput::BRAKE] = 1;
+	}
+	return true;
 }
 
-void AiCarExperimental::UpdateSteer(float dt)
+void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
 {
 #ifdef VISUALIZE_AI_DEBUG
 	steerlook.clear();
 #endif
 
-	const Bezier * curr_patch_ptr = GetCurrentPatch(car);
+	const RoadPatch * curr_patch_ptr = GetCurrentPatch(car);
 
 	// if car has no contact with track, just let it roll
 	if (!curr_patch_ptr || is_recovering)
 	{
-		last_patch = GetNearestPatch(last_patch);
+		last_patch = GetNearestPatch(car, last_patch);
 
 		// if car is off track, steer the car towards the last patch it was on
 		// this should get the car back on track
 		curr_patch_ptr = last_patch;
 
 		// recover to the road.
-		if (Recover(dt, curr_patch_ptr))
+		if (Recover(car, dt, curr_patch_ptr))
 			return;
 	}
 
 	last_patch = curr_patch_ptr;
 
-	Bezier curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
+	RoadPatch curr_patch = RevisePatch(curr_patch_ptr);
 #ifdef VISUALIZE_AI_DEBUG
 	steerlook.push_back(curr_patch);
 #endif
@@ -603,7 +549,7 @@ void AiCarExperimental::UpdateSteer(float dt)
 	if (!curr_patch.GetNextPatch())
 		return;
 
-	Bezier next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
+	RoadPatch next_patch = RevisePatch(curr_patch.GetNextPatch());
 
 	// find the point to steer towards
 	float lookahead = 1.0;
@@ -626,7 +572,7 @@ void AiCarExperimental::UpdateSteer(float dt)
 			break;
 		}
 
-		next_patch = RevisePatch(next_patch.GetNextPatch(), use_racingline);
+		next_patch = RevisePatch(next_patch.GetNextPatch());
 
 		// if next patch is a very sharp corner, stop lookahead
 		if (GetPatchRadius(next_patch) < LOOKAHEAD_MIN_RADIUS)
@@ -636,8 +582,8 @@ void AiCarExperimental::UpdateSteer(float dt)
 		}
 	}
 
-	btVector3 car_position = car->GetCenterOfMass();
-	btVector3 car_orientation = quatRotate(car->GetOrientation(), Direction::forward);
+	btVector3 car_position = car.GetCenterOfMass();
+	btVector3 car_orientation = quatRotate(car.GetOrientation(), Direction::forward);
 	btVector3 desire_orientation = ToBulletVector(dest_point) - car_position;
 
 	//car's direction on the horizontal plane
@@ -668,20 +614,16 @@ void AiCarExperimental::UpdateSteer(float dt)
 	else if (angle > 180 && angle <= 360)
 		angle = 360 - angle;
 
-	float optimum_range = car->GetTire(FRONT_LEFT).getIdealSlipAngle() * rad2deg;
-	angle = Clamp(angle, -optimum_range, optimum_range);
+	float steer_value = Clamp(angle / car.GetMaxSteeringAngle(), -1.0f, 1.0f);
 
-	float steer_value = Clamp(angle / car->GetMaxSteeringAngle(), -1.0f, 1.0f);
-
-	assert(!std::isnan(steer_value));
-	if (is_recovering){
-		// If we are driving backwards, we need to invert steer direction.
+	// If we are driving backwards, we need to invert steer direction.
+	if (is_recovering)
 		steer_value = steer_value > 0 ? -1 : 1;
-	}
+
 	inputs[CarInput::STEER_RIGHT] = steer_value;
 }
 
-float AiCarExperimental::GetHorizontalDistanceAlongPatch(const Bezier & patch, Vec3 carposition)
+float AiCarExperimental::GetHorizontalDistanceAlongPatch(const RoadPatch & patch, Vec3 carposition)
 {
 	Vec3 leftside = (patch.GetPoint(0,0) + patch.GetPoint(3,0))*0.5f;
 	Vec3 rightside = (patch.GetPoint(0,3) + patch.GetPoint(3,3))*0.5f;
@@ -710,12 +652,12 @@ float AiCarExperimental::BrakeFromOthers(float speed_diff)
 
 	for (const auto & car : othercars)
 	{
-		if (car.second.active && std::abs(car.second.horizontal_distance) < horizontal_care)
+		if (car.active && std::abs(car.horizontal_distance) < horizontal_care)
 		{
-			if (car.second.fore_distance < mindistance)
+			if (car.fore_distance < mindistance)
 			{
-				mindistance = car.second.fore_distance;
-				mineta = car.second.eta;
+				mindistance = car.fore_distance;
+				mineta = car.eta;
 			}
 		}
 	}
@@ -748,72 +690,76 @@ float AiCarExperimental::BrakeFromOthers(float speed_diff)
 	return bias;
 }
 
-void AiCarExperimental::AnalyzeOthers(float dt, const CarDynamics cars[], const int cars_num)
+void AiCarExperimental::AnalyzeOthers(float dt, const CarDynamics cars[], const unsigned cars_num)
 {
 	const float half_carlength = 1.25;
 	const btVector3 throttle_axis = Direction::forward;
+	const CarDynamics & car = cars[carid];
 
-	for (int i = 0; i != cars_num; ++i)
+	if (othercars.size() < cars_num)
+		othercars.resize(cars_num);
+
+	for (unsigned i = 0; i < cars_num; ++i)
 	{
-		const CarDynamics * icar = &cars[i];
-		if (icar != car)
+		if (i == carid)
+			continue;
+
+		const CarDynamics & icar = cars[i];
+		OtherCarInfo & info = othercars[i];
+
+		// find direction of other cars in our frame
+		btVector3 relative_position = icar.GetCenterOfMass() - car.GetCenterOfMass();
+		relative_position = quatRotate(car.GetOrientation().inverse(), relative_position);
+
+		// only make a move if the other car is within our distance limit
+		float fore_position = relative_position.dot(throttle_axis);
+
+		btVector3 myvel = quatRotate(car.GetOrientation().inverse(), car.GetVelocity());
+		btVector3 othervel = quatRotate(icar.GetOrientation().inverse(), icar.GetVelocity());
+		float speed_diff = othervel.dot(throttle_axis) - myvel.dot(throttle_axis);
+
+		const float fore_position_offset = -half_carlength;
+		if (fore_position > fore_position_offset)
 		{
-			OtherCarInfo & info = othercars[icar];
+			const RoadPatch * othercarpatch = GetCurrentPatch(icar);
+			const RoadPatch * mycarpatch = GetCurrentPatch(car);
 
-			// find direction of other cars in our frame
-			btVector3 relative_position = icar->GetCenterOfMass() - car->GetCenterOfMass();
-			relative_position = quatRotate(car->GetOrientation().inverse(), relative_position);
-
-			// only make a move if the other car is within our distance limit
-			float fore_position = relative_position.dot(throttle_axis);
-
-			btVector3 myvel = quatRotate(car->GetOrientation().inverse(), car->GetVelocity());
-			btVector3 othervel = quatRotate(icar->GetOrientation().inverse(), icar->GetVelocity());
-			float speed_diff = othervel.dot(throttle_axis) - myvel.dot(throttle_axis);
-
-			const float fore_position_offset = -half_carlength;
-			if (fore_position > fore_position_offset)
+			if (othercarpatch && mycarpatch)
 			{
-				const Bezier * othercarpatch = GetCurrentPatch(icar);
-				const Bezier * mycarpatch = GetCurrentPatch(car);
+				Vec3 mypos = ToMathVector<float>(car.GetCenterOfMass());
+				Vec3 otpos = ToMathVector<float>(icar.GetCenterOfMass());
+				float my_track_placement = GetHorizontalDistanceAlongPatch(*mycarpatch, mypos);
+				float their_track_placement = GetHorizontalDistanceAlongPatch(*othercarpatch, otpos);
 
-				if (othercarpatch && mycarpatch)
-				{
-					Vec3 mypos = ToMathVector<float>(car->GetCenterOfMass());
-					Vec3 otpos = ToMathVector<float>(icar->GetCenterOfMass());
-					float my_track_placement = GetHorizontalDistanceAlongPatch(*mycarpatch, mypos);
-					float their_track_placement = GetHorizontalDistanceAlongPatch(*othercarpatch, otpos);
+				float speed_diff_denom = Clamp(speed_diff, -100.f, -0.01f);
+				float eta = (fore_position - fore_position_offset) / -speed_diff_denom;
 
-					float speed_diff_denom = Clamp(speed_diff, -100.f, -0.01f);
-					float eta = (fore_position - fore_position_offset) / -speed_diff_denom;
-
-					if (!info.active)
-						info.eta = eta;
-					else
-						info.eta = RateLimit(info.eta, eta, 10.f*dt, 10000.f*dt);
-
-					info.horizontal_distance = their_track_placement - my_track_placement;
-					info.fore_distance = fore_position;
-					info.active = true;
-				}
+				if (!info.active)
+					info.eta = eta;
 				else
-				{
-					info.active = false;
-				}
+					info.eta = RateLimit(info.eta, eta, 10.f*dt, 10000.f*dt);
+
+				info.horizontal_distance = their_track_placement - my_track_placement;
+				info.fore_distance = fore_position;
+				info.active = true;
 			}
 			else
 			{
 				info.active = false;
 			}
 		}
+		else
+		{
+			info.active = false;
+		}
 	}
 }
 
-float AiCarExperimental::SteerAwayFromOthers()
+float AiCarExperimental::SteerAwayFromOthers(float carspeed)
 {
 	const float spacingdistance = 3.5; //how far left and right we target for our spacing in meters (center of mass to center of mass)
 	const float horizontal_meters_per_second = 5.0; //how fast we want to steer away in horizontal meters per second
-	const float speed = Max(1.0f, car->GetVelocity().length());
+	const float speed = Max(1.0f, carspeed);
 	const float authority = Min(10.0f, std::atan(horizontal_meters_per_second / speed) * rad2deg); //steering bias authority limit magnitude in degrees
 	const float gain = 4.0; //amplify steering command by this factor
 	const float mineta = 1.0; //fastest reaction time in seconds
@@ -824,10 +770,10 @@ float AiCarExperimental::SteerAwayFromOthers()
 
 	for (const auto & car : othercars)
 	{
-		if (car.second.active && std::abs(car.second.horizontal_distance) < std::abs(min_horizontal_distance))
+		if (car.active && std::abs(car.horizontal_distance) < std::abs(min_horizontal_distance))
 		{
-			min_horizontal_distance = car.second.horizontal_distance;
-			eta = car.second.eta;
+			min_horizontal_distance = car.horizontal_distance;
+			eta = car.eta;
 		}
 	}
 
@@ -843,7 +789,7 @@ float AiCarExperimental::SteerAwayFromOthers()
 		bias = spacingdistance - bias;
 
 	bias *= std::pow(mineta,etaexponent)*gain/std::pow(eta,etaexponent);
-	Clamp(bias, -spacingdistance, spacingdistance);
+	bias = Clamp(bias, -spacingdistance, spacingdistance);
 
 	//std::cout << "min horiz: " << min_horizontal_distance << ", eta: " << eta << ", " << bias << std::endl;
 
@@ -884,7 +830,7 @@ void AiCarExperimental::AddLinePoint(VertexArray & va, const Vec3 & p)
 
 void AiCarExperimental::Visualize()
 {
-	SceneNode& topnode  = car->GetNode();
+	SceneNode& topnode  = car.GetNode();
 	ConfigureDrawable(brakedraw, topnode, 0,1,0);
 	ConfigureDrawable(steerdraw, topnode, 0,0,1);
 	ConfigureDrawable(raycastdraw, topnode, 1,0,0);

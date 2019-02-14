@@ -21,11 +21,11 @@
 #define _REPLAY_H
 
 #include "carinfo.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 class CarDynamics;
 
@@ -62,15 +62,14 @@ public:
 	/// record car inputs and state
 	void RecordFrame(unsigned carid, const std::vector <float> & inputs, CarDynamics & car);
 
-	bool Serialize(joeserialize::Serializer & s);
+	template <class Serializer>
+	bool Serialize(Serializer & s);
 
 	const std::vector<CarInfo> & GetCarInfo() const;
 
 	const std::string & GetTrack() const;
 
 private:
-	friend class joeserialize::Serializer;
-
 	class Version
 	{
 	public:
@@ -82,7 +81,8 @@ private:
 
 		Version(const std::string & ver, unsigned ins, float newfr);
 
-		bool Serialize(joeserialize::Serializer & s);
+		template <class Serializer>
+		bool Serialize(Serializer & s);
 
 		void Save(std::ostream & outstream);
 
@@ -99,7 +99,8 @@ private:
 
 		InputFrame(unsigned newframe);
 
-		bool Serialize(joeserialize::Serializer & s);
+		template <class Serializer>
+		bool Serialize(Serializer & s);
 
 		void AddInput(int index, float value);
 
@@ -110,7 +111,6 @@ private:
 		const std::pair<int, float>& GetInput(unsigned index) const;
 
 	private:
-		friend class joeserialize::Serializer;
 		unsigned frame;
 		std::vector< std::pair<int, float> > inputs;
 	};
@@ -123,7 +123,8 @@ private:
 
 		StateFrame(unsigned newframe);
 
-		bool Serialize(joeserialize::Serializer & s);
+		template <class Serializer>
+		bool Serialize(Serializer & s);
 
 		void SetBinaryStateData(const std::string & value);
 
@@ -136,7 +137,6 @@ private:
 		void SetInputSnapshot(const std::vector<float>& value);
 
 	private:
-		friend class joeserialize::Serializer;
 		unsigned frame;
 		std::string binary_state_data;
 		std::vector<float> input_snapshot;
@@ -161,7 +161,8 @@ private:
 		void Reset();
 
 		/// write state into outstream
-		bool Serialize(joeserialize::Serializer & s);
+		template <class Serializer>
+		bool Serialize(Serializer & s);
 
 		/// set car, update inputbuffer, false if we are out of frames
 		bool PlayFrame(CarDynamics & car);
@@ -210,6 +211,48 @@ inline const std::vector<CarInfo> & Replay::GetCarInfo() const
 inline const std::string & Replay::GetTrack() const
 {
 	return track;
+}
+
+template <class Serializer>
+inline bool Replay::CarState::Serialize(Serializer & s)
+{
+	_SERIALIZE_(s, inputframes);
+	_SERIALIZE_(s, stateframes);
+	return true;
+}
+
+template <class Serializer>
+inline bool Replay::StateFrame::Serialize(Serializer & s)
+{
+	_SERIALIZE_(s, frame);
+	_SERIALIZE_(s, binary_state_data);
+	_SERIALIZE_(s, input_snapshot);
+	return true;
+}
+
+template <class Serializer>
+inline bool Replay::InputFrame::Serialize(Serializer & s)
+{
+	_SERIALIZE_(s, frame);
+	_SERIALIZE_(s, inputs);
+	return true;
+}
+
+template <class Serializer>
+inline bool Replay::Version::Serialize(Serializer & s)
+{
+	_SERIALIZE_(s, inputs_supported);
+	_SERIALIZE_(s, framerate);
+	return true;
+}
+
+template <class Serializer>
+inline bool Replay::Serialize(Serializer & s)
+{
+	_SERIALIZE_(s, track);
+	_SERIALIZE_(s, carinfo);
+	_SERIALIZE_(s, carstate);
+	return true;
 }
 
 #endif

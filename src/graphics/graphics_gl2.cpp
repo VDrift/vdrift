@@ -24,34 +24,16 @@
 #include "shader.h"
 #include "uniforms.h"
 #include "vertexattrib.h"
+#include "frustumcull.h"
+#include "model.h"
 #include "sky.h"
+#include "tokenize.h"
 
 /// array end ptr
 template <typename T, size_t N>
 static T * End(T (&ar)[N])
 {
 	return ar + N;
-}
-
-/// break up the input into a vector of strings using the token characters given
-std::vector <std::string> Tokenize(const std::string & input, const std::string & tokens)
-{
-	std::vector <std::string> out;
-
-	unsigned int pos = 0;
-	unsigned int lastpos = 0;
-
-	while (pos != (unsigned int) std::string::npos)
-	{
-		pos = input.find_first_of(tokens, pos);
-		std::string thisstr = input.substr(lastpos,pos-lastpos);
-		if (!thisstr.empty())
-			out.push_back(thisstr);
-		pos = input.find_first_not_of(tokens, pos);
-		lastpos = pos;
-	}
-
-	return out;
 }
 
 static FrameBufferTexture::Format TextureFormatFromString(const std::string & format)
@@ -201,24 +183,6 @@ static void AttachCubeSide(int i, FrameBufferObject & reflection_fbo, std::ostre
 	};
 
 	CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
-}
-
-static bool Cull(const Frustum & f, const Drawable & d)
-{
-	const float radius = d.GetRadius();
-	Vec3 center = d.GetObjectCenter();
-	d.GetTransform().TransformVectorOut(center[0], center[1], center[2]);
-	for (int i = 0; i < 6; i++)
-	{
-		const float rd =
-			f.frustum[i][0] * center[0] +
-			f.frustum[i][1] * center[1] +
-			f.frustum[i][2] * center[2] +
-			f.frustum[i][3];
-		if (rd <= -radius)
-			return true;
-	}
-	return false;
 }
 
 GraphicsGL2::GraphicsGL2() :
@@ -419,14 +383,14 @@ void GraphicsGL2::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(screen_quad);
 	nodes.push_back(&quad_node);
 
-	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
+	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size());
 
 	screen_quad = quad_node.GetDrawList().twodim.get(d);
 }
 
 void GraphicsGL2::BindStaticVertexData(std::vector<SceneNode*> nodes)
 {
-	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
+	vertex_buffer.SetStaticVertexData(nodes.data(), nodes.size());
 }
 
 void GraphicsGL2::AddDynamicNode(SceneNode & node)
@@ -917,7 +881,7 @@ void GraphicsGL2::SetupCameras(
 		GraphicsCamera & cam = cameras["2d"];
 
 		// this is the glOrtho call we want: glOrtho( 0, 1, 1, 0, -1, 1 );
-		cam.orthomode = true;
+		cam.fov = 0;
 		cam.orthomin = Vec3(0, 1, -1);
 		cam.orthomax = Vec3(1, 0, 1);
 	}
@@ -958,7 +922,7 @@ void GraphicsGL2::SetupCameras(
 
 			GraphicsCamera & cam = cameras["shadows_"+shadow_names[i]];
 			cam = cameras["default"];
-			cam.orthomode = true;
+			cam.fov = 0;
 			cam.orthomin = -shadowbox;
 			cam.orthomax = shadowbox;
 			cam.pos = cam.pos + shadowoffset;
@@ -1139,14 +1103,36 @@ void GraphicsGL2::CullScenePass(
 			draw_list.valid = true;
 			if (pass.cull)
 			{
-				// cull static drawlist
-				pass.static_draw_lists[i]->Query(frustum, draw_list.drawables);
-
-				// cull dynamic drawlist
-				for (const auto & drawable : *pass.dynamic_draw_lists[i])
+				if (cam->fov > 0)
 				{
-					if (!Cull(frustum, *drawable))
-						draw_list.drawables.push_back(drawable);
+					float height = output.GetHeight();
+					float fov = cam->fov * float(M_PI/180);
+					float ct = ContributionCullThreshold(height, fov);
+					auto cull = MakeFrustumCullerPersp(frustum.frustum, cam->pos, ct);
+
+					// cull static drawlist
+					pass.static_draw_lists[i]->Query(cull, draw_list.drawables);
+
+					// cull dynamic drawlist
+					for (const auto & drawable : *pass.dynamic_draw_lists[i])
+					{
+						if (!cull(drawable->GetCenter(), drawable->GetRadius()))
+							draw_list.drawables.push_back(drawable);
+					}
+				}
+				else
+				{
+					auto cull = MakeFrustumCuller(frustum.frustum);
+
+					// cull static drawlist
+					pass.static_draw_lists[i]->Query(cull, draw_list.drawables);
+
+					// cull dynamic drawlist
+					for (const auto & drawable : *pass.dynamic_draw_lists[i])
+					{
+						if (!cull(drawable->GetCenter(), drawable->GetRadius()))
+							draw_list.drawables.push_back(drawable);
+					}
 				}
 			}
 			else

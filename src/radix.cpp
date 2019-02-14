@@ -30,7 +30,7 @@ static inline bool ComputeCounters(
 {
 	assert(sizeof(T) == 4);
 
-	const unsigned char * bytes = (const unsigned char *)&input[0];
+	const unsigned char * bytes = (const unsigned char *)input.data();
 	const unsigned char * bytes_end = bytes + 4 * input.size();
 	unsigned * c0 = &counters[0];
 	unsigned * c1 = &counters[256];

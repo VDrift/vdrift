@@ -22,7 +22,6 @@
 
 #include "mathvector.h"
 
-#include <iostream>
 #include <cstring>
 #include <cmath>
 #include <cassert>
@@ -51,7 +50,8 @@ class Matrix4
 			return data[n];
 		}
 
-		void DebugPrint(std::ostream & out) const
+		template <class Stream>
+		void DebugPrint(Stream & out) const
 		{
 			for (size_type row = 0; row < 4; row++)
 			{
@@ -59,9 +59,9 @@ class Matrix4
 				{
 					out << data[col*4+row] << "\t";
 				}
-				out << std::endl;
+				out << "\n";
 			}
-			out << std::endl;
+			out << "\n";
 		}
 
 		// this is actually other * this, not this * other
@@ -132,17 +132,19 @@ class Matrix4
 			data[14] += tz;
 		}
 
-		bool operator==(const Matrix4 <T> & other) {return Equals(other);}
-		bool operator!=(const Matrix4 <T> & other) {return !Equals(other);}
+		bool operator==(const Matrix4 <T> & other) const {return Equals(other);}
+		bool operator!=(const Matrix4 <T> & other) const {return !Equals(other);}
 
-		bool Equals(const Matrix4 <T> & other)
+		bool IsIdentity() const {return Equals(Matrix4());}
+
+		bool Equals(const Matrix4 <T> & other) const
 		{
-			return (memcmp(data,other.data,16*sizeof(T)) == 0); //high performance, but portability issues?
-			/*for (int i = 0; i < 16; i++)
+			// high performance, but portability issues?
+			//return (std::memcmp(data,other.data,16*sizeof(T)) == 0);
+			for (int i = 0; i < 16; i++)
 				if (data[i] != other.data[i])
 					return false;
-
-			return true;*/
+			return true;
 		}
 
 		void TransformVectorIn(float & x, float & y, float & z) const
@@ -360,8 +362,8 @@ class Matrix4
 		}
 };
 
-template <typename T>
-std::ostream & operator << (std::ostream &os, const Matrix4 <T> & m)
+template <typename T, class Stream>
+Stream & operator << (Stream & os, const Matrix4 <T> & m)
 {
 	m.DebugPrint(os);
 	return os;

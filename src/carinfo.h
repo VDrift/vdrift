@@ -21,7 +21,6 @@
 #define _CARINFO_H
 
 #include "mathvector.h"
-#include "joeserialize.h"
 #include "macros.h"
 
 #include <string>
@@ -37,7 +36,8 @@ struct CarInfo
 	Vec3 hsv;
 	float ailevel;
 
-	bool Serialize(joeserialize::Serializer & s)
+	template <class Serializer>
+	bool Serialize(Serializer & s)
 	{
 		_SERIALIZE_(s, config);
 		_SERIALIZE_(s, driver);

@@ -20,9 +20,6 @@
 #include "mathvector.h"
 #include "unittest.h"
 
-#include <iostream>
-using std::ostream;
-
 QT_TEST(mathvector_test)
 {
 	{

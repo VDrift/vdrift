@@ -38,4 +38,33 @@ private:
 	GLuint handle;
 };
 
+
+inline RenderSampler::RenderSampler(GLuint newTu, GLuint newHandle) : tu(newTu), handle(newHandle)
+{
+	// ctor
+}
+
+inline void RenderSampler::apply(GLWrapper & gl) const
+{
+	for (const auto & s : state)
+		s.applySampler(gl, handle);
+
+	gl.BindSampler(tu, handle);
+}
+
+inline void RenderSampler::addState(const RenderState & newState)
+{
+	state.push_back(newState);
+}
+
+inline GLuint RenderSampler::getHandle() const
+{
+	return handle;
+}
+
+inline const std::vector <RenderState> & RenderSampler::getStateVector() const
+{
+	return state;
+}
+
 #endif

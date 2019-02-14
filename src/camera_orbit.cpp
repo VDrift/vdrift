@@ -56,10 +56,7 @@ void CameraOrbit::Update(const Vec3 & newfocus, const Quat &, float)
 
 void CameraOrbit::Rotate(float up, float left)
 {
-	const float maxupdown = 1.5f;
-	updown_rotation += up;
-	if (updown_rotation > maxupdown) updown_rotation = maxupdown;
-	if (updown_rotation <-maxupdown) updown_rotation =-maxupdown;
+	updown_rotation = Clamp(updown_rotation + up, -1.5f, 1.5f);
 
 	leftright_rotation -= left;
 
@@ -74,8 +71,7 @@ void CameraOrbit::Move(float dx, float dy, float dz)
 	distance += Direction::Forward.dot(move);
 	float min_distance = -Direction::Forward.dot(offset);
 	float max_distance = 4 * min_distance;
-	if (distance < min_distance) distance = min_distance;
-	else if (distance > max_distance) distance = max_distance;
+	distance = Clamp(distance, min_distance, max_distance);
 
 	position = -Direction::Forward * distance;
 	rotation.RotateVector(position);

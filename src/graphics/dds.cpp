@@ -65,6 +65,17 @@ typedef uint32_t uint32;
 #define DDPF_YUV 0x200
 #define DDPF_LUMINANCE 0x20000
 
+#define DDS_CUBEMAP_POSITIVEX 0x00000600 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_POSITIVEX
+#define DDS_CUBEMAP_NEGATIVEX 0x00000a00 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_NEGATIVEX
+#define DDS_CUBEMAP_POSITIVEY 0x00001200 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_POSITIVEY
+#define DDS_CUBEMAP_NEGATIVEY 0x00002200 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_NEGATIVEY
+#define DDS_CUBEMAP_POSITIVEZ 0x00004200 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_POSITIVEZ
+#define DDS_CUBEMAP_NEGATIVEZ 0x00008200 // DDSCAPS2_CUBEMAP | DDSCAPS2_CUBEMAP_NEGATIVEZ
+#define DDS_CUBEMAP_ALLFACES ( DDS_CUBEMAP_POSITIVEX | DDS_CUBEMAP_NEGATIVEX |\
+                               DDS_CUBEMAP_POSITIVEY | DDS_CUBEMAP_NEGATIVEY |\
+                               DDS_CUBEMAP_POSITIVEZ | DDS_CUBEMAP_NEGATIVEZ )
+#define DDS_CUBEMAP 0x00000200 // DDSCAPS2_CUBEMAP
+
 #define FOURCC_DXT1 0x31545844
 #define FOURCC_DXT2 0x32545844
 #define FOURCC_DXT3 0x33545844
@@ -72,11 +83,13 @@ typedef uint32_t uint32;
 #define FOURCC_DXT5 0x35545844
 #define FOURCC_DX10 0x30315844
 
+#define GL_BGR 0x80E0
+#define GL_BGRA 0x80E1
 #define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
 #define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
-#define GL_BGR 0x80E0
-#define GL_BGRA 0x80E1
+#define GL_TEXTURE_2D 0x0DE1
+#define GL_TEXTURE_CUBE_MAP 0x8513
 
 typedef struct
 {
@@ -126,8 +139,8 @@ static uint32 readui32(const uint8 *&_ptr, size_t &_len)
 } // readui32
 
 static int parse_dds(
-	DDSHeader &header, const uint8 *&ptr, size_t &len,
-	unsigned int &_glfmt, unsigned int &_miplevels)
+    DDSHeader &header, const uint8 *&ptr, size_t &len,
+    unsigned int &_glfmt, unsigned int &_gltgt, unsigned int &_miplevels)
 {
     const uint32 pitchAndLinear = (DDSD_PITCH | DDSD_LINEARSIZE);
     uint32 width = 0;
@@ -173,18 +186,21 @@ static int parse_dds(
 
     if (header.dwSize != DDS_HEADERSIZE)   // header size must be 124.
         return 0;
-    else if (header.ddspf.dwSize != DDS_PIXFMTSIZE)   // size must be 32.
+    if (header.ddspf.dwSize != DDS_PIXFMTSIZE)   // size must be 32.
         return 0;
-    else if ((header.dwFlags & DDSD_REQ) != DDSD_REQ)  // must have these bits.
+    if ((header.dwFlags & DDSD_REQ) != DDSD_REQ)  // must have these bits.
         return 0;
-    else if ((header.dwCaps & DDSCAPS_TEXTURE) == 0)
+    if ((header.dwCaps & DDSCAPS_TEXTURE) == 0)
         return 0;
-    else if (header.dwCaps2 != 0)  // !!! FIXME (non-zero with other bits in dwCaps set)
-        return 0;
-    else if ((header.dwFlags & pitchAndLinear) == pitchAndLinear)
+    if ((header.dwFlags & pitchAndLinear) == pitchAndLinear)
         return 0;  // can't specify both.
 
     _miplevels = (header.dwCaps & DDSCAPS_MIPMAP) ? header.dwMipMapCount : 1;
+
+    if ((header.dwCaps2 & DDS_CUBEMAP_ALLFACES) == DDS_CUBEMAP_ALLFACES)
+        _gltgt = GL_TEXTURE_CUBE_MAP;
+    else
+        _gltgt = GL_TEXTURE_2D;
 
     if (header.ddspf.dwFlags & DDPF_FOURCC)
     {
@@ -278,13 +294,14 @@ int IsDDS(const void *_ptr, const unsigned long _len)
 int ReadDDS(
     const void *_ptr, const unsigned long _len,
     const void *&_tex, unsigned long &_texlen,
-    unsigned int &_glfmt, unsigned int &_w,
-    unsigned int &_h, unsigned int &_miplevels)
+    unsigned int &_glfmt, unsigned int &_gltgt,
+    unsigned int &_w, unsigned int &_h,
+    unsigned int &_miplevels)
 {
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     DDSHeader header;
-    if (!parse_dds(header, ptr, len, _glfmt, _miplevels))
+    if (!parse_dds(header, ptr, len, _glfmt, _gltgt, _miplevels))
         return 0;
 
     _tex = (const void *) ptr;

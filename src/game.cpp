@@ -20,7 +20,6 @@
 #include "game.h"
 #include "unittest.h"
 #include "definitions.h"
-#include "joepack.h"
 #include "matrix4.h"
 #include "physics/carwheelposition.h"
 #include "physics/tracksurface.h"
@@ -38,6 +37,7 @@
 #include "tobullet.h"
 #include "hsvtorgb.h"
 #include "camera_orbit.h"
+#include "tokenize.h"
 
 #include <fstream>
 #include <string>
@@ -113,6 +113,7 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	active_camera(0),
 	car_info(1),
 	player_car_id(0),
+	camera_car_id(0),
 	car_edit_id(0),
 	race_laps(0),
 	practice(true),
@@ -128,9 +129,9 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	particle_timer(0),
 	track(),
 	replay(timestep),
-	http("/tmp")
+	http("/tmp"),
+	ff_update_time(0)
 {
-	carcontrols_local.first = NULL;
 	dynamics.setContactAddedCallback(&CarDynamics::WheelContactCallback);
 	RegisterActions();
 }
@@ -157,11 +158,11 @@ void Game::Start(std::list <std::string> & args)
 
 	// Load controls.
 	info_output << "Loading car controls from: " << pathmanager.GetCarControlsFile() << std::endl;
-	if (!carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output))
+	if (!car_controls_local.Load(pathmanager.GetCarControlsFile(), info_output, error_output))
 	{
 		info_output << "Car control file " << pathmanager.GetCarControlsFile() << " doesn't exist; using defaults" << std::endl;
-		carcontrols_local.second.Load(pathmanager.GetDefaultCarControlsFile(), info_output, error_output);
-		carcontrols_local.second.Save(pathmanager.GetCarControlsFile());
+		car_controls_local.Load(pathmanager.GetDefaultCarControlsFile(), info_output, error_output);
+		car_controls_local.Save(pathmanager.GetCarControlsFile());
 	}
 
 	// Load player car info from settings
@@ -230,8 +231,6 @@ void Game::Start(std::list <std::string> & args)
 	if (benchmode)
 	{
 		assert(!car_info.empty());
-
-		player_car_id = 0;
 		car_info[player_car_id].driver = Ai::default_type;
 
 		if (!NewGame(false, false, 1))
@@ -416,7 +415,7 @@ void Game::InitPlayerCar()
 	hsv[1] = settings.GetCarColorSat();
 	hsv[2] = settings.GetCarColorVal();
 
-	car_info[0].driver = "user";
+	car_info[0].driver = "";
 	car_info[0].name = settings.GetCar();
 	car_info[0].paint = settings.GetCarPaint();
 	car_info[0].ailevel = settings.GetAILevel();
@@ -483,7 +482,7 @@ bool Game::InitGUI()
 	// Set driver/edit num to update gui explicitely
 	// as they are not stored in settings
 	gui.SetOptionValue("game.car_edit", "0");
-	gui.SetOptionValue("game.driver", "user");
+	gui.SetOptionValue("game.driver", "");
 
 	// Set input control labels
 	LoadControlsIntoGUI();
@@ -734,8 +733,8 @@ void Game::Draw(float dt)
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
 
 		Vec3 reflection_location = active_camera->GetPosition();
-		if (carcontrols_local.first)
-			reflection_location = ToMathVector<float>(carcontrols_local.first->GetCenterOfMass());
+		if (camera_car_id < unsigned(car_dynamics.size()))
+			reflection_location = ToMathVector<float>(car_dynamics[camera_car_id].GetCenterOfMass());
 
 		Quat camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
@@ -807,7 +806,7 @@ void Game::Tick(float deltat)
 
 	// Throw away wall clock time if necessary to keep the framerate above the minimum.
 	if (deltat > maxtime)
-        deltat = maxtime;
+		deltat = maxtime;
 
 	target_time += deltat;
 
@@ -845,11 +844,8 @@ void Game::AdvanceGameLogic()
 
 	eventsystem.ProcessEvents();
 
-	float car_speed = 0;
-	if (carcontrols_local.first)
-		car_speed = carcontrols_local.first->GetSpeed();
-
-	carcontrols_local.second.ProcessInput(
+	float car_speed = !pause ? car_dynamics[player_car_id].GetSpeed() : 0;
+	car_controls_local.ProcessInput(
 			settings.GetJoyType(),
 			eventsystem,
 			timestep,
@@ -875,8 +871,7 @@ void Game::AdvanceGameLogic()
 		PROFILER.endBlock("ai");
 
 		//PROFILER.beginBlock("input");
-		for (int i = 0; i < car_dynamics.size(); ++i)
-			ProcessCarInputs(i);
+		ProcessCarInputs();
 		//PROFILER.endBlock("input");
 
 		PROFILER.beginBlock("physics");
@@ -929,7 +924,7 @@ void Game::AdvanceGameLogic()
 void Game::ProcessGameInputs()
 {
 	// Most game inputs are allowed whether or not there's a car in the game.
-	if (carcontrols_local.second.GetInput(GameInput::SCREENSHOT) == 1)
+	if (car_controls_local.GetInput(GameInput::SCREENSHOT) == 1)
 	{
 		// Determine filename.
 		std::string shotfile;
@@ -955,7 +950,7 @@ void Game::ProcessGameInputs()
 			error_output << "Couldn't find a file to which to save the captured screenshot" << std::endl;
 	}
 
-	if (carcontrols_local.second.GetInput(GameInput::RELOAD_SHADERS) == 1)
+	if (car_controls_local.GetInput(GameInput::RELOAD_SHADERS) == 1)
 	{
 		info_output << "Reloading shaders" << std::endl;
 		if (!graphics->ReloadShaders(info_output, error_output))
@@ -964,7 +959,7 @@ void Game::ProcessGameInputs()
 		}
 	}
 
-	if (carcontrols_local.second.GetInput(GameInput::RELOAD_GUI) == 1)
+	if (car_controls_local.GetInput(GameInput::RELOAD_GUI) == 1)
 	{
 		info_output << "Reloading GUI" << std::endl;
 
@@ -984,7 +979,7 @@ void Game::ProcessGameInputs()
 void Game::UpdateTimer()
 {
 	// Check for cars doing a lap.
-	for (int i = 0; i != car_dynamics.size(); ++i)
+	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
 		const CarDynamics & car = car_dynamics[i];
 		bool advance = false;
@@ -994,7 +989,7 @@ void Game::UpdateTimer()
 			nextsector = (timer.GetLastSector(i) + 1) % track.GetSectors();
 			for (int p = 0; p < 4; ++p)
 			{
-				const Bezier * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
+				const RoadPatch * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
 				if (patch == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
@@ -1007,7 +1002,7 @@ void Game::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const Bezier * curpatch = car.GetWheelContact(FRONT_LEFT).GetPatch();
+		const RoadPatch * curpatch = car.GetWheelContact(FRONT_LEFT).GetPatch();
 		if (!curpatch)
 			curpatch = car.GetWheelContact(FRONT_RIGHT).GetPatch();
 
@@ -1055,16 +1050,12 @@ void Game::UpdateTimer()
 
 void Game::UpdateTrackMap()
 {
-	std::list <std::pair<Vec3, bool> > carpositions;
-	for (int i = 0; i != car_dynamics.size(); ++i)
+	std::vector<Vec3> positions(car_dynamics.size());
+	for (unsigned i = 0; i < positions.size(); ++i)
 	{
-		const CarDynamics & car = car_dynamics[i];
-		bool player = (carcontrols_local.first == &car);
-		Vec3 carpos = ToMathVector<float>(car.GetCenterOfMass());
-		carpositions.push_back(std::make_pair(carpos, player));
+		positions[i] = ToMathVector<float>(car_dynamics[i].GetCenterOfMass());
 	}
-
-	trackmap.Update(settings.GetTrackmap(), carpositions);
+	trackmap.Update(settings.GetTrackmap(), camera_car_id, positions);
 }
 
 void Game::ProcessGUIInputs()
@@ -1072,14 +1063,14 @@ void Game::ProcessGUIInputs()
 	gui.ProcessInput(
 		eventsystem.GetMousePosition()[0] / (float)window.GetW(),
 		eventsystem.GetMousePosition()[1] / (float)window.GetH(),
-		eventsystem.GetMouseButtonState(1).down,
-		eventsystem.GetMouseButtonState(1).just_up,
-		carcontrols_local.second.GetInput(GameInput::GUI_LEFT),
-		carcontrols_local.second.GetInput(GameInput::GUI_RIGHT),
-		carcontrols_local.second.GetInput(GameInput::GUI_UP),
-		carcontrols_local.second.GetInput(GameInput::GUI_DOWN),
-		carcontrols_local.second.GetInput(GameInput::GUI_SELECT),
-		carcontrols_local.second.GetInput(GameInput::GUI_CANCEL));
+		eventsystem.GetMouseButtonState(1).GetState(),
+		eventsystem.GetMouseButtonState(1).GetImpulseFalling(),
+		car_controls_local.GetInput(GameInput::GUI_LEFT),
+		car_controls_local.GetInput(GameInput::GUI_RIGHT),
+		car_controls_local.GetInput(GameInput::GUI_UP),
+		car_controls_local.GetInput(GameInput::GUI_DOWN),
+		car_controls_local.GetInput(GameInput::GUI_SELECT),
+		car_controls_local.GetInput(GameInput::GUI_CANCEL));
 
 	if (controlgrab && AssignControl())
 	{
@@ -1097,9 +1088,10 @@ bool Game::AssignControl()
 	{
 		if (key.second.GetImpulseRising())
 		{
-			controlgrab_control.type = CarControlMap::Control::KEY;
-			controlgrab_control.keycode = key.first;
-			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+			controlgrab_control.device = CarControlMap::Control::KEYBOARD;
+			controlgrab_control.id = key.first;
+			controlgrab_control.analog = false;
+			car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
 	}
@@ -1112,11 +1104,10 @@ bool Game::AssignControl()
 		{
 			if (eventsystem.GetJoyButton(j, i).GetImpulseRising())
 			{
-				controlgrab_control.type = CarControlMap::Control::JOY;
-				controlgrab_control.joynum = j;
-				controlgrab_control.joytype = CarControlMap::Control::JOYBUTTON;
-				controlgrab_control.keycode = i;
-				carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+				controlgrab_control.device = j;
+				controlgrab_control.id = i;
+				controlgrab_control.analog = false;
+				car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
 		}
@@ -1128,20 +1119,13 @@ bool Game::AssignControl()
 			assert(i < controlgrab_joystick_state[j].GetNumAxes());
 
 			float delta = eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i);
-			int axis = 0;
-			if (delta > 0.4f) axis = 1;
-			if (delta < -0.4f) axis = -1;
-			if (axis)
+			if (delta > 0.4f || delta < -0.4f)
 			{
-				controlgrab_control.type = CarControlMap::Control::JOY;
-				controlgrab_control.joytype = CarControlMap::Control::JOYAXIS;
-				controlgrab_control.joynum = j;
-				controlgrab_control.joyaxis = i;
-				if (axis > 0)
-					controlgrab_control.joyaxistype = CarControlMap::Control::POSITIVE;
-				else if (axis < 0)
-					controlgrab_control.joyaxistype = CarControlMap::Control::NEGATIVE;
-				carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+				controlgrab_control.device = j;
+				controlgrab_control.id = i;
+				controlgrab_control.analog = true;
+				controlgrab_control.negative = delta < 0;
+				car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
 		}
@@ -1150,12 +1134,12 @@ bool Game::AssignControl()
 	// Check for mouse button inputs.
 	for (int i = 1; i < 4; ++i)
 	{
-		if (eventsystem.GetMouseButtonState(i).just_down)
+		if (eventsystem.GetMouseButtonState(i).GetImpulseRising())
 		{
-			controlgrab_control.type = CarControlMap::Control::MOUSE;
-			controlgrab_control.mousetype = CarControlMap::Control::MOUSEBUTTON;
-			controlgrab_control.keycode = i;
-			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+			controlgrab_control.device = CarControlMap::Control::MOUSE;
+			controlgrab_control.analog = false;
+			controlgrab_control.id = i;
+			car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
 	}
@@ -1166,17 +1150,29 @@ bool Game::AssignControl()
 	int threshold = 200;
 	if (dx < -threshold || dx > threshold || dy < -threshold || dy > threshold)
 	{
-		controlgrab_control.type = CarControlMap::Control::MOUSE;
-		controlgrab_control.mousetype = CarControlMap::Control::MOUSEMOTION;
+		controlgrab_control.device = CarControlMap::Control::MOUSE;
+		controlgrab_control.analog = true;
 		if (dx < -threshold)
-			controlgrab_control.mdir = CarControlMap::Control::LEFT;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEX;
+			controlgrab_control.negative = true;
+		}
 		else if (dx > threshold)
-			controlgrab_control.mdir = CarControlMap::Control::RIGHT;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEX;
+			controlgrab_control.negative = false;
+		}
 		else if (dy < -threshold)
-			controlgrab_control.mdir = CarControlMap::Control::UP;
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEY;
+			controlgrab_control.negative = true;
+		}
 		else if (dy > threshold)
-			controlgrab_control.mdir = CarControlMap::Control::DOWN;
-		carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+		{
+			controlgrab_control.id = CarControlMap::Control::MOUSEY;
+			controlgrab_control.negative = false;
+		}
+		car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 		return true;
 	}
 
@@ -1186,14 +1182,14 @@ bool Game::AssignControl()
 void Game::LoadControlsIntoGUIPage(const std::string & page_name)
 {
 	std::map<std::string, std::string> label_text;
-	carcontrols_local.second.GetControlsInfo(label_text);
+	car_controls_local.GetControlsInfo(label_text);
 	gui.SetLabelText(page_name, label_text);
 }
 
 void Game::LoadControlsIntoGUI()
 {
 	std::map<std::string, std::string> label_text;
-	carcontrols_local.second.GetControlsInfo(label_text);
+	car_controls_local.GetControlsInfo(label_text);
 	gui.SetLabelText(label_text);
 }
 
@@ -1294,103 +1290,93 @@ void Game::UpdateCars(float dt)
 	}
 }
 
-void Game::ProcessCarInputs(const size_t carid)
+void Game::ProcessCarInputs()
 {
-	CarDynamics & car = car_dynamics[carid];
-	CarGraphics & car_gfx = car_graphics[carid];
-
-	std::vector <float> carinputs(CarInput::INVALID, 0.0f);
-	if (replay.GetPlaying())
+	bool player_control = car_info[player_car_id].driver.empty();
+	#ifdef VISUALIZE_AI_DEBUG
+	if (!player_control)
 	{
-		const std::vector<float> inputs = replay.PlayFrame(carid, car);
-		assert(inputs.size() <= carinputs.size());
-		for (size_t i = 0; i < inputs.size(); ++i)
-		{
-			carinputs[i] = inputs[i];
-		}
-	}
-	else if (carcontrols_local.first == &car)
-	{
-		carinputs = carcontrols_local.second.GetInputs();
-#ifdef VISUALIZE_AI_DEBUG
-		// It allows to activate the AI on the player car with F9 button.
-		// AI will override player inputs.
+		// It allows to deactivate the AI on the player car with F9 button.
 		// This is useful for bringing the car in strange
 		// situations and test how the AI solves it.
-		static bool aiControlled = false;
-		static bool buttonPressed = false;
-		if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+		static bool override_ai = false;
+		static bool button_pressed = false;
+		if (button_pressed != eventsystem.GetKeyState(SDLK_F9).just_down)
 		{
-			buttonPressed = !buttonPressed;
-			if (buttonPressed)
+			button_pressed = !button_pressed;
+			if (button_pressed)
 			{
-				aiControlled = !aiControlled;
-				if (aiControlled)
-				{
-					info_output << "Switching to AI controlled player." << std::endl;
-					ai.AddCar(&car, 1.0);
-				}
+				override_ai = !override_ai;
+				if (override_ai)
+					info_output << "Switching to user controlled player car." << std::endl;
 				else
-				{
-					info_output << "Switching to user controlled player." << std::endl;
-					ai.RemoveCar(&car);
-				}
+					info_output << "Switching to ai controlled player car." << std::endl;
 			}
 		}
-		if (aiControlled)
+		player_control = override_ai;
+	}
+	#endif
+
+	for (unsigned carid = 0, aiid = 0; carid < unsigned(car_dynamics.size()); ++carid)
+	{
+		CarDynamics & car = car_dynamics[carid];
+		CarGraphics & car_gfx = car_graphics[carid];
+
+		std::vector <float> carinputs(CarInput::INVALID, 0.0f);
+		if (replay.GetPlaying())
+			carinputs = replay.PlayFrame(carid, car);
+		else if (carid == player_car_id && player_control)
+			carinputs = car_controls_local.GetInputs();
+		else
+			carinputs = ai.GetInputs(aiid++);
+
+		assert(carinputs.size() >= CarInput::INVALID);
+
+		// Force brake at start and once the race is over.
+		if (timer.Staging())
 		{
-			carinputs = ai.GetInputs(&car);
-			assert(carinputs.size() == CarInput::INVALID);
+			carinputs[CarInput::BRAKE] = 1.0;
+			carinputs[CarInput::CLUTCH] = 1.0;
 		}
-#endif
-	}
-	else
-	{
-		carinputs = ai.GetInputs(&car);
-		assert(carinputs.size() == CarInput::INVALID);
-	}
+		else if (race_laps > 0 && (int)timer.GetCurrentLap(carid) > race_laps)
+		{
+			carinputs[CarInput::BRAKE] = 1.0;
+			carinputs[CarInput::CLUTCH] = 1.0;
+			carinputs[CarInput::THROTTLE] = 0.0;
 
-	// Force brake at start and once the race is over.
-	if (timer.Staging())
-	{
-		carinputs[CarInput::BRAKE] = 1.0;
-		carinputs[CarInput::CLUTCH] = 1.0;
-	}
-	else if (race_laps > 0 && (int)timer.GetCurrentLap(carid) > race_laps)
-	{
-		carinputs[CarInput::BRAKE] = 1.0;
-		carinputs[CarInput::CLUTCH] = 1.0;
-		carinputs[CarInput::THROTTLE] = 0.0;
+			if (benchmode)
+				eventsystem.Quit();
+		}
 
-		if (benchmode)
-			eventsystem.Quit();
-	}
+		car.Update(carinputs);
+		car_gfx.Update(carinputs);
 
-	car.Update(carinputs);
-	car_gfx.Update(carinputs);
+		// Record car state.
+		if (replay.GetRecording())
+			replay.RecordFrame(carid, carinputs, car);
 
-	// Record car state.
-	if (replay.GetRecording())
-		replay.RecordFrame(carid, carinputs, car);
-
-	if (carid == player_car_id)
-	{
-		if (settings.GetHUD() != "NoHud")
+		if (carid == camera_car_id && settings.GetHUD() != "NoHud")
 			UpdateHUD(carid, carinputs);
 	}
 }
 
 void Game::ProcessCameraInputs()
 {
-	const size_t carid = player_car_id;
-	CarDynamics & car = car_dynamics[carid];
-	CarGraphics & car_gfx = car_graphics[carid];
-	CarSound & car_snd = car_sounds[carid];
+	CarControlMap & carcontrol = car_controls_local;
+
+	// Handle camera focus
+	unsigned car_count = car_dynamics.size();
+	if (carcontrol.GetInput(GameInput::FOCUS_NEXT))
+		camera_car_id = (camera_car_id < car_count - 1) ? camera_car_id + 1 : 0;
+	else if (carcontrol.GetInput(GameInput::FOCUS_PREV))
+		camera_car_id = (camera_car_id > 0) ? camera_car_id - 1 : car_count - 1;
+
+	CarDynamics & car = car_dynamics[camera_car_id];
+	CarGraphics & car_gfx = car_graphics[camera_car_id];
+	CarSound & car_snd = car_sounds[camera_car_id];
 
 	// Handle camera mode change inputs.
-	CarControlMap & carcontrol = carcontrols_local.second;
-	Camera * old_camera = active_camera;
-	unsigned int camera_id = settings.GetCamera();
+	unsigned camera_id = settings.GetCamera();
 	if (carcontrol.GetInput(GameInput::VIEW_HOOD))
 		camera_id = 0;
 	else if (carcontrol.GetInput(GameInput::VIEW_INCAR))
@@ -1409,13 +1395,14 @@ void Game::ProcessCameraInputs()
 		camera_id--;
 
 	// wrap around
-	const unsigned int camera_count = car_gfx.GetCameras().size();
+	unsigned camera_count = car_gfx.GetCameras().size();
 	if (camera_id > camera_count)
 		camera_id = camera_count - 1;
 	else if (camera_id == camera_count)
 		camera_id = 0;
 
 	// set active camera
+	Camera * old_camera = active_camera;
 	active_camera = car_gfx.GetCameras()[camera_id];
 	settings.SetCamera(camera_id);
 
@@ -1458,6 +1445,11 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 		if (!profilingmode)
 		{
 			std::ostringstream debug_info[4];
+			debug_info[0] << std::fixed << std::setprecision(2);
+			debug_info[1] << std::fixed << std::setprecision(2);
+			debug_info[2] << std::fixed << std::setprecision(2);
+			debug_info[3] << std::fixed << std::setprecision(2);
+
 			car.DebugPrint(debug_info[0], true, false, false, false);
 			car.DebugPrint(debug_info[1], false, true, false, false);
 			car.DebugPrint(debug_info[2], false, false, true, false);
@@ -1490,11 +1482,11 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 		signal_brake(brakestr.str());
 	}
 
-	std::pair <int, int> curplace = timer.GetPlayerPlace();
+	std::pair <int, int> curplace = timer.GetCarPlace(carid);
 	std::ostringstream placestr;
 	placestr << curplace.first << " / " << curplace.second;
 
-	int cur_lap = Clamp(timer.GetPlayerCurrentLap(), 1, race_laps);
+	int cur_lap = Clamp(timer.GetCurrentLap(carid), 1, race_laps);
 	std::ostringstream lapstr;
 	if (race_laps > 0)
 		lapstr << cur_lap << " / " << race_laps;
@@ -1515,7 +1507,7 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 			msgstr << lang("Ready");
 		else if (stagingtimeleft < 0 && stagingtimeleft > -1)
 			msgstr << lang("GO");
-		else if (timer.GetPlayerCurrentLap() > race_laps)
+		else if (timer.GetCurrentLap(carid) > race_laps)
 			msgstr << ((curplace.first == 1) ? lang("You won!") : lang("You lost"));
 	}
 	if (msgstr.tellp() <= 0 && timer.GetIsDrifting(carid))
@@ -1558,9 +1550,9 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
 	nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
 
-	signal_lap_time[0](GetTimeString(timer.GetPlayerTime()));
-	signal_lap_time[1](GetTimeString(timer.GetLastLap()));
-	signal_lap_time[2](GetTimeString(timer.GetBestLap()));
+	signal_lap_time[0](GetTimeString(timer.GetTime(carid)));
+	signal_lap_time[1](GetTimeString(timer.GetLastLap(carid)));
+	signal_lap_time[2](GetTimeString(timer.GetBestLap(carid)));
 
 	signal_pos(placestr.str());
 	signal_lap(lapstr.str());
@@ -1594,6 +1586,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	race_laps = num_laps;
 
 	// Start out with no camera.
+	camera_car_id = player_car_id;
 	active_camera = NULL;
 
 	// Get cars count.
@@ -1643,12 +1636,10 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Add cars to the timer system.
 	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
-		int carid = timer.AddCar(car_info[i].name);
-		assert(carid == i);
-
-		if (carcontrols_local.first == &car_dynamics[i])
-			timer.SetPlayerCarId(i);
+		timer.AddCar(car_info[i].name);
 	}
+	timer.SetPlayerCarId(
+		car_info[player_car_id].driver.empty() ? player_car_id : car_info.size());
 
 	// Bind vertex data.
 	std::vector<SceneNode *> nodes;
@@ -1777,7 +1768,8 @@ bool Game::LoadCar(
 	}
 
 	car_dynamics.push_back(CarDynamics());
-	CarDynamics & car = car_dynamics[car_dynamics.size() - 1];
+	unsigned carid = car_dynamics.size() - 1;
+	CarDynamics & car = car_dynamics[carid];
 	if (!car.Load(
 		*carconf, cardir, info.tire,
 		ToBulletVector(position),
@@ -1792,16 +1784,25 @@ bool Game::LoadCar(
 		return false;
 	}
 
-	bool isai = (info.driver != "user");
-	if (!isai)
-		carcontrols_local.first = &car;
+	if (!info.driver.empty())
+	{
+		ai.AddCar(carid, info.ailevel, info.driver);
+		car.SetSteeringAssist(true);
+		car.SetAutoReverse(true);
+		car.SetAutoClutch(true);
+		car.SetAutoShift(true);
+		car.SetABS(true);
+		car.SetTCS(true);
+	}
 	else
-		ai.AddCar(&car, info.ailevel, info.driver);
-
-	car.SetAutoClutch(settings.GetAutoClutch() || isai);
-	car.SetAutoShift(settings.GetAutoShift() || isai);
-	car.SetABS(settings.GetABS() || isai);
-	car.SetTCS(settings.GetTCS() || isai);
+	{
+		car.SetSteeringAssist(settings.GetSteeringAssist());
+		car.SetAutoReverse(settings.GetAutoReverse());
+		car.SetAutoClutch(settings.GetAutoClutch());
+		car.SetAutoShift(settings.GetAutoShift());
+		car.SetABS(settings.GetABS());
+		car.SetTCS(settings.GetTCS());
+	}
 
 	info_output << "Car loading was successful: " << info.name << std::endl;
 
@@ -1946,7 +1947,6 @@ void Game::SetGarageCar()
 		return;
 
 	// clear previous car
-	carcontrols_local.first = NULL;
 	car_dynamics.clear();
 	car_graphics.clear();
 	car_sounds.clear();
@@ -1964,7 +1964,7 @@ void Game::SetGarageCar()
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
-	Vec3 offset(0.5, -3.0, 0.5);
+	Vec3 offset(0.5, -2.5, 0.5);
 	Vec3 pos = car_pos + offset;
 	Quat rot = LookAt(pos, car_pos, Direction::Up);
 	garage_camera.SetOffset(offset);
@@ -2184,7 +2184,7 @@ void Game::PopulateDriverList(GuiOption::List & driverlist)
 {
 	const std::vector<std::string> aitypes = ai.ListFactoryTypes();
 	driverlist.clear();
-	driverlist.push_back(std::make_pair("user", "user"));
+	driverlist.push_back(std::make_pair("", "player"));
 	for (const auto & aitype : aitypes)
 	{
 		driverlist.push_back(std::make_pair(aitype, aitype));
@@ -2196,10 +2196,12 @@ void Game::PopulateStartList(GuiOption::List & startlist)
 	startlist.clear();
 	for (size_t i = 0; i < car_info.size(); ++i)
 	{
-		const size_t n0 = car_info[i].name.find("/") + 1;
-		const size_t n1 = car_info[i].name.length();
-		const std::string carname = car_info[i].name.substr(n0, n1 - n0);
-		startlist.push_back(std::make_pair(cast(i + 1), carname + " / " + car_info[i].driver));
+		auto & info = car_info[i];
+		const size_t n0 = info.name.find("/") + 1;
+		const size_t n1 = info.name.length();
+		const std::string entry = info.name.substr(n0, n1 - n0) + " / "
+			+ (info.driver.empty() ? "player" : info.driver);
+		startlist.push_back(std::make_pair(cast(i + 1), entry));
 	}
 }
 
@@ -2334,10 +2336,13 @@ void Game::ProcessNewSettings()
 		track.SetRacingLineVisibility(settings.GetRacingline());
 	}
 
-	if (carcontrols_local.first)
+	if (player_car_id < unsigned(car_dynamics.size()) &&
+		car_info[player_car_id].driver.empty())
 	{
-		carcontrols_local.first->SetAutoClutch(settings.GetAutoClutch());
-		carcontrols_local.first->SetAutoShift(settings.GetAutoShift());
+		car_dynamics[player_car_id].SetAutoClutch(settings.GetAutoClutch());
+		car_dynamics[player_car_id].SetAutoShift(settings.GetAutoShift());
+		car_dynamics[player_car_id].SetAutoReverse(settings.GetAutoReverse());
+		car_dynamics[player_car_id].SetSteeringAssist(settings.GetSteeringAssist());
 	}
 
 	sound.SetVolume(settings.GetSoundVolume());
@@ -2470,15 +2475,15 @@ bool Game::Download(const std::vector <std::string> & urls)
 void Game::UpdateForceFeedback(float dt)
 {
 	const float ffdt = 0.02f;
-
-	if (carcontrols_local.first)
+	float feedback = 0.0f;
+	if (!pause)
 	{
 		ff_update_time += dt;
-		if (ff_update_time >= ffdt )
+		if (ff_update_time >= ffdt)
 		{
 			ff_update_time = 0;
 
-			float feedback = carcontrols_local.first->GetFeedback();
+			feedback = car_dynamics[player_car_id].GetFeedback();
 
 			// scale
 			feedback = feedback * settings.GetFFGain();
@@ -2488,15 +2493,9 @@ void Game::UpdateForceFeedback(float dt)
 
 			// clamp
 			feedback = Clamp(feedback, -1.0f, 1.0f);
-
-			forcefeedback->update(feedback, ffdt, error_output);
 		}
 	}
-
-	if (pause && dt == 0)
-	{
-		forcefeedback->update(0, ffdt, error_output);
-	}
+	forcefeedback->update(feedback, ffdt, error_output);
 }
 
 void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
@@ -2507,11 +2506,11 @@ void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			float squeal = car.GetTireSquealAmount(WheelPosition(i));
-			if (squeal > 0)
+			float squeal = car.GetTireSqueal(WheelPosition(i));
+			if (squeal > 0.8f)
 			{
 				btVector3 p = car.GetWheelContact(WheelPosition(i)).GetPosition();
-				tire_smoke.AddParticle(ToMathVector<float>(p), 0.5);
+				tire_smoke.AddParticle(ToMathVector<float>(p), 0.5f);
 			}
 		}
 	}
@@ -2626,8 +2625,6 @@ void Game::LeaveGame()
 
 	ai.ClearCars();
 
-	carcontrols_local.first = NULL;
-
 	if (replay.GetRecording())
 	{
 		std::string replayname = GetReplayRecordingFilename();
@@ -2652,7 +2649,8 @@ void Game::LeaveGame()
 	sound.Update(true);
 	trackmap.Unload();
 	timer.Unload();
-	active_camera = 0;
+	active_camera = NULL;
+	camera_car_id = 0;
 	race_laps = 0;
 }
 
@@ -2762,7 +2760,7 @@ void Game::ApplyTrackUpdate()
 
 void Game::ActivateEditControlPage()
 {
-	if (controlgrab_control.IsAnalog())
+	if (controlgrab_control.analog)
 	{
 		// edit analog control
 		std::string control = controlgrab_control.GetInfo();
@@ -2800,7 +2798,7 @@ void Game::CancelControl()
 
 void Game::DeleteControl()
 {
-	carcontrols_local.second.DeleteControl(controlgrab_input, controlgrab_id);
+	car_controls_local.DeleteControl(controlgrab_input, controlgrab_id);
 
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
 	LoadControlsIntoGUIPage(controlgrab_page);
@@ -2810,7 +2808,7 @@ void Game::SetButtonControl()
 {
 	controlgrab_control.onetime = (gui.GetOptionValue("controledit.once") == "true");
 	controlgrab_control.pushdown = (gui.GetOptionValue("controledit.down") == "true");
-	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+	car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
 	LoadControlsIntoGUIPage(controlgrab_page);
@@ -2821,7 +2819,7 @@ void Game::SetAnalogControl()
 	controlgrab_control.deadzone = cast<float>(gui.GetOptionValue("controledit.deadzone"));
 	controlgrab_control.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
 	controlgrab_control.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
-	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+	car_controls_local.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
 	LoadControlsIntoGUIPage(controlgrab_page);
@@ -2829,7 +2827,7 @@ void Game::SetAnalogControl()
 
 void Game::LoadControls()
 {
-	carcontrols_local.second.Load(
+	car_controls_local.Load(
 		pathmanager.GetCarControlsFile(),
 		info_output,
 		error_output);
@@ -2839,7 +2837,7 @@ void Game::LoadControls()
 
 void Game::SaveControls()
 {
-	carcontrols_local.second.Save(pathmanager.GetCarControlsFile());
+	car_controls_local.Save(pathmanager.GetCarControlsFile());
 }
 
 void Game::SyncOptions()
@@ -2849,7 +2847,6 @@ void Game::SyncOptions()
 
 	// hack: store player car info only
 	CarInfo & info = car_info[player_car_id];
-	assert(info.driver == "user");
 	info.name = optionmap["game.car"];
 	info.paint = optionmap["game.car_paint"];
 	info.tire = optionmap["game.car_tire"];
@@ -2878,9 +2875,8 @@ void Game::SyncSettings()
 	settings.Get(optionmap);
 	gui.GetOptions(optionmap);
 
-	// hack: store first car info only
+	// hack: store player car info only
 	const CarInfo & info = car_info[player_car_id];
-	assert(info.driver == "user");
 	optionmap["game.driver"] = info.driver;
 	optionmap["game.car"] = info.name;
 	optionmap["game.car_paint"] = info.paint;
@@ -3013,26 +3009,14 @@ void Game::SetCarDriver(const std::string & value)
 	if (value == info.driver)
 		return;
 
-	// reset option in the no opponents case
-	if (car_info.size() == 1)
-	{
-		gui.SetOptionValue("game.driver", "user");
-		return;
-	}
-
-	// swap driver with user
-	if (value == "user")
+	// swap driver with player
+	if (value.empty())
 	{
 		CarInfo & pinfo = car_info[player_car_id];
 		pinfo.driver = info.driver;
 		player_car_id = car_edit_id;
 	}
-	else if (player_car_id == car_edit_id)
-	{
-		player_car_id = (car_edit_id + 1) % car_info.size();
-		CarInfo & pinfo = car_info[player_car_id];
-		pinfo.driver = "user";
-	}
+
 	info.driver = value;
 
 	UpdateStartList();
@@ -3046,26 +3030,23 @@ void Game::SetCarAILevel(const std::string & value)
 void Game::SetCarsNum(const std::string & value)
 {
 	size_t cars_num = cast<size_t>(value);
-	int delta = cars_num - car_info.size();
-	if (delta == 0)
+	if (cars_num == car_info.size())
 		return;
 
-	if (delta < 0)
+	if (cars_num < car_info.size())
 	{
-		for (size_t i = car_info.size(); i > cars_num; --i)
+		if (car_edit_id >= cars_num)
+			car_edit_id = cars_num - 1;
+
+		if (player_car_id >= cars_num)
 		{
-			if (player_car_id == i - 1)
-			{
-				CarInfo & info = car_info[--player_car_id];
-				info.driver = "user";
-			}
-			car_info.pop_back();
+			car_info[cars_num - 1] = car_info[player_car_id];
+			player_car_id = cars_num - 1;
 		}
 
-		if (car_edit_id >= cars_num)
-			car_edit_id = cars_num;
+		car_info.resize(cars_num);
 	}
-	else if (delta > 0)
+	else
 	{
 		car_info.reserve(cars_num);
 		for (size_t i = car_info.size(); i < cars_num; ++i)
@@ -3108,12 +3089,12 @@ void Game::SetControl(const std::string & value)
 	std::istringstream ns(idstr);
 	ns >> id;
 
-	controlgrab_control = carcontrols_local.second.GetControl(inputstr, id);
+	controlgrab_control = car_controls_local.GetControl(inputstr, id);
 	controlgrab_page = gui.GetActivePageName();
 	controlgrab_input = inputstr;
 	controlgrab_id = id;
 
-	if (controlgrab_control.type == CarControlMap::Control::UNKNOWN)
+	if (controlgrab_control.device == CarControlMap::Control::UNKNOWN)
 	{
 		// assign control
 		controlgrab_mouse_coords = std::make_pair(eventsystem.GetMousePosition()[0], eventsystem.GetMousePosition()[1]);

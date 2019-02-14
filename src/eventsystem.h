@@ -32,36 +32,13 @@
 class EventSystem
 {
 public:
-	class ButtonState
-	{
-	public:
-		bool down; 	//button is down (false for up)
-		bool just_down; //button was just pressed
-		bool just_up;	//button was just released
-
-		ButtonState() : down(false), just_down(false), just_up(false) {}
-	};
-
 	class Joystick
 	{
-		public:
-			class HatPosition
-			{
-				public:
-					HatPosition() : centered(true), up(false), right(false), down(false), left(false) {}
-
-					bool centered;
-					bool up;
-					bool right;
-					bool down;
-					bool left;
-			};
-
 		private:
 			SDL_Joystick * sdl_joyptr;
 			std::vector <float> axis;
 			std::vector <Toggle> button;
-			std::vector <HatPosition> hat;
+			std::vector <uint8_t> hat;
 
 		public:
 			Joystick() : sdl_joyptr(NULL) {}
@@ -69,13 +46,15 @@ public:
 			Joystick(SDL_Joystick * ptr, int numaxes, int numbuttons, int numhats) : sdl_joyptr(ptr)
 			{
 				axis.resize(numaxes, 0);
-				button.resize(numbuttons);
+				button.resize(numbuttons + numhats * 4);
 				hat.resize(numhats);
 			}
 
 			int GetNumAxes() const {return axis.size();}
 
 			int GetNumButtons() const {return button.size();}
+
+			int GetNumHats() const {return hat.size();}
 
 			void AgeToggles()
 			{
@@ -85,35 +64,43 @@ public:
 				}
 			}
 
-			void SetAxis(unsigned int axisid, float newval)
+			void SetAxis(unsigned int id, float val)
 			{
-				assert (axisid < axis.size());
-				axis[axisid] = newval;
+				assert (id < axis.size());
+				axis[id] = val;
 			}
 
-			float GetAxis(unsigned int axisid) const
+			float GetAxis(unsigned int id) const
 			{
-				//assert (axisid < axis.size()); //don't want to assert since this could be due to a control file misconfiguration
-				if (axisid >= axis.size())
-					return 0.0;
-				else
-					return axis[axisid];
+				if (id < axis.size())
+					return axis[id];
+				return 0;
 			}
 
-			Toggle GetButton(unsigned int buttonid) const
+			Toggle GetButton(unsigned int id) const
 			{
-				//don't want to assert since this could be due to a control file misconfiguration
-
-				if (buttonid >= button.size())
-					return Toggle();
-				else
-					return button[buttonid];
+				// don't want to assert since this could be due to a control file misconfiguration
+				if (id < button.size())
+					return button[id];
+				return Toggle();
 			}
 
 			void SetButton(unsigned int id, bool state)
 			{
 				assert (id < button.size());
 				button[id].Set(state);
+			}
+
+			uint8_t GetHat(unsigned int id) const
+			{
+				assert (id < hat.size());
+				return hat[id];
+			}
+
+			void SetHat(unsigned int id, uint8_t state)
+			{
+				assert (id < hat.size());
+				hat[id] = state;
 			}
 	};
 
@@ -135,9 +122,9 @@ public:
 
 	void ProcessEvents();
 
-	ButtonState GetMouseButtonState(int id) const;
+	Toggle GetMouseButtonState(int id) const { return GetToggle(mbutmap, id); }
 
-	ButtonState GetKeyState(SDL_Keycode id) const;
+	Toggle GetKeyState(SDL_Keycode id) const { return GetToggle(keymap, id); }
 
 	std::map <SDL_Keycode, Toggle> & GetKeyMap() {return keymap;}
 
@@ -221,13 +208,6 @@ private:
 
 	void HandleMouseMotion(int x, int y, int xrel, int yrel);
 
-	template <class T>
-	void HandleToggle(std::map <T, Toggle> & togglemap, const DirectionEnum dir, const T & id)
-	{
-		togglemap[id].Tick();
-		togglemap[id].Set(dir == DOWN);
-	}
-
 	void HandleMouseButton(DirectionEnum dir, int id);
 
 	void HandleKey(DirectionEnum dir, SDL_Keycode id);
@@ -236,34 +216,34 @@ private:
 
 	void HandleQuit() {quit = true;}
 
-	template <class T>
-	void AgeToggles(std::map <T, Toggle> & togglemap)
+	template <class ToggleMap, typename T>
+	Toggle GetToggle(const ToggleMap & togglemap, const T & id) const
 	{
-		std::list <typename std::map<T, Toggle>::iterator> todel;
-		for (auto i = togglemap.begin(); i != togglemap.end(); ++i)
+		auto i = togglemap.find(id);
+		if (i != togglemap.end())
+			return i->second;
+		return Toggle();
+	}
+
+	template <class ToggleMap, typename T>
+	void HandleToggle(ToggleMap & togglemap, const DirectionEnum dir, const T & id)
+	{
+		togglemap[id].Tick();
+		togglemap[id].Set(dir == DOWN);
+	}
+
+	template <class ToggleMap>
+	void AgeToggles(ToggleMap & togglemap)
+	{
+		auto i = togglemap.begin();
+		while (i != togglemap.end())
 		{
 			i->second.Tick();
 			if (!i->second.GetState() && !i->second.GetImpulseFalling())
-				todel.push_back(i);
+				togglemap.erase(i++);
+			else
+				i++;
 		}
-
-		for (auto i : todel)
-			togglemap.erase(i);
-	}
-
-	template <class T>
-	ButtonState GetToggle(const std::map <T, Toggle> & togglemap, const T & id) const
-	{
-		ButtonState s;
-		s.down = s.just_down = s.just_up = false;
-		auto i = togglemap.find(id);
-		if (i != togglemap.end())
-		{
-			s.down = i->second.GetState();
-			s.just_down = i->second.GetImpulseRising();
-			s.just_up = i->second.GetImpulseFalling();
-		}
-		return s;
 	}
 };
 

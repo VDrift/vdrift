@@ -70,7 +70,6 @@ This is an example **VDrift.config** file.
     track = paulricard88
     traction_control = true
     [joystick]
-    calibrated = false
     ff_device = /dev/input/event0
     ff_gain = 2
     ff_invert = false
