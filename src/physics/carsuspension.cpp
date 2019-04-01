@@ -21,8 +21,6 @@
 #include "coordinatesystem.h"
 #include "cfg/ptree.h"
 
-#include <iomanip> // std::setw
-
 static const btScalar deg2rad = M_PI / 180;
 
 CarSuspensionInfo::CarSuspensionInfo() :
@@ -31,8 +29,6 @@ CarSuspensionInfo::CarSuspensionInfo() :
 	bounce(2500),
 	rebound(4000),
 	travel(0.2),
-	damper_factors(1),
-	spring_factors(1),
 	steering_angle(0),
 	ackermann(0),
 	camber(0),
@@ -74,12 +70,6 @@ void CarSuspension::Init(const CarSuspensionInfo & info)
 
 	position = info.position;
 	orientation = orientation_ext;
-}
-
-btScalar CarSuspension::GetDisplacement(btScalar force) const
-{
-	// ignoring spring factors here, duh
-	return force / info.spring_constant;
 }
 
 void CarSuspension::SetSteering(btScalar value)
@@ -160,8 +150,7 @@ struct Hinge
 	btVector3 Rotate(btScalar travel) const
 	{
 		btScalar z = arm[2] + travel;
-		assert(length_2 > z * z); // todo: limit travel to hinge arm length
-		btScalar nxy = norm_xy * std::sqrt(length_2 - z * z);
+		btScalar nxy = norm_xy * std::sqrt(Max(length_2 - z * z, btScalar(0)));
 		btVector3 arm_new(arm[0] * nxy, arm[1] * nxy, z);
 
 		return anchor + arm_new;
@@ -277,12 +266,12 @@ struct WishboneSuspension
 
 template <class Suspension>
 void ComputeTransforms(
-	const Suspension & s, btScalar travel,
+	const Suspension & s, btScalar travel_min, btScalar travel_max,
 	btQuaternion (&orientations)[5], btVector3 (&positions)[5])
 {
-	btScalar travel_delta = travel / (5 - 1);
+	btScalar travel_delta = (travel_max - travel_min) / (5 - 1);
 	for (int i = 0; i < 5; ++i)
-		s.GetWheelTransform(travel_delta * i, orientations[i], positions[i]);
+		s.GetWheelTransform(travel_min + travel_delta * i, orientations[i], positions[i]);
 }
 
 std::istream & operator>>(std::istream & s, btVector3 & v)
@@ -299,21 +288,6 @@ std::istream & operator>>(std::istream & s, btVector3 & v)
 	return s;
 }
 
-// 1-9 points
-static void LoadPoints(const PTree & cfg, const std::string & name, LinearInterp<btScalar> & points)
-{
-	int i = 1;
-	std::ostringstream s;
-	s << std::setw(1) << i;
-	std::vector<btScalar> point(2);
-	while (cfg.get(name+s.str(), point) && i < 10)
-	{
-		s.clear();
-		s << std::setw(1) << ++i;
-		points.AddPoint(point[0], point[1]);
-	}
-}
-
 static bool LoadCoilover(
 	const PTree & cfg,
 	CarSuspensionInfo & info,
@@ -324,14 +298,13 @@ static bool LoadCoilover(
 	if (!cfg.get("rebound", info.rebound, error_output)) return false;
 	if (!cfg.get("travel", info.travel, error_output)) return false;
 	if (!cfg.get("anti-roll", info.anti_roll, error_output)) return false;
-	LoadPoints(cfg, "damper-factor-", info.damper_factors);
-	LoadPoints(cfg, "spring-factor-", info.spring_factors);
 	return true;
 }
 
 bool CarSuspension::Load(
 	const PTree & cfg_wheel,
 	btScalar wheel_mass,
+	btScalar wheel_load,
 	CarSuspension & suspension,
 	std::ostream & error_output)
 {
@@ -348,6 +321,12 @@ bool CarSuspension::Load(
 	if (!cfg_wheel.get("coilover", cfg_coil, error_output)) return false;
 	if (!LoadCoilover(*cfg_coil, info, error_output)) return false;
 
+	// the loaded info.travel is max travel from rest postion under load
+	// calculate the extended suspension travel
+	btScalar travel_max = info.travel;
+	btScalar travel_min = -wheel_load / info.spring_constant;
+	info.travel = travel_max - travel_min;
+
 	const PTree * cfg_susp;
 	if (cfg_wheel.get("double-wishbone", cfg_susp))
 	{
@@ -360,7 +339,7 @@ bool CarSuspension::Load(
 		if (!cfg_susp->get("lower-hub", hinges[1][2], error_output)) return false;
 
 		WishboneSuspension s(info.position, hinges);
-		ComputeTransforms(s, info.travel, info.orientations, info.positions);
+		ComputeTransforms(s, travel_min, travel_max, info.orientations, info.positions);
 	}
 	else if (cfg_wheel.get("macpherson-strut", cfg_susp))
 	{
@@ -370,7 +349,7 @@ bool CarSuspension::Load(
 		if (!cfg_susp->get("strut-end", strut_end, error_output)) return false;
 
 		MacPhersonSuspension s(info.position, strut_top, strut_end, hinge);
-		ComputeTransforms(s, info.travel, info.orientations, info.positions);
+		ComputeTransforms(s, travel_min, travel_max, info.orientations, info.positions);
 	}
 	else
 	{
@@ -380,9 +359,20 @@ bool CarSuspension::Load(
 		if (!cfg_susp->get("wheel", wheel, error_output)) return false;
 
 		BasicSuspension s(info.position, chassis, wheel);
-		ComputeTransforms(s, info.travel, info.orientations, info.positions);
+		ComputeTransforms(s, travel_min, travel_max, info.orientations, info.positions);
 	}
 
 	suspension.Init(info);
+/*
+	const btScalar rad2deg = 180/M_PI;
+	btScalar z, y, x;
+	suspension.orientation_ext.getEulerZYX(z, y, x);
+	error_output << "0 " << y * rad2deg << "\n";
+	for (int i = 0; i < 5; ++i) {
+		(suspension.orientation_ext * info.orientations[i]).getEulerZYX(z, y, x);
+		error_output << travel_min + ((travel_max - travel_min)/4)*i << " " << y * rad2deg << "\n";
+	}
+	error_output << std::endl;
+*/
 	return true;
 }

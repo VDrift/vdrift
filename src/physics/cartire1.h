@@ -67,6 +67,7 @@ public:
 		const btScalar velocity,
 		const btScalar resistance_factor) const;
 
+	btScalar getCamber() const;
 	btScalar getSlip() const;
 	btScalar getSlipAngle() const;
 	btScalar getIdealSlip() const;
@@ -126,6 +127,11 @@ private:
 inline btScalar CarTire1::getTread() const
 {
 	return tread;
+}
+
+inline btScalar CarTire1:: getCamber() const
+{
+	return camber;
 }
 
 inline btScalar CarTire1::getSlip() const

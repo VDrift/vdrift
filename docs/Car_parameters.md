@@ -170,6 +170,8 @@ Wheel
 
 The number of wheels is fixed to four: fl, fr, rl, rr. For a FWD car the wheels fl and fr are powered, for RWD the wheels rl and rr.
 
+Wheel position, camber, toe are the values for the car at rest.
+
 The wheel mesh is the wheel disk mesh(wheel mesh without rim). The mesh will be scaled according to tire dimensions, has to fit into a unit cube. The rim mesh is generated automatically.
 
 Wheel alignment is set with the camber, caster, and toe. All angles are in degrees. For a "negative camber" the left wheel camber has to be negative, the right wheel camber positive.
@@ -199,21 +201,16 @@ Coilover
     spring-constant = 49131.9
     bounce = 2600
     rebound = 7900
-    damper-factor-1 = 0.06, 1.2
-    damper-factor-2 = 0.08, 1.1
-    damper-factor-3 = 0.1, 1
-    damper-factor-4 = 0.2, 0.9
-    damper-factor-5 = 0.5, 0.5
-    damper-factor-6 = 1, 0.3
-    damper-factor-7 = 5, 0.1
     travel = 0.19
     anti-roll = 800.0
 
-Each wheel has a coilover(spring-damper unit). The spring-constant is the **wheel rate** in N/m. The spring-factor-1 and 2 parameters define a curve for the spring response. These can be omitted if desired, in which case a factor of 1.0 will be used everywhere. Points are defined by specifying an x,y pair where x is the suspension displacement in meters and y is the factor to be applied to the spring coefficient. In this example, the spring factor will be 1.0 when the displacement is between 0 and 0.052 m, and then the spring factor will change linearly to 1.2 at 0.055 m (and beyond). The spring factor gets multiplied by the spring-constant. You can put as many spring-factor points as you want (just increase the spring-factor- number for each additional point). Note that displacement values are relative to the "zero g", "zero force" position. For best results, start VDrift with the -debug option and observe suspension displacements during maneuvering to determine where you want to put your points.
+Each wheel has a coilover(spring-damper unit). The spring-constant is the **wheel rate** in N/m.
 
-The bounce and rebound parameters are the damping coefficients for compression and expansion of the suspension, respectively, in units of N/m/s. The damper-factor-1 and 2 parameters define a curve for the damper response. These can be omitted if desired, in which case a factor of 1.0 will be used everywhere. Points are defined by specifying an x,y pair where x is an absolute value of suspension velocity in m/s and y is the factor to be applied to the damping coefficient. In this example, the damper factor will be 1.0 when the compression velocity absolute value is between 0 and 0.08 m/s, and then the damper factor will change linearly to 0.7 at 0.1 m/s (and beyond). The damper factor gets applied to the bonce or rebound damper coefficient, depending on the direction of travel. You can put as many damper-factor points as you want (just increase the damper-factor- number for each additional point).
+The bounce and rebound parameters are the damping coefficients for compression and expansion of the suspension, respectively, in units of N/m/s. 
 
-The travel is the maximum wheel travel from wheel extended position. Anti-roll in N/m is currently incorrectly associated with the wheel coilover, acts between front wheels fl and fr and rear wheels rl and rr.
+The travel is the wheel travel at rest position (spring compressed by car weight at rest). The extended wheel position and total travel is calculated from rest travel and  spring stiffnes (total travel = travel + wheel load at rest / spring constant).
+
+Anti-roll in N/m (currently associated with the wheel coilover) acts between front wheels fl and fr and rear wheels rl and rr.
 
 Tire
 ----

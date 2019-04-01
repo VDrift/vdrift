@@ -594,6 +594,12 @@ bool CarDynamics::Load(
 	FractureBodyInfo bodyinfo(motion_state);
 	BodyLoader loadBody(aerodevice, bodyinfo, damage);
 
+	// load children bodies
+	for (const auto & node : cfg)
+	{
+		if (!loadBody(node.second, error)) return false;
+	}
+
 	// load wheels
 	const PTree * cfg_wheels;
 	if (!cfg.get("wheel", cfg_wheels, error)) return false;
@@ -608,7 +614,7 @@ bool CarDynamics::Load(
 	int i = 0;
 	for (const auto & node : *cfg_wheels)
 	{
-		const PTree & cfg_wheel = node.second;
+		const auto & cfg_wheel = node.second;
 		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
 
 		std::string tirestr(cartire);
@@ -627,10 +633,6 @@ bool CarDynamics::Load(
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
 
-		if (!CarSuspension::Load(cfg_wheel, wheel[i].GetMass(), suspension[i], error)) return false;
-		if (suspension[i].GetMaxSteeringAngle() > maxangle)
-			maxangle = suspension[i].GetMaxSteeringAngle();
-
 		btScalar mass = wheel[i].GetMass();
 		btScalar width = wheel[i].GetWidth();
 		btScalar radius = wheel[i].GetRadius();
@@ -640,16 +642,26 @@ bool CarDynamics::Load(
 		i++;
 	}
 
-	// load children bodies
-	for (const auto & node : cfg)
-	{
-		if (!loadBody(node.second, error)) return false;
-	}
+	// get suspension load at rest
+	btVector3 f(0, 0, 0), r(0, 0, 0);
+	(cfg_wheels->begin())->second.get("position", f, error);
+	(--cfg_wheels->end())->second.get("position", r, error);
+	btScalar half_car_load = loadBody.info.m_mass * (gravity * 0.5f);
+	btScalar dr = -loadBody.info.m_massCenter[1] / loadBody.info.m_mass;
+	btScalar front_mass_ratio = (r[1] + dr) / (r[1] - f[1]);
+	btScalar fwl = front_mass_ratio * half_car_load;
+	btScalar rwl = half_car_load - fwl;
+	btScalar wheel_load[WHEEL_COUNT] = {fwl, fwl, rwl, rwl};
 
-	if (bodyinfo.m_shape->getNumChildShapes() == wheel_count)
+	// load suspension
+	i = 0;
+	for (const auto & node : *cfg_wheels)
 	{
-		error << "No collision shape defined." << std::endl;
-		return false;
+		if (!CarSuspension::Load( node.second, wheel[i].GetMass(), wheel_load[i], suspension[i], error))
+			return false;
+		if (suspension[i].GetMaxSteeringAngle() > maxangle)
+			maxangle = suspension[i].GetMaxSteeringAngle();
+		i++;
 	}
 
 	if (drive == AWD)
@@ -677,20 +689,6 @@ bool CarDynamics::Load(
 	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(2);
 	btVector3 fwd_offset = fwd * (2 - bmax.y());
 	btVector3 up_offset = -up * (btScalar(0.5) + bmin.z());
-
-	// adjust for suspension rest position
-	// a bit hacky here, should use updated aabb
-	btScalar m = 1 / body->getInvMass();
-	btScalar m1 = m * CalculateFrontMassRatio();
-	btScalar m2 = m - m1;
-	btScalar d1 = suspension[0].GetDisplacement(m1 * gravity / 2);
-	btScalar d2 = suspension[3].GetDisplacement(m2 * gravity / 2);
-	suspension[0].SetDisplacement(d1);
-	suspension[1].SetDisplacement(d1);
-	suspension[2].SetDisplacement(d2);
-	suspension[3].SetDisplacement(d2);
-	up_offset -= up * Max(d1, d2);
-
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 	UpdateWheelTransform();
 
@@ -1689,9 +1687,9 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 btScalar CarDynamics::CalculateFrontMassRatio() const
 {
 	btScalar dr = GetCenterOfMassOffset()[1];
-	btScalar r1 = suspension[0].GetWheelPosition()[1] + dr;
-	btScalar r2 = suspension[2].GetWheelPosition()[1] + dr;
-	return r2 / (r2 - r1);
+	btScalar r1 = suspension[0].GetWheelPosition()[1];
+	btScalar r2 = suspension[2].GetWheelPosition()[1];
+	return (r2 + dr) / (r2 - r1);
 }
 
 btScalar CarDynamics::CalculateGripBalance() const
@@ -1702,8 +1700,8 @@ btScalar CarDynamics::CalculateGripBalance() const
 	btScalar m = 1 / body->getInvMass();
 	btScalar m1 = m * r2 / (r2 - r1);
 	btScalar m2 = m - m1;
-	btScalar f1 = tire[0].getMaxFy(m1 * gravity * 0.5f, 0);
-	btScalar f2 = tire[2].getMaxFy(m2 * gravity * 0.5f, 0);
+	btScalar f1 = tire[0].getMaxFy(m1 * (gravity * 0.5f), 0);
+	btScalar f2 = tire[2].getMaxFy(m2 * (gravity * 0.5f), 0);
 	btScalar t1 = f1 * r1;
 	btScalar t2 = f2 * r2;
 	return -t1 / (t2 - t1);

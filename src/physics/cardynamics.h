@@ -351,12 +351,14 @@ inline Stream & operator << (Stream & os, const btVector3 & v)
 template <class Stream>
 inline Stream & operator << (Stream & os, const CarTire & tire)
 {
-	os << "Fx: " << tire.getFx() << "\n";
-	os << "Fy: " << tire.getFy() << "\n";
-	os << "Slip Ang: " << tire.getSlipAngle() * btScalar(180 / M_PI) << " / ";
-	os << tire.getIdealSlipAngle() * btScalar(180 / M_PI) << "\n";
-	os << "Slip: " << tire.getSlip() << " / ";
-	os << tire.getIdealSlip() << "\n";
+	os	<< "Camber: " << tire.getCamber() * btScalar(180 / M_PI)
+		<< "\nFx: " << tire.getFx()
+		<< "\nFy: " << tire.getFy()
+		<< "\nSlip Ang: " << tire.getSlipAngle() * btScalar(180 / M_PI)
+		<< " / " << tire.getIdealSlipAngle() * btScalar(180 / M_PI)
+		<< "\nSlip: " << tire.getSlip()
+		<< " / " << tire.getIdealSlip()
+		<< "\n";
 	return os;
 }
 
