@@ -1134,26 +1134,29 @@ void CarDynamics::ApplyTCS(int i)
 
 void CarDynamics::ApplyABS(int i)
 {
-	// only active if brakes commanded past threshold and speed exceeds 4 m/s
-	if (brake[i].GetBrakeFactor() > btScalar(0.1) &&
-		body->getLinearVelocity().length2() > 16)
+	// only active if speed exceeds 4 m/s
+	btScalar slip = tire[i].getSlip();
+	if (brake_value > 0.01f && body->getLinearVelocity().length2() > 16)
 	{
-		btScalar slip = -tire[i].getSlip();
-		btScalar slip_angle = tire[i].getSlipAngle();
-		btScalar slip_ideal = tire[i].getIdealSlip() * CosPi2(slip_angle);
-		btScalar slip_engage = slip_ideal * btScalar(1.0);
-		btScalar slip_disengage = slip_ideal * btScalar(0.5);
+		// limit brake value based on normalized predicted slip
+		btScalar slip_delta = slip - wheel_slip[i];
+		btScalar slip_predicted = slip + slip_delta;
+		btScalar slip_ideal = tire[i].getIdealSlip();
+		btScalar sr = std::abs(slip_predicted) / slip_ideal;
+		btScalar brake_delta_limit = (1 - sr) * 2;
 
-		if (slip > slip_engage)
-			abs_active[i] = true;
-		else if (slip < slip_disengage)
-			abs_active[i] = false;
-
-		if (abs_active[i])
-			brake[i].SetBrakeFactor(0);
+		btScalar brake_old = brake[i].GetBrakeFactor();
+		btScalar brake_delta = Min(brake_delta_limit, brake_value - brake_old);
+		btScalar brake_new = Clamp(brake_old + brake_delta, 0.0f, 1.0f);
+		brake[i].SetBrakeFactor(brake_new);
+		abs_active[i] = brake_new < brake_value ? true : false;
 	}
 	else
+	{
+		brake[i].SetBrakeFactor(brake_value);
 		abs_active[i] = false;
+	}
+	wheel_slip[i] = slip;
 }
 
 // even triangle wave with a period and amplitude of 1
@@ -1202,6 +1205,11 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 	{
 		for (int i = 0; i < WHEEL_COUNT; ++i)
 			ApplyABS(i);
+	}
+	else
+	{
+		for (int i = 0; i < WHEEL_COUNT; ++i)
+			brake[i].SetBrakeFactor(brake_value);
 	}
 
 	UpdateTransmission(dt);
@@ -1793,10 +1801,6 @@ void CarDynamics::SetClutch(btScalar value)
 void CarDynamics::SetBrake(btScalar value)
 {
 	brake_value = value;
-	for (int i = 0; i < WHEEL_COUNT; ++i)
-	{
-		brake[i].SetBrakeFactor(value);
-	}
 }
 
 void CarDynamics::SetHandBrake(btScalar value)
@@ -1900,6 +1904,7 @@ void CarDynamics::Init()
 		wheel_velocity[i][0] = 0;
 		wheel_velocity[i][1] = 0;
 		wheel_velocity[i][2] = 0;
+		wheel_slip[i] = 0;
 		abs_active[i] = 0;
 		tcs_active[i] = 0;
 	}

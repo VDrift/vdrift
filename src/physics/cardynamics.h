@@ -216,6 +216,7 @@ protected:
 	btScalar wheel_velocity[WHEEL_COUNT][3];
 
 	// traction control state
+	btScalar wheel_slip[WHEEL_COUNT];
 	bool abs_active[WHEEL_COUNT];
 	bool tcs_active[WHEEL_COUNT];
 
@@ -508,6 +509,7 @@ inline bool CarDynamics::Serialize(Serializer & s)
 		_SERIALIZE_(s, suspension[i]);
 		_SERIALIZE_(s, wheel[i]);
 		_SERIALIZE_(s, brake[i]);
+		_SERIALIZE_(s, wheel_slip[i]);
 		_SERIALIZE_(s, abs_active[i]);
 		_SERIALIZE_(s, tcs_active[i]);
 	}
