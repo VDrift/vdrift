@@ -594,12 +594,6 @@ bool CarDynamics::Load(
 	FractureBodyInfo bodyinfo(motion_state);
 	BodyLoader loadBody(aerodevice, bodyinfo, damage);
 
-	// load children bodies
-	for (const auto & node : cfg)
-	{
-		if (!loadBody(node.second, error)) return false;
-	}
-
 	// load wheels
 	const PTree * cfg_wheels;
 	if (!cfg.get("wheel", cfg_wheels, error)) return false;
@@ -640,6 +634,12 @@ bool CarDynamics::Load(
 		btCollisionShape * shape = new btCylinderShapeX(size);
 		loadBody(cfg_wheel, error, shape, mass, true);
 		i++;
+	}
+
+	// load children bodies
+	for (const auto & node : cfg)
+	{
+		if (!loadBody(node.second, error)) return false;
 	}
 
 	// get suspension load at rest
