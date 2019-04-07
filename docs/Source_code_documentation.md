@@ -5,6 +5,17 @@ Other versions
 
 Doxygen output for the last release will be added soon. When new releases are made, documentation will be made available with the release.
 
+Generate Locally
+----------------
+
+1. [Install doxygen](http://doxygen.nl/manual/install.html)
+1. Set the `VDRIFT_ROOT` environment variable to the directory of your project. Do not use a trailing slash.
+    ```sh
+    # on Linux
+    export VDRIFT_ROOT=/home/yourname/vdrift
+    ```
+1. Run `doxygen -s` to generate docs.
+
 Read Online
 -----------
 

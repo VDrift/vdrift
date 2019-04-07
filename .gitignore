@@ -2,6 +2,8 @@
 *.dll
 *.exe
 *.out
+*.swp
+*.bak
 .DS_Store
 .sconf_temp/
 .sconsign.dblite
@@ -11,6 +13,7 @@ obj
 build
 data
 vdrift
+doxygen
 vdrift-mac
 vdrift-win
 vdrift.cfg
