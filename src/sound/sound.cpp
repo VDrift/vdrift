@@ -172,7 +172,7 @@ bool Sound::Init(unsigned short buffersize, std::ostream & info_output, std::ost
 
 	desired.freq = 44100;
 	desired.format = AUDIO_S16SYS;
-	desired.samples = buffersize;
+	desired.samples = Clamp<Uint16>(buffersize, 512, 2048);
 	desired.callback = Sound::CallbackWrapper;
 	desired.userdata = this;
 	desired.channels = 2;

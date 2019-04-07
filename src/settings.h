@@ -99,6 +99,12 @@ public:
 		return sound_sources;
 	}
 
+	// log2 sound buffer size
+	int GetSoundBufferSizeLog2() const
+	{
+		return sound_buffer_size_log2;
+	}
+
 	// get sound attenuation[4] coefficients
 	const float * GetSoundAttenuation() const
 	{
@@ -416,6 +422,7 @@ private:
 	float music_volume;
 	float sound_volume;
 	int sound_sources;
+	int sound_buffer_size_log2;
 	float sound_attenuation[4];
 	bool mph; //if false, KPH
 	std::string track;

@@ -492,7 +492,7 @@ bool Game::InitGUI()
 
 bool Game::InitSound()
 {
-	if (sound.Init(2048, info_output, error_output))
+	if (sound.Init(1<<settings.GetSoundBufferSizeLog2(), info_output, error_output))
 	{
 		sound.SetVolume(settings.GetSoundVolume());
 		content.getFactory<SoundBuffer>().init(sound.GetDeviceInfo());

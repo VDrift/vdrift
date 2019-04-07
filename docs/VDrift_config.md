@@ -46,7 +46,7 @@ This is an example **VDrift.config** file.
     view_distance = 1000
     width = 1680
     zdepth = 16
-    
+
     [game]
     ai_difficulty = 1
     antilock = true

@@ -51,6 +51,7 @@ Settings::Settings() :
 	music_volume(0.5),
 	sound_volume(0.5),
 	sound_sources(64),
+	sound_buffer_size_log2(10),
 	mph(true),
 	track("ruudskogen"),
 	antialiasing(0),
@@ -194,6 +195,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "attenuation_exponent", sound_attenuation[2]);
 	Param(config, write, section, "attenuation_offset", sound_attenuation[3]);
 	Param(config, write, section, "sources", sound_sources);
+	Param(config, write, section, "buffer_size_log2", sound_buffer_size_log2);
 	Param(config, write, section, "volume", sound_volume);
 	Param(config, write, section, "music_volume", music_volume);
 
