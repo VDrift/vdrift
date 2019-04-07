@@ -363,6 +363,7 @@ bool CarSuspension::Load(
 	}
 
 	suspension.Init(info);
+	suspension.SetDisplacement(-travel_min);
 /*
 	const btScalar rad2deg = 180/M_PI;
 	btScalar z, y, x;
