@@ -24,125 +24,104 @@
 #include "minmax.h"
 #include "macros.h"
 
+struct CarBrakeInfo
+{
+	btScalar friction; ///< sliding coefficient of friction for the brake pads on the rotor
+	btScalar max_pressure; ///< maximum allowed pressure
+	btScalar radius; ///< effective radius of the rotor
+	btScalar area; ///< area of the brake pads
+	btScalar brake_bias; ///< the fraction of the pressure to be applied to the brake
+	btScalar handbrake_bias; ///< the fraction of the pressure to be applied when the handbrake is pulled
+
+	CarBrakeInfo() :
+		friction(0.73),
+		max_pressure(4E6),
+		radius(0.14),
+		area(0.015),
+		brake_bias(1),
+		handbrake_bias(0)
+	{ }
+};
+
 class CarBrake
 {
-	private:
-		//constants (not actually declared as const because they can be changed after object creation)
-		btScalar friction; ///< sliding coefficient of friction for the brake pads on the rotor
-		btScalar max_pressure; ///< maximum allowed pressure
-		btScalar radius; ///< effective radius of the rotor
-		btScalar area; ///< area of the brake pads
-		btScalar bias; ///< the fraction of the pressure to be applied to the brake
-		btScalar handbrake; ///< the fraction of the pressure to be applied when the handbrake is pulled
+public:
+	// default constructor makes an S2000-like car
+	CarBrake() :
+		max_torque(6132),
+		brake_bias(1),
+		handbrake_bias(0),
+		brake_factor(0),
+		handbrake_factor(0),
+		lasttorque(0)
+	{
+		// ctor
+	}
 
-		//variables
-		btScalar brake_factor;
-		btScalar handbrake_factor; ///< this is separate so that ABS does not get applied to the handbrake
+	void Init(const CarBrakeInfo & info)
+	{
+		max_torque = (info.max_pressure * info.area) * (info.friction * info.radius);
+		brake_bias = info.brake_bias;
+		handbrake_bias = info.handbrake_bias;
+	}
 
-		//for info only
-		btScalar lasttorque;
+	/// brake_factor ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
+	void SetBrakeFactor(btScalar newfactor)
+	{
+		brake_factor = newfactor;
+	}
 
+	/// ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
+	void SetHandbrakeFactor(btScalar value)
+	{
+		handbrake_factor = value;
+	}
 
-	public:
-		//default constructor makes an S2000-like car
-		CarBrake() :
-			friction(0.73),
-			max_pressure(4e6),
-			radius(0.14),
-			area(0.015),
-			bias(1),
-			handbrake(1),
-			brake_factor(0),
-			handbrake_factor(0),
-			lasttorque(0)
-		{
-			// ctor
-		}
+	void SetBias(btScalar value)
+	{
+		brake_bias = value;
+	}
 
-		template <class Stream>
-		void DebugPrint(Stream & out) const
-		{
-			out << "---Brake---" << "\n";
-			out << "Control: " << brake_factor << ", " << handbrake_factor << "\n";
-			out << "Torque: " << lasttorque << "\n";
-		}
+	void SetHandbrake(btScalar value)
+	{
+		handbrake_bias = value;
+	}
 
-		///brake_factor ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
-		void SetBrakeFactor(btScalar newfactor)
-		{
-			brake_factor = newfactor;
-		}
+	btScalar GetBrakeFactor() const
+	{
+		return brake_factor;
+	}
 
-		btScalar GetMaxTorque() const
-		{
-			return (max_pressure * area) * (friction * radius);
-		}
+	/// brake torque magnitude
+	btScalar GetTorque()
+	{
+		lasttorque = max_torque * (brake_bias * brake_factor + handbrake_bias * handbrake_factor);
+		return lasttorque;
+	}
 
-		///brake torque magnitude
-		btScalar GetTorque()
-		{
-			lasttorque = GetMaxTorque() * (bias * brake_factor + handbrake * handbrake_factor);
-			return lasttorque;
-		}
+	template <class Stream>
+	void DebugPrint(Stream & out) const
+	{
+		out << "---Brake---" << "\n";
+		out << "Control: " << brake_factor << ", " << handbrake_factor << "\n";
+		out << "Torque: " << lasttorque << "\n";
+	}
 
-		void SetFriction(btScalar value)
-		{
-			friction = value;
-		}
+	template <class Serializer>
+	bool Serialize(Serializer & s)
+	{
+		_SERIALIZE_(s, brake_factor);
+		_SERIALIZE_(s, handbrake_factor);
+		return true;
+	}
 
-		btScalar GetFriction() const
-		{
-			return friction;
-		}
-
-		void SetMaxPressure(btScalar value)
-		{
-			max_pressure = value;
-		}
-
-		void SetRadius(btScalar value)
-		{
-			radius = value;
-		}
-
-		btScalar GetRadius() const
-		{
-			return radius;
-		}
-
-		void SetArea(btScalar value)
-		{
-			area = value;
-		}
-
-		void SetBias(btScalar value)
-		{
-			bias = value;
-		}
-
-		btScalar GetBrakeFactor() const
-		{
-			return brake_factor;
-		}
-
-		void SetHandbrake(btScalar value)
-		{
-			handbrake = value;
-		}
-
-		///ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
-		void SetHandbrakeFactor(btScalar value)
-		{
-			handbrake_factor = value;
-		}
-
-		template <class Serializer>
-		bool Serialize(Serializer & s)
-		{
-			_SERIALIZE_(s, brake_factor);
-			_SERIALIZE_(s, handbrake_factor);
-			return true;
-		}
+private:
+	btScalar max_torque;
+	btScalar brake_bias;
+	btScalar handbrake_bias;
+	btScalar brake_factor;
+	btScalar handbrake_factor; ///< this is separate so that ABS does not get applied to the handbrake
+	btScalar lasttorque; ///< for info only
 };
 
 #endif

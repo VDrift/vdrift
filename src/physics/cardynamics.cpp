@@ -144,22 +144,15 @@ static bool LoadBrake(
 	CarBrake & brake,
 	std::ostream & error_output)
 {
-	btScalar friction, max_pressure, area, bias, radius, handbrake(0);
+	CarBrakeInfo info;
+	if (!cfg.get("friction", info.friction, error_output)) return false;
+	if (!cfg.get("max-pressure", info.max_pressure, error_output)) return false;
+	if (!cfg.get("radius", info.radius, error_output)) return false;
+	if (!cfg.get("area", info.area, error_output)) return false;
+	if (!cfg.get("bias", info.brake_bias, error_output)) return false;
+	cfg.get("handbrake", info.handbrake_bias);
 
-	if (!cfg.get("friction", friction, error_output)) return false;
-	if (!cfg.get("area", area, error_output)) return false;
-	if (!cfg.get("radius", radius, error_output)) return false;
-	if (!cfg.get("bias", bias, error_output)) return false;
-	if (!cfg.get("max-pressure", max_pressure, error_output)) return false;
-	cfg.get("handbrake", handbrake);
-
-	brake.SetFriction(friction);
-	brake.SetArea(area);
-	brake.SetRadius(radius);
-	brake.SetBias(bias);
-	brake.SetMaxPressure(max_pressure*bias);
-	brake.SetHandbrake(handbrake);
-
+	brake.Init(info);
 	return true;
 }
 
