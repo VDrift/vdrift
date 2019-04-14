@@ -145,11 +145,11 @@ static bool LoadBrake(
 	std::ostream & error_output)
 {
 	CarBrakeInfo info;
-	if (!cfg.get("friction", info.friction, error_output)) return false;
-	if (!cfg.get("max-pressure", info.max_pressure, error_output)) return false;
-	if (!cfg.get("radius", info.radius, error_output)) return false;
-	if (!cfg.get("area", info.area, error_output)) return false;
-	if (!cfg.get("bias", info.brake_bias, error_output)) return false;
+	cfg.get("friction", info.friction, error_output);
+	cfg.get("max-pressure", info.max_pressure, error_output);
+	cfg.get("radius", info.radius, error_output);
+	cfg.get("area", info.area, error_output);
+	cfg.get("bias", info.brake_bias, error_output);
 	cfg.get("handbrake", info.handbrake_bias);
 
 	brake.Init(info);
