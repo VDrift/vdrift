@@ -386,8 +386,8 @@ static bool LoadDifferential(
 	CarDifferential & d,
 	std::ostream & error_output)
 {
-	if (!cfg.get("final-drive", d.final_drive, error_output)) return false;
-	if (!cfg.get("anti-slip", d.anti_slip, error_output)) return false;
+	cfg.get("final-drive", d.final_drive, error_output);
+	cfg.get("anti-slip", d.anti_slip, error_output);
 	cfg.get("anti-slip-torque", d.anti_slip_torque);
 	cfg.get("anti-slip-torque-deceleration-factor", d.anti_slip_torque_deceleration_factor);
 	cfg.get("torque-split", d.torque_split);
