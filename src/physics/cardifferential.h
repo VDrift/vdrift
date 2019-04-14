@@ -27,21 +27,11 @@
 
 struct CarDifferential
 {
-	btScalar final_drive; ///< The gear ratio of the differential.
-	btScalar anti_slip; ///< This allows modelling of speed-sensitive limited-slip differentials. This is the maximum anti_slip torque that will be applied and, for speed-sensitive limited-slip differentials, the anti-slip multiplier that's always applied.
-	btScalar anti_slip_torque; ///< This allows modelling of torque sensitive limited-slip differentials. This is the anti_slip dependence on torque.
-	btScalar anti_slip_torque_deceleration_factor; ///< This allows modelling of torque sensitive limited-slip differentials that are 1.5 or 2-way. Set it to 0.0 for 1-way LSD, 1.0 for 2-way LSD, and somewhere in between for 1.5-way LSD.
-	btScalar torque_split; ///< This allows modelling of epicyclic differentials. This value ranges from 0.0 to 1.0 where 0.0 applies all torque to side1.
-
-	CarDifferential() :
-		final_drive(4.1),
-		anti_slip(600),
-		anti_slip_torque(0),
-		anti_slip_torque_deceleration_factor(0),
-		torque_split(0.5)
-	{
-		// ctor
-	}
+	btScalar final_drive = 4.1; ///< The gear ratio of the differential.
+	btScalar anti_slip = 600; ///< This allows modelling of speed-sensitive limited-slip differentials. This is the maximum anti_slip torque that will be applied and, for speed-sensitive limited-slip differentials, the anti-slip multiplier that's always applied.
+	btScalar anti_slip_torque = 0; ///< This allows modelling of torque sensitive limited-slip differentials. This is the anti_slip dependence on torque.
+	btScalar anti_slip_torque_deceleration_factor = 0; ///< This allows modelling of torque sensitive limited-slip differentials that are 1.5 or 2-way. Set it to 0.0 for 1-way LSD, 1.0 for 2-way LSD, and somewhere in between for 1.5-way LSD.
+	btScalar torque_split = 0.5; ///< This allows modelling of epicyclic differentials. This value ranges from 0.0 to 1.0 where 0.0 applies all torque to side1.
 };
 
 #endif

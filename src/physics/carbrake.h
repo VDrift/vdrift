@@ -24,40 +24,20 @@
 #include "minmax.h"
 #include "macros.h"
 
+// default constructor makes an S2000-like car
 struct CarBrakeInfo
 {
-	btScalar friction; ///< sliding coefficient of friction for the brake pads on the rotor
-	btScalar max_pressure; ///< maximum allowed pressure
-	btScalar radius; ///< effective radius of the rotor
-	btScalar area; ///< area of the brake pads
-	btScalar brake_bias; ///< the fraction of the pressure to be applied to the brake
-	btScalar handbrake_bias; ///< the fraction of the pressure to be applied when the handbrake is pulled
-
-	CarBrakeInfo() :
-		friction(0.73),
-		max_pressure(4E6),
-		radius(0.14),
-		area(0.015),
-		brake_bias(1),
-		handbrake_bias(0)
-	{ }
+	btScalar friction = 0.73; ///< sliding coefficient of friction for the brake pads on the rotor
+	btScalar max_pressure = 4E6; ///< maximum allowed pressure
+	btScalar radius = 0.14; ///< effective radius of the rotor
+	btScalar area = 0.015; ///< area of the brake pads
+	btScalar brake_bias = 1; ///< the fraction of the pressure to be applied to the brake
+	btScalar handbrake_bias = 0; ///< the fraction of the pressure to be applied when the handbrake is pulled
 };
 
 class CarBrake
 {
 public:
-	// default constructor makes an S2000-like car
-	CarBrake() :
-		max_torque(6132),
-		brake_bias(1),
-		handbrake_bias(0),
-		brake_factor(0),
-		handbrake_factor(0),
-		lasttorque(0)
-	{
-		// ctor
-	}
-
 	void Init(const CarBrakeInfo & info)
 	{
 		max_torque = (info.max_pressure * info.area) * (info.friction * info.radius);
@@ -116,12 +96,12 @@ public:
 	}
 
 private:
-	btScalar max_torque;
-	btScalar brake_bias;
-	btScalar handbrake_bias;
-	btScalar brake_factor;
-	btScalar handbrake_factor; ///< this is separate so that ABS does not get applied to the handbrake
-	btScalar lasttorque; ///< for info only
+	btScalar max_torque = 6132;
+	btScalar brake_bias = 1;
+	btScalar handbrake_bias = 0;
+	btScalar brake_factor = 0;
+	btScalar handbrake_factor = 0; ///< this is separate so that ABS does not get applied to the handbrake
+	btScalar lasttorque = 0; ///< for info only
 };
 
 #endif
