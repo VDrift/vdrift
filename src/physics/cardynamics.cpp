@@ -105,16 +105,14 @@ static bool LoadFuelTank(
 	btScalar capacity;
 	btScalar volume;
 	btScalar fuel_density;
-	std::vector<btScalar> pos(3);
+	btVector3 position;
 
 	const PTree * cfg_fuel;
 	if (!cfg.get("fuel-tank", cfg_fuel, error_output)) return false;
 	if (!cfg_fuel->get("capacity", capacity, error_output)) return false;
 	if (!cfg_fuel->get("volume", volume, error_output)) return false;
 	if (!cfg_fuel->get("fuel-density", fuel_density, error_output)) return false;
-	if (!cfg_fuel->get("position", pos, error_output)) return false;
-
-	btVector3 position(pos[0], pos[1], pos[2]);
+	if (!cfg_fuel->get("position", position, error_output)) return false;
 
 	fuel_tank.SetCapacity(capacity);
 	fuel_tank.SetVolume(volume);
