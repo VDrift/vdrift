@@ -56,17 +56,16 @@ static bool LoadClutch(
 	CarClutch & clutch,
 	std::ostream & error_output)
 {
-	btScalar sliding, radius, area, max_pressure;
-
 	const PTree * cfg_clutch;
 	if (!cfg.get("clutch", cfg_clutch, error_output)) return false;
-	if (!cfg_clutch->get("sliding", sliding, error_output)) return false;
-	if (!cfg_clutch->get("radius", radius, error_output)) return false;
-	if (!cfg_clutch->get("area", area, error_output)) return false;
-	if (!cfg_clutch->get("max-pressure", max_pressure, error_output)) return false;
 
-	clutch.Set(sliding, max_pressure, area, radius);
+	CarClutchInfo info;
+	cfg_clutch->get("sliding", info.friction, error_output);
+	cfg_clutch->get("max-pressure", info.max_pressure, error_output);
+	cfg_clutch->get("radius", info.radius, error_output);
+	cfg_clutch->get("area", info.area, error_output);
 
+	clutch.Init(info);
 	return true;
 }
 
