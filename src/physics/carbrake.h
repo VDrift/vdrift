@@ -33,7 +33,7 @@ class CarBrake
 		btScalar radius; ///< effective radius of the rotor
 		btScalar area; ///< area of the brake pads
 		btScalar bias; ///< the fraction of the pressure to be applied to the brake
-		btScalar handbrake; ///< the friction factor that is applied when the handbrake is pulled.  this is usually 1.0 for rear brakes and 0.0 for front brakes, but could be any number
+		btScalar handbrake; ///< the fraction of the pressure to be applied when the handbrake is pulled
 
 		//variables
 		btScalar brake_factor;
@@ -63,8 +63,8 @@ class CarBrake
 		void DebugPrint(Stream & out) const
 		{
 			out << "---Brake---" << "\n";
-			out << "Brake control: " << brake_factor << ", " << handbrake_factor << "\n";
-			out << "Braking torque: " << lasttorque << "\n";
+			out << "Control: " << brake_factor << ", " << handbrake_factor << "\n";
+			out << "Torque: " << lasttorque << "\n";
 		}
 
 		///brake_factor ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
@@ -75,13 +75,13 @@ class CarBrake
 
 		btScalar GetMaxTorque() const
 		{
-			return bias * (max_pressure * area) * (friction * radius);
+			return (max_pressure * area) * (friction * radius);
 		}
 
 		///brake torque magnitude
 		btScalar GetTorque()
 		{
-			lasttorque = GetMaxTorque() * Max(brake_factor, handbrake * handbrake_factor);
+			lasttorque = GetMaxTorque() * (bias * brake_factor + handbrake * handbrake_factor);
 			return lasttorque;
 		}
 
