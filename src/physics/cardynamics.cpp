@@ -1359,9 +1359,6 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 			displacement += overtravel;
 			stiffness += bump_stiffness * overtravel / displacement;
 		}
-		btScalar softness = 1 / (dt * (dt * stiffness + damping));
-		btScalar bias = stiffness / (dt * stiffness + damping);
-		btScalar error = -bias * displacement;
 
 		btVector3 xw = wheel_orientation[i].getColumn(0);
 		btVector3 yw = wheel_orientation[i].getColumn(1);
@@ -1384,7 +1381,7 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 		w.constraint[0].axis = y;
 		w.constraint[1].axis = x;
 		w.constraint[2].axis = z;
-		w.init(softness, error);
+		w.init(stiffness, damping, displacement, dt);
 	}
 }
 

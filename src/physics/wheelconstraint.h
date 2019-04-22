@@ -91,6 +91,14 @@ struct WheelConstraint
 		constraint[2].impulse = 0;
 	}
 
+	void init(btScalar stiffness, btScalar damping, btScalar displacement, btScalar dt)
+	{
+		btScalar softness = 1 / (dt * (dt * stiffness + damping));
+		btScalar bias = stiffness / (dt * stiffness + damping);
+		btScalar error = -bias * displacement;
+		init(softness, error);
+	}
+
 	void getContactVelocity(btScalar v[3]) const
 	{
 		btVector3 vb = body->getVelocityInLocalPoint(position);
