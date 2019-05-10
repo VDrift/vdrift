@@ -1105,7 +1105,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		info.get(lapname.str(), lapraw);
 
 		unsigned roadid = lapraw[0];
-		if (roadid + 1 >= num_roads)
+		if (roadid >= num_roads)
 		{
 			info_output << "Ignore " << lapname.str() << ". Road id exceeds number of available roads." << std::endl;
 			continue;
@@ -1114,7 +1114,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		auto & road = data.roads[roadid];
 		unsigned num_patches = road.GetPatches().size();
 		unsigned patchid = lapraw[1];
-		if (patchid + 1 >= num_patches)
+		if (patchid >= num_patches)
 		{
 			info_output << "Ignore " << lapname.str() << ". Patch id exceeds number of available road patches." << std::endl;
 			continue;
