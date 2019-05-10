@@ -1087,30 +1087,44 @@ bool Track::Loader::LoadStartPositions(const PTree & info)
 
 bool Track::Loader::LoadLapSections(const PTree & info)
 {
-	// get timing sectors
+	if (data.roads.empty())
+	{
+		info_output << "No roads loaded. Skip loading lap timing sectors. Lap timing will not be possible." << std::endl;
+		return true;
+	}
+
+	// get lap timing sectors
 	unsigned num_roads = data.roads.size();
 	unsigned lapmarkers = 0;
-	if (info.get("lap sequences", lapmarkers))
+	info.get("lap sequences", lapmarkers);
+	for (unsigned i = 0; i < lapmarkers; i++)
 	{
-		for (unsigned l = 0; l < lapmarkers; l++)
+		std::vector<unsigned> lapraw(2);
+		std::ostringstream lapname;
+		lapname << "lap sequence " << i;
+		info.get(lapname.str(), lapraw);
+
+		unsigned roadid = lapraw[0];
+		if (roadid + 1 >= num_roads)
 		{
-			std::vector<unsigned> lapraw(2);
-			std::ostringstream lapname;
-			lapname << "lap sequence " << l;
-			info.get(lapname.str(), lapraw);
-
-			unsigned roadid = Min(num_roads, lapraw[0]);
-			auto & road = data.roads[roadid];
-
-			unsigned num_patches = road.GetPatches().size();
-			unsigned patchid = Min(num_patches, lapraw[1]);
-
-			// adjust id for reverse case
-			if (data.reverse)
-				patchid = num_patches - patchid;
-
-			data.lap.push_back(&road.GetPatches()[patchid]);
+			info_output << "Ignore " << lapname.str() << ". Road id exceeds number of available roads." << std::endl;
+			continue;
 		}
+
+		auto & road = data.roads[roadid];
+		unsigned num_patches = road.GetPatches().size();
+		unsigned patchid = lapraw[1];
+		if (patchid + 1 >= num_patches)
+		{
+			info_output << "Ignore " << lapname.str() << ". Patch id exceeds number of available road patches." << std::endl;
+			continue;
+		}
+
+		// adjust id for reverse case
+		if (data.reverse)
+			patchid = num_patches - patchid;
+
+		data.lap.push_back(&road.GetPatches()[patchid]);
 	}
 
 	if (data.lap.empty())
