@@ -1102,7 +1102,11 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		std::vector<unsigned> lapraw(2);
 		std::ostringstream lapname;
 		lapname << "lap sequence " << i;
-		info.get(lapname.str(), lapraw);
+		if (!info.get(lapname.str(), lapraw))
+		{
+			info_output << "Failed to load " << lapname.str() << "." << std::endl;
+			continue;
+		}
 
 		unsigned roadid = lapraw[0];
 		if (roadid >= num_roads)
