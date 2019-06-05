@@ -45,6 +45,7 @@ Settings::Settings() :
 	fullscreen(false),
 	vsync(false),
 	renderer("gl3/deferred.conf"),
+	menu_room(".room"),
 	skin("simple"),
 	language("en"),
 	show_fps(false),
@@ -159,6 +160,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "fullscreen", fullscreen);
 	Param(config, write, section, "vsync", vsync);
 	Param(config, write, section, "renderer", renderer);
+	Param(config, write, section, "menu_room", menu_room);
 	Param(config, write, section, "skin", skin);
 	Param(config, write, section, "language", language);
 	Param(config, write, section, "show_fps", show_fps);

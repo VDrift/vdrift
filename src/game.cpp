@@ -386,11 +386,8 @@ bool Game::InitCoreSubsystems()
 		return false;
 	}
 
-	Vec3 ldir(-0.250, -0.588, 0.769);
-	ldir = ldir.Normalize();
-	graphics->SetSunDirection(ldir);
-	graphics->SetLocalTime(settings.GetSkyTime());
-	graphics->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
+	//graphics->SetLocalTime(settings.GetSkyTime());
+	//graphics->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
 
 	// Init content factories
 	content.getFactory<Texture>().init(texture_size, using_gl3, settings.GetTextureCompress());
@@ -728,6 +725,7 @@ void Game::Draw(float dt)
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
 	graphics->SetContrast(settings.GetContrast());
+	graphics->SetSunDirection(track.GetSunDirection());
 	if (active_camera)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
@@ -1898,15 +1896,15 @@ void Game::LoadGarage()
 	if (!track.DeferredLoad(
 		content, dynamics,
 		info_output, error_output,
-		pathmanager.GetSkinsPath() + "/" + settings.GetSkin(),
-		pathmanager.GetSkinsDir() + "/" + settings.GetSkin(),
+		pathmanager.GetTracksPath(settings.GetMenuRoom()),
+		pathmanager.GetTracksDir()+"/"+settings.GetMenuRoom(),
 		pathmanager.GetEffectsTextureDir(),
 		pathmanager.GetTrackPartsPath(),
 		settings.GetAnisotropy(),
 		track_reverse, track_dynamic,
 		graphics->GetShadows()))
 	{
-		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
+		error_output << "Error loading menu room: " << settings.GetMenuRoom() << std::endl;
 		return;
 	}
 
@@ -1925,7 +1923,7 @@ void Game::LoadGarage()
 
 	if (!success)
 	{
-		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
+		error_output << "Error loading menu room: " << settings.GetMenuRoom() << std::endl;
 		return;
 	}
 
@@ -1964,11 +1962,12 @@ void Game::SetGarageCar()
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
-	Vec3 offset(0.5, -2.5, 0.5);
-	Vec3 pos = car_pos + offset;
-	Quat rot = LookAt(pos, car_pos, Direction::Up);
-	garage_camera.SetOffset(offset);
-	garage_camera.Reset(pos, rot);
+	Vec3 cam_offset(2, 4, 1);
+	car_rot.RotateVector(cam_offset);
+	Vec3 cam_pos = car_pos + cam_offset;
+	Quat cam_rot = LookAt(cam_pos, car_pos, Direction::Up);
+	garage_camera.SetOffset(cam_offset);
+	garage_camera.Reset(car_pos, cam_rot);
 	active_camera = &garage_camera;
 
 	UpdateCarSpecs();

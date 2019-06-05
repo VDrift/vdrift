@@ -38,6 +38,7 @@ GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	logNextGlFrame(false),
 	initialized(false),
 	fixed_skybox(true),
+	light_direction(0,0,1),
 	closeshadow(5.f)
 {
 	// initialize the full screen quad

@@ -74,6 +74,11 @@ public:
 		return renderer;
 	}
 
+	const std::string & GetMenuRoom() const
+	{
+		return menu_room;
+	}
+
 	const std::string & GetSkin() const
 	{
 		return skin;
@@ -416,6 +421,7 @@ private:
 	bool fullscreen;
 	bool vsync;
 	std::string renderer;
+	std::string menu_room;
 	std::string skin;
 	std::string language;
 	bool show_fps;

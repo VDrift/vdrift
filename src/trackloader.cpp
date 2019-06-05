@@ -189,6 +189,20 @@ bool Track::Loader::BeginLoad()
 	info.get("cull faces", data.cull);
 	info.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
 
+	float sun_elevation = 50.0f;
+	float sun_azimuth = 200.0f;
+	info.get("sun elevation", sun_elevation);
+	info.get("sun azimuth", sun_azimuth);
+	sun_elevation = Clamp(sun_elevation, 10.0f, 90.0f);
+	sun_azimuth = Clamp(sun_azimuth, -360.0f, 360.0f);
+	float e = sun_elevation * float(M_PI/180);
+	float a = sun_azimuth * float(M_PI/180);
+	float z = std::sin(e);
+	float r = std::cos(e);
+	float x = r * std::sin(a);
+	float y = r * std::cos(a);
+	data.sun_direction.Set(x, y, z);
+
 	if (!LoadStartPositions(info))
 	{
 		return false;
