@@ -23,12 +23,10 @@
 #include "LinearMath/btVector3.h"
 #include "macros.h"
 
-#include <vector>
-
 struct CarTireInfo1
 {
-	std::vector<btScalar> sigma_hat; ///< maximum grip in the longitudinal direction
-	std::vector<btScalar> alpha_hat; ///< maximum grip in the lateral direction
+	btScalar sigma_hat[20]; ///< maximum grip in the longitudinal direction
+	btScalar alpha_hat[20]; ///< maximum grip in the lateral direction
 	btScalar longitudinal[11]; ///< the parameters of the longitudinal pacejka equation.  this is series b
 	btScalar lateral[15]; ///< the parameters of the lateral pacejka equation.  this is series a
 	btScalar aligning[18]; ///< the parameters of the aligning moment pacejka equation.  this is series c
@@ -119,7 +117,7 @@ private:
 		btScalar & output_alphahat,
 		int iterations = 200);
 
-	void initSigmaHatAlphaHat(int tablesize = 20);
+	void initSigmaHatAlphaHat();
 };
 
 // implementation

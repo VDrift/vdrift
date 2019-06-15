@@ -25,7 +25,15 @@
 static const btScalar deg2rad = M_PI / 180;
 static const btScalar rad2deg = 180 / M_PI;
 
+template <class T, int N>
+constexpr int size(const T (&array)[N])
+{
+    return N;
+}
+
 CarTireInfo1::CarTireInfo1() :
+	sigma_hat(),
+	alpha_hat(),
 	longitudinal(),
 	lateral(),
 	aligning(),
@@ -284,35 +292,16 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 
 void CarTire1::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
-	assert(!sigma_hat.empty());
-	assert(!alpha_hat.empty());
+	const btScalar rdelta = 1 / 500.0; // 500 N table delta
+	const int table_size = size(sigma_hat);
+	assert(table_size > 1);
 
-	int HAT_ITERATIONS = sigma_hat.size();
+	btScalar n = Clamp(load * rdelta - 1, btScalar(0), btScalar(table_size - 1 - 1E-3));
+	int i = n;
+	btScalar blend = n - i;
 
-	btScalar HAT_LOAD = 0.5;
-	btScalar nf = load * btScalar(1E-3);
-	if (nf < HAT_LOAD)
-	{
-		sh = sigma_hat[0];
-		ah = alpha_hat[0];
-	}
-	else if (nf >= HAT_LOAD * HAT_ITERATIONS)
-	{
-		sh = sigma_hat[HAT_ITERATIONS-1];
-		ah = alpha_hat[HAT_ITERATIONS-1];
-	}
-	else
-	{
-		int lbound = (int)(nf/HAT_LOAD);
-		lbound--;
-		if (lbound < 0)
-			lbound = 0;
-		if (lbound >= (int)sigma_hat.size())
-			lbound = (int)sigma_hat.size()-1;
-		btScalar blend = (nf-HAT_LOAD*(lbound+1))/HAT_LOAD;
-		sh = sigma_hat[lbound]*(1-blend)+sigma_hat[lbound+1]*blend;
-		ah = alpha_hat[lbound]*(1-blend)+alpha_hat[lbound+1]*blend;
-	}
+	sh = sigma_hat[i] * (1-blend) + sigma_hat[i+1] * blend;
+	ah = alpha_hat[i] * (1-blend) + alpha_hat[i+1] * blend;
 }
 
 void CarTire1::findSigmaHatAlphaHat(
@@ -359,13 +348,11 @@ void CarTire1::findSigmaHatAlphaHat(
 	btAssert(fmax > 0);
 }
 
-void CarTire1::initSigmaHatAlphaHat(int tablesize)
+void CarTire1::initSigmaHatAlphaHat()
 {
-	btScalar HAT_LOAD = 0.5;
-	sigma_hat.resize(tablesize, 0);
-	alpha_hat.resize(tablesize, 0);
-	for (int i = 0; i < tablesize; i++)
+	for (int i = 0; i < size(sigma_hat); i++)
 	{
-		findSigmaHatAlphaHat((btScalar)(i+1)*HAT_LOAD, sigma_hat[i], alpha_hat[i]);
+		btScalar hat_load = (i + 1) * btScalar(0.5);
+		findSigmaHatAlphaHat(hat_load, sigma_hat[i], alpha_hat[i]);
 	}
 }
