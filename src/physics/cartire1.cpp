@@ -26,10 +26,10 @@ static const btScalar deg2rad = M_PI / 180;
 static const btScalar rad2deg = 180 / M_PI;
 
 CarTireInfo1::CarTireInfo1() :
-	longitudinal(11),
-	lateral(15),
-	aligning(18),
-	combining(4),
+	longitudinal(),
+	lateral(),
+	aligning(),
+	combining(),
 	rolling_resistance_quad(1E-6),
 	rolling_resistance_lin(1E-3),
 	tread(0)
@@ -125,7 +125,7 @@ btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar 
 
 btScalar CarTire1::getMaxFx(btScalar load) const
 {
-	const std::vector<btScalar> & b = longitudinal;
+	auto & b = longitudinal;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 	return D;
@@ -133,7 +133,7 @@ btScalar CarTire1::getMaxFx(btScalar load) const
 
 btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 {
-	const std::vector<btScalar> & a = lateral;
+	auto & a = lateral;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
@@ -143,7 +143,7 @@ btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 
 btScalar CarTire1::getMaxMz(btScalar load, btScalar camber) const
 {
-	const std::vector<btScalar> & c = aligning;
+	auto & c = aligning;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
@@ -153,7 +153,7 @@ btScalar CarTire1::getMaxMz(btScalar load, btScalar camber) const
 
 btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
 {
-	const std::vector<btScalar> & b = longitudinal;
+	auto & b = longitudinal;
 
 	// shape factor
 	btScalar C = b[0];
@@ -188,7 +188,7 @@ btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coef
 
 btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
 {
-	const std::vector<btScalar> & a = lateral;
+	auto & a = lateral;
 
 	// shape factor
 	btScalar C = a[0];
@@ -231,7 +231,7 @@ inline btScalar btCosAtan(btScalar x)
 
 btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha)
 {
-	const std::vector<btScalar> & p = combining;
+	auto & p = combining;
 	btScalar B = p[2] * btCosAtan(p[3] * sigma);
 	btScalar G = btCosAtan(B * alpha);
 	return G;
@@ -239,7 +239,7 @@ btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha)
 
 btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha)
 {
-	const std::vector<btScalar> & p = combining;
+	auto & p = combining;
 	btScalar B = p[0] * btCosAtan(p[1] * alpha);
 	btScalar G = btCosAtan(B * sigma);
 	return G;
@@ -247,7 +247,7 @@ btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha)
 
 btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
 {
-	const std::vector<btScalar> & c = aligning;
+	auto & c = aligning;
 
 	btScalar C = c[0];
 

@@ -27,12 +27,12 @@
 
 struct CarTireInfo1
 {
-	std::vector<btScalar> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
-	std::vector<btScalar> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
-	std::vector<btScalar> aligning; ///< the parameters of the aligning moment pacejka equation.  this is series c
-	std::vector<btScalar> combining; ///< force combining parameters
 	std::vector<btScalar> sigma_hat; ///< maximum grip in the longitudinal direction
 	std::vector<btScalar> alpha_hat; ///< maximum grip in the lateral direction
+	btScalar longitudinal[11]; ///< the parameters of the longitudinal pacejka equation.  this is series b
+	btScalar lateral[15]; ///< the parameters of the lateral pacejka equation.  this is series a
+	btScalar aligning[18]; ///< the parameters of the aligning moment pacejka equation.  this is series c
+	btScalar combining[4]; ///< force combining parameters
 	btScalar rolling_resistance_quad; ///< quadratic rolling resistance on a hard surface
 	btScalar rolling_resistance_lin; ///< linear rolling resistance on a hard surface
 	btScalar tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
