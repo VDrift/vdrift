@@ -39,10 +39,10 @@ CarTireInfo1::CarTireInfo1() :
 
 CarTire1::CarTire1() :
 	camber(0),
-	slide(0),
 	slip(0),
-	ideal_slide(0),
+	slip_angle(0),
 	ideal_slip(0),
+	ideal_slip_angle(0),
 	fx(0),
 	fy(0),
 	fz(0),
@@ -76,7 +76,7 @@ btVector3 CarTire1::getForce(
 	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
 	camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
 
-	// get ideal slip ratio
+	// get ideal slip ratio and slip angle
 	btScalar sigma_hat(0);
 	btScalar alpha_hat(0);
 	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
@@ -98,10 +98,10 @@ btVector3 CarTire1::getForce(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	slide = sigma;
-	slip = alpha * deg2rad;
-	ideal_slide = sigma_hat;
-	ideal_slip = alpha_hat * deg2rad;
+	slip = sigma;
+	slip_angle = alpha * deg2rad;
+	ideal_slip = sigma_hat;
+	ideal_slip_angle = alpha_hat * deg2rad;
 	fx = Fx;
 	fy = Fy;
 	fz = Fz;

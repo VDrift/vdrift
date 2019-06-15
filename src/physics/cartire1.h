@@ -89,11 +89,11 @@ public:
 	bool Serialize(Serializer & s);
 
 private:
-	btScalar camber; ///< tire camber relative to track surface
-	btScalar slide; ///< ratio of tire contact patch speed to road speed, minus one
-	btScalar slip; ///< the angle (in degrees) between the wheel heading and the wheel's actual velocity
-	btScalar ideal_slide; ///< ideal slide ratio
-	btScalar ideal_slip; ///< ideal slip angle
+	btScalar camber; ///< tire camber angle relative to track surface
+	btScalar slip; ///< ratio of tire contact patch speed to road speed, minus one
+	btScalar slip_angle; ///< the angle between the wheel heading and the wheel's actual velocity
+	btScalar ideal_slip; ///< peak force slip ratio
+	btScalar ideal_slip_angle; ///< peak force slip angle
 	btScalar fx, fy, fz, mz;
 
 	/// pacejka magic formula function, longitudinal
@@ -136,22 +136,22 @@ inline btScalar CarTire1:: getCamber() const
 
 inline btScalar CarTire1::getSlip() const
 {
-	return slide;
+	return slip;
 }
 
 inline btScalar CarTire1::getSlipAngle() const
 {
-	return slip;
+	return slip_angle;
 }
 
 inline btScalar CarTire1::getIdealSlip() const
 {
-	return ideal_slide;
+	return ideal_slip;
 }
 
 inline btScalar CarTire1::getIdealSlipAngle() const
 {
-	return ideal_slip;
+	return ideal_slip_angle;
 }
 
 inline btScalar CarTire1::getFx() const
