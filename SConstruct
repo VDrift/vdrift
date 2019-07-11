@@ -1,5 +1,4 @@
-import os, sys, errno, SCons
-from time import gmtime, strftime
+import os, sys, time, errno, SCons
 
 #---------------#
 # Build Options #
@@ -395,7 +394,7 @@ else:
 #------------------------#
 # Version, debug/release #
 #------------------------#
-version = strftime("%Y-%m-%d")
+version = time.strftime("%Y-%m-%d", time.gmtime(int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))))
 build_dir = 'build'
 if env['release']:
     # release build, debugging off, optimizations on
