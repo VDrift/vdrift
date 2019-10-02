@@ -237,7 +237,7 @@ inline btScalar btCosAtan(btScalar x)
 	return btRecipSqrt(1 + x * x);
 }
 
-btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha)
+btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
 {
 	auto & p = combining;
 	btScalar B = p[2] * btCosAtan(p[3] * sigma);
@@ -245,7 +245,7 @@ btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha)
 	return G;
 }
 
-btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha)
+btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
 {
 	auto & p = combining;
 	btScalar B = p[0] * btCosAtan(p[1] * alpha);
@@ -308,7 +308,7 @@ void CarTire1::findSigmaHatAlphaHat(
 	btScalar load,
 	btScalar & output_sigmahat,
 	btScalar & output_alphahat,
-	int iterations)
+	int iterations) const
 {
 	btScalar junk;
 	btScalar fmax = 0;

@@ -104,10 +104,10 @@ private:
 	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
 
 	/// pacejka magic formula longitudinal combining factor
-	btScalar PacejkaGx(btScalar sigma, btScalar alpha);
+	btScalar PacejkaGx(btScalar sigma, btScalar alpha) const;
 
 	/// pacejka magic formula lateral combining factor
-	btScalar PacejkaGy(btScalar sigma, btScalar alpha);
+	btScalar PacejkaGy(btScalar sigma, btScalar alpha) const;
 
 	void getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
 
@@ -115,7 +115,7 @@ private:
 		btScalar load,
 		btScalar & output_sigmahat,
 		btScalar & output_alphahat,
-		int iterations = 200);
+		int iterations = 200) const;
 
 	void initSigmaHatAlphaHat();
 };
