@@ -33,7 +33,8 @@ public:
 
 	~Timer() {Unload();}
 
-	bool Load(const std::string & trackrecordspath, float stagingtime);
+	///stagingtime in seconds, num_cars hint of expected number of cars
+	bool Load(const std::string & trackrecordspath, float stagingtime, unsigned num_cars);
 
 	///add a car of the given type and return the integer identifier that the track system will use
 	int AddCar(const std::string & cartype);

@@ -1625,7 +1625,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Load timer.
 	float pretime = (num_laps > 0) ? 3.0f : 0.0f;
-	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime))
+	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, cars_num))
 	{
 		error_output << "Unable to load timer" << std::endl;
 		return false;
