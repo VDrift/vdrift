@@ -48,6 +48,19 @@ T CosPi2(T x)
     return p;
 }
 
+// |x| <= 3/2pi
+// max error: 9.2028470133065365e-6
+template <typename T>
+T Cos3Pi2(T x)
+{
+    T y = abs(x);
+    T z = T(M_PI) - y;
+    z = Min(z, y);
+    z = CosPi2(z);
+    z = std::copysign(z, T(M_PI_2) - y);
+    return z;
+}
+
 // |x| <= pi/2
 // max error: 1.0205878936686563e-6
 template <typename T>
