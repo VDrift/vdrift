@@ -43,6 +43,7 @@ src = Split("""
 		downloadable.cpp
 		dynamicsdraw.cpp
 		eventsystem.cpp
+		fastmath.cpp
 		forcefeedback.cpp
 		game.cpp
 		graphics/bcndecode.cpp
