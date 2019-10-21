@@ -53,7 +53,7 @@ T CosPi2(T x)
 template <typename T>
 T Cos3Pi2(T x)
 {
-    T y = abs(x);
+    T y = std::abs(x);
     T z = T(M_PI) - y;
     z = Min(z, y);
     z = CosPi2(z);
