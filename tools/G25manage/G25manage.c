@@ -120,7 +120,7 @@ int usb_rebind_kernel_driver_np()
 }
 
 
-int G25send_command(char command[7]) {
+int G25send_command(const char *command, unsigned int command_size) {
 
   int stat;
 
@@ -143,7 +143,7 @@ int G25send_command(char command[7]) {
   }
   if (verbose_flag) printf ("USB interface claimed\n");
 
-  stat=usb_interrupt_write(usb_handle, 1, command, sizeof(command), 100);
+  stat=usb_interrupt_write(usb_handle, 1, command, command_size, 100);
   if ( (stat < 0) ) { 
     if ( (stat == -ENODEV) && verbose_flag) fprintf(stderr, "usb_interrupt_write: No such device, changed identity ?\n");
   }
@@ -174,7 +174,7 @@ int G25native() {
   dev=usb_find_device(VENDOR,G25NORMAL);
   if ( dev != NULL ) {
     char setextended[] = { 0xf8, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    G25send_command(setextended);
+    G25send_command(setextended, sizeof(setextended));
   }
   else {
     printf ("Unable to find G25 device.\n");
@@ -186,7 +186,7 @@ int G25range(unsigned short int range) {
   dev=usb_find_device(VENDOR,G25EXTENDED);
   if ( dev != NULL ) {
     char setrange[] = { 0xf8, 0x81, range & 0x00ff , (range & 0xff00)>>8, 0x00, 0x00, 0x00 }; 
-    G25send_command(setrange);
+    G25send_command(setrange, sizeof(setrange));
   }
   return 0;
 } 
