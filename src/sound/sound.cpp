@@ -412,7 +412,7 @@ void Sound::ProcessSources()
 			{
 				Vec3 relvec = src.position - listener_pos;
 				float len = relvec.Magnitude();
-				if (len < 0.1f) len = 0.1f;
+				if (len < 1E-6f) len = 1E-6f;
 
 				// distance attenuation
 				// y = a * (x - b)^c + d
@@ -420,15 +420,15 @@ void Sound::ProcessSources()
 				cgain = Clamp(cgain, 0.0f, 1.0f);
 
 				// directional attenuation
-				// maximum at 0.75 (source on opposite side)
 				relvec = relvec * (1.0f / len);
 				(-listener_rot).RotateVector(relvec);
-				float xcoord = relvec.dot(Direction::Right) * 0.75f;
-				float pgain1 = Max(xcoord, 0.0f);  // left attenuation
-				float pgain2 = Max(-xcoord, 0.0f); // right attenuation
+				float pgain = relvec.dot(Direction::Right) * 0.5f;
+				float pgain1 = Max(0.0f, 0.5f - pgain); // left attenuation
+				float pgain2 = Max(0.0f, 0.5f + pgain); // right attenuation
 
-				gain1 = cgain * src.gain * (1 - pgain1);
-				gain2 = cgain * src.gain * (1 - pgain2);
+				float gain = cgain * src.gain;
+				gain1 = gain * pgain1;
+				gain2 = gain * pgain2;
 			}
 			else
 			{
