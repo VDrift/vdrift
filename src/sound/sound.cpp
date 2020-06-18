@@ -422,7 +422,7 @@ void Sound::ProcessSources()
 				// directional attenuation
 				relvec = relvec * (1.0f / len);
 				(-listener_rot).RotateVector(relvec);
-				float pgain = relvec.dot(Direction::Right) * 0.5f;
+				float pgain = relvec[Direction::RIGHT] * 0.5f;
 				float pgain1 = Max(0.0f, 0.5f - pgain); // left attenuation
 				float pgain2 = Max(0.0f, 0.5f + pgain); // right attenuation
 

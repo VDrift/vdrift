@@ -675,8 +675,8 @@ bool CarDynamics::Load(
 	// move car to fit bounding box front lower edge of the position box
 	btVector3 bmin, bmax;
 	body->getCollisionShape()->getAabb(btTransform::getIdentity(), bmin, bmax);
-	btVector3 fwd = body->getCenterOfMassTransform().getBasis().getColumn(1);
-	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(2);
+	btVector3 fwd = body->getCenterOfMassTransform().getBasis().getColumn(Direction::FORWARD);
+	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(Direction::UP);
 	btVector3 fwd_offset = fwd * (2 - bmax.y());
 	btVector3 up_offset = -up * (btScalar(0.5) + bmin.z());
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
@@ -1049,7 +1049,7 @@ std::vector<float> CarDynamics::GetSpecs() const
 
 btVector3 CarDynamics::GetDownVector() const
 {
-	return -body->getCenterOfMassTransform().getBasis().getColumn(2);
+	return -body->getCenterOfMassTransform().getBasis().getColumn(Direction::UP);
 }
 
 const btVector3 & CarDynamics::GetCenterOfMassOffset() const
@@ -1310,7 +1310,7 @@ void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT
 	m.shaft = &engine.GetShaft();
 	m.target_velocity = engine.GetTorque() > 0 ? 100000 : 0;
 	m.impulse_limit_delta = (std::abs(engine.GetTorque()) * dt - m.impulse_limit) * rsubsteps;
-	m.computeInertia(*body, body->getWorldTransform().getBasis().getColumn(0));
+	m.computeInertia(*body, body->getWorldTransform().getBasis().getColumn(Direction::RIGHT));
 
 	driveline.motor_count = 1;
 	for (int i = 0; i < WHEEL_COUNT; ++i)
@@ -1319,7 +1319,7 @@ void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT
 		m.shaft = &wheel[i].GetShaft();
 		m.target_velocity = 0;
 		m.impulse_limit_delta = (brake[i].GetTorque() * dt - m.impulse_limit) * rsubsteps;
-		m.computeInertia(*body, wheel_orientation[i].getColumn(0));
+		m.computeInertia(*body, wheel_orientation[i].getColumn(Direction::RIGHT));
 	}
 }
 
@@ -1360,8 +1360,8 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 			stiffness += bump_stiffness * overtravel / displacement;
 		}
 
-		btVector3 xw = wheel_orientation[i].getColumn(0);
-		btVector3 yw = wheel_orientation[i].getColumn(1);
+		btVector3 xw = wheel_orientation[i].getColumn(Direction::RIGHT);
+		btVector3 yw = wheel_orientation[i].getColumn(Direction::FORWARD);
 		btVector3 z = wheel_contact[i].GetNormal();
 		btScalar coszxw = z.dot(xw);
 		btScalar coszyw = z.dot(yw);
@@ -1800,12 +1800,12 @@ void CarDynamics::SetHandBrake(btScalar value)
 
 void CarDynamics::RolloverRecover()
 {
-	btVector3 z(Direction::up);
-	btVector3 y_car = transform.getBasis() * Direction::forward;
+	btVector3 z = Direction::up;
+	btVector3 y_car = transform.getBasis().getColumn(Direction::FORWARD);
 	y_car = y_car - z * z.dot(y_car);
 	y_car.normalize();
 
-	btVector3 z_car = transform.getBasis() * Direction::up;
+	btVector3 z_car = transform.getBasis().getColumn(Direction::UP);
 	z_car = z_car - y_car * y_car.dot(z_car);
 	z_car.normalize();
 

@@ -26,6 +26,13 @@
 namespace Direction
 {
 
+enum Enum
+{
+	RIGHT = 0,
+	FORWARD = 1,
+	UP = 2
+};
+
 static const btVector3 right(1, 0, 0);
 static const btVector3 forward(0, 1, 0);
 static const btVector3 up(0, 0, 1);
