@@ -1920,8 +1920,11 @@ bool CarDynamics::WheelContactCallback(
 		const btCollisionShape * root_shape = obj0->getCollisionShape();
 		const btCompoundShape * car_shape = static_cast<const btCompoundShape *>(root_shape);
 		const btCylinderShapeX * wheel_shape = static_cast<const btCylinderShapeX *>(shape0);
-		btVector3 contact_point = cp.m_localPointA - car_shape->getChildTransform(cp.m_index0).getOrigin();
-		if (-Direction::up.dot(contact_point) > btScalar(0.5) * wheel_shape->getRadius())
+		btVector3 up_dir = obj0->getWorldTransform ().getBasis().getColumn(Direction::UP);
+		btVector3 wheel_center = car_shape->getChildTransform(cp.m_index0).getOrigin();
+		btVector3 contact_vec = wheel_center - cp.m_localPointA;
+		// only invalidate if contact point in the lower quarter of the wheel
+		if (up_dir.dot(contact_vec) > btScalar(0.5) * wheel_shape->getRadius())
 		{
 			cp.m_normalWorldOnB = btVector3(0, 0, 0);
 			cp.m_distance1 = 0;
