@@ -21,106 +21,21 @@
 #define _COLLISION_CONTACT_H
 
 #include "tracksurface.h"
+#include "coordinatesystem.h"
 #include "LinearMath/btVector3.h"
-#include <cassert>
 
 class RoadPatch;
 class btCollisionObject;
 
-class CollisionContact
+struct CollisionContact
 {
-public:
-	CollisionContact() :
-		depth(0),
-		patchid(-1),
-		patch(0),
-		surface(TrackSurface::None()),
-		col(0)
-	{
-		// ctor
-	}
-
-	CollisionContact(
-		const btVector3 & p,
-		const btVector3 & n,
-		const btScalar d,
-		const int i,
-		const RoadPatch * r,
-		const TrackSurface * s,
-		const btCollisionObject * c) :
-		position(p),
-		normal(n),
-		depth(d),
-		patchid(i),
-		patch(r),
-		surface(s),
-		col(c)
-	{
-		assert(s != NULL);
-	}
-
-	const btVector3 & GetPosition() const
-	{
-		return position;
-	}
-
-	const btVector3 & GetNormal() const
-	{
-		return normal;
-	}
-
-	btScalar GetDepth() const
-	{
-		return depth;
-	}
-
-	const TrackSurface & GetSurface() const
-	{
-		return *surface;
-	}
-
-	int GetPatchId() const
-	{
-		return patchid;
-	}
-
-	const RoadPatch * GetPatch() const
-	{
-		return patch;
-	}
-
-	const btCollisionObject * GetObject() const
-	{
-		return col;
-	}
-
-	// update/interpolate contact
-	bool CastRay(
-		const btVector3 & origin,
-		const btVector3 & direction,
-		const btScalar length)
-	{
-		// plane-based approximation
-		btScalar nd = normal.dot(direction);
-		if (nd < 0)
-		{
-			depth = normal.dot(position - origin) / nd;
-			position = origin + direction * depth;
-			return true;
-		}
-		position = origin + direction * length;
-		depth = length;
-		return false;
-	}
-
-private:
-	btVector3 position;
-	btVector3 normal;
-	btScalar depth;
-	int patchid;
-	const RoadPatch * patch;
-	const TrackSurface * surface;
-	const btCollisionObject * col;
+	const btCollisionObject * col = 0;
+	const TrackSurface * surface = TrackSurface::None();
+	const RoadPatch * patch = 0;
+	btVector3 position = btVector3(0,0,0);
+	btVector3 normal = Direction::up;
+	btScalar depth = 1;
+	int patchid = -1;
 };
 
 #endif // _COLLISION_CONTACT_H

@@ -341,7 +341,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		float maxgain = 0.3f;
 		float pitchvariation = 0.4f;
 		unsigned sound_active = 0;
-		const TrackSurface & surface = dynamics.GetWheelContact(WheelPosition(i)).GetSurface();
+		const TrackSurface & surface = *dynamics.GetWheelContact(WheelPosition(i)).surface;
 		if (surface.type == TrackSurface::ASPHALT)
 		{
 			sound_active = tiresqueal[i];

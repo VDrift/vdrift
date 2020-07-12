@@ -987,7 +987,7 @@ void Game::UpdateTimer()
 			nextsector = (timer.GetLastSector(i) + 1) % track.GetSectors();
 			for (int p = 0; p < 4; ++p)
 			{
-				const RoadPatch * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
+				const RoadPatch * patch = car.GetWheelContact(WheelPosition(p)).patch;
 				if (patch == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
@@ -1000,9 +1000,9 @@ void Game::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const RoadPatch * curpatch = car.GetWheelContact(FRONT_LEFT).GetPatch();
+		const RoadPatch * curpatch = car.GetWheelContact(FRONT_LEFT).patch;
 		if (!curpatch)
-			curpatch = car.GetWheelContact(FRONT_RIGHT).GetPatch();
+			curpatch = car.GetWheelContact(FRONT_RIGHT).patch;
 
 		// Only update if car is on track.
 		if (curpatch)
@@ -2508,7 +2508,7 @@ void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 			float squeal = car.GetTireSqueal(WheelPosition(i));
 			if (squeal > 0.8f)
 			{
-				btVector3 p = car.GetWheelContact(WheelPosition(i)).GetPosition();
+				btVector3 p = car.GetWheelContact(WheelPosition(i)).position;
 				tire_smoke.AddParticle(ToMathVector<float>(p), 0.5f);
 			}
 		}
@@ -2544,7 +2544,7 @@ void Game::UpdateDriftScore(const int carid, const float dt)
 	int wheel_count = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		if (car.GetWheelContact(WheelPosition(i)).GetPatch())
+		if (car.GetWheelContact(WheelPosition(i)).patch)
 			wheel_count++;
 	}
 

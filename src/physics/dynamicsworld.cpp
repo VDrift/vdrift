@@ -26,6 +26,7 @@
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 
 #define EXTBULLET
+//#define WHEELRAYS
 
 struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 {
@@ -125,6 +126,7 @@ bool DynamicsWorld::castRay(
 	btScalar d = length;
 	int patch_id = -1;
 	const RoadPatch * patch = 0;
+#ifdef WHEELRAYS
 	const TrackSurface * s = TrackSurface::None();
 	const btCollisionObject * c = 0;
 
@@ -157,7 +159,7 @@ bool DynamicsWorld::castRay(
 			if (ts)
 				s = ts;
 		}
-
+#endif
 		// track bezierpatch collision
 		if (track)
 		{
@@ -165,7 +167,7 @@ bool DynamicsWorld::castRay(
 			Vec3 dir = ToMathVector<float>(direction);
 			Vec3 colpoint;
 			Vec3 colnormal;
-			patch_id = contact.GetPatchId();
+			patch_id = contact.patchid;
 			if (track->CastRay(org, dir, length, patch_id, colpoint, patch, colnormal))
 			{
 				p = ToBulletVector(colpoint);
@@ -173,14 +175,29 @@ bool DynamicsWorld::castRay(
 				d = (colpoint - org).Magnitude();
 			}
 		}
-
-		contact = CollisionContact(p, n, d, patch_id, patch, s, c);
+#ifdef WHEELRAYS
+		contact.col = c;
+		contact.surface = s;
+		contact.position = p;
+		contact.depth = d;
+#endif
+		contact.patchid = patch_id;
+		contact.patch = patch;
+		contact.normal = n;
 		return true;
+#ifdef WHEELRAYS
 	}
 
 	// should only happen on vehicle rollover
-	contact = CollisionContact(p, n, d, patch_id, patch, s, c);
+	contact.col = c;
+	contact.surface = s;
+	contact.patch = patch;
+	contact.position = p;
+	contact.normal = n;
+	contact.depth = d;
+	contact.patchid = patch_id;
 	return false;
+#endif
 }
 
 void DynamicsWorld::update(btScalar dt)

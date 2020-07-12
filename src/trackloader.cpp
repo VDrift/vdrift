@@ -20,6 +20,7 @@
 #include "trackloader.h"
 #include "loadcollisionshape.h"
 #include "physics/dynamicsworld.h"
+#include "physics/smoothmeshshape.h"
 #include "coordinatesystem.h"
 #include "tobullet.h"
 #include "k1999.h"
@@ -29,7 +30,6 @@
 #include "graphics/model.h"
 
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
@@ -336,15 +336,17 @@ bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & bod
 		data.meshes.push_back(mesh);
 		body.mesh = mesh;
 
-		int surface = 0;
+		unsigned int surface = 0;
 		cfg.get("surface", surface);
-		if (surface >= (int)data.surfaces.size())
-		{
+		if (surface >= data.surfaces.size())
 			surface = 0;
-		}
 
-		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+		SmoothMeshShape * shape = new SmoothMeshShape(mesh, true);
 		shape->setUserPointer((void*)&data.surfaces[surface]);
+		unsigned int unused;
+		model.GetVertexArray().GetNormals(shape->normalBase, unused);
+		shape->normalStride = 3;
+
 		data.shapes.push_back(shape);
 		body.shape = shape;
 	}
@@ -773,8 +775,12 @@ bool Track::Loader::AddObject(const Object & object)
 		data.meshes.push_back(mesh);
 
 		assert(object.surface >= 0 && object.surface < (int)data.surfaces.size());
-		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+		SmoothMeshShape * shape = new SmoothMeshShape(mesh, true);
 		shape->setUserPointer((void*)&data.surfaces[object.surface]);
+		unsigned int unused;
+		object.model->GetVertexArray().GetNormals(shape->normalBase, unused);
+		shape->normalStride = 3;
+
 		data.shapes.push_back(shape);
 
 #ifndef EXTBULLET

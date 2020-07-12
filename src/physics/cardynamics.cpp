@@ -22,6 +22,7 @@
 #include "tracksurface.h"
 #include "dynamicsworld.h"
 #include "fracturebody.h"
+#include "smoothmeshshape.h"
 #include "loadcollisionshape.h"
 #include "coordinatesystem.h"
 #include "content/contentmanager.h"
@@ -34,6 +35,8 @@
 #include "BulletCollision/CollisionShapes/btTriangleShape.h"
 
 #include <cmath>
+
+//#define WHEELRAYS
 
 static const btScalar gravity = 9.81;
 static const int substeps = 10;
@@ -622,6 +625,7 @@ bool CarDynamics::Load(
 		btScalar radius = wheel[i].GetRadius();
 		btVector3 size(width * 0.5f, radius, radius);
 		btCollisionShape * shape = new btCylinderShapeX(size);
+		shape->setUserPointer(&wheel_contact[i]);
 		loadBody(cfg_wheel, error, shape, mass, true);
 		i++;
 	}
@@ -667,6 +671,7 @@ bool CarDynamics::Load(
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0);
 	body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+	body->getCollisionShape()->setUserPointer(this);
 	world.addRigidBody(body);
 	world.addAction(this);
 	this->world = &world;
@@ -714,7 +719,7 @@ void CarDynamics::AlignWithGround()
 	bool no_min_height = true;
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		btScalar height = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius();
+		btScalar height = wheel_contact[i].depth - 2 * wheel[i].GetRadius();
 		if (height < min_height || no_min_height)
 		{
 			min_height = height;
@@ -1162,26 +1167,46 @@ inline btScalar SmoothWave(btScalar x)
 	return (btScalar(1.5) - btScalar(0.5) * (x * x)) * x;
 }
 
+#include <fstream>
+static std::ofstream logi("log.txt");
+static std::ofstream logd("logd.txt");
+static size_t counter = 0;
+
 void CarDynamics::UpdateSuspension(int i, btScalar dt)
 {
-	auto surface = wheel_contact[i].GetSurface();
+	auto surface = *wheel_contact[i].surface;
 	btScalar bump = 0;
 	if (surface.bumpAmplitude > 0)
 	{
 		btScalar frequency = 1 / surface.bumpWaveLength;
-		btScalar nx = wheel_contact[i].GetPosition()[0] * frequency;
-		btScalar ny = wheel_contact[i].GetPosition()[1] * frequency;
+		btScalar nx = wheel_contact[i].position[Direction::FORWARD] * frequency;
+		btScalar ny = wheel_contact[i].position[Direction::RIGHT] * frequency;
 		btScalar sx = SmoothWave(nx);
 		btScalar sy = SmoothWave(ny);
 		bump = btScalar(0.5) * surface.bumpAmplitude * sx * sy;
 	}
-	btScalar displacement_delta = 2 * wheel[i].GetRadius() - wheel_contact[i].GetDepth() + bump;
+	btScalar displacement_delta = 2 * wheel[i].GetRadius() - wheel_contact[i].depth + bump;
 	suspension[i].UpdateDisplacement(displacement_delta, dt);
+
+	if (i == 3)
+	{
+		for (btScalar d = 0; d < suspension[i].GetDisplacement(); d += 0.01f)
+			logi << "*";
+		logi << std::endl;
+/*
+		logd << suspension[i].GetDisplacement()
+			<< "\t" << wheel_contact[i].normal[Direction::UP]
+			<< std::endl;
+*/
+	}
+
 }
 
 // executed as last function(after integration) in bullet singlestepsimulation
 void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar dt)
 {
+	counter++;
+
 	// reset body transform
 	body->setCenterOfMassTransform(transform);
 
@@ -1227,21 +1252,22 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 
 void CarDynamics::UpdateWheelContacts()
 {
-	btVector3 raydir = GetDownVector();
-	btScalar raylen = 4;
+	const btVector3 raydir = GetDownVector();
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		btVector3 raystart = body->getCenterOfMassPosition() + wheel_position[i] - raydir * wheel[i].GetRadius();
-		if (body->getChildBody(i)->isInWorld())
-		{
-			// wheel separated
-			wheel_contact[i] = CollisionContact(raystart, raydir, raylen, -1, 0, TrackSurface::None(), 0);
-		}
-		else
-		{
+		btScalar raylen = 4 * wheel[i].GetRadius();
+		if (!body->getChildBody(i)->isInWorld())
 			world->castRay(raystart, raydir, raylen, body, wheel_contact[i]);
-		}
+		else // wheel separated
+			wheel_contact[i].depth = raylen;
 	}
+}
+
+void CarDynamics::ResetWheelContacts()
+{
+	for (int i = 0; i < WHEEL_COUNT; ++i)
+		wheel_contact[i].depth = 4 * wheel[i].GetRadius();
 }
 
 void CarDynamics::InitDriveline2(btScalar dt)
@@ -1362,14 +1388,14 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 
 		btVector3 xw = wheel_orientation[i].getColumn(Direction::RIGHT);
 		btVector3 yw = wheel_orientation[i].getColumn(Direction::FORWARD);
-		btVector3 z = wheel_contact[i].GetNormal();
+		btVector3 z = wheel_contact[i].normal;
 		btScalar coszxw = z.dot(xw);
 		btScalar coszyw = z.dot(yw);
 		btVector3 x = (xw - z * coszxw).normalized();
 		btVector3 y = (yw - z * coszyw).normalized();
 		btScalar camber = btScalar(M_PI_2) - btAcos(coszxw);
-		btScalar friction = tire[i].getTread() * wheel_contact[i].GetSurface().frictionTread +
-			(1 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
+		btScalar friction = tire[i].getTread() * wheel_contact[i].surface->frictionTread +
+			(1 - tire[i].getTread()) * wheel_contact[i].surface->frictionNonTread;
 
 		auto & w = wheel_constraint[i];
 		w.body = body;
@@ -1394,8 +1420,8 @@ void CarDynamics::ApplyWheelContactDrag(btScalar dt)
 		if (suspension[i].GetDisplacement() > 0)
 		{
 			btVector3 velocity = body->getVelocityInLocalPoint(wheel_position[i]);
-			velocity -= velocity.dot(wheel_contact[i].GetNormal()) * wheel_contact[i].GetNormal();
-			btVector3 impulse = -velocity * (wheel_contact[i].GetSurface().rollingDrag * dt);
+			velocity -= velocity.dot(wheel_contact[i].normal) * wheel_contact[i].normal;
+			btVector3 impulse = -velocity * (wheel_contact[i].surface->rollingDrag * dt);
 			total_impulse = total_impulse + impulse;
 			total_torque_impulse = total_torque_impulse + wheel_position[i].cross(impulse);
 		}
@@ -1418,7 +1444,7 @@ void CarDynamics::ApplyRollingResistance(int i)
 {
 	auto & shaft = wheel[i].GetShaft();
 	btScalar vr = wheel[i].GetAngularVelocity() * wheel[i].GetRadius();
-	btScalar cr = tire[i].getRollingResistance(vr, wheel_contact[i].GetSurface().rollResistanceCoefficient);
+	btScalar cr = tire[i].getRollingResistance(vr, wheel_contact[i].surface->rollResistanceCoefficient);
 	btScalar suspension_impulse = wheel_constraint[i].constraint[2].impulse;
 	btScalar impulse_mag = cr * suspension_impulse * wheel[i].GetRadius();
 	btScalar impulse_limit = std::abs(shaft.ang_velocity) * shaft.inertia;
@@ -1458,6 +1484,9 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 		wheel_orientation[i] = transform.getBasis() * btMatrix3x3(suspension[i].GetWheelOrientation());
 		wheel_position[i] = transform.getBasis() * (suspension[i].GetWheelPosition() + GetCenterOfMassOffset());
 	}
+#ifndef WHEELRAYS
+	ResetWheelContacts();
+#endif
 
 	SetupWheelConstraints(wheel_orientation, dt);
 
@@ -1897,6 +1926,46 @@ void CarDynamics::Init()
 	}
 }
 
+inline void FixEdgeCollisons(const btTriangleShape * triangle, btManifoldPoint & cp)
+{
+	auto v = &triangle->getVertexPtr(0);
+	btVector3 n = (v[1] - v[0]).cross(v[2] - v[0]);
+	btScalar d = n.dot(cp.m_normalWorldOnB);
+	btScalar n2 = n.dot(n);
+	btScalar d2 = d * d;
+
+	// if angle below 80 deg fix up normal
+	if (d2 < n2 * btScalar(0.97))
+	{
+		btScalar rn = std::copysign(1.0f, d) / std::sqrt(n2);
+		cp.m_normalWorldOnB =  n * rn;
+		cp.m_distance1 *= d * rn;
+	}
+}
+
+inline void GetMeshTriangle(const btTriangleMeshShape * shape, int part, int index,
+	const int ** indices, const float ** vertices, int * vstride)
+{
+	const unsigned char* vertexbase = 0;
+	int numverts = 0;
+	PHY_ScalarType type = PHY_FLOAT;
+	int stride = 0;
+	const unsigned char* indexbase = 0;
+	int indexstride = 0;
+	int numfaces = 0;
+	PHY_ScalarType indicestype = PHY_INTEGER;
+
+	auto mesh = shape->getMeshInterface();
+	mesh->getLockedReadOnlyVertexIndexBase(
+		&vertexbase, numverts, type, stride,
+		&indexbase, indexstride, numfaces, indicestype,
+		part);
+
+	*indices = (const int *)(indexbase + indexstride * index);
+	*vertices = (const float *)(vertexbase);
+	*vstride = stride / sizeof(float);
+}
+
 bool CarDynamics::WheelContactCallback(
 	btManifoldPoint& cp,
 	const btCollisionObjectWrapper* col0,
@@ -1907,56 +1976,92 @@ bool CarDynamics::WheelContactCallback(
 	int /*index1*/)
 {
 	// apply to cars only
-	const btCollisionObject * obj0 = col0->getCollisionObject();
+	auto obj0 = col0->getCollisionObject();
 	if (!(obj0->getInternalType() & CO_FRACTURE_TYPE))
 		return false;
 
-	const btCollisionShape * shape1 = col1->getCollisionShape();
-	const btCollisionShape * shape0 = col0->getCollisionShape();
-
+	auto shape1 = col1->getCollisionShape();
+	auto shape0 = col0->getCollisionShape();
+#ifndef ENABLE_EDGE_COLLISIONS
+	if (shape1->getShapeType() == TRIANGLE_SHAPE_PROXYTYPE)
+		FixEdgeCollisons(static_cast<const btTriangleShape *>(shape1), cp);
+#endif
 	// invalidate wheel shape contact with ground as we are handling it separately
 	if (shape0->getShapeType() == CYLINDER_SHAPE_PROXYTYPE)
 	{
-		const btCollisionShape * root_shape = obj0->getCollisionShape();
-		const btCompoundShape * car_shape = static_cast<const btCompoundShape *>(root_shape);
-		const btCylinderShapeX * wheel_shape = static_cast<const btCylinderShapeX *>(shape0);
-		btVector3 up_dir = obj0->getWorldTransform ().getBasis().getColumn(Direction::UP);
+		auto root_shape = obj0->getCollisionShape();
+		auto car_shape = static_cast<const btCompoundShape *>(root_shape);
+		auto wheel_shape = static_cast<const btCylinderShapeX *>(shape0);
+		btVector3 up = obj0->getWorldTransform().getBasis().getColumn(Direction::UP);
 		btVector3 wheel_center = car_shape->getChildTransform(cp.m_index0).getOrigin();
 		btVector3 contact_vec = wheel_center - cp.m_localPointA;
-		// only invalidate if contact point in the lower quarter of the wheel
-		if (up_dir.dot(contact_vec) > btScalar(0.5) * wheel_shape->getRadius())
+		btScalar cosn = up.dot(cp.m_normalWorldOnB);
+		btScalar r = wheel_shape->getRadius();
+
+		// only invalidate if contact under the wheel
+		if (contact_vec[Direction::UP] > 0.8f * (1 - cosn) * r)
 		{
+#ifndef WHEELRAYS
+			assert(wheel_shape->getUserPointer());
+			auto & wc = *static_cast<WheelContact *>(wheel_shape->getUserPointer());
+			auto obj1 = col1->getCollisionObject();
+			auto ts = shape1->isCompound() ? shape1->getUserPointer() : obj1->getUserPointer();
+			wc.surface = ts ? static_cast<const TrackSurface *>(ts) : TrackSurface::None();
+			wc.col = obj1;
+
+			auto shape = obj1->getCollisionShape(); // typically not the same as shape1
+			if (shape->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
+			{
+				auto mesh = static_cast<const SmoothMeshShape*>(shape); // assume SmoothMeshShape
+				const float * np = mesh->normalBase;
+				int nstride = mesh->normalStride;
+
+				const int * ip;
+				const float * vp;
+				int vstride;
+				GetMeshTriangle(mesh, col1->m_partId, col1->m_index, &ip, &vp, &vstride);
+
+				if (wc.ip != ip)
+				{
+					UpdateCache(ip, vp, np, vstride, nstride, wc.pncache);
+					wc.ip = ip;
+				}
+				btVector3 p, n;
+				GetPointNormal(ip, vp, np, vstride, nstride, wc.pncache, cp.m_positionWorldOnB, p, n);
+
+				btScalar depth = 2 * r + cosn * (cp.m_positionWorldOnA - p).dot(n);
+				wc.depth = Min(wc.depth, depth);
+				wc.position = p;
+				wc.normal = n;
+
+				if (&wc == &(((CarDynamics*)(car_shape->getUserPointer()))->wheel_contact[3]))
+					logd
+//						<< std::hex << (size_t(&wc) & 0xff)
+						<< counter
+						<< "\t" << contact_vec[0]
+						<< "\t" << contact_vec[2]
+						<< "\t" << cp.m_distance1
+						<< "\t" << wc.depth
+//						<< "\t" << cosn
+						<< std::endl;
+			}
+			else
+			{
+				btScalar depth = 2 * r + cosn * cp.m_distance1;
+				wc.depth = Min(wc.depth, depth);
+				wc.position = cp.m_positionWorldOnB;
+				wc.normal = cp.m_normalWorldOnB;
+			}
+			//logd << std::hex << ((size_t)wc & 0xff) << "\t" << wc.depth << "\t" << cosn << std::endl;
+#endif
 			cp.m_normalWorldOnB = btVector3(0, 0, 0);
 			cp.m_distance1 = 0;
 			cp.m_combinedFriction = 0;
 			cp.m_combinedRestitution = 0;
 			return true;
 		}
+		//logd << std::hex << (size_t(wheel_shape->getUserPointer()) & 0xff) << "\t" << cosn << std::endl;
 	}
-
-#ifndef ENABLE_EDGE_COLLISIONS
-	// filter edge collisions
-	if (shape1->getShapeType() == TRIANGLE_SHAPE_PROXYTYPE)
-	{
-		const btTriangleShape * triangle = static_cast<const btTriangleShape *>(shape1);
-		const btVector3 * v = &triangle->getVertexPtr(0);
-		btVector3 n = (v[1] - v[0]).cross(v[2] - v[0]);
-		btScalar d = n.dot(cp.m_normalWorldOnB);
-		btScalar n2 = n.dot(n);
-		btScalar d2 = d * d;
-
-		// if angle below 80 deg fix up normal
-		if (d2 < n2 * btScalar(0.97))
-		{
-			btScalar rlen = 1 / btSqrt(n2);
-			if (d < 0) rlen = -rlen;
-
-			cp.m_normalWorldOnB =  n * rlen;
-			cp.m_distance1 *= d * rlen;
-		}
-	}
-#endif
-
 	return false;
 }
 

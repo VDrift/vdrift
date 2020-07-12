@@ -23,22 +23,14 @@
 #include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "BulletDynamics/Dynamics/btDynamicsWorld.h"
 
-template <typename T0, typename T1>
-static inline T0 cast(const T1 & t)
-{
-	union {T0 t0; T1 t1;} cast;
-	cast.t1 = t;
-	return cast.t0;
-}
-
 static inline int getConId(const btCollisionShape & shape)
 {
-	return cast<int>(shape.getUserPointer()) - 1;
+	return shape.getUserIndex();
 }
 
 static inline void setConId(btCollisionShape & shape, int id)
 {
-	shape.setUserPointer(cast<void*>(id + 1));
+	shape.setUserIndex(id);
 }
 
 static inline btVector3 getPrincipalInertia(const btVector3 & p, const btScalar m)

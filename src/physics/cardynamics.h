@@ -32,6 +32,7 @@
 #include "carwheelposition.h"
 #include "aerodevice.h"
 #include "collision_contact.h"
+#include "pntriangle.h"
 #include "wheelconstraint.h"
 #include "driveline.h"
 #include "motionstate.h"
@@ -47,6 +48,12 @@ class DynamicsWorld;
 class FractureBody;
 class ContentManager;
 class PTree;
+
+struct WheelContact : CollisionContact
+{
+	PNCache pncache;
+	const int * ip = 0;
+};
 
 class CarDynamics : public btActionInterface
 {
@@ -211,7 +218,7 @@ protected:
 	Driveline driveline;
 
 	// wheel contact state
-	CollisionContact wheel_contact[WHEEL_COUNT];
+	WheelContact wheel_contact[WHEEL_COUNT];
 	btVector3 wheel_position[WHEEL_COUNT];
 	btScalar wheel_velocity[WHEEL_COUNT][3];
 
@@ -266,6 +273,8 @@ protected:
 	void Tick(btScalar dt);
 
 	void UpdateWheelContacts();
+
+	void ResetWheelContacts();
 
 	void InitDriveline2(btScalar dt);
 

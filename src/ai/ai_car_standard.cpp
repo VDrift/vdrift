@@ -98,11 +98,11 @@ void AiCarStandard::Update(float dt, const CarDynamics cars[], const unsigned ca
 
 const RoadPatch * AiCarStandard::GetCurrentPatch(const CarDynamics & car)
 {
-	const RoadPatch *curr_patch = car.GetWheelContact(WheelPosition(0)).GetPatch();
+	const RoadPatch *curr_patch = car.GetWheelContact(WheelPosition(0)).patch;
 	if (!curr_patch)
 	{
 		// let's try the other wheel
-		curr_patch = car.GetWheelContact(WheelPosition(1)).GetPatch();
+		curr_patch = car.GetWheelContact(WheelPosition(1)).patch;
 		if (!curr_patch) return NULL;
 	}
 	return curr_patch;

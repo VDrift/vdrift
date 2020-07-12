@@ -114,11 +114,11 @@ void AiCarExperimental::Update(float dt, const CarDynamics cars[], const unsigne
 
 const RoadPatch * AiCarExperimental::GetCurrentPatch(const CarDynamics & car)
 {
-	const RoadPatch * curr_patch = car.GetWheelContact(WheelPosition(0)).GetPatch();
+	const RoadPatch * curr_patch = car.GetWheelContact(WheelPosition(0)).patch;
 	if (!curr_patch)
 	{
 		// let's try the other wheel
-		curr_patch = car.GetWheelContact(WheelPosition(1)).GetPatch();
+		curr_patch = car.GetWheelContact(WheelPosition(1)).patch;
 		if (!curr_patch) return NULL;
 	}
 	return curr_patch;
@@ -435,8 +435,7 @@ float AiCarExperimental::RayCastDistance(const CarDynamics & car, Vec3 direction
 		&car.getCollisionObject(),
 		contact);
 
-	float depth = contact.GetDepth();
-	float dist = Min(max_length, depth);
+	float dist = Min(max_length, contact.depth);
 
 #ifdef VISUALIZE_AI_DEBUG
 	Vec3 pos_start(ToMathVector<float>(pos));
