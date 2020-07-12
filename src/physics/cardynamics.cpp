@@ -1924,7 +1924,7 @@ bool CarDynamics::WheelContactCallback(
 		btVector3 wheel_center = car_shape->getChildTransform(cp.m_index0).getOrigin();
 		btVector3 contact_vec = wheel_center - cp.m_localPointA;
 		// only invalidate if contact point in the lower quarter of the wheel
-		if (up_dir.dot(contact_vec) > btScalar(0.5) * wheel_shape->getRadius())
+		if (contact_vec[Direction::UP] > btScalar(0.5) * wheel_shape->getRadius())
 		{
 			cp.m_normalWorldOnB = btVector3(0, 0, 0);
 			cp.m_distance1 = 0;
