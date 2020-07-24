@@ -33,6 +33,8 @@ default_datadir = "share/games/vdrift/data"
 default_localedir = "share/locale"
 default_bindir = "bin"
 
+print (sys.platform)
+
 #---------------#
 # FreeBSD build #
 #---------------#
