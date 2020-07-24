@@ -41,6 +41,6 @@ jobs:
     - uses: actions/checkout@v1
     - name: install_dependencies
       run: |
-        brew install scons sdl2 sdl2_image bullet libvorbis curl
+        brew install pkg-config scons sdl2 sdl2_image bullet libvorbis curl
     - name: Build
       run: scons
