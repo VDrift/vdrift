@@ -29,11 +29,9 @@ jobs:
       with:
         msystem: MINGW64
         update: true
-        install: scons pkg-config mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis
+        install: scons pkg-config mingw-w64-x86_64-python mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis
     - name: Build
-      run: |
-        set MSYSTEM=MINGW64
-        msys2 -c 'scons'
+      run: scons
 
   test_MacOS:
 
