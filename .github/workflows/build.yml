@@ -1,0 +1,17 @@
+name: VDrift
+
+on: [push, pull_request]
+
+jobs:
+  test_Ubuntu:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: install_dependencies
+      run: |
+        sudo apt-get update -y -qq
+        sudo apt-get install scons libsdl2-dev libsdl2-image-dev libbullet-dev libvorbis-dev libcurl4-gnutls-dev
+    - name: Build
+      run: scons
