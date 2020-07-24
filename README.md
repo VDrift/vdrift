@@ -5,8 +5,6 @@ VDrift is a cross-platform, open source driving simulation made with drift
 racing in mind. It is released under the [GNU General Public License (GPL) v3](http://www.gnu.org/licenses/gpl-3.0.en.html).
 It is currently available for FreeBSD, Linux, Mac OS X and Windows.
 
-[![Build Status](https://travis-ci.org/VDrift/vdrift.svg?branch=master)](https://travis-ci.org/VDrift/vdrift) [![Coverity Status](https://scan.coverity.com/projects/3734/badge.svg)](https://scan.coverity.com/projects/3734)
-
 Mission Statement
 -----------------
 
