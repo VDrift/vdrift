@@ -141,7 +141,7 @@ src = Split("""
 		utils.cpp
 		window.cpp""")
 
-src.sort(lambda x, y: cmp(x.lower(),y.lower()))
+src.sort(key = str.lower)
 
 #------------------------#
 # Copy Build Environment #

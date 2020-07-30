@@ -91,9 +91,9 @@ elif sys.platform == 'darwin':
 
     for a in env['universal']:
         if not sdk_path:
-            print 'Building a universal binary require access to an ' + \
+            print('Building a universal binary require access to an ' + \
                 'SDK that has universal \nbinary support.If you know ' + \
-                'the location of such an SDK, specify it using the \n"SDK" option'
+                'the location of such an SDK, specify it using the \n"SDK" option')
             Exit(1)
         env.Append( CCFLAGS = ['-arch', a],  LINKFLAGS = ['-arch', a] )
 
@@ -231,7 +231,7 @@ def distcopy (target, source, env):
 def tarballer (target, source, env):            
     cmd = 'tar -jcf "%s" -C "%s" .'  % ( str(target[0]), str(source[0]) )
     #cmd = 'tar -jcf ' + str (target[0]) +  ' ' + str(source[0]) + "  --exclude '*~' "
-    print 'running ', cmd, ' ... '
+    print('running ', cmd, ' ... ')
     p = os.popen (cmd)
     return p.close ()
 
@@ -361,11 +361,11 @@ env.ParseConfig(env['pkg_config'] + ' bullet --libs --cflags')
 conf = Configure(env)
 for header in check_headers:
     if not conf.CheckCXXHeader(header):
-        print 'You do not have the %s headers installed. Exiting.' % header
+        print('You do not have the %s headers installed. Exiting.' % header)
         Exit(1)
 for lib in check_libs:
     if not conf.CheckLibWithHeader(lib[0], lib[1], 'C', lib[2]):
-        print lib[3]
+        print(lib[3])
         Exit(1)
 
 env = conf.Finish()
