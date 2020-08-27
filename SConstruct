@@ -140,11 +140,11 @@ else:
         CC = 'gcc', CXX = 'g++',
         options = opts)
     # Take environment variables into account
-    if os.environ.has_key('CXX'):
+    if 'CXX' in os.environ:
         env['CXX'] = os.environ['CXX']
-    if os.environ.has_key('CXXFLAGS'):
+    if 'CXXFLAGS' in os.environ:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
-    if os.environ.has_key('LDFLAGS'):
+    if 'LDFLAGS' in os.environ:
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
     check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
