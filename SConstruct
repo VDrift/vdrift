@@ -515,7 +515,7 @@ if 'install' in COMMAND_LINE_TARGETS:
     SConscript('data/SConscript')
     # desktop appdata installation
     install_desktop = env.Install(env['destdir'] + env['prefix'] + '/share/applications', 'vdrift.desktop')
-    install_appdata = env.Install(env['destdir'] + env['prefix'] + '/share/appdata', 'vdrift.appdata.xml')
+    install_appdata = env.Install(env['destdir'] + env['prefix'] + '/share/metainfo', 'vdrift.appdata.xml')
     env.Alias('install', [install_desktop, install_appdata])
 
 if 'src-package' in COMMAND_LINE_TARGETS:
