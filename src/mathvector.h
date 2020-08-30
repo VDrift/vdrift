@@ -46,10 +46,7 @@ public:
 		for (size_type i = 0; i < dimension; ++i)
 			v[i] = t;
 	}
-	MathVector(const MathVector <T, dimension> & other)
-	{
-		*this = other;
-	}
+
 	MathVector(const T x, const T y)
 	{
 		assert(dimension==2);
