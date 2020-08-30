@@ -51,7 +51,7 @@ void ContentManager::sweep()
 	}
 }
 
-bool ContentManager::_logleaks()
+void ContentManager::_logleaks()
 {
 	size_t n = 0;
 	for (const auto & cache : factory_cached.m_caches)
@@ -59,7 +59,7 @@ bool ContentManager::_logleaks()
 		n += cache->size();
 	}
 	if (n == 0)
-		return false;
+		return;
 
 	error << "Leaked " << n << " cached objects:";
 	for (const auto & cache : factory_cached.m_caches)
@@ -68,10 +68,9 @@ bool ContentManager::_logleaks()
 		cache->log(error);
 	}
 	error << std::endl;
-	return false;
 }
 
-bool ContentManager::_logerror(
+void ContentManager::_logerror(
 	const std::string & path,
 	const std::string & name)
 {
@@ -85,5 +84,4 @@ bool ContentManager::_logerror(
 		error << "\n" << sharedpath;
 	}
 	error << std::endl;
-	return false;
 }
