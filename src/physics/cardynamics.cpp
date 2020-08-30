@@ -1168,8 +1168,11 @@ inline btScalar SmoothWave(btScalar x)
 }
 
 #include <fstream>
-static std::ofstream logi("log.txt");
 static std::ofstream logd("logd.txt");
+static std::ofstream loge("loge.txt");
+static std::ofstream logg("logf.txt");
+static std::ofstream logi("logi.txt");
+static std::ofstream logk("logk.txt");
 static size_t counter = 0;
 
 void CarDynamics::UpdateSuspension(int i, btScalar dt)
@@ -1190,9 +1193,13 @@ void CarDynamics::UpdateSuspension(int i, btScalar dt)
 
 	if (i == 3)
 	{
+		logi << counter << ", " << suspension[i].GetDisplacement() << std::endl;
+		logk << counter << ", " << displacement_delta << std::endl;
+/*
 		for (btScalar d = 0; d < suspension[i].GetDisplacement(); d += 0.01f)
 			logi << "*";
 		logi << std::endl;
+*/
 /*
 		logd << suspension[i].GetDisplacement()
 			<< "\t" << wheel_contact[i].normal[Direction::UP]
@@ -2035,15 +2042,22 @@ bool CarDynamics::WheelContactCallback(
 				wc.normal = n;
 
 				if (&wc == &(((CarDynamics*)(car_shape->getUserPointer()))->wheel_contact[3]))
+				{
 					logd
-//						<< std::hex << (size_t(&wc) & 0xff)
 						<< counter
-						<< "\t" << contact_vec[0]
+						<< "\t" << wc.ip
+						<< "\t" << cp.m_positionWorldOnB[0]
+						<< "\t" << cp.m_positionWorldOnB[2]
+//						<< "\t" << contact_vec[0]
 						<< "\t" << contact_vec[2]
 						<< "\t" << cp.m_distance1
 						<< "\t" << wc.depth
 //						<< "\t" << cosn
 						<< std::endl;
+						
+					loge << counter << ", " << cp.m_positionWorldOnB[2] << std::endl;
+					logg << counter << ", " << wheel_center[2] << std::endl;
+				}
 			}
 			else
 			{
