@@ -1682,6 +1682,13 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 		replay.StartRecording(car_info, settings.GetTrack(), error_output);
 	}
 
+	if (settings.GetRecordReplay() || playreplay)
+	{
+		// clear replay car configs
+		for (size_t i = 0; i < car_info.size(); ++i)
+			car_info[i].config.clear();
+	}
+
 	// Clean up asset cache.
 	content.sweep();
 
