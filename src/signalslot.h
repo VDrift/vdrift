@@ -82,8 +82,6 @@ using Slot2 = Slot<Delegate2<void, P, R>>;
 class Signal0 : public Signal<Delegate0<void> >
 {
 public:
-	Signal0(void);
-	Signal0(const Signal0 & other);
 	void operator()() const;
 };
 
@@ -91,8 +89,6 @@ template <typename P>
 class Signal1 : public Signal<Delegate1<void, P> >
 {
 public:
-	Signal1(void);
-	Signal1(const Signal1 & other);
 	void operator()(P p) const;
 };
 
@@ -100,8 +96,6 @@ template <typename P, typename R>
 class Signal2 : public Signal<Delegate2<void, P, R> >
 {
 public:
-	Signal2(void);
-	Signal2(const Signal2 & other);
 	void operator()(P p, R r) const;
 };
 
@@ -223,17 +217,6 @@ inline bool Signal<Delegate>::connected(void) const
 	return m_connections.size();
 }
 
-inline Signal0::Signal0(void)
-{
-	// ctor
-}
-
-inline Signal0::Signal0(const Signal0 & other) :
-	Signal<Delegate0<void> >(other)
-{
-	// copy ctor
-}
-
 inline void Signal0::operator()() const
 {
 	for (const auto & con : m_connections)
@@ -243,38 +226,12 @@ inline void Signal0::operator()() const
 }
 
 template <typename P>
-inline Signal1<P>::Signal1(void)
-{
-	// ctor
-}
-
-template <typename P>
-inline Signal1<P>::Signal1(const Signal1 & other) :
-	Signal<Delegate1<void, P> >(other)
-{
-	// copy ctor
-}
-
-template <typename P>
 inline void Signal1<P>::operator()(P p) const
 {
 	for (const auto & con : Signal<Delegate1<void, P> >::m_connections)
 	{
 		con.slot->call(p);
 	}
-}
-
-template <typename P, typename R>
-inline Signal2<P, R>::Signal2(void)
-{
-	// ctor
-}
-
-template <typename P, typename R>
-inline Signal2<P, R>::Signal2(const Signal2 & other) :
-	Signal<Delegate2<void, P, R> >(other)
-{
-	// copy ctor
 }
 
 template <typename P, typename R>
