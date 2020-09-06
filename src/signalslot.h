@@ -148,8 +148,8 @@ inline void Slot<Delegate>::disconnect(void)
 	for (const auto & con : m_connections)
 	{
 		// remove slot from signal by swapping
-		Signal<Delegate> & signal = *con.signal;
-		std::size_t id = con.id;
+		auto & signal = *con.signal;
+		auto id = con.id;
 		signal.m_connections[id] = signal.m_connections[signal.m_connections.size() - 1];
 
 		// update id of the swapped connection
@@ -198,8 +198,8 @@ inline void Signal<Delegate>::disconnect(void)
 	for (const auto & con : m_connections)
 	{
 		// remove signal from slot by swapping
-		Slot<Delegate> & slot = *con.slot;
-		std::size_t id = con.id;
+		auto & slot = *con.slot;
+		auto id = con.id;
 		slot.m_connections[id] = slot.m_connections[slot.m_connections.size() - 1];
 
 		// update id of the swapped connection
