@@ -53,6 +53,7 @@ class Slot
 {
 public:
 	Slot(void) {};
+	~Slot(void);
 	Slot(const Slot & other);
 	Slot & operator=(const Slot & other);
 	void connect(Signal<Delegate> & signal);
@@ -62,8 +63,6 @@ public:
 
 protected:
 	friend class Signal<Delegate>;
-	~Slot(void);
-
 	struct Connection
 	{
 		Signal<Delegate> * signal;
@@ -72,23 +71,13 @@ protected:
 	std::vector<Connection> m_connections;
 };
 
-class Slot0 : public Slot<Delegate0<void> >
-{
-	// template typedef hack
-};
+using Slot0 = Slot<Delegate0<void>>;
 
 template <typename P>
-class Slot1 : public Slot<Delegate1<void, P> >
-{
-	// template typedef hack
-};
-
+using Slot1 = Slot<Delegate1<void, P>>;
 
 template <typename P, typename R>
-class Slot2 : public Slot<Delegate2<void, P, R> >
-{
-	// template typedef hack
-};
+using Slot2 = Slot<Delegate2<void, P, R>>;
 
 class Signal0 : public Signal<Delegate0<void> >
 {
