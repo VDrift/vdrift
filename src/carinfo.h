@@ -30,6 +30,7 @@ struct CarInfo
 	std::string config;
 	std::string driver;
 	std::string name;
+	std::string variant;
 	std::string paint;
 	std::string tire;
 	std::string wheel;
@@ -42,6 +43,7 @@ struct CarInfo
 		_SERIALIZE_(s, config);
 		_SERIALIZE_(s, driver);
 		_SERIALIZE_(s, name);
+		_SERIALIZE_(s, variant);
 		_SERIALIZE_(s, paint);
 		_SERIALIZE_(s, tire);
 		_SERIALIZE_(s, wheel);

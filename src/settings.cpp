@@ -92,7 +92,8 @@ Settings::Settings() :
 	bloom(false),
 	motionblur(false),
 	normalmaps(false),
-	car("XS/XS"),
+	car("XS"),
+	car_variant("XS"),
 	car_paint("default"),
 	car_tire("default"),
 	car_wheel("default"),
@@ -141,6 +142,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "record", recordreplay);
 	Param(config, write, section, "selected_replay", selected_replay);
 	Param(config, write, section, "car", car);
+	Param(config, write, section, "car_variant", car_variant);
 	Param(config, write, section, "car_paint", car_paint);
 	Param(config, write, section, "car_tire", car_tire);
 	Param(config, write, section, "car_wheel", car_wheel);

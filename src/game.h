@@ -153,13 +153,15 @@ private:
 
 	void PopulateTrackList(GuiOption::List & tracklist);
 
-	void PopulateCarList(GuiOption::List & carlist, bool cardironly = false);
+	void PopulateCarList(GuiOption::List & carlist);
 
-	void PopulateCarPaintList(const std::string & carname, GuiOption::List & paintlist);
+	void PopulateCarVariantList(const std::string & carname, GuiOption::List & variants);
 
-	void PopulateCarTireList(const std::string & carname, GuiOption::List & tirelist);
+	void PopulateCarPaintList(const std::string & carname, GuiOption::List & paints);
 
-	void PopulateCarWheelList(const std::string & carname, GuiOption::List & wheellist);
+	void PopulateCarTireList(const std::string & carname, GuiOption::List & tires);
+
+	void PopulateCarWheelList(const std::string & carname, GuiOption::List & wheels);
 
 	void PopulateCarSpecList(GuiOption::List & speclist);
 
@@ -245,6 +247,7 @@ private:
 	void SetCarToEdit(const std::string & value);
 	void SetCarStartPos(const std::string & value);
 	void SetCarName(const std::string & value);
+	void SetCarVariant(const std::string & value);
 	void SetCarPaint(const std::string & value);
 	void SetCarTire(const std::string & value);
 	void SetCarWheel(const std::string & value);
@@ -265,6 +268,7 @@ private:
 	Slot1<const std::string &> set_car_toedit;
 	Slot1<const std::string &> set_car_startpos;
 	Slot1<const std::string &> set_car_name;
+	Slot1<const std::string &> set_car_variant;
 	Slot1<const std::string &> set_car_paint;
 	Slot1<const std::string &> set_car_tire;
 	Slot1<const std::string &> set_car_wheel;

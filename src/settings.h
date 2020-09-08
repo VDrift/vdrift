@@ -333,6 +333,11 @@ public:
 		return car;
 	}
 
+	const std::string & GetCarVariant() const
+	{
+		return car_variant;
+	}
+
 	const std::string & GetCarPaint() const
 	{
 		return car_paint;
@@ -470,6 +475,7 @@ private:
 	bool motionblur;
 	bool normalmaps;
 	std::string car;
+	std::string car_variant;
 	std::string car_paint;
 	std::string car_tire;
 	std::string car_wheel;
