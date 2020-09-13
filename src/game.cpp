@@ -133,7 +133,6 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	ff_update_time(0)
 {
 	dynamics.setContactAddedCallback(&CarDynamics::WheelContactCallback);
-	RegisterActions();
 }
 
 Game::~Game()
@@ -469,8 +468,7 @@ bool Game::InitGUI()
 		return false;
 	}
 
-	// Connect game actions to gui options
-	BindActionsToGUI();
+	BindActions();
 
 	// Set options from game settings.
 	std::map<std::string, std::string> optionmap;
@@ -2789,6 +2787,11 @@ void Game::ActivateEditControlPage()
 	}
 }
 
+void Game::CancelDownload()
+{
+	http.CancelAllRequests();
+}
+
 void Game::CancelControl()
 {
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
@@ -3132,98 +3135,60 @@ void Game::SetControl(const std::string & value)
 	}
 }
 
-void Game::BindActionsToGUI()
+void Game::BindActions()
 {
-	set_car_toedit.connect(gui.GetOption("game.startlist").signal_val);
-	set_car_startpos.connect(gui.GetOption("game.car_startpos").signal_val);
-	set_car_name.connect(gui.GetOption("game.car").signal_val);
-	set_car_variant.connect(gui.GetOption("game.car_variant").signal_val);
-	set_car_paint.connect(gui.GetOption("game.car_paint").signal_val);
-	set_car_tire.connect(gui.GetOption("game.car_tire").signal_val);
-	set_car_wheel.connect(gui.GetOption("game.car_wheel").signal_val);
-	set_car_color_hue.connect(gui.GetOption("game.car_color_hue").signal_val);
-	set_car_color_sat.connect(gui.GetOption("game.car_color_sat").signal_val);
-	set_car_color_val.connect(gui.GetOption("game.car_color_val").signal_val);
-	set_car_driver.connect(gui.GetOption("game.driver").signal_val);
-	set_car_ailevel.connect(gui.GetOption("game.ai_level").signal_val);
-	set_cars_num.connect(gui.GetOption("game.cars_num").signal_val);
-	set_control.connect(gui.GetOption("controledit.string").signal_val);
-}
-
-void Game::RegisterActions()
-{
-	set_car_toedit.call.bind<Game, &Game::SetCarToEdit>(this);
-	set_car_startpos.call.bind<Game, &Game::SetCarStartPos>(this);
-	set_car_name.call.bind<Game, &Game::SetCarName>(this);
-	set_car_variant.call.bind<Game, &Game::SetCarVariant>(this);
-	set_car_paint.call.bind<Game, &Game::SetCarPaint>(this);
-	set_car_tire.call.bind<Game, &Game::SetCarTire>(this);
-	set_car_wheel.call.bind<Game, &Game::SetCarWheel>(this);
-	set_car_color_hue.call.bind<Game, &Game::SetCarColorHue>(this);
-	set_car_color_sat.call.bind<Game, &Game::SetCarColorSat>(this);
-	set_car_color_val.call.bind<Game, &Game::SetCarColorVal>(this);
-	set_car_driver.call.bind<Game, &Game::SetCarDriver>(this);
-	set_car_ailevel.call.bind<Game, &Game::SetCarAILevel>(this);
-	set_cars_num.call.bind<Game, &Game::SetCarsNum>(this);
-	set_control.call.bind<Game, &Game::SetControl>(this);
-
-	actions.resize(26);
-	actions[0].call.bind<Game, &Game::QuitGame>(this);
-	actions[1].call.bind<Game, &Game::LoadGarage>(this);
-	actions[2].call.bind<Game, &Game::StartRace>(this);
-	actions[3].call.bind<Game, &Game::PauseGame>(this);
-	actions[4].call.bind<Game, &Game::ContinueGame>(this);
-	actions[5].call.bind<Game, &Game::RestartGame>(this);
-	actions[6].call.bind<Game, &Game::StartReplay>(this);
-	actions[7].call.bind<Game, &Game::StartCheckForUpdates>(this);
-	actions[8].call.bind<Http, &Http::CancelAllRequests>(&http);
-	actions[9].call.bind<Game, &Game::StartCarManager>(this);
-	actions[10].call.bind<Game, &Game::CarManagerNext>(this);
-	actions[11].call.bind<Game, &Game::CarManagerPrev>(this);
-	actions[12].call.bind<Game, &Game::ApplyCarUpdate>(this);
-	actions[13].call.bind<Game, &Game::StartTrackManager>(this);
-	actions[14].call.bind<Game, &Game::TrackManagerNext>(this);
-	actions[15].call.bind<Game, &Game::TrackManagerPrev>(this);
-	actions[16].call.bind<Game, &Game::ApplyTrackUpdate>(this);
-	actions[17].call.bind<Game, &Game::CancelControl>(this);
-	actions[18].call.bind<Game, &Game::DeleteControl>(this);
-	actions[19].call.bind<Game, &Game::SetButtonControl>(this);
-	actions[20].call.bind<Game, &Game::SetAnalogControl>(this);
-	actions[21].call.bind<Game, &Game::LoadControls>(this);
-	actions[22].call.bind<Game, &Game::SaveControls>(this);
-	actions[23].call.bind<Game, &Game::SyncOptions>(this);
-	actions[24].call.bind<Game, &Game::SyncSettings>(this);
-	actions[25].call.bind<Game, &Game::SelectPlayerCar>(this);
+	#define BIND(option, func, n)\
+		stractions[n].connect(gui.GetOption(option).signal_val);\
+		stractions[n].call.bind<Game, &Game::func>(this)
+	BIND("game.startlist",     SetCarToEdit,   0);
+	BIND("game.car",           SetCarName,     1);
+	BIND("game.car_startpos",  SetCarStartPos, 2);
+	BIND("game.car_variant",   SetCarVariant,  3);
+	BIND("game.car_paint",     SetCarPaint,    4);
+	BIND("game.car_tire",      SetCarTire,     5);
+	BIND("game.car_wheel",     SetCarWheel,    6);
+	BIND("game.car_color_hue", SetCarColorHue, 7);
+	BIND("game.car_color_sat", SetCarColorSat, 8);
+	BIND("game.car_color_val", SetCarColorVal, 9);
+	BIND("game.cars_num",      SetCarsNum,    10);
+	BIND("game.driver",        SetCarDriver,  11);
+	BIND("game.ai_level",      SetCarAILevel, 12);
+	BIND("controledit.string", SetControl,    13);
+	#undef BIND
 }
 
 void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 {
-	actionmap["QuitGame"] = &actions[0];
-	actionmap["LeaveGame"] = &actions[1];
-	actionmap["StartRace"] = &actions[2];
-	actionmap["PauseGame"] = &actions[3];
-	actionmap["ContinueGame"] = &actions[4];
-	actionmap["RestartGame"] = &actions[5];
-	actionmap["StartReplay"] = &actions[6];
-	actionmap["StartCheckForUpdates"] = &actions[7];
-	actionmap["CancelDownload"] = &actions[8];
-	actionmap["StartCarManager"] = &actions[9];
-	actionmap["CarManagerNext"] = &actions[10];
-	actionmap["CarManagerPrev"] = &actions[11];
-	actionmap["ApplyCarUpdate"] = &actions[12];
-	actionmap["StartTrackManager"] = &actions[13];
-	actionmap["TrackManagerNext"] = &actions[14];
-	actionmap["TrackManagerPrev"] = &actions[15];
-	actionmap["ApplyTrackUpdate"] = &actions[16];
-	actionmap["CancelControl"] = &actions[17];
-	actionmap["DeleteControl"] = &actions[18];
-	actionmap["SetButtonControl"] = &actions[19];
-	actionmap["SetAnalogControl"] = &actions[20];
-	actionmap["LoadControls"] = &actions[21];
-	actionmap["SaveControls"] = &actions[22];
-	actionmap["gui.options.load"] = &actions[23];
-	actionmap["gui.options.save"] = &actions[24];
-	actionmap["SelectPlayerCar"] = &actions[25];
+	#define BIND(func, n)\
+		&actions[n];\
+		actions[n].call.bind<Game, &Game::func>(this)
+	actionmap["QuitGame"] =             BIND(QuitGame,             0);
+	actionmap["LeaveGame"] =            BIND(LoadGarage,           1);
+	actionmap["StartRace"] =            BIND(StartRace,            2);
+	actionmap["PauseGame"] =            BIND(PauseGame,            3);
+	actionmap["ContinueGame"] =         BIND(ContinueGame,         4);
+	actionmap["RestartGame"] =          BIND(RestartGame,          5);
+	actionmap["StartReplay"] =          BIND(StartReplay,          6);
+	actionmap["StartCheckForUpdates"] = BIND(StartCheckForUpdates, 7);
+	actionmap["CancelDownload"] =       BIND(CancelDownload,       8);
+	actionmap["StartCarManager"] =      BIND(StartCarManager,      9);
+	actionmap["CarManagerNext"] =       BIND(CarManagerNext,      10);
+	actionmap["CarManagerPrev"] =       BIND(CarManagerPrev,      11);
+	actionmap["ApplyCarUpdate"] =       BIND(ApplyCarUpdate,      12);
+	actionmap["StartTrackManager"] =    BIND(StartTrackManager,   13);
+	actionmap["TrackManagerNext"] =     BIND(TrackManagerNext,    14);
+	actionmap["TrackManagerPrev"] =     BIND(TrackManagerPrev,    15);
+	actionmap["ApplyTrackUpdate"] =     BIND(ApplyTrackUpdate,    16);
+	actionmap["CancelControl"] =        BIND(CancelControl,       17);
+	actionmap["DeleteControl"] =        BIND(DeleteControl,       18);
+	actionmap["SetButtonControl"] =     BIND(SetButtonControl,    19);
+	actionmap["SetAnalogControl"] =     BIND(SetAnalogControl,    20);
+	actionmap["LoadControls"] =         BIND(LoadControls,        21);
+	actionmap["SaveControls"] =         BIND(SaveControls,        22);
+	actionmap["gui.options.load"] =     BIND(SyncOptions,         23);
+	actionmap["gui.options.save"] =     BIND(SyncSettings,        24);
+	actionmap["SelectPlayerCar"] =      BIND(SelectPlayerCar,     25);
+	#undef BIND
 }
 
 void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap)

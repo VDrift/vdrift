@@ -233,6 +233,7 @@ private:
 	void TrackManagerNext();
 	void TrackManagerPrev();
 	void ApplyTrackUpdate();
+	void CancelDownload();
 	void ActivateEditControlPage();
 	void CancelControl();
 	void DeleteControl();
@@ -260,26 +261,12 @@ private:
 	void SetCarsNum(const std::string & value);
 	void SetControl(const std::string & value);
 
-	void BindActionsToGUI();
-	void RegisterActions();
+	void BindActions();
 	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
 	void InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap);
 
-	Slot1<const std::string &> set_car_toedit;
-	Slot1<const std::string &> set_car_startpos;
-	Slot1<const std::string &> set_car_name;
-	Slot1<const std::string &> set_car_variant;
-	Slot1<const std::string &> set_car_paint;
-	Slot1<const std::string &> set_car_tire;
-	Slot1<const std::string &> set_car_wheel;
-	Slot1<const std::string &> set_car_color_hue;
-	Slot1<const std::string &> set_car_color_sat;
-	Slot1<const std::string &> set_car_color_val;
-	Slot1<const std::string &> set_car_driver;
-	Slot1<const std::string &> set_car_ailevel;
-	Slot1<const std::string &> set_cars_num;
-	Slot1<const std::string &> set_control;
-	std::vector<Slot0> actions;
+	Slot1<const std::string &> stractions[14];
+	Slot0 actions[26];
 
 	// game info signals
 	Signal1<const std::string &> signal_loading;
