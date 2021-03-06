@@ -44,18 +44,6 @@ CarTireInfo3::CarTireInfo3():
 	// ctor
 }
 
-CarTire3::CarTire3():
-	ideal_slip(0.2),
-	ideal_slip_angle(0.2),
-	slip(0),
-	slip_angle(0),
-	fx(0),
-	fy(0),
-	mz(0)
-{
-	// ctor
-}
-
 void CarTire3::init(const CarTireInfo3 & info)
 {
 	CarTireInfo3::operator=(info);

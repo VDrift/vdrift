@@ -51,20 +51,6 @@ CarTireInfo1::CarTireInfo1() :
 	// ctor
 }
 
-CarTire1::CarTire1() :
-	camber(0),
-	slip(0),
-	slip_angle(0),
-	ideal_slip(0),
-	ideal_slip_angle(0),
-	fx(0),
-	fy(0),
-	fz(0),
-	mz(0)
-{
-	// ctor
-}
-
 void CarTire1::init(const CarTireInfo1 & info)
 {
 	CarTireInfo1::operator=(info);

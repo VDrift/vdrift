@@ -21,6 +21,7 @@
 #define _CARTIRE3_H
 
 #include "LinearMath/btVector3.h"
+#include "cartirestate.h"
 
 struct CarTireInfo3
 {
@@ -45,11 +46,9 @@ struct CarTireInfo3
 	CarTireInfo3();
 };
 
-class CarTire3 : private CarTireInfo3
+class CarTire3 : public CarTireState, private CarTireInfo3
 {
 public:
-	CarTire3();
-
 	void init(const CarTireInfo3 & info);
 
 	/// normal_force: tire load in N
@@ -70,14 +69,6 @@ public:
 
 	btScalar getTread() const;
 
-	btScalar getSlip() const;
-	btScalar getSlipAngle() const;
-	btScalar getIdealSlip() const;
-	btScalar getIdealSlipAngle() const;
-	btScalar getFx() const;
-	btScalar getFy() const;
-	btScalar getMz() const;
-
 	/// load is the normal force in newtons.
 	btScalar getMaxFx(btScalar load) const;
 
@@ -88,14 +79,6 @@ public:
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
 private:
-	btScalar ideal_slip;
-	btScalar ideal_slip_angle;
-	btScalar slip;
-	btScalar slip_angle;
-	btScalar fx;
-	btScalar fy;
-	btScalar mz;
-
 	// cached derived parameters
 	btScalar rkz; // 1 / tire vertical stiffness
 	btScalar rkb; // 1 / carcass bending stiffness
@@ -116,7 +99,6 @@ private:
 	void initSlipTables();
 };
 
-
 inline btScalar CarTire3::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
@@ -135,41 +117,6 @@ inline btScalar CarTire3::getRollingResistance(btScalar velocity, btScalar resis
 inline btScalar CarTire3::getTread() const
 {
 	return tread;
-}
-
-inline btScalar CarTire3::getSlip() const
-{
-	return slip;
-}
-
-inline btScalar CarTire3::getSlipAngle() const
-{
-	return slip_angle;
-}
-
-inline btScalar CarTire3::getIdealSlip() const
-{
-	return ideal_slip;
-}
-
-inline btScalar CarTire3::getIdealSlipAngle() const
-{
-	return ideal_slip_angle;
-}
-
-inline btScalar CarTire3::getFx() const
-{
-	return fx;
-}
-
-inline btScalar CarTire3::getFy() const
-{
-	return fy;
-}
-
-inline btScalar CarTire3::getMz() const
-{
-	return mz;
 }
 
 #endif // _CARTIRE3_H

@@ -21,6 +21,7 @@
 #define _CARTIRE2_H
 
 #include "LinearMath/btVector3.h"
+#include "cartirestate.h"
 
 struct CarTireInfo2
 {
@@ -74,12 +75,9 @@ struct CarTireInfo2
 	CarTireInfo2();						///< default constructor
 };
 
-class CarTire2 : private CarTireInfo2
+class CarTire2 : public CarTireState, private CarTireInfo2
 {
 public:
-	/// default constructor
-	CarTire2();
-
 	/// init tire
 	void init(const CarTireInfo2 & info);
 
@@ -104,15 +102,6 @@ public:
 		const btScalar velocity,
 		const btScalar resistance_factor) const;
 
-	/// cached state, modified by getForce, slip_angle in rad
-	btScalar getSlip() const;
-	btScalar getSlipAngle() const;
-	btScalar getIdealSlip() const;
-	btScalar getIdealSlipAngle() const;
-	btScalar getFx() const;
-	btScalar getFy() const;
-	btScalar getMz() const;
-
 	/// calculate tire squeal factor [0, 1] based on ideal slide/slip
 	btScalar getSqueal() const;
 
@@ -125,13 +114,7 @@ public:
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
 private:
-	btScalar slip;				///< ratio of tire contact patch speed to road speed, minus one
-	btScalar slip_angle;		///< angle (in degrees) between the wheel heading and the wheel velocity
-	btScalar ideal_slip;		///< ideal slip ratio
-	btScalar ideal_slip_angle;	///< ideal slip angle
-	btScalar vx, vy;			///< contact velocity in tire space
-	btScalar fx, fy, fz;		///< contact force in tire space
-	btScalar mz;				///< aligning torque
+	btScalar vx = 0, vy = 0; ///< contact velocity in tire space
 
 	/// longitudinal friction
 	btScalar PacejkaFx(
@@ -202,41 +185,6 @@ private:
 inline btScalar CarTire2::getTread() const
 {
 	return tread;
-}
-
-inline btScalar CarTire2::getSlip() const
-{
-	return slip;
-}
-
-inline btScalar CarTire2::getSlipAngle() const
-{
-	return slip_angle;
-}
-
-inline btScalar CarTire2::getIdealSlip() const
-{
-	return ideal_slip;
-}
-
-inline btScalar CarTire2::getIdealSlipAngle() const
-{
-	return ideal_slip_angle;
-}
-
-inline btScalar CarTire2::getFx() const
-{
-	return fx;
-}
-
-inline btScalar CarTire2::getFy() const
-{
-	return fy;
-}
-
-inline btScalar CarTire2::getMz() const
-{
-	return mz;
 }
 
 inline btScalar CarTire2::getRollingResistance(

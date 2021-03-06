@@ -21,6 +21,7 @@
 #define _CARTIRE1_H
 
 #include "LinearMath/btVector3.h"
+#include "cartirestate.h"
 
 struct CarTireInfo1
 {
@@ -36,11 +37,9 @@ struct CarTireInfo1
 	CarTireInfo1();
 };
 
-class CarTire1 : private CarTireInfo1
+class CarTire1 : public CarTireState, private CarTireInfo1
 {
 public:
-	CarTire1();
-
 	void init(const CarTireInfo1 & info);
 
 	/// get tire tread fraction
@@ -64,15 +63,6 @@ public:
 		const btScalar velocity,
 		const btScalar resistance_factor) const;
 
-	btScalar getCamber() const;
-	btScalar getSlip() const;
-	btScalar getSlipAngle() const;
-	btScalar getIdealSlip() const;
-	btScalar getIdealSlipAngle() const;
-	btScalar getFx() const;
-	btScalar getFy() const;
-	btScalar getMz() const;
-
 	/// load is the normal force in newtons.
 	btScalar getMaxFx(btScalar load) const;
 
@@ -95,13 +85,6 @@ public:
 	bool Serialize(Serializer & s);
 
 private:
-	btScalar camber; ///< tire camber angle relative to track surface
-	btScalar slip; ///< ratio of tire contact patch speed to road speed, minus one
-	btScalar slip_angle; ///< the angle between the wheel heading and the wheel's actual velocity
-	btScalar ideal_slip; ///< peak force slip ratio
-	btScalar ideal_slip_angle; ///< peak force slip angle
-	btScalar fx, fy, fz, mz;
-
 	/// pacejka magic formula function, longitudinal
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
 
@@ -133,46 +116,6 @@ private:
 inline btScalar CarTire1::getTread() const
 {
 	return tread;
-}
-
-inline btScalar CarTire1::getCamber() const
-{
-	return camber;
-}
-
-inline btScalar CarTire1::getSlip() const
-{
-	return slip;
-}
-
-inline btScalar CarTire1::getSlipAngle() const
-{
-	return slip_angle;
-}
-
-inline btScalar CarTire1::getIdealSlip() const
-{
-	return ideal_slip;
-}
-
-inline btScalar CarTire1::getIdealSlipAngle() const
-{
-	return ideal_slip_angle;
-}
-
-inline btScalar CarTire1::getFx() const
-{
-	return fx;
-}
-
-inline btScalar CarTire1::getFy() const
-{
-	return fy;
-}
-
-inline btScalar CarTire1::getMz() const
-{
-	return mz;
 }
 
 template <class Serializer>
