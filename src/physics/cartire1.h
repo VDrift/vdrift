@@ -21,7 +21,6 @@
 #define _CARTIRE1_H
 
 #include "LinearMath/btVector3.h"
-#include "macros.h"
 
 struct CarTireInfo1
 {
@@ -77,8 +76,17 @@ public:
 	/// load is the normal force in newtons.
 	btScalar getMaxFx(btScalar load) const;
 
+	/// longitudinal force derivative at zero slip
+	btScalar getMaxDx(btScalar load) const;
+
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxFy(btScalar load, btScalar camber) const;
+
+	/// lateral force derivative at zero slip angle
+	btScalar getMaxDy(btScalar load, btScalar camber) const;
+
+	/// horizontal and vertical fy function shift due to camber
+	void getCamberShift(btScalar load, btScalar camber, btScalar & sh, btScalar & sv) const;
 
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
@@ -127,7 +135,7 @@ inline btScalar CarTire1::getTread() const
 	return tread;
 }
 
-inline btScalar CarTire1:: getCamber() const
+inline btScalar CarTire1::getCamber() const
 {
 	return camber;
 }

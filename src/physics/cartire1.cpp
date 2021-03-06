@@ -27,7 +27,14 @@ static const btScalar rad2deg = 180 / M_PI;
 template <class T, int N>
 constexpr int size(const T (&array)[N])
 {
-    return N;
+	return N;
+}
+
+// approximate asin(x) = x + x^3/6 for +-18 deg range
+inline btScalar ComputeCamberAngle(btScalar sin_camber)
+{
+	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
+	return (btScalar(1/6.0) * sc) * (sc * sc) + sc;
 }
 
 CarTireInfo1::CarTireInfo1() :
@@ -79,9 +86,7 @@ btVector3 CarTire1::getForce(
 
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
 
-	// approximate asin(x) = x + x^3/6 for +-18 deg range
-	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
-	camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
+	camber = ComputeCamberAngle(sin_camber);
 
 	// get ideal slip ratio and slip angle
 	btScalar sigma_hat(0);
@@ -138,6 +143,14 @@ btScalar CarTire1::getMaxFx(btScalar load) const
 	return D;
 }
 
+btScalar CarTire1::getMaxDx(btScalar load) const
+{
+	auto & b = longitudinal;
+	btScalar Fz = load * btScalar(1E-3);
+	btScalar BCD = (b[3] * Fz + b[4]) * Fz * btExp(-b[5] * Fz);
+	return BCD;
+}
+
 btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 {
 	auto & a = lateral;
@@ -146,6 +159,24 @@ btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14];
 	return D + Sv;
+}
+
+btScalar CarTire1::getMaxDy(btScalar load, btScalar camber) const
+{
+	auto & a = lateral;
+	btScalar Fz = load * btScalar(1E-3);
+	btScalar gamma = camber;
+	btScalar BCD = a[3] * Sin3Pi2(2 * Atan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
+	return BCD;
+}
+
+void CarTire1::getCamberShift(btScalar load, btScalar camber, btScalar & sh, btScalar & sv) const
+{
+	auto & a = lateral;
+	btScalar Fz = load * btScalar(1E-3);
+	btScalar gamma = camber;
+	sh = a[8] * gamma + a[9] * Fz + a[10];
+	sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
 }
 
 btScalar CarTire1::getMaxMz(btScalar load, btScalar camber) const
