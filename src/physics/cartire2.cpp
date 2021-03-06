@@ -21,9 +21,9 @@
 #include "minmax.h"
 
 template <typename T>
-inline T sgn(T val)
+inline T sgn(T v)
 {
-	return (T(0) < val) - (val < T(0));
+	return std::copysign(T(1), v);
 }
 
 #define ENTRY(x) #x,
