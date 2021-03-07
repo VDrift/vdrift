@@ -102,7 +102,6 @@ btVector3 CarTire1::getForce(
 	ideal_slip_angle = alpha_hat * deg2rad;
 	fx = Fx;
 	fy = Fy;
-	fz = Fz;
 	mz = Mz;
 
 	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn

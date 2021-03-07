@@ -21,7 +21,7 @@ protected:
 	btScalar slip_angle = 0; ///< the angle between the wheel heading and the wheel velocity
 	btScalar ideal_slip = 0; ///< peak force slip ratio
 	btScalar ideal_slip_angle = 0; ///< peak force slip angle
-	btScalar fx = 0, fy = 0, fz = 0, mz = 0;
+	btScalar fx = 0, fy = 0, mz = 0;
 };
 
 #endif
