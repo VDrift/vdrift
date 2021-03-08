@@ -43,7 +43,6 @@ public:
 	/// element properties
 	virtual bool GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot);
 
-	void SetColor(int n, const std::string & value);
 	void SetOpacity(int n, const std::string & value);
 	void SetHue(int n, const std::string & value);
 	void SetSat(int n, const std::string & value);
@@ -55,7 +54,6 @@ public:
 	/// update list, parameter holds list item count
 	void UpdateList(const std::string & vnum);
 
-	Slot2<int, const std::string &> setn_color;
 	Slot2<int, const std::string &> setn_opacity;
 	Slot2<int, const std::string &> setn_hue;
 	Slot2<int, const std::string &> setn_sat;
@@ -79,7 +77,6 @@ protected:
 	virtual void UpdateElements(SceneNode & scene) = 0;
 
 	/// override widget property callbacks
-	void SetColorAll(const std::string & value);
 	void SetOpacityAll(const std::string & value);
 	void SetHueAll(const std::string & value);
 	void SetSatAll(const std::string & value);

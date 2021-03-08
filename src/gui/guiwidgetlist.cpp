@@ -24,13 +24,11 @@
 GuiWidgetList::GuiWidgetList()
 {
 	// override widget callbacks
-	GuiWidget::set_color.call.bind<GuiWidgetList, &GuiWidgetList::SetColorAll>(this);
 	GuiWidget::set_opacity.call.bind<GuiWidgetList, &GuiWidgetList::SetOpacityAll>(this);
 	GuiWidget::set_hue.call.bind<GuiWidgetList, &GuiWidgetList::SetHueAll>(this);
 	GuiWidget::set_sat.call.bind<GuiWidgetList, &GuiWidgetList::SetSatAll>(this);
 	GuiWidget::set_val.call.bind<GuiWidgetList, &GuiWidgetList::SetValAll>(this);
 
-	setn_color.call.bind<GuiWidgetList, &GuiWidgetList::SetColor>(this);
 	setn_opacity.call.bind<GuiWidgetList, &GuiWidgetList::SetOpacity>(this);
 	setn_hue.call.bind<GuiWidgetList, &GuiWidgetList::SetHue>(this);
 	setn_sat.call.bind<GuiWidgetList, &GuiWidgetList::SetSat>(this);
@@ -79,20 +77,9 @@ bool GuiWidgetList::GetProperty(const std::string & name, Slot2<int, const std::
 		return (slot = &setn_val);
 	if (name == "opacity")
 		return (slot = &setn_opacity);
-	if (name == "color")
-		return (slot = &setn_color);
 	if (name == "scroll")
 		return (slot = &scroll);
 	return (slot = NULL);
-}
-
-void GuiWidgetList::SetColor(int n, const std::string & value)
-{
-	size_t i = n - m_list_offset;
-	if (i < m_elements.size())
-	{
-		m_elements[i]->SetColor(value);
-	}
 }
 
 void GuiWidgetList::SetOpacity(int n, const std::string & value)
@@ -174,12 +161,6 @@ void GuiWidgetList::UpdateList(const std::string & vnum)
 
 	m_values.resize(m_rows * m_cols);
 	get_values(m_list_offset, m_values);
-}
-
-void GuiWidgetList::SetColorAll(const std::string & value)
-{
-	for (auto element : m_elements)
-		element->SetColor(value);
 }
 
 void GuiWidgetList::SetOpacityAll(const std::string & value)

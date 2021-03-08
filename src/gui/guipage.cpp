@@ -588,8 +588,6 @@ bool GuiPage::Load(
 				ConnectAction(val, vsignalmap, widget->set_visible);
 			if (pagefile.get(section, "opacity", val))
 				ConnectAction(val, vsignalmap, widget->set_opacity);
-			if (pagefile.get(section, "color", val))
-				ConnectAction(val, vsignalmap, widget->set_color);
 			if (pagefile.get(section, "hue", val))
 				ConnectAction(val, vsignalmap, widget->set_hue);
 			if (pagefile.get(section, "sat", val))
