@@ -65,6 +65,7 @@ static PROC WinGetProcAddress(const char *name)
 int GLC_EXT_texture_compression_s3tc = GLC_LOAD_FAILED;
 int GLC_EXT_texture_sRGB = GLC_LOAD_FAILED;
 int GLC_EXT_texture_filter_anisotropic = GLC_LOAD_FAILED;
+int GLC_ARB_draw_elements_base_vertex = GLC_LOAD_FAILED;
 int GLC_ARB_vertex_array_object = GLC_LOAD_FAILED;
 int GLC_ARB_framebuffer_object = GLC_LOAD_FAILED;
 int GLC_ARB_half_float_pixel = GLC_LOAD_FAILED;
@@ -1140,10 +1141,11 @@ typedef struct glcStrToExtMap_s
 	PFN_LOADFUNCPOINTERS LoadExtension;
 } glcStrToExtMap;
 
-static glcStrToExtMap ExtensionMap[9] = {
+static glcStrToExtMap ExtensionMap[10] = {
 	{"GL_EXT_texture_compression_s3tc", &GLC_EXT_texture_compression_s3tc, NULL},
 	{"GL_EXT_texture_sRGB", &GLC_EXT_texture_sRGB, NULL},
 	{"GL_EXT_texture_filter_anisotropic", &GLC_EXT_texture_filter_anisotropic, NULL},
+	{"GL_ARB_draw_elements_base_vertex", &GLC_ARB_draw_elements_base_vertex, NULL},
 	{"GL_ARB_vertex_array_object", &GLC_ARB_vertex_array_object, NULL},
 	{"GL_ARB_framebuffer_object", &GLC_ARB_framebuffer_object, NULL},
 	{"GL_ARB_half_float_pixel", &GLC_ARB_half_float_pixel, NULL},
@@ -1173,6 +1175,7 @@ static void ClearExtensionVars(void)
 	GLC_EXT_texture_compression_s3tc = GLC_LOAD_FAILED;
 	GLC_EXT_texture_sRGB = GLC_LOAD_FAILED;
 	GLC_EXT_texture_filter_anisotropic = GLC_LOAD_FAILED;
+	GLC_ARB_draw_elements_base_vertex = GLC_LOAD_FAILED;
 	GLC_ARB_vertex_array_object = GLC_LOAD_FAILED;
 	GLC_ARB_framebuffer_object = GLC_LOAD_FAILED;
 	GLC_ARB_half_float_pixel = GLC_LOAD_FAILED;

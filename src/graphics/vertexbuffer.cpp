@@ -342,9 +342,18 @@ void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 
 	if (s.icount != 0)
 	{
-		glDrawRangeElements(
-			GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1, s.icount,
-			GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset);
+		if (GLC_ARB_draw_elements_base_vertex)
+		{
+			glDrawRangeElementsBaseVertex(
+				GL_TRIANGLES, 0, s.vcount - 1, s.icount,
+				GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset, s.voffset);
+		}
+		else
+		{
+			glDrawRangeElements(
+				GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1, s.icount,
+				GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset);
+		}
 	}
 	else
 	{
@@ -457,9 +466,14 @@ unsigned int VertexBuffer::WriteIndices(
 
 	assert(icount + fn <= index_buffer.size());
 	unsigned int * ib = &index_buffer[icount];
-	for (unsigned int j = 0; j < fn; ++j)
+	if (GLC_ARB_draw_elements_base_vertex)
 	{
-		ib[j] = faces[j] + vcount;
+		std::memcpy(ib, faces, fn * sizeof(unsigned int));
+	}
+	else
+	{
+		for (unsigned int j = 0; j < fn; ++j)
+			ib[j] = faces[j] + vcount;
 	}
 
 	return icount + fn;
