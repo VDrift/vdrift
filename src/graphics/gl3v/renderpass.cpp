@@ -1147,7 +1147,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 			RenderTexture texture(target, sharedRenderTarget->second.handle);
 
 			// Store the dependency.
-			externalRenderTargets.insert(std::make_pair(renderTargetNameId,texture));
+			externalRenderTargets.emplace(renderTargetNameId, texture);
 
 			if (rt.second.autoMipmap)
 				autoMipMapRenderTargets.push_back(texture);
@@ -1175,7 +1175,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 			gl.unbindTexture(texture.target);
 
 			// Store the texture we created.
-			renderTargets.insert(std::make_pair(renderTargetNameId,texture));
+			renderTargets.emplace(renderTargetNameId, texture);
 			if (rt.second.autoMipmap)
 				autoMipMapRenderTargets.push_back(texture);
 

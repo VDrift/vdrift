@@ -252,7 +252,7 @@ template <typename T>
 inline PTree & PTree::set(const std::string & key, const T & value)
 {
 	size_t next = key.find(".");
-	iterator i = _children.insert(std::make_pair(key.substr(0, next), PTree())).first;
+	iterator i = _children.emplace(key.substr(0, next), PTree()).first;
 	PTree & p = i->second;
 	p._parent = this; ///< store parent pointer for error reporting
 	if (next >= key.length()-1)
@@ -332,7 +332,7 @@ template <>
 inline PTree & PTree::set(const std::string & key, const PTree & value)
 {
 	std::string::size_type n = key.find('.');
-	auto pi = _children.insert(std::make_pair(key.substr(0, n), value));
+	auto pi = _children.emplace(key.substr(0, n), value);
 	PTree & p = pi.first->second;
 	if (pi.second && p._value.empty())
 	{

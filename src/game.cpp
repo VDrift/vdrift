@@ -2049,7 +2049,7 @@ static void PopulateCarSet(
 	{
 		std::ifstream file((path + "/" + folder + "/" + folder + ".car").c_str());
 		if (file)
-			set.insert(std::make_pair(folder, folder));
+			set.emplace(folder, folder);
 	}
 }
 
@@ -2067,7 +2067,7 @@ static void PopulateTrackSet(
 		{
 			std::string name;
 			getline(file, name);
-			set.insert(std::make_pair(folder, name));
+			set.emplace(folder, name);
 		}
 	}
 }

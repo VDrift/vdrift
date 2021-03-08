@@ -757,7 +757,7 @@ bool GraphicsGL2::SetupFrameBufferObjectsAndShaders(std::ostream & info_output, 
 	std::map <std::string, const GraphicsConfigShader *> config_shaders;
 	for (const auto & shader : config.shaders)
 	{
-		auto result = config_shaders.insert(std::make_pair(shader.name, &shader));
+		auto result = config_shaders.emplace(shader.name, &shader);
 		if (!result.second)
 			error_output << "Ignore duplicate definition of shader: " << shader.name << std::endl;
 	}

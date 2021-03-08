@@ -210,8 +210,8 @@ bool Http::Request(const std::string & url, std::ostream & error_output)
 			RequestState requestinfo(url,file);
 			requestinfo.progress_callback_data.http = this;
 			requestinfo.progress_callback_data.easyhandle = easyhandle;
-			easyhandles.insert(std::make_pair(easyhandle,requestinfo));
-			requests.insert(std::make_pair(url,HttpInfo()));
+			easyhandles.emplace(easyhandle, requestinfo);
+			requests.emplace(url, HttpInfo());
 
 			// Setup the progress callback.
 			curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 0);

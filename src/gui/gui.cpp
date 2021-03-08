@@ -259,7 +259,7 @@ bool Gui::Load(
 	size_t pagecount = 0;
 	for (const auto & page : pagelist)
 	{
-		pages.insert(std::make_pair(page, GuiPage()));
+		pages.emplace(page, GuiPage());
 		pagecount++;
 	}
 

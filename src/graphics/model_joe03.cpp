@@ -391,7 +391,7 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 		for (unsigned int j = 0; j < 3; j++)
 		{
 			const Vert vert(f.vertexIndex[j], f.textureIndex[j], f.normalIndex[j]);
-			auto r = vmap.insert(std::make_pair(vert, vnum));
+			auto r = vmap.emplace(vert, vnum);
 			if (r.second)
 				vnum++;
 

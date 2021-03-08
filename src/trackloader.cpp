@@ -485,7 +485,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided);
 
-	return bodies.insert(std::make_pair(name, body)).first;
+	return bodies.emplace(name, body).first;
 }
 
 void Track::Loader::AddBody(SceneNode & scene, const Body & body)

@@ -290,7 +290,7 @@ static void ParseActions(
 		auto vai = vactionmap.find(aname);
 		if (vai != vactionmap.end())
 		{
-			action_val_set.insert(std::make_pair(action, vai->second));
+			action_val_set.emplace(action, vai->second);
 			continue;
 		}
 
@@ -307,7 +307,7 @@ static void ParseActions(
 		{
 			Slot1<const std::string &> * pslot;
 			if (wi->second->GetProperty(pname, pslot))
-				action_val_set.insert(std::make_pair(action, pslot));
+				action_val_set.emplace(action, pslot);
 			continue;
 		}
 
@@ -317,7 +317,7 @@ static void ParseActions(
 		{
 			Slot2<int, const std::string &> * pslot;
 			if (wli->second->GetProperty(pname, pslot))
-				action_valn_set.insert(std::make_pair(action, pslot));
+				action_valn_set.emplace(action, pslot);
 		}
 	}
 }
