@@ -3160,34 +3160,34 @@ void Game::BindActions()
 void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 {
 	#define BIND(func, n)\
-		&actions[n];\
+		actionmap[#func] = &actions[n];\
 		actions[n].call.bind<Game, &Game::func>(this)
-	actionmap["QuitGame"] =             BIND(QuitGame,             0);
-	actionmap["LeaveGame"] =            BIND(LoadGarage,           1);
-	actionmap["StartRace"] =            BIND(StartRace,            2);
-	actionmap["PauseGame"] =            BIND(PauseGame,            3);
-	actionmap["ContinueGame"] =         BIND(ContinueGame,         4);
-	actionmap["RestartGame"] =          BIND(RestartGame,          5);
-	actionmap["StartReplay"] =          BIND(StartReplay,          6);
-	actionmap["StartCheckForUpdates"] = BIND(StartCheckForUpdates, 7);
-	actionmap["CancelDownload"] =       BIND(CancelDownload,       8);
-	actionmap["StartCarManager"] =      BIND(StartCarManager,      9);
-	actionmap["CarManagerNext"] =       BIND(CarManagerNext,      10);
-	actionmap["CarManagerPrev"] =       BIND(CarManagerPrev,      11);
-	actionmap["ApplyCarUpdate"] =       BIND(ApplyCarUpdate,      12);
-	actionmap["StartTrackManager"] =    BIND(StartTrackManager,   13);
-	actionmap["TrackManagerNext"] =     BIND(TrackManagerNext,    14);
-	actionmap["TrackManagerPrev"] =     BIND(TrackManagerPrev,    15);
-	actionmap["ApplyTrackUpdate"] =     BIND(ApplyTrackUpdate,    16);
-	actionmap["CancelControl"] =        BIND(CancelControl,       17);
-	actionmap["DeleteControl"] =        BIND(DeleteControl,       18);
-	actionmap["SetButtonControl"] =     BIND(SetButtonControl,    19);
-	actionmap["SetAnalogControl"] =     BIND(SetAnalogControl,    20);
-	actionmap["LoadControls"] =         BIND(LoadControls,        21);
-	actionmap["SaveControls"] =         BIND(SaveControls,        22);
-	actionmap["gui.options.load"] =     BIND(SyncOptions,         23);
-	actionmap["gui.options.save"] =     BIND(SyncSettings,        24);
-	actionmap["SelectPlayerCar"] =      BIND(SelectPlayerCar,     25);
+	BIND(QuitGame,             0);
+	BIND(LoadGarage,           1);
+	BIND(StartRace,            2);
+	BIND(PauseGame,            3);
+	BIND(ContinueGame,         4);
+	BIND(RestartGame,          5);
+	BIND(StartReplay,          6);
+	BIND(StartCheckForUpdates, 7);
+	BIND(CancelDownload,       8);
+	BIND(StartCarManager,      9);
+	BIND(CarManagerNext,      10);
+	BIND(CarManagerPrev,      11);
+	BIND(ApplyCarUpdate,      12);
+	BIND(StartTrackManager,   13);
+	BIND(TrackManagerNext,    14);
+	BIND(TrackManagerPrev,    15);
+	BIND(ApplyTrackUpdate,    16);
+	BIND(CancelControl,       17);
+	BIND(DeleteControl,       18);
+	BIND(SetButtonControl,    19);
+	BIND(SetAnalogControl,    20);
+	BIND(LoadControls,        21);
+	BIND(SaveControls,        22);
+	BIND(SyncOptions,         23);
+	BIND(SyncSettings,        24);
+	BIND(SelectPlayerCar,     25);
 	#undef BIND
 }
 
