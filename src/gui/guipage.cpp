@@ -272,7 +272,7 @@ static void ParseActions(
 		// get next action with value
 		size_t posn = actions.find(' ', pos);
 		size_t n = actions.find(':', pos);
-		if (n > posn)
+		if (n >= posn)
 		{
 			pos = posn;
 			continue;
