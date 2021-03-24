@@ -60,7 +60,7 @@ bool GuiControl::Focus(float x, float y)
 	return false;
 }
 
-void GuiControl::Signal(Event ev)
+void GuiControl::SignalEvent(Event ev)
 {
 	if (ev == SELECTDOWN)
 	{

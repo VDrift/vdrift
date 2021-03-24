@@ -41,7 +41,7 @@ public:
 	void SetAlpha(SceneNode & scene, float value);
 
 	/// element properties
-	virtual bool GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot);
+	virtual bool GetProperty(const std::string & name, Slot<int, const std::string &> *& slot);
 
 	void SetOpacity(int n, const std::string & value);
 	void SetHue(int n, const std::string & value);
@@ -54,15 +54,15 @@ public:
 	/// update list, parameter holds list item count
 	void UpdateList(const std::string & vnum);
 
-	Slot2<int, const std::string &> setn_opacity;
-	Slot2<int, const std::string &> setn_hue;
-	Slot2<int, const std::string &> setn_sat;
-	Slot2<int, const std::string &> setn_val;
-	Slot2<int, const std::string &> scroll;
-	Slot1<const std::string &> update_list;
+	Slot<int, const std::string &> setn_opacity;
+	Slot<int, const std::string &> setn_hue;
+	Slot<int, const std::string &> setn_sat;
+	Slot<int, const std::string &> setn_val;
+	Slot<int, const std::string &> scroll;
+	Slot<const std::string &> update_list;
 
 	/// value list range access signal
-	Signal2<int, std::vector<std::string> &> get_values;
+	Signal<int, std::vector<std::string> &> get_values;
 
 protected:
 	std::vector<GuiWidget*> m_elements;

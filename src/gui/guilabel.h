@@ -40,11 +40,11 @@ public:
 		float scalex, float scaley,
 		float xywh[4], float z);
 
-	bool GetProperty(const std::string & name, Slot1<const std::string &> *& slot);
+	bool GetProperty(const std::string & name, Slot<const std::string &> *& slot);
 
 	void SetText(const std::string & text);
 
-	Slot1<const std::string &> set_value;
+	Slot<const std::string &> set_value;
 
 private:
 	SceneNode::DrawableHandle m_draw;

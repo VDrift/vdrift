@@ -37,11 +37,11 @@ class Config;
 class ContentManager;
 class PathManager;
 
-typedef std::map<std::string, Signal1<const std::string &>*> StrSignalMap;
-typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> StrVecSlotMap;
-typedef std::map<std::string, Slot1<const std::string &>*> StrSlotMap;
-typedef std::map<std::string, Slot1<int>*> IntSlotMap;
-typedef std::map<std::string, Slot0*> SlotMap;
+using StrSignalMap = std::map<std::string, Signal<const std::string &>*>;
+using StrVecSlotMap = std::map<std::string, Slot<int, std::vector<std::string> &>*>;
+using StrSlotMap = std::map<std::string, Slot<const std::string &>*>;
+using IntSlotMap = std::map<std::string, Slot<int>*>;
+using SlotMap = std::map<std::string, Slot<>*>;
 
 class GuiPage
 {
@@ -101,7 +101,7 @@ private:
 	{
 		GuiPage * page;
 		GuiControl * control;
-		Slot0 action;
+		Slot<> action;
 
 		ControlCb();
 		ControlCb(const ControlCb & other);
@@ -112,8 +112,8 @@ private:
 	struct SignalVal
 	{
 		std::string value;
-		Signal1<const std::string &> signal;
-		Slot0 action;
+		Signal<const std::string &> signal;
+		Slot<> action;
 
 		SignalVal();
 		SignalVal(const SignalVal & other);
@@ -124,8 +124,8 @@ private:
 	struct SignalValn
 	{
 		std::string value;
-		Signal2<int, const std::string&> signal;
-		Slot1<int> action;
+		Signal<int, const std::string&> signal;
+		Slot<int> action;
 
 		SignalValn();
 		SignalValn(const SignalValn & other);
@@ -135,7 +135,7 @@ private:
 	std::vector<ControlCb> control_set;		// control focus callbacks
 	std::vector<SignalVal> action_set;		// action value callbacks
 	std::vector<SignalValn> action_setn;	// action value nth callbacks
-	Signal0 onfocus, oncancel;				// page action signals
+	Signal<> onfocus, oncancel;				// page action signals
 
 	void Clear(SceneNode & parentnode);
 

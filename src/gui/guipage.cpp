@@ -305,7 +305,7 @@ static void ParseActions(
 		auto wi = widgetmap.find(wname);
 		if (wi != widgetmap.end())
 		{
-			Slot1<const std::string &> * pslot;
+			Slot<const std::string &> * pslot;
 			if (wi->second->GetProperty(pname, pslot))
 				action_val_set.emplace(action, pslot);
 			continue;
@@ -315,7 +315,7 @@ static void ParseActions(
 		auto wli = widgetlistmap.find(wname);
 		if (wli != widgetlistmap.end())
 		{
-			Slot2<int, const std::string &> * pslot;
+			Slot<int, const std::string &> * pslot;
 			if (wli->second->GetProperty(pname, pslot))
 				action_valn_set.emplace(action, pslot);
 		}
@@ -646,8 +646,8 @@ bool GuiPage::Load(
 	// load control actions (connect control signals)
 
 	// parse control event actions with values(arguments)
-	typedef std::pair<std::string, Slot2<int, const std::string &>*> ActionValn;
-	typedef std::pair<std::string, Slot1<const std::string &>*> ActionVal;
+	using ActionValn = std::pair<std::string, Slot<int, const std::string &>*>;
+	using ActionVal = std::pair<std::string, Slot<const std::string &>*>;
 	std::set<ActionValn> action_valn_set;
 	std::set<ActionVal> action_val_set;
 	std::string actionstr;
@@ -729,7 +729,7 @@ bool GuiPage::Load(
 
 	// enable active control
 	if (active_control)
-		active_control->Signal(GuiControl::FOCUS);
+		active_control->SignalEvent(GuiControl::FOCUS);
 
 	// set default control
 	default_control = active_control;
@@ -788,17 +788,17 @@ void GuiPage::ProcessInput(
 	if (active_control)
 	{
 		if (cursordown)
-			active_control->Signal(GuiControl::SELECTDOWN);
+			active_control->SignalEvent(GuiControl::SELECTDOWN);
 		else if (select)
-			active_control->Signal(GuiControl::SELECTUP);
+			active_control->SignalEvent(GuiControl::SELECTUP);
 		else if (moveleft)
-			active_control->Signal(GuiControl::MOVELEFT);
+			active_control->SignalEvent(GuiControl::MOVELEFT);
 		else if (moveright)
-			active_control->Signal(GuiControl::MOVERIGHT);
+			active_control->SignalEvent(GuiControl::MOVERIGHT);
 		else if (moveup)
-			active_control->Signal(GuiControl::MOVEUP);
+			active_control->SignalEvent(GuiControl::MOVEUP);
 		else if (movedown)
-			active_control->Signal(GuiControl::MOVEDOWN);
+			active_control->SignalEvent(GuiControl::MOVEDOWN);
 	}
 }
 
@@ -853,9 +853,9 @@ void GuiPage::SetActiveControl(GuiControl & control)
 	if (active_control != &control)
 	{
 		assert(active_control);
-		active_control->Signal(GuiControl::BLUR);
+		active_control->SignalEvent(GuiControl::BLUR);
 		active_control = &control;
-		active_control->Signal(GuiControl::FOCUS);
+		active_control->SignalEvent(GuiControl::FOCUS);
 	}
 }
 

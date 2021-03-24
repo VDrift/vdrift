@@ -23,32 +23,32 @@
 #include "delegate.h"
 #include <vector>
 
-template <class Delegate>
+template <typename... Params>
 class Slot;
 
-template <class Delegate>
+template <typename... Params>
 class Signal
 {
 public:
 	Signal(void) {};
+	~Signal(void);
 	Signal(const Signal & other);
 	Signal & operator=(const Signal & other);
 	void disconnect(void);
 	bool connected(void) const;
+	void operator()(Params... p) const;
 
-protected:
-	friend class Slot<Delegate>;
-	~Signal(void);
-
+private:
+	friend class Slot<Params...>;
 	struct Connection
 	{
-		Slot<Delegate> * slot;
+		Slot<Params...> * slot;
 		std::size_t id;
 	};
 	std::vector<Connection> m_connections;
 };
 
-template <class Delegate>
+template <typename... Params>
 class Slot
 {
 public:
@@ -56,65 +56,38 @@ public:
 	~Slot(void);
 	Slot(const Slot & other);
 	Slot & operator=(const Slot & other);
-	void connect(Signal<Delegate> & signal);
+	void connect(Signal<Params...> & signal);
 	void disconnect(void);
 	bool connected(void) const;
-	Delegate call;
+	Delegate<void, Params...> call;
 
-protected:
-	friend class Signal<Delegate>;
+private:
+	friend class Signal<Params...>;
 	struct Connection
 	{
-		Signal<Delegate> * signal;
+		Signal<Params...> * signal;
 		std::size_t id;
 	};
 	std::vector<Connection> m_connections;
 };
 
-using Slot0 = Slot<Delegate0<void>>;
-
-template <typename P>
-using Slot1 = Slot<Delegate1<void, P>>;
-
-template <typename P, typename R>
-using Slot2 = Slot<Delegate2<void, P, R>>;
-
-class Signal0 : public Signal<Delegate0<void> >
-{
-public:
-	void operator()() const;
-};
-
-template <typename P>
-class Signal1 : public Signal<Delegate1<void, P> >
-{
-public:
-	void operator()(P p) const;
-};
-
-template <typename P, typename R>
-class Signal2 : public Signal<Delegate2<void, P, R> >
-{
-public:
-	void operator()(P p, R r) const;
-};
 
 // Implementation
 
-template <class Delegate>
-inline Slot<Delegate>::Slot(const Slot & other)
+template <typename... Params>
+inline Slot<Params...>::Slot(const Slot<Params...> & other)
 {
 	*this = other;
 }
 
-template <class Delegate>
-inline Slot<Delegate>::~Slot()
+template <typename... Params>
+inline Slot<Params...>::~Slot()
 {
 	disconnect();
 }
 
-template <class Delegate>
-inline Slot<Delegate> & Slot<Delegate>::operator=(const Slot<Delegate> & other)
+template <typename... Params>
+inline Slot<Params...> & Slot<Params...>::operator=(const Slot<Params...> & other)
 {
 	if (this != &other)
 	{
@@ -127,10 +100,10 @@ inline Slot<Delegate> & Slot<Delegate>::operator=(const Slot<Delegate> & other)
 	return *this;
 }
 
-template <class Delegate>
-inline void Slot<Delegate>::connect(Signal<Delegate> & signal)
+template <typename... Params>
+inline void Slot<Params...>::connect(Signal<Params...> & signal)
 {
-	typename Signal<Delegate>::Connection sg;
+	typename Signal<Params...>::Connection sg;
 	sg.slot = this;
 	sg.id = m_connections.size();
 
@@ -142,8 +115,8 @@ inline void Slot<Delegate>::connect(Signal<Delegate> & signal)
 	signal.m_connections.push_back(sg);
 }
 
-template <class Delegate>
-inline void Slot<Delegate>::disconnect(void)
+template <typename... Params>
+inline void Slot<Params...>::disconnect(void)
 {
 	for (const auto & con : m_connections)
 	{
@@ -161,20 +134,20 @@ inline void Slot<Delegate>::disconnect(void)
 	m_connections.resize(0);
 }
 
-template <class Delegate>
-inline bool Slot<Delegate>::connected(void) const
+template <typename... Params>
+inline bool Slot<Params...>::connected(void) const
 {
 	return m_connections.size();
 }
 
-template <class Delegate>
-inline Signal<Delegate>::Signal(const Signal & other)
+template <typename... Params>
+inline Signal<Params...>::Signal(const Signal<Params...> & other)
 {
 	*this = other;
 }
 
-template <class Delegate>
-inline Signal<Delegate> & Signal<Delegate>::operator=(const Signal & other)
+template <typename... Params>
+inline Signal<Params...> & Signal<Params...>::operator=(const Signal<Params...> & other)
 {
 	if (this != &other)
 	{
@@ -186,14 +159,14 @@ inline Signal<Delegate> & Signal<Delegate>::operator=(const Signal & other)
 	return *this;
 }
 
-template <class Delegate>
-inline Signal<Delegate>::~Signal(void)
+template <typename... Params>
+inline Signal<Params...>::~Signal(void)
 {
 	disconnect();
 }
 
-template <class Delegate>
-inline void Signal<Delegate>::disconnect(void)
+template <typename... Params>
+inline void Signal<Params...>::disconnect(void)
 {
 	for (const auto & con : m_connections)
 	{
@@ -211,35 +184,18 @@ inline void Signal<Delegate>::disconnect(void)
 	m_connections.resize(0);
 }
 
-template <class Delegate>
-inline bool Signal<Delegate>::connected(void) const
+template <typename... Params>
+inline bool Signal<Params...>::connected(void) const
 {
 	return m_connections.size();
 }
 
-inline void Signal0::operator()() const
+template <typename... Params>
+inline void Signal<Params...>::operator()(Params... p) const
 {
 	for (const auto & con : m_connections)
 	{
-		con.slot->call();
-	}
-}
-
-template <typename P>
-inline void Signal1<P>::operator()(P p) const
-{
-	for (const auto & con : Signal<Delegate1<void, P> >::m_connections)
-	{
-		con.slot->call(p);
-	}
-}
-
-template <typename P, typename R>
-inline void Signal2<P, R>::operator()(P p, R r) const
-{
-	for (const auto & con : Signal<Delegate2<void, P, R> >::m_connections)
-	{
-		con.slot->call(p, r);
+		con.slot->call(p...);
 	}
 }
 

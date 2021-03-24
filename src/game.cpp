@@ -445,8 +445,8 @@ bool Game::InitGUI()
 	std::map<std::string, GuiOption::List> valuelists;
 	PopulateValueLists(valuelists);
 
-	std::map<std::string, Signal1<const std::string &>*> vsignalmap;
-	std::map<std::string, Slot0*> actionmap;
+	std::map<std::string, Signal<const std::string &>*> vsignalmap;
+	std::map<std::string, Slot<>*> actionmap;
 	InitSignalMap(vsignalmap);
 	InitActionMap(actionmap);
 
@@ -3157,7 +3157,7 @@ void Game::BindActions()
 	#undef BIND
 }
 
-void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
+void Game::InitActionMap(std::map<std::string, Slot<>*> & actionmap)
 {
 	#define BIND(func, n)\
 		actionmap[#func] = &actions[n];\
@@ -3191,7 +3191,7 @@ void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 	#undef BIND
 }
 
-void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap)
+void Game::InitSignalMap(std::map<std::string, Signal<const std::string &>*> & signalmap)
 {
 	signalmap["game.loading"] = &signal_loading;
 	signalmap["game.fps"] = &signal_fps;

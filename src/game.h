@@ -262,39 +262,39 @@ private:
 	void SetControl(const std::string & value);
 
 	void BindActions();
-	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
-	void InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap);
+	void InitActionMap(std::map<std::string, Slot<>*> & actionmap);
+	void InitSignalMap(std::map<std::string, Signal<const std::string &>*> & signalmap);
 
-	Slot1<const std::string &> stractions[14];
-	Slot0 actions[26];
+	Slot<const std::string &> stractions[14];
+	Slot<> actions[26];
 
 	// game info signals
-	Signal1<const std::string &> signal_loading;
-	Signal1<const std::string &> signal_fps;
+	Signal<const std::string &> signal_loading;
+	Signal<const std::string &> signal_fps;
 
 	// hud info signals
-	Signal1<const std::string &> signal_debug_info[4];
-	Signal1<const std::string &> signal_message;
-	Signal1<const std::string &> signal_lap_time[3];
-	Signal1<const std::string &> signal_lap;
-	Signal1<const std::string &> signal_pos;
-	Signal1<const std::string &> signal_score;
-	Signal1<const std::string &> signal_steering;
-	Signal1<const std::string &> signal_throttle;
-	Signal1<const std::string &> signal_brake;
-	Signal1<const std::string &> signal_gear;
-	Signal1<const std::string &> signal_shift;
-	Signal1<const std::string &> signal_speedometer;
-	Signal1<const std::string &> signal_speed_norm;
-	Signal1<const std::string &> signal_speed;
-	Signal1<const std::string &> signal_tachometer;
-	Signal1<const std::string &> signal_rpm_norm;
-	Signal1<const std::string &> signal_rpm_red;
-	Signal1<const std::string &> signal_rpm;
-	Signal1<const std::string &> signal_abs;
-	Signal1<const std::string &> signal_tcs;
-	Signal1<const std::string &> signal_gas;
-	Signal1<const std::string &> signal_nos;
+	Signal<const std::string &> signal_debug_info[4];
+	Signal<const std::string &> signal_message;
+	Signal<const std::string &> signal_lap_time[3];
+	Signal<const std::string &> signal_lap;
+	Signal<const std::string &> signal_pos;
+	Signal<const std::string &> signal_score;
+	Signal<const std::string &> signal_steering;
+	Signal<const std::string &> signal_throttle;
+	Signal<const std::string &> signal_brake;
+	Signal<const std::string &> signal_gear;
+	Signal<const std::string &> signal_shift;
+	Signal<const std::string &> signal_speedometer;
+	Signal<const std::string &> signal_speed_norm;
+	Signal<const std::string &> signal_speed;
+	Signal<const std::string &> signal_tachometer;
+	Signal<const std::string &> signal_rpm_norm;
+	Signal<const std::string &> signal_rpm_red;
+	Signal<const std::string &> signal_rpm;
+	Signal<const std::string &> signal_abs;
+	Signal<const std::string &> signal_tcs;
+	Signal<const std::string &> signal_gas;
+	Signal<const std::string &> signal_nos;
 
 	std::ostream & info_output;
 	std::ostream & error_output;

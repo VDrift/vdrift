@@ -35,19 +35,19 @@ public:
 	bool Focus(float x, float y);
 
 	/// Signal slots attached to events
-	void Signal(Event ev);
+	void SignalEvent(Event ev);
 
 	/// List update slot, parameter holds list item count
-	Slot1<const std::string &> update_list;
+	Slot<const std::string &> update_list;
 
 	/// Set active element, parameter holds list item index
-	Slot1<const std::string &> set_nth;
+	Slot<const std::string &> set_nth;
 
 	/// List scroll slots
-	Slot0 scroll_fwd;
-	Slot0 scroll_rev;
+	Slot<> scroll_fwd;
+	Slot<> scroll_rev;
 
-	Signal1<int> m_signaln[EVENTNUM];
+	Signal<int> m_signaln[EVENTNUM];
 
 private:
 	int m_active_element;

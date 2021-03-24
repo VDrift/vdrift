@@ -44,7 +44,7 @@ bool GuiControlList::Focus(float x, float y)
 	return false;
 }
 
-void GuiControlList::Signal(Event ev)
+void GuiControlList::SignalEvent(Event ev)
 {
 	if (ev == MOVEUP)
 	{
@@ -69,7 +69,7 @@ void GuiControlList::Signal(Event ev)
 	else
 	{
 		m_signaln[ev](m_active_element + m_list_offset);
-		GuiControl::Signal(ev);
+		GuiControl::SignalEvent(ev);
 	}
 }
 

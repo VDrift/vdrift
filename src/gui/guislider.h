@@ -36,9 +36,9 @@ public:
 
 	~GuiSlider();
 
-	Slot1<const std::string &> set_value;
-	Slot1<const std::string &> set_min_value;
-	Slot1<const std::string &> set_max_value;
+	Slot<const std::string &> set_value;
+	Slot<const std::string &> set_min_value;
+	Slot<const std::string &> set_max_value;
 
 protected:
 	std::shared_ptr<Texture> m_texture;

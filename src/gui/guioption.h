@@ -71,24 +71,24 @@ public:
 	bool IsFloat() const { return m_type == type_float; };
 
 	/// get value range, parameters are offset and value range vector
-	Slot2<int, std::vector<std::string> &> get_val;
-	Slot2<int, std::vector<std::string> &> get_str;
+	Slot<int, std::vector<std::string> &> get_val;
+	Slot<int, std::vector<std::string> &> get_str;
 
 	/// signal values update, parameter is value count
-	Signal1<const std::string &> signal_update;
+	Signal<const std::string &> signal_update;
 
 	/// option signals (normalized value, value, string, index)
-	Signal1<const std::string &> signal_valn;
-	Signal1<const std::string &> signal_val;
-	Signal1<const std::string &> signal_str;
-	Signal1<const std::string &> signal_nth;
+	Signal<const std::string &> signal_valn;
+	Signal<const std::string &> signal_val;
+	Signal<const std::string &> signal_str;
+	Signal<const std::string &> signal_nth;
 
 	/// option slots (normalized value, value, string, increment, decrement)
-	Slot1<const std::string &> set_valn;
-	Slot1<const std::string &> set_val;
-	Slot1<int> set_nth;
-	Slot0 set_prev;
-	Slot0 set_next;
+	Slot<const std::string &> set_valn;
+	Slot<const std::string &> set_val;
+	Slot<int> set_nth;
+	Slot<> set_prev;
+	Slot<> set_next;
 
 private:
 	/// list option

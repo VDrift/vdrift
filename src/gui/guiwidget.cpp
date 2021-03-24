@@ -51,7 +51,7 @@ void GuiWidget::SetAlpha(SceneNode & scene, float value)
 	GetDrawable(scene).SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha * value);
 }
 
-bool GuiWidget::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
+bool GuiWidget::GetProperty(const std::string & name, Slot<const std::string &> *& slot)
 {
 	if (name == "hue")
 		return (slot = &set_hue);

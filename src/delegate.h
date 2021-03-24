@@ -22,20 +22,20 @@
 
 #include <cassert>
 
-template <typename R>
-class Delegate0
+template <typename R, typename... P>
+class Delegate
 {
 	typedef void* InstancePtr;
-	typedef R (*FunctionPtr)(InstancePtr);
+	typedef R (*FunctionPtr)(InstancePtr, P...);
 
 public:
-	Delegate0(void) : m_inst(0), m_func(0)
+	Delegate(void) : m_inst(0), m_func(0)
 	{
 		// ctor
 	}
 
 	// Bind a function
-	template <R (*Function)()>
+	template <R (*Function)(P...)>
 	void bind(void)
 	{
 		m_inst = 0;
@@ -43,7 +43,7 @@ public:
 	}
 
 	// Bind a class method
-	template <class C, R (C::*Function)()>
+	template <class C, R (C::*Function)(P...)>
 	void bind(C* inst)
 	{
 		m_inst = inst;
@@ -51,10 +51,10 @@ public:
 	}
 
 	// Invoke delegate
-	R operator()() const
+	R operator()(P... p) const
 	{
 		assert(m_func != 0);
-		return m_func(m_inst);
+		return m_func(m_inst, p...);
 	}
 
 private:
@@ -62,115 +62,17 @@ private:
 	FunctionPtr m_func;
 
 	// Free function call wrapper
-	template <R (*Function)()>
-	static R callFunction(InstancePtr)
+	template <R (*Function)(P...)>
+	static R callFunction(InstancePtr, P... p)
 	{
-		return (Function)();
+		return (Function)(p...);
 	}
 
 	// Member function call wrapper
-	template <class C, R (C::*Function)()>
-	static R callClassMethod(InstancePtr inst)
+	template <class C, R (C::*Function)(P...)>
+	static R callClassMethod(InstancePtr inst, P... p)
 	{
-		return (static_cast<C*>(inst)->*Function)();
-	}
-};
-
-template <typename R, typename P>
-class Delegate1
-{
-	typedef void* InstancePtr;
-	typedef R (*FunctionPtr)(InstancePtr, P);
-
-public:
-	Delegate1(void) : m_inst(0), m_func(0)
-	{
-		// ctor
-	}
-
-	template <R (*Function)(P)>
-	void bind(void)
-	{
-		m_inst = 0;
-		m_func = &callFunction<Function>;
-	}
-
-	template <class C, R (C::*Function)(P)>
-	void bind(C* inst)
-	{
-		m_inst = inst;
-		m_func = &callClassMethod<C, Function>;
-	}
-
-	R operator()(P p) const
-	{
-		assert(m_func != 0);
-		return m_func(m_inst, p);
-	}
-
-private:
-	InstancePtr m_inst;
-	FunctionPtr m_func;
-
-	template <R (*Function)(P)>
-	static R callFunction(InstancePtr, P p)
-	{
-		return (Function)(p);
-	}
-
-	template <class C, R (C::*Function)(P)>
-	static R callClassMethod(InstancePtr inst, P p)
-	{
-		return (static_cast<C*>(inst)->*Function)(p);
-	}
-};
-
-template <typename R, typename P1, typename P2>
-class Delegate2
-{
-	typedef void* InstancePtr;
-	typedef R (*FunctionPtr)(InstancePtr, P1, P2);
-
-public:
-	Delegate2(void) : m_inst(0), m_func(0)
-	{
-		// ctor
-	}
-
-	template <R (*Function)(P1, P2)>
-	void bind(void)
-	{
-		m_inst = 0;
-		m_func = &callFunction<Function>;
-	}
-
-	template <class C, R (C::*Function)(P1, P2)>
-	void bind(C* inst)
-	{
-		m_inst = inst;
-		m_func = &callClassMethod<C, Function>;
-	}
-
-	R operator()(P1 p1, P2 p2) const
-	{
-		assert(m_func != 0);
-		return m_func(m_inst, p1, p2);
-	}
-
-private:
-	InstancePtr m_inst;
-	FunctionPtr m_func;
-
-	template <R (*Function)(P1, P2)>
-	static R callFunction(InstancePtr, P1 p1, P2 p2)
-	{
-		return (Function)(p1, p2);
-	}
-
-	template <class C, R (C::*Function)(P1, P2)>
-	static R callClassMethod(InstancePtr inst, P1 p1, P2 p2)
-	{
-		return (static_cast<C*>(inst)->*Function)(p1, p2);
+		return (static_cast<C*>(inst)->*Function)(p...);
 	}
 };
 

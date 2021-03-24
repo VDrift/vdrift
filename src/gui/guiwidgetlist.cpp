@@ -67,7 +67,7 @@ void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 	}
 }
 
-bool GuiWidgetList::GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot)
+bool GuiWidgetList::GetProperty(const std::string & name, Slot<int, const std::string &> *& slot)
 {
 	if (name == "hue")
 		return (slot = &setn_hue);
