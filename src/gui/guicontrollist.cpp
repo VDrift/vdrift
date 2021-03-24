@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "guicontrollist.h"
+#include <sstream>
 
 GuiControlList::GuiControlList() :
 	m_active_element(0)

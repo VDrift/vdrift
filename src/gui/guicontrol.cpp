@@ -19,6 +19,7 @@
 
 #include "guicontrol.h"
 #include "minmax.h"
+#include <sstream>
 
 static const std::string names[] = {
 	"onfocus",

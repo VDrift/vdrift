@@ -21,9 +21,8 @@
 #define _GUICONTROL_H
 
 #include "signalslot.h"
-#include "cfg/config.h"
 #include <string>
-#include <map>
+#include <vector>
 
 class SceneNode;
 
