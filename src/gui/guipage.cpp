@@ -228,7 +228,8 @@ template <class ActionMap, class Signal>
 static void ConnectActions(
 	const std::string & actionstr,
 	const ActionMap & actionmap,
-	Signal & signal)
+	Signal & signal,
+	std::ostream & error)
 {
 	size_t len = actionstr.size();
 	size_t pos = 0;
@@ -249,8 +250,54 @@ static void ConnectActions(
 		auto it = actionmap.find(action);
 		if (it != actionmap.end())
 			it->second->connect(signal);
+		else
+			error << "Widget ConnectActions failed: " << actionstr << " " << action << std::endl;
 	}
 }
+
+template <class ActionMap, class NActionMap, class Signal, class NSignal>
+static void ConnectActions(
+	const std::string & actionstr,
+	const ActionMap & actionmap,
+	const NActionMap & nactionmap,
+	Signal & signal,
+	NSignal & nsignal,
+	std::ostream & error)
+{
+	size_t len = actionstr.size();
+	size_t pos = 0;
+	while (pos < len)
+	{
+		pos = actionstr.find_first_not_of(' ', pos);
+		if (pos >= len)
+			break;
+
+		size_t posn = actionstr.find(' ', pos);
+		size_t n = actionstr.find(':', pos);
+		if (n < posn && n + 1 < len && actionstr[n + 1] == '"')
+			posn = actionstr.find('"', n + 2) + 1;
+
+		std::string action = actionstr.substr(pos, posn - pos);
+		pos = posn;
+
+		auto it = actionmap.find(action);
+		if (it != actionmap.end())
+		{
+			it->second->connect(signal);
+			continue;
+		}
+
+		auto nit = nactionmap.find(action);
+		if (nit != nactionmap.end())
+		{
+			nit->second->connect(nsignal);
+			continue;
+		}
+
+		error << "WidgetList ConnectActions failed: " << actionstr << " " << action << std::endl;
+	}
+}
+
 
 template <class ActionMap, class WidgetMap, class WidgetListMap, class ActionValSet, class ActionValnSet>
 static void ParseActions(
@@ -708,12 +755,12 @@ bool GuiPage::Load(
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
-				ConnectActions(actionstr, actionmap, controls[i]->m_signal[j]);
+				ConnectActions(actionstr, actionmap, controls[i]->m_signal[j], error_output);
 		}
 		for (size_t j = 0; j < GuiControl::EVENTVNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[GuiControl::EVENTNUM + j], actionstr))
-				ConnectActions(actionstr, vactionmap, controls[i]->m_signalv[j]);
+				ConnectActions(actionstr, vactionmap, controls[i]->m_signalv[j], error_output);
 		}
 	}
 	for (size_t i = 0; i < controlnit.size(); ++i)
@@ -722,18 +769,18 @@ bool GuiPage::Load(
 		{
 			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
 			{
-				ConnectActions(actionstr, actionmap, controllists[i]->m_signal[j]);
-				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j]);
+				ConnectActions(actionstr, actionmap, nactionmap,
+					controllists[i]->m_signal[j], controllists[i]->m_signaln[j], error_output);
 			}
 		}
 	}
 
 	// connect page event signals with their actions
 	if (pagefile.get("", "onfocus", actionstr))
-		ConnectActions(actionstr, actionmap, onfocus);
+		ConnectActions(actionstr, actionmap, onfocus, error_output);
 
 	if (pagefile.get("", "oncancel", actionstr))
-		ConnectActions(actionstr, actionmap, oncancel);
+		ConnectActions(actionstr, actionmap, oncancel, error_output);
 
 	controls.insert(controls.end(), controllists.begin(), controllists.end());
 
