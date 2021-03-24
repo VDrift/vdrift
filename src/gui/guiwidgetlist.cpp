@@ -123,7 +123,7 @@ void GuiWidgetList::ScrollList(int /*n*/, const std::string & value)
 	if (value == "fwd")
 	{
 		int delta = m_vertical ? m_rows : m_cols;
-		if (m_list_offset < m_list_size - delta)
+		if (m_list_offset + int(m_rows * m_cols) < m_list_size)
 		{
 			m_list_offset += delta;
 			if (get_values.connected())

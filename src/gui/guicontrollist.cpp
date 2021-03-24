@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "guicontrollist.h"
+#include <minmax.h>
 #include <sstream>
 
 GuiControlList::GuiControlList() :
@@ -108,33 +109,34 @@ void GuiControlList::SetToNth(const std::string & value)
 	std::istringstream s(value);
 	s >> list_item;
 
-	if (list_item != m_active_element + m_list_offset)
-	{
-		m_signaln[BLUR](m_active_element + m_list_offset);
+	list_item = Clamp(list_item, 0, m_list_size);
 
-		int active_element = list_item % (m_rows * m_cols);
-		int list_offset = list_item - active_element;
-		int delta = list_offset - m_list_offset;
-		m_active_element = active_element + delta;
-		if (delta > 0)
+	int active_item = m_active_element + m_list_offset;
+	if (list_item != active_item)
+	{
+		m_signaln[BLUR](active_item);
+
+		if (list_item > active_item)
 		{
-			while (list_offset > m_list_offset)
+			while (list_item >= m_list_offset + int(m_rows * m_cols))
 				ScrollFwd();
 		}
-		else if (delta < 0)
+		else
 		{
-			while (list_offset < m_list_offset)
+			while (list_item < m_list_offset)
 				ScrollRev();
 		}
-
-		m_signaln[FOCUS](m_active_element + m_list_offset);
+		m_active_element = list_item - m_list_offset;
+		assert(m_active_element >= 0);
+		m_signaln[FOCUS](list_item);
 	}
 }
 
 void GuiControlList::ScrollFwd()
 {
 	int delta = m_vertical ? m_rows : m_cols;
-	if (m_list_offset < m_list_size - m_list_size % int(m_rows * m_cols))
+	assert(m_list_offset % delta == 0);
+	if (m_list_offset + int(m_rows * m_cols) < m_list_size)
 	{
 		m_list_offset += delta;
 		m_active_element -= delta;
@@ -146,6 +148,7 @@ void GuiControlList::ScrollFwd()
 void GuiControlList::ScrollRev()
 {
 	int delta = m_vertical ? m_rows : m_cols;
+	assert(m_list_offset % delta == 0);
 	if (m_list_offset >= delta)
 	{
 		m_list_offset -= delta;
@@ -157,9 +160,7 @@ void GuiControlList::ScrollRev()
 
 void GuiControlList::SetActiveElement(int active_element)
 {
-	int list_item = active_element + m_list_offset;
-	if (m_active_element != active_element &&
-		list_item >= 0 && list_item < m_list_size)
+	if (m_active_element != active_element)
 	{
 		m_signaln[BLUR](m_active_element + m_list_offset);
 
@@ -169,6 +170,7 @@ void GuiControlList::SetActiveElement(int active_element)
 		else if (active_element >= int(m_rows * m_cols))
 			ScrollFwd();
 
+		m_active_element = Min(m_active_element, m_list_size - m_list_offset - 1);
 		m_signaln[FOCUS](m_active_element + m_list_offset);
 	}
 }
