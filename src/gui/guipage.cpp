@@ -259,7 +259,8 @@ static void ParseActions(
 	const WidgetMap & widgetmap,
 	const WidgetListMap & widgetlistmap,
 	ActionValSet & action_val_set,
-	ActionValnSet & action_valn_set)
+	ActionValnSet & action_valn_set,
+	std::ostream & error)
 {
 	size_t len = actions.size();
 	size_t pos = 0;
@@ -308,6 +309,11 @@ static void ParseActions(
 			Slot<const std::string &> * pslot;
 			if (wi->second->GetProperty(pname, pslot))
 				action_val_set.emplace(action, pslot);
+			else
+			{
+				error << "ParseActions: Widget " << wname
+					<< " property " << pname << " not found." << std::endl;
+			}
 			continue;
 		}
 
@@ -318,7 +324,15 @@ static void ParseActions(
 			Slot<int, const std::string &> * pslot;
 			if (wli->second->GetProperty(pname, pslot))
 				action_valn_set.emplace(action, pslot);
+			else
+			{
+				error << "ParseActions: WidgetList " << wname
+					<< " property " << pname << " not found." << std::endl;
+			}
+			continue;
 		}
+
+		error << "ParseActions: Unknown action " << action << " " << aname << std::endl;
 	}
 }
 
@@ -657,7 +671,7 @@ bool GuiPage::Load(
 		{
 			if (pagefile.get(ci, signal_name, actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
-					action_val_set, action_valn_set);
+					action_val_set, action_valn_set, error_output);
 		}
 	}
 	for (const auto & ci : controlnit)
@@ -666,18 +680,18 @@ bool GuiPage::Load(
 		{
 			if (pagefile.get(ci, signal_name, actionstr))
 				ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
-					action_val_set, action_valn_set);
+					action_val_set, action_valn_set, error_output);
 		}
 	}
 
 	// parse page event actions with values
 	if (pagefile.get("", "onfocus", actionstr))
 		ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
-			action_val_set, action_valn_set);
+			action_val_set, action_valn_set, error_output);
 
 	if (pagefile.get("", "oncancel", actionstr))
 		ParseActions(actionstr, vactionmap, widgetmap, widgetlistmap,
-			action_val_set, action_valn_set);
+			action_val_set, action_valn_set, error_output);
 
 	// register controls, so that they can be activated by control events
 	control_set.reserve(controlit.size() + controlnit.size());
