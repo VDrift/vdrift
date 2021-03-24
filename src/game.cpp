@@ -1691,7 +1691,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Set up GUI.
 	gui.SetInGame(true);
-	gui.ActivatePage("Hud", 0.25, error_output);
+	gui.ActivatePage(settings.GetHUD(), 0.25, error_output);
 
 	// not strictly needed, is expected to be called by Hud page onfocus event
 	ContinueGame();
