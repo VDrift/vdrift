@@ -144,8 +144,8 @@ Gui::Gui() :
 	active_page = pages.end();
 	next_active_page = pages.end();
 
-	activate_page.call.bind<Gui, &Gui::ActivatePage>(this);
-	activate_prev_page.call.bind<Gui, &Gui::ActivatePrevPage>(this);
+	activate_page.bind<Gui, &Gui::ActivatePage>(this);
+	activate_prev_page.bind<Gui, &Gui::ActivatePrevPage>(this);
 }
 
 const std::string & Gui::GetActivePageName() const

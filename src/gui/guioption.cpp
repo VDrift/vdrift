@@ -30,25 +30,25 @@ GuiOption::GuiOption() :
 	m_max(0),
 	m_percent(false)
 {
-	get_val.call.bind<GuiOption, &GuiOption::GetStorageValues>(this);
-	get_str.call.bind<GuiOption, &GuiOption::GetDisplayValues>(this);
-	set_valn.call.bind<GuiOption, &GuiOption::SetCurrentValueNorm>(this);
-	set_val.call.bind<GuiOption, &GuiOption::SetCurrentValue>(this);
-	set_nth.call.bind<GuiOption, &GuiOption::SetToNthValue>(this);
-	set_prev.call.bind<GuiOption, &GuiOption::Decrement>(this);
-	set_next.call.bind<GuiOption, &GuiOption::Increment>(this);
+	get_val.bind<GuiOption, &GuiOption::GetStorageValues>(this);
+	get_str.bind<GuiOption, &GuiOption::GetDisplayValues>(this);
+	set_valn.bind<GuiOption, &GuiOption::SetCurrentValueNorm>(this);
+	set_val.bind<GuiOption, &GuiOption::SetCurrentValue>(this);
+	set_nth.bind<GuiOption, &GuiOption::SetToNthValue>(this);
+	set_prev.bind<GuiOption, &GuiOption::Decrement>(this);
+	set_next.bind<GuiOption, &GuiOption::Increment>(this);
 }
 
 GuiOption::GuiOption(const GuiOption & other)
 {
 	*this = other;
-	get_val.call.bind<GuiOption, &GuiOption::GetStorageValues>(this);
-	get_str.call.bind<GuiOption, &GuiOption::GetDisplayValues>(this);
-	set_valn.call.bind<GuiOption, &GuiOption::SetCurrentValueNorm>(this);
-	set_val.call.bind<GuiOption, &GuiOption::SetCurrentValue>(this);
-	set_nth.call.bind<GuiOption, &GuiOption::SetToNthValue>(this);
-	set_prev.call.bind<GuiOption, &GuiOption::Decrement>(this);
-	set_next.call.bind<GuiOption, &GuiOption::Increment>(this);
+	get_val.bind<GuiOption, &GuiOption::GetStorageValues>(this);
+	get_str.bind<GuiOption, &GuiOption::GetDisplayValues>(this);
+	set_valn.bind<GuiOption, &GuiOption::SetCurrentValueNorm>(this);
+	set_val.bind<GuiOption, &GuiOption::SetCurrentValue>(this);
+	set_nth.bind<GuiOption, &GuiOption::SetToNthValue>(this);
+	set_prev.bind<GuiOption, &GuiOption::Decrement>(this);
+	set_next.bind<GuiOption, &GuiOption::Increment>(this);
 }
 
 GuiOption & GuiOption::operator=(const GuiOption & other)

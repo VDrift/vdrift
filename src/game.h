@@ -262,39 +262,47 @@ private:
 	void SetControl(const std::string & value);
 
 	void BindActions();
-	void InitActionMap(std::map<std::string, Slot<>*> & actionmap);
-	void InitSignalMap(std::map<std::string, Signal<const std::string &>*> & signalmap);
+	void InitActionMap(std::map<std::string, Delegated<>*> & actionmap);
+	void InitSignalMap(std::map<std::string, Signald<const std::string &>*> & signalmap);
 
-	Slot<const std::string &> stractions[14];
-	Slot<> actions[26];
+	Delegated<const std::string &> stractions[14];
+	Delegated<> actions[26];
 
-	// game info signals
-	Signal<const std::string &> signal_loading;
-	Signal<const std::string &> signal_fps;
-
-	// hud info signals
-	Signal<const std::string &> signal_debug_info[4];
-	Signal<const std::string &> signal_message;
-	Signal<const std::string &> signal_lap_time[3];
-	Signal<const std::string &> signal_lap;
-	Signal<const std::string &> signal_pos;
-	Signal<const std::string &> signal_score;
-	Signal<const std::string &> signal_steering;
-	Signal<const std::string &> signal_throttle;
-	Signal<const std::string &> signal_brake;
-	Signal<const std::string &> signal_gear;
-	Signal<const std::string &> signal_shift;
-	Signal<const std::string &> signal_speedometer;
-	Signal<const std::string &> signal_speed_norm;
-	Signal<const std::string &> signal_speed;
-	Signal<const std::string &> signal_tachometer;
-	Signal<const std::string &> signal_rpm_norm;
-	Signal<const std::string &> signal_rpm_red;
-	Signal<const std::string &> signal_rpm;
-	Signal<const std::string &> signal_abs;
-	Signal<const std::string &> signal_tcs;
-	Signal<const std::string &> signal_gas;
-	Signal<const std::string &> signal_nos;
+	enum GameSignal {
+		// game info signals
+		LOADING,
+		FPS,
+		// hud info signals
+		DEBUG0,
+		DEBUG1,
+		DEBUG2,
+		DEBUG3,
+		MSG,
+		TIME0,
+		TIME1,
+		TIME2,
+		LAP,
+		POS,
+		SCORE,
+		STEER,
+		ACCEL,
+		BRAKE,
+		SHIFT,
+		GEAR,
+		SPEEDO,
+		SPEEDN,
+		SPEED,
+		TACHO,
+		RPMN,
+		RPMR,
+		RPM,
+		ABS,
+		TCS,
+		GAS,
+		NOS,
+		SIGNALNUM
+	};
+	Signald<const std::string &> signals[SIGNALNUM];
 
 	std::ostream & info_output;
 	std::ostream & error_output;

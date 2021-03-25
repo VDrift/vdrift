@@ -38,16 +38,16 @@ public:
 	void SignalEvent(Event ev);
 
 	/// List update slot, parameter holds list item count
-	Slot<const std::string &> update_list;
+	Delegated<const std::string &> update_list;
 
 	/// Set active element, parameter holds list item index
-	Slot<const std::string &> set_nth;
+	Delegated<const std::string &> set_nth;
 
 	/// List scroll slots
-	Slot<> scroll_fwd;
-	Slot<> scroll_rev;
+	Delegated<> scroll_fwd;
+	Delegated<> scroll_rev;
 
-	Signal<int> m_signaln[EVENTNUM];
+	Signald<int> m_signaln[EVENTNUM];
 
 private:
 	int m_active_element;

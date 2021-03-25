@@ -24,17 +24,17 @@
 GuiWidgetList::GuiWidgetList()
 {
 	// override widget callbacks
-	GuiWidget::set_opacity.call.bind<GuiWidgetList, &GuiWidgetList::SetOpacityAll>(this);
-	GuiWidget::set_hue.call.bind<GuiWidgetList, &GuiWidgetList::SetHueAll>(this);
-	GuiWidget::set_sat.call.bind<GuiWidgetList, &GuiWidgetList::SetSatAll>(this);
-	GuiWidget::set_val.call.bind<GuiWidgetList, &GuiWidgetList::SetValAll>(this);
+	GuiWidget::set_opacity.bind<GuiWidgetList, &GuiWidgetList::SetOpacityAll>(this);
+	GuiWidget::set_hue.bind<GuiWidgetList, &GuiWidgetList::SetHueAll>(this);
+	GuiWidget::set_sat.bind<GuiWidgetList, &GuiWidgetList::SetSatAll>(this);
+	GuiWidget::set_val.bind<GuiWidgetList, &GuiWidgetList::SetValAll>(this);
 
-	setn_opacity.call.bind<GuiWidgetList, &GuiWidgetList::SetOpacity>(this);
-	setn_hue.call.bind<GuiWidgetList, &GuiWidgetList::SetHue>(this);
-	setn_sat.call.bind<GuiWidgetList, &GuiWidgetList::SetSat>(this);
-	setn_val.call.bind<GuiWidgetList, &GuiWidgetList::SetVal>(this);
-	scroll.call.bind<GuiWidgetList, &GuiWidgetList::ScrollList>(this);
-	update_list.call.bind<GuiWidgetList, &GuiWidgetList::UpdateList>(this);
+	setn_opacity.bind<GuiWidgetList, &GuiWidgetList::SetOpacity>(this);
+	setn_hue.bind<GuiWidgetList, &GuiWidgetList::SetHue>(this);
+	setn_sat.bind<GuiWidgetList, &GuiWidgetList::SetSat>(this);
+	setn_val.bind<GuiWidgetList, &GuiWidgetList::SetVal>(this);
+	scroll.bind<GuiWidgetList, &GuiWidgetList::ScrollList>(this);
+	update_list.bind<GuiWidgetList, &GuiWidgetList::UpdateList>(this);
 }
 
 GuiWidgetList::~GuiWidgetList()
@@ -67,7 +67,7 @@ void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 	}
 }
 
-bool GuiWidgetList::GetProperty(const std::string & name, Slot<int, const std::string &> *& slot)
+bool GuiWidgetList::GetProperty(const std::string & name, Delegated<int, const std::string &> *& slot)
 {
 	if (name == "hue")
 		return (slot = &setn_hue);

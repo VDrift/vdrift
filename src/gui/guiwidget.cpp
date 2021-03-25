@@ -28,11 +28,11 @@ GuiWidget::GuiWidget() :
 {
 	m_rgb[0] = 1, m_rgb[1] = 1, m_rgb[2] = 1;
 	m_hsv[0] = 0, m_hsv[1] = 0, m_hsv[2] = 1;
-	set_visible.call.bind<GuiWidget, &GuiWidget::SetVisible>(this);
-	set_opacity.call.bind<GuiWidget, &GuiWidget::SetOpacity>(this);
-	set_hue.call.bind<GuiWidget, &GuiWidget::SetHue>(this);
-	set_sat.call.bind<GuiWidget, &GuiWidget::SetSat>(this);
-	set_val.call.bind<GuiWidget, &GuiWidget::SetVal>(this);
+	set_visible.bind<GuiWidget, &GuiWidget::SetVisible>(this);
+	set_opacity.bind<GuiWidget, &GuiWidget::SetOpacity>(this);
+	set_hue.bind<GuiWidget, &GuiWidget::SetHue>(this);
+	set_sat.bind<GuiWidget, &GuiWidget::SetSat>(this);
+	set_val.bind<GuiWidget, &GuiWidget::SetVal>(this);
 }
 
 void GuiWidget::Update(SceneNode & scene, float /*dt*/)
@@ -51,7 +51,7 @@ void GuiWidget::SetAlpha(SceneNode & scene, float value)
 	GetDrawable(scene).SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha * value);
 }
 
-bool GuiWidget::GetProperty(const std::string & name, Slot<const std::string &> *& slot)
+bool GuiWidget::GetProperty(const std::string & name, Delegated<const std::string &> *& slot)
 {
 	if (name == "hue")
 		return (slot = &set_hue);

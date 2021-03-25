@@ -445,8 +445,8 @@ bool Game::InitGUI()
 	std::map<std::string, GuiOption::List> valuelists;
 	PopulateValueLists(valuelists);
 
-	std::map<std::string, Signal<const std::string &>*> vsignalmap;
-	std::map<std::string, Slot<>*> actionmap;
+	std::map<std::string, Signald<const std::string &>*> vsignalmap;
+	std::map<std::string, Delegated<>*> actionmap;
 	InitSignalMap(vsignalmap);
 	InitActionMap(actionmap);
 
@@ -1453,18 +1453,18 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 			car.DebugPrint(debug_info[2], false, false, true, false);
 			car.DebugPrint(debug_info[3], false, false, false, true);
 
-			signal_debug_info[0](debug_info[0].str());
-			signal_debug_info[1](debug_info[1].str());
-			signal_debug_info[2](debug_info[2].str());
-			signal_debug_info[3](debug_info[3].str());
+			signals[DEBUG0](debug_info[0].str());
+			signals[DEBUG1](debug_info[1].str());
+			signals[DEBUG2](debug_info[2].str());
+			signals[DEBUG3](debug_info[3].str());
 		}
 		else if (frame % 10 == 0)
 		{
 			std::ostringstream gpu_profile;
 			graphics->printProfilingInfo(gpu_profile);
 
-			signal_debug_info[0](PROFILER.getAvgSummary(quickprof::MICROSECONDS));
-			signal_debug_info[1](gpu_profile.str());
+			signals[DEBUG0](PROFILER.getAvgSummary(quickprof::MICROSECONDS));
+			signals[DEBUG1](gpu_profile.str());
 		}
 	}
 
@@ -1475,9 +1475,9 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 		throttlestr << carinputs[CarInput::THROTTLE];
 		brakestr << carinputs[CarInput::BRAKE];
 
-		signal_steering(steeringstr.str());
-		signal_throttle(throttlestr.str());
-		signal_brake(brakestr.str());
+		signals[STEER](steeringstr.str());
+		signals[ACCEL](throttlestr.str());
+		signals[BRAKE](brakestr.str());
 	}
 
 	std::pair <int, int> curplace = timer.GetCarPlace(carid);
@@ -1548,31 +1548,31 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
 	nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
 
-	signal_lap_time[0](GetTimeString(timer.GetTime(carid)));
-	signal_lap_time[1](GetTimeString(timer.GetLastLap(carid)));
-	signal_lap_time[2](GetTimeString(timer.GetBestLap(carid)));
+	signals[TIME0](GetTimeString(timer.GetTime(carid)));
+	signals[TIME1](GetTimeString(timer.GetLastLap(carid)));
+	signals[TIME2](GetTimeString(timer.GetBestLap(carid)));
 
-	signal_pos(placestr.str());
-	signal_lap(lapstr.str());
-	signal_score(scorestr.str());
-	signal_message(msgstr.str());
+	signals[POS](placestr.str());
+	signals[LAP](lapstr.str());
+	signals[SCORE](scorestr.str());
+	signals[MSG](msgstr.str());
 
-	signal_gear(gearstr.str());
-	signal_shift(shiftstr.str());
+	signals[GEAR](gearstr.str());
+	signals[SHIFT](shiftstr.str());
 
-	signal_speedometer(speedostr.str());
-	signal_speed_norm(speednstr.str());
-	signal_speed(speedstr.str());
+	signals[SPEEDO](speedostr.str());
+	signals[SPEEDN](speednstr.str());
+	signals[SPEED](speedstr.str());
 
-	signal_tachometer(tachostr.str());
-	signal_rpm_norm(rpmnstr.str());
-	signal_rpm_red(rpmrstr.str());
-	signal_rpm(rpmstr.str());
+	signals[TACHO](tachostr.str());
+	signals[RPMN](rpmnstr.str());
+	signals[RPMR](rpmrstr.str());
+	signals[RPM](rpmstr.str());
 
-	signal_abs(absstr.str());
-	signal_tcs(tcsstr.str());
-	signal_gas(gasstr.str());
-	signal_nos(nosstr.str());
+	signals[ABS](absstr.str());
+	signals[TCS](tcsstr.str());
+	signals[GAS](gasstr.str());
+	signals[NOS](nosstr.str());
 }
 
 bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
@@ -2034,7 +2034,7 @@ void Game::CalculateFPS()
 	{
 		std::ostringstream fpsstr;
 		fpsstr << (int)fps_avg;
-		signal_fps(fpsstr.str());
+		signals[FPS](fpsstr.str());
 	}
 }
 
@@ -2353,7 +2353,7 @@ void Game::ShowLoadingScreen(float progress, float progress_max, const std::stri
 
 	std::ostringstream loadstr;
 	loadstr << progress / progress_max;
-	signal_loading(loadstr.str());
+	signals[LOADING](loadstr.str());
 
 	// Tick the gui.
 	eventsystem.BeginFrame();
@@ -2451,7 +2451,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 
 			std::ostringstream loadstr;
 			loadstr << fmod(info.downloaded, total) / total;
-			signal_loading(loadstr.str());
+			signals[LOADING](loadstr.str());
 
 			Advance();
 		}
@@ -3138,8 +3138,8 @@ void Game::SetControl(const std::string & value)
 void Game::BindActions()
 {
 	#define BIND(option, func, n)\
-		stractions[n].connect(gui.GetOption(option).signal_val);\
-		stractions[n].call.bind<Game, &Game::func>(this)
+		gui.GetOption(option).signal_val.connect(stractions[n]);\
+		stractions[n].bind<Game, &Game::func>(this)
 	BIND("game.startlist",     SetCarToEdit,   0);
 	BIND("game.car",           SetCarName,     1);
 	BIND("game.car_startpos",  SetCarStartPos, 2);
@@ -3157,11 +3157,11 @@ void Game::BindActions()
 	#undef BIND
 }
 
-void Game::InitActionMap(std::map<std::string, Slot<>*> & actionmap)
+void Game::InitActionMap(std::map<std::string, Delegated<>*> & actionmap)
 {
 	#define BIND(func, n)\
 		actionmap[#func] = &actions[n];\
-		actions[n].call.bind<Game, &Game::func>(this)
+		actions[n].bind<Game, &Game::func>(this)
 	BIND(QuitGame,             0);
 	BIND(LoadGarage,           1);
 	BIND(StartRace,            2);
@@ -3191,36 +3191,40 @@ void Game::InitActionMap(std::map<std::string, Slot<>*> & actionmap)
 	#undef BIND
 }
 
-void Game::InitSignalMap(std::map<std::string, Signal<const std::string &>*> & signalmap)
+void Game::InitSignalMap(std::map<std::string, Signald<const std::string &>*> & signalmap)
 {
-	signalmap["game.loading"] = &signal_loading;
-	signalmap["game.fps"] = &signal_fps;
+	for (int i = 0; i < SIGNALNUM; ++i)
+		signals[i].disconnect();
 
-	signalmap["car.debug0"] = &signal_debug_info[0];
-	signalmap["car.debug1"] = &signal_debug_info[1];
-	signalmap["car.debug2"] = &signal_debug_info[2];
-	signalmap["car.debug3"] = &signal_debug_info[3];
-	signalmap["car.message"] = &signal_message;
-	signalmap["car.cur_lap_time"] = &signal_lap_time[0];
-	signalmap["car.last_lap_time"] = &signal_lap_time[1];
-	signalmap["car.best_lap_time"] = &signal_lap_time[2];
-	signalmap["car.lap"] = &signal_lap;
-	signalmap["car.pos"] = &signal_pos;
-	signalmap["car.score"] = &signal_score;
-	signalmap["car.steering"] = &signal_steering;
-	signalmap["car.throttle"] = &signal_throttle;
-	signalmap["car.brake"] = &signal_brake;
-	signalmap["car.gear"] = &signal_gear;
-	signalmap["car.shift"] = &signal_shift;
-	signalmap["car.speedometer"] = &signal_speedometer;
-	signalmap["car.speed.norm"] = &signal_speed_norm;
-	signalmap["car.speed"] = &signal_speed;
-	signalmap["car.tachometer"] = &signal_tachometer;
-	signalmap["car.rpm.norm"] = &signal_rpm_norm;
-	signalmap["car.rpm.red"] = &signal_rpm_red;
-	signalmap["car.rpm"] = &signal_rpm;
-	signalmap["car.abs"] = &signal_abs;
-	signalmap["car.tcs"] = &signal_tcs;
-	signalmap["car.gas"] = &signal_gas;
-	signalmap["car.nos"] = &signal_nos;
+	#define BIND(s, n) signalmap[s] = &signals[n];
+	BIND("game.loading",      0);
+	BIND("game.fps",          1);
+	BIND("car.debug0",        2);
+	BIND("car.debug1",        3);
+	BIND("car.debug2",        4);
+	BIND("car.debug3",        5);
+	BIND("car.message",       6);
+	BIND("car.cur_lap_time",  7);
+	BIND("car.last_lap_time", 8);
+	BIND("car.best_lap_time", 9);
+	BIND("car.lap",          10);
+	BIND("car.pos",          11);
+	BIND("car.score",        12);
+	BIND("car.steering",     13);
+	BIND("car.throttle",     14);
+	BIND("car.brake",        15);
+	BIND("car.gear",         16);
+	BIND("car.shift",        17);
+	BIND("car.speedometer",  18);
+	BIND("car.speed.norm",   19);
+	BIND("car.speed",        20);
+	BIND("car.tachometer",   21);
+	BIND("car.rpm.norm",     22);
+	BIND("car.rpm.red",      23);
+	BIND("car.rpm",          24);
+	BIND("car.abs",          25);
+	BIND("car.tcs",          26);
+	BIND("car.gas",          27);
+	BIND("car.nos",          28);
+	#undef BIND
 }

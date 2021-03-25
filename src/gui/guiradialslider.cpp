@@ -23,7 +23,8 @@ GuiRadialSlider::GuiRadialSlider() :
 	m_start_angle(0),
 	m_end_angle(0),
 	m_radius(0),
-	m_dar(1)
+	m_dar(1),
+	m_pointer(false)
 {
 	// ctor
 }
@@ -47,13 +48,14 @@ void GuiRadialSlider::SetupDrawable(
 	const std::shared_ptr<Texture> & texture,
 	float xywh[4], float z,
 	float start_angle, float end_angle,
-	float radius, float dar,
+	float radius, float dar, bool pointer,
 	std::ostream & /*error_output*/)
 {
 	m_start_angle = start_angle;
 	m_end_angle = end_angle;
 	m_radius = radius;
 	m_dar = dar;
+	m_pointer = pointer;
 
 	InitDrawable(node, texture, xywh, z);
 	UpdateVertexArray();
@@ -66,7 +68,7 @@ void GuiRadialSlider::UpdateVertexArray()
 	float r1 = m_radius * 2.0f - m_h * 0.5f;
 	float r2 = m_h * 0.5f;
 
-	if (set_value.connected()) // fixme: this is kinda sketchy
+	if (m_pointer)
 	{
 		float half_width = (m_max_value - m_min_value) * 0.5f;
 		float x1 = -m_h * half_width;

@@ -30,7 +30,7 @@ GuiLabel::GuiLabel() :
 	m_scaley(0),
 	m_align(0)
 {
-	set_value.call.bind<GuiLabel, &GuiLabel::SetText>(this);
+	set_value.bind<GuiLabel, &GuiLabel::SetText>(this);
 }
 
 GuiLabel::~GuiLabel()
@@ -60,7 +60,7 @@ void GuiLabel::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, m_x, m_y, scalex, scaley, m_rgb[0], m_rgb[1], m_rgb[2]);
 }
 
-bool GuiLabel::GetProperty(const std::string & name, Slot<const std::string &> *& slot)
+bool GuiLabel::GetProperty(const std::string & name, Delegated<const std::string &> *& slot)
 {
 	if (name == "text")
 		return (slot = &set_value);

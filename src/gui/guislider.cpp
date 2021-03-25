@@ -25,9 +25,9 @@ GuiSlider::GuiSlider() :
 	m_x(0), m_y(0), m_w(0), m_h(0),
 	m_min_value(-0.02), m_max_value(0.02)
 {
-	set_value.call.bind<GuiSlider, &GuiSlider::SetValue>(this);
-	set_min_value.call.bind<GuiSlider, &GuiSlider::SetMinValue>(this);
-	set_max_value.call.bind<GuiSlider, &GuiSlider::SetMaxValue>(this);
+	set_value.bind<GuiSlider, &GuiSlider::SetValue>(this);
+	set_min_value.bind<GuiSlider, &GuiSlider::SetMinValue>(this);
+	set_max_value.bind<GuiSlider, &GuiSlider::SetMaxValue>(this);
 }
 
 GuiSlider::~GuiSlider()

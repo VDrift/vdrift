@@ -76,4 +76,7 @@ private:
 	}
 };
 
+template <typename... P>
+using Delegated = Delegate<void, P...>;
+
 #endif // _DELEGATE_H

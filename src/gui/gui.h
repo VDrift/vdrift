@@ -121,8 +121,8 @@ private:
 	bool ingame;
 
 	/// page activation callbacks
-	Slot<const std::string&> activate_page;
-	Slot<> activate_prev_page;
+	Delegated<const std::string&> activate_page;
+	Delegated<> activate_prev_page;
 
 	/// return false on failure
 	bool ActivatePage(

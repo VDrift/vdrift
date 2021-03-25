@@ -24,6 +24,32 @@
 #include <vector>
 
 template <typename... Params>
+class Signald
+{
+public:
+	void operator()(Params... p) const
+	{
+		for (const auto & s : m_slots)
+			s->operator()(p...);
+	};
+	void connect(Delegated<Params...> & s)
+	{
+		m_slots.push_back(&s);
+	}
+	void disconnect(void)
+	{
+		m_slots.clear();
+	}
+	bool connected(void) const
+	{
+		return !m_slots.empty();
+	};
+
+private:
+	std::vector<Delegated<Params...>*> m_slots;
+};
+
+template <typename... Params>
 class Slot;
 
 template <typename... Params>
@@ -34,6 +60,7 @@ public:
 	~Signal(void);
 	Signal(const Signal & other);
 	Signal & operator=(const Signal & other);
+	void connect(Slot<Params...> & slot);
 	void disconnect(void);
 	bool connected(void) const;
 	void operator()(Params... p) const;
@@ -163,6 +190,12 @@ template <typename... Params>
 inline Signal<Params...>::~Signal(void)
 {
 	disconnect();
+}
+
+template <typename... Params>
+inline void Signal<Params...>::connect(Slot<Params...> & slot)
+{
+	slot.connect(*this);
 }
 
 template <typename... Params>

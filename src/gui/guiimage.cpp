@@ -25,7 +25,7 @@ GuiImage::GuiImage() :
 	m_content(0),
 	m_load(false)
 {
-	set_image.call.bind<GuiImage, &GuiImage::SetImage>(this);
+	set_image.bind<GuiImage, &GuiImage::SetImage>(this);
 }
 
 GuiImage::~GuiImage()
@@ -83,7 +83,7 @@ void GuiImage::SetupDrawable(
 	d.SetDrawEnable(false);
 }
 
-bool GuiImage::GetProperty(const std::string & name, Slot<const std::string &> *& slot)
+bool GuiImage::GetProperty(const std::string & name, Delegated<const std::string &> *& slot)
 {
 	if (name == "image")
 		return (slot = &set_image);

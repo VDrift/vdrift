@@ -66,8 +66,8 @@ public:
 	/// available control signals
 	static const std::vector<std::string> signal_names;
 
-	Signal<> m_signal[EVENTNUM];
-	Signal<const std::string &> m_signalv[EVENTVNUM];
+	Signald<> m_signal[EVENTNUM];
+	Signald<const std::string &> m_signalv[EVENTVNUM];
 
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;

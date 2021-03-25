@@ -24,10 +24,10 @@
 GuiControlList::GuiControlList() :
 	m_active_element(0)
 {
-	update_list.call.bind<GuiControlList, &GuiControlList::UpdateList>(this);
-	set_nth.call.bind<GuiControlList, &GuiControlList::SetToNth>(this);
-	scroll_fwd.call.bind<GuiControlList, &GuiControlList::ScrollFwd>(this);
-	scroll_rev.call.bind<GuiControlList, &GuiControlList::ScrollRev>(this);
+	update_list.bind<GuiControlList, &GuiControlList::UpdateList>(this);
+	set_nth.bind<GuiControlList, &GuiControlList::SetToNth>(this);
+	scroll_fwd.bind<GuiControlList, &GuiControlList::ScrollFwd>(this);
+	scroll_rev.bind<GuiControlList, &GuiControlList::ScrollRev>(this);
 }
 
 GuiControlList::~GuiControlList()
