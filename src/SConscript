@@ -126,6 +126,7 @@ src = Split("""
 		roadpatch.cpp
 		roadstrip.cpp
 		settings.cpp
+		skidmarks.cpp
 		sound/soundbuffer.cpp
 		sound/sound.cpp
 		sound/soundfilter.cpp
