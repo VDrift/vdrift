@@ -109,9 +109,10 @@ Settings::Settings() :
 	ai_level(1.0),
 	vehicle_damage(false),
 	particles(512),
-	sky_dynamic(false),
+	skidmarks(1024),
 	sky_time(17),
-	sky_time_speed(1)
+	sky_time_speed(1),
+	sky_dynamic(false)
 {
 	resolution[0] = 800;
 	resolution[1] = 600;
@@ -189,9 +190,10 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
 	Param(config, write, section, "particles", particles);
-	Param(config, write, section, "sky_dynamic", sky_dynamic);
+	Param(config, write, section, "skidmarks", skidmarks);
 	Param(config, write, section, "sky_time", sky_time);
 	Param(config, write, section, "sky_time_speed", sky_time_speed);
+	Param(config, write, section, "sky_dynamic", sky_dynamic);
 
 	config.get("sound", section);
 	Param(config, write, section, "attenuation_scale", sound_attenuation[0]);

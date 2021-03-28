@@ -26,7 +26,7 @@ Drawable::Drawable() :
 	vert_array(NULL),
 	model(NULL),
 	center(0),
-	radius(1),
+	radius(1E6),
 	color(1),
 	draw_order(0),
 	decal(false),

@@ -373,9 +373,14 @@ public:
 		return contrast;
 	}
 
-	float GetParticles() const
+	int GetParticles() const
 	{
 		return particles;
+	}
+
+	int GetSkidMarks() const
+	{
+		return skidmarks;
 	}
 
 	int GetCamera() const
@@ -491,9 +496,10 @@ private:
 	float ai_level;
 	bool vehicle_damage;
 	int particles;
-	bool sky_dynamic;
+	int skidmarks;
 	int sky_time;
 	int sky_time_speed;
+	bool sky_dynamic;
 };
 
 #endif

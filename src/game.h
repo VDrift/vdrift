@@ -48,6 +48,7 @@
 #include "replay.h"
 #include "forcefeedback.h"
 #include "particle.h"
+#include "skidmarks.h"
 #include "ai/ai.h"
 #include "content/contentmanager.h"
 #include "updatemanager.h"
@@ -193,6 +194,8 @@ private:
 	void LoadControlsIntoGUI();
 
 	void UpdateForceFeedback(float dt);
+
+	void UpdateSkidMarks(const int carid);
 
 	void AddTireSmokeParticles(const CarDynamics & car, float dt);
 
@@ -368,6 +371,7 @@ private:
 	DynamicsWorld dynamics;
 	int dynamics_drawmode;
 
+	SkidMarks skid_marks;
 	ParticleSystem tire_smoke;
 	unsigned int particle_timer;
 

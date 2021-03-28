@@ -218,6 +218,8 @@ void Game::Start(std::list <std::string> & args)
 		return;
 	}
 
+	skid_marks.Load(pathmanager.GetEffectsTextureDir(), "skidmark.png", settings.GetAnisotropy(), content);
+
 	// Load particle system.
 	Vec3 smokedir(0.4, 0.2, 1.0);
 	tire_smoke.Load(pathmanager.GetEffectsTextureDir(), "smoke.png", settings.GetAnisotropy(), content);
@@ -689,10 +691,11 @@ void Game::Draw(float dt)
 	PROFILER.beginBlock("scenegraph");
 
 	std::vector<SceneNode*> nodes;
-	nodes.reserve(5);
+	nodes.reserve(6);
 
 	nodes.push_back(&dynamicsdraw.getNode());
 	nodes.push_back(&trackmap.GetNode());
+	nodes.push_back(&skid_marks.GetNode());
 	nodes.push_back(&tire_smoke.GetNode());
 
 	if (gui.GetNodes().first)
@@ -708,6 +711,7 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(track.GetBodyNode());
 	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
+	graphics->AddDynamicNode(skid_marks.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
 
 	for (auto & car : car_graphics)
@@ -1279,13 +1283,17 @@ void Game::UpdateCars(float dt)
 	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
 		car_graphics[i].Update(car_dynamics[i]);
-
 		car_sounds[i].Update(car_dynamics[i], dt);
-
-		AddTireSmokeParticles(car_dynamics[i], dt);
-
 		UpdateDriftScore(i, dt);
 	}
+
+	if (settings.GetParticles())
+		for (int i = 0; i < car_dynamics.size(); ++i)
+			AddTireSmokeParticles(car_dynamics[i], dt);
+
+	if (settings.GetSkidMarks())
+		for (int i = 0; i < car_dynamics.size(); ++i)
+			UpdateSkidMarks(i);
 }
 
 void Game::ProcessCarInputs()
@@ -1688,6 +1696,8 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Clean up asset cache.
 	content.sweep();
+
+	skid_marks.Reset(cars_num * 4, settings.GetSkidMarks());
 
 	// Set up GUI.
 	gui.SetInGame(true);
@@ -2495,6 +2505,22 @@ void Game::UpdateForceFeedback(float dt)
 	forcefeedback->update(feedback, ffdt, error_output);
 }
 
+void Game::UpdateSkidMarks(const int carid)
+{
+	auto & car = car_dynamics[carid];
+	for (int j = 0; j < 4; ++j)
+	{
+		float squeal = car.GetTireSqueal(WheelPosition(j));
+		float hw = car.GetWheel(WheelPosition(j)).GetWidth() * 0.5f;
+		auto & wc = car.GetWheelContact(WheelPosition(j));
+		Vec3 v = ToMathVector<float>(car.GetVelocity());
+		Vec3 n = ToMathVector<float>(wc.GetNormal());
+		Vec3 p = ToMathVector<float>(wc.GetPosition()) + n * 0.005f;
+		Vec3 r = v.cross(n).Normalize() * hw;
+		skid_marks.UpdateEmitter(carid * 4 + j, squeal, p + r, p - r);
+	}
+}
+
 void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 {
 	// Only spawn particles every so often...
@@ -2529,7 +2555,16 @@ void Game::UpdateParticleGraphics()
 		Vec3 campos = active_camera->GetPosition();
 		float znear = 0.1f; // hardcoded in graphics
 		float zfar = settings.GetViewDistance();
+		float fovy = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
+		float sy = std::sin(fovy * float(M_PI/360.0));
+		// compute sin(fov/2) of screen diagonal
+		float rx = settings.GetResolutionX();
+		float ry = settings.GetResolutionY();
+		float rx2 = rx * rx;
+		float ry2 = ry * ry;
+		float s = sy * std::sqrt((rx2 + ry2) / (sy * sy * rx2 + ry2));
 		tire_smoke.UpdateGraphics(camorient, campos, znear, zfar);
+		skid_marks.UpdateGraphics(active_camera->GetOrientation(), campos, znear, zfar, s);
 	}
 }
 
@@ -2638,6 +2673,7 @@ void Game::LeaveGame()
 
 	graphics->ClearStaticDrawables();
 
+	skid_marks.Clear();
 	tire_smoke.Clear();
 	track.Clear();
 	car_dynamics.clear();
