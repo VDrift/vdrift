@@ -2023,7 +2023,7 @@ void Game::CalculateFPS()
 	{
 		fps_avg += fps_track[i];
 	}
-	fps_avg /= 10.0;
+	fps_avg *= 0.1f;
 
 	// Don't start looking an min/max until we've put out a few frames.
 	if (fps_min == 0 && frame > 20)
