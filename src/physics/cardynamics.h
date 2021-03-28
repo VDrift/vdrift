@@ -112,6 +112,7 @@ public:
 	// body
 	const btVector3 & GetCenterOfMass() const;
 	const btVector3 & GetVelocity() const;
+	btVector3 GetVelocity(const btVector3 & pos) const;
 	btScalar GetInvMass() const;
 	btScalar GetSpeed() const;
 

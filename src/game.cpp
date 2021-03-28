@@ -2513,7 +2513,7 @@ void Game::UpdateSkidMarks(const int carid)
 		float squeal = car.GetTireSqueal(WheelPosition(j));
 		float hw = car.GetWheel(WheelPosition(j)).GetWidth() * 0.5f;
 		auto & wc = car.GetWheelContact(WheelPosition(j));
-		Vec3 v = ToMathVector<float>(car.GetVelocity());
+		Vec3 v = ToMathVector<float>(car.GetVelocity(wc.GetPosition()));
 		Vec3 n = ToMathVector<float>(wc.GetNormal());
 		Vec3 p = ToMathVector<float>(wc.GetPosition()) + n * 0.005f;
 		Vec3 r = v.cross(n).Normalize() * hw;
