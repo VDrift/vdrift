@@ -20,7 +20,7 @@
 #include "skidmarks.h"
 #include "content/contentmanager.h"
 #include "graphics/texture.h"
-#include "minmax.h"
+#include "conecull.h"
 
 #include <cassert>
 
@@ -147,46 +147,6 @@ void SkidMarks::UpdateEmitter(int id, float intensity, Vec3 corner_left, Vec3 co
 	NewMark(e, intensity);
 	//dlog << "start " << id << " " << e.markid << std::endl;
 }
-
-struct Cone
-{
-	Vec3 pos;
-	Vec3 dir;
-	float sina;
-	float rcosa2;
-	
-	Cone(Vec3 cpos, Vec3 cdir, float csina)
-	{
-		pos = cpos;
-		dir = cdir;
-		sina = csina;
-		rcosa2 = 1 / (1 - csina * csina);
-	}
-
-	bool cull(Vec3 sphere_pos, float sphere_radius)
-	{
-		Vec3 r = sphere_pos - pos;
-/*
-		// cone plane (shifted by -radius sina) vs point
-		float rd = r.dot(dir);
-		if (rd > sphere_radius * sina)
-		{
-			// cone vs sphere center shifted by radius / sina
-			float cd = rd * sina + sphere_radius;
-			return r.dot(r) > cd * cd * rcosa2 + rd * rd;
-		}
-		// cone origin vs sphere
-		return r.dot(r) > sphere_radius * sphere_radius;
-*/
-		// optimized
-		float rd = r.dot(dir);
-		float rr = r.dot(r);
-		float cd = rd * sina + sphere_radius;
-		float e = sphere_radius * sphere_radius;
-		float f = cd * cd * rcosa2 + rd * rd;
-		return rr > Max(e, f); // rr > e && rr > f
-	}
-};
 
 template <typename Mark>
 inline void ProccessMark(Cone & c, Mark & m, VertexArray & v)
