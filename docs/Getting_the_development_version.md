@@ -55,7 +55,7 @@ Cloning the dependencies for Windows and OS X is similar to cloning the source c
 
 The data can be checked out into the **vdrift/data** folder with the following command. Make sure you are still in the **vdrift** folder.
 
-    svn co https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+    svn co https://svn.code.sf.net/p/vdrift/code/vdrift-data data
 
 This will take a while to complete as the data is quite big.
 
