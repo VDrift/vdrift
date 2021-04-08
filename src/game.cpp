@@ -452,6 +452,10 @@ bool Game::InitGUI()
 	InitSignalMap(vsignalmap);
 	InitActionMap(actionmap);
 
+	// make sure signals are disconnected in case of a gui reload
+	for (auto & s : signals)
+		s.disconnect();
+
 	if (!gui.Load(
 		menufiles,
 		valuelists,
