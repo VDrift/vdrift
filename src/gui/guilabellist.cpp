@@ -20,16 +20,6 @@
 #include "guilabellist.h"
 #include "guilabel.h"
 
-GuiLabelList::GuiLabelList()
-{
-	// ctor
-}
-
-GuiLabelList::~GuiLabelList()
-{
-	// dtor
-}
-
 void GuiLabelList::SetupDrawable(
 	SceneNode & scene, const Font & font, int align,
 	float scalex, float scaley, float z)

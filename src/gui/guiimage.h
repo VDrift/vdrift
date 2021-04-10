@@ -32,9 +32,7 @@ class Texture;
 class GuiImage : public GuiWidget
 {
 public:
-	GuiImage();
-
-	~GuiImage();
+	GuiImage() {};
 
 	virtual void Update(SceneNode & scene, float dt);
 
@@ -47,19 +45,17 @@ public:
 		const float uv[4],
 		const float z);
 
-	bool GetProperty(const std::string & name, Delegated<const std::string &> *& slot);
+	bool GetProperty(const std::string & name, Delegated<const std::string &> & slot) override;
 
 	void SetImage(const std::string & value);
 
-	Delegated<const std::string &> set_image;
-
 private:
-	ContentManager * m_content;
+	ContentManager * m_content = 0;
 	std::string m_path, m_name, m_ext;
 	SceneNode::DrawableHandle m_draw;
 	std::shared_ptr<Texture> m_texture;
 	VertexArray m_varray;
-	bool m_load;
+	bool m_load = false;
 
 	Drawable & GetDrawable(SceneNode & scene)
 	{

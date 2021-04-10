@@ -30,11 +30,11 @@ public:
 	void operator()(Params... p) const
 	{
 		for (const auto & s : m_slots)
-			s->operator()(p...);
+			s(p...);
 	};
-	void connect(Delegated<Params...> & s)
+	void connect(Delegated<Params...> s)
 	{
-		m_slots.push_back(&s);
+		m_slots.push_back(s);
 	}
 	void disconnect(void)
 	{
@@ -46,7 +46,7 @@ public:
 	};
 
 private:
-	std::vector<Delegated<Params...>*> m_slots;
+	std::vector<Delegated<Params...>> m_slots;
 };
 
 template <typename... Params>

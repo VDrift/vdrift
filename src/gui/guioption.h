@@ -31,11 +31,7 @@ class GuiOption
 public:
 	typedef std::vector< std::pair<std::string, std::string> > List;
 
-	GuiOption();
-
-	GuiOption(const GuiOption & other);
-
-	GuiOption & operator=(const GuiOption & other);
+	GuiOption() {};
 
 	/// will move new value elements to option list
 	void SetValues(const std::string & curvalue, const List & values);
@@ -48,6 +44,9 @@ public:
 
 	/// reset to first value if passed value invalid
 	void SetCurrentValue(const std::string & value);
+
+	/// only valid for floating point options
+	void SetCurrentValueNorm(const std::string & value);
 
 	/// increment current_value to the next in the values list
 	void Increment();
@@ -66,13 +65,13 @@ public:
 
 	const List & GetValueList() const;
 
+	void GetDisplayValues(int offset, std::vector<std::string> & vals);
+
+	void GetStorageValues(int offset, std::vector<std::string> & vals);
+
 	const std::string & GetDescription() const {return m_description;};
 
-	bool IsFloat() const { return m_type == type_float; };
-
-	/// get value range, parameters are offset and value range vector
-	Delegated<int, std::vector<std::string> &> get_val;
-	Delegated<int, std::vector<std::string> &> get_str;
+	bool IsFloat() const { return m_float; };
 
 	/// signal values update, parameter is value count
 	Signald<const std::string &> signal_update;
@@ -83,35 +82,22 @@ public:
 	Signald<const std::string &> signal_str;
 	Signald<const std::string &> signal_nth;
 
-	/// option slots (normalized value, value, string, increment, decrement)
-	Delegated<const std::string &> set_valn;
-	Delegated<const std::string &> set_val;
-	Delegated<int> set_nth;
-	Delegated<> set_prev;
-	Delegated<> set_next;
-
 private:
 	/// list option
 	List m_values;
-	size_t m_current_value;
+	size_t m_current_value = 0;
 
 	/// meta data
 	std::string m_description;
-	enum type {type_float, type_other} m_type;
 
 	/// string/int/float option
 	std::string m_data;
-	float m_min;
-	float m_max;
-	bool m_percent;
+	float m_min = 0;
+	float m_max = 0;
+	bool m_float = true;
+	bool m_percent = false;
 
 	void SignalValue();
-
-	void SetCurrentValueNorm(const std::string & value);
-
-	void GetDisplayValues(int offset, std::vector<std::string> & vals);
-
-	void GetStorageValues(int offset, std::vector<std::string> & vals);
 };
 
 #endif

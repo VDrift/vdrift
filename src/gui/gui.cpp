@@ -143,9 +143,6 @@ Gui::Gui() :
 	last_active_page = pages.end();
 	active_page = pages.end();
 	next_active_page = pages.end();
-
-	activate_page.bind<Gui, &Gui::ActivatePage>(this);
-	activate_prev_page.bind<Gui, &Gui::ActivatePrevPage>(this);
 }
 
 const std::string & Gui::GetActivePageName() const
@@ -252,8 +249,8 @@ bool Gui::Load(
 	RegisterOptions(vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap);
 
 	// register page activation callbacks
-	vactionmap["gui.page"] = &activate_page;
-	actionmap["gui.page.prev"] = &activate_prev_page;
+	vactionmap["gui.page"].bind<Gui, &Gui::ActivatePage>(this);
+	actionmap["gui.page.prev"].bind<Gui, &Gui::ActivatePrevPage>(this);
 
 	// init pages
 	size_t pagecount = 0;
@@ -481,31 +478,31 @@ void Gui::RegisterOptions(
 	IntSlotMap & nactionmap,
 	SlotMap & actionmap)
 {
-	for (auto & op : options)
+	for (auto & n : options)
 	{
-		const std::string & opname = op.first;
-		GuiOption & option = op.second;
-		if (option.IsFloat())
+		const std::string & name = n.first;
+		GuiOption & op = n.second;
+		if (op.IsFloat())
 		{
 			// option is a float
-			vsignalmap[opname + ".norm"] = &option.signal_valn;
-			vactionmap[opname + ".norm"] = &option.set_valn;
+			vsignalmap[name + ".norm"] = &op.signal_valn;
+			vactionmap[name + ".norm"].bind<GuiOption, &GuiOption::SetCurrentValueNorm>(&op);
 		}
 		else
 		{
 			// option is a list
-			vsignalmap[opname + ".str.update"] = &option.signal_update;
-			vsignalmap[opname + ".update"] = &option.signal_update;
-			vnactionmap[opname + ".str"] = &option.get_str;
-			vnactionmap[opname] = &option.get_val;
+			vsignalmap[name + ".str.update"] = &op.signal_update;
+			vsignalmap[name + ".update"] = &op.signal_update;
+			vnactionmap[name + ".str"].bind<GuiOption, &GuiOption::GetDisplayValues>(&op);
+			vnactionmap[name].bind<GuiOption, &GuiOption::GetStorageValues>(&op);
 		}
-		vsignalmap[opname + ".nth"] = &option.signal_nth;
-		vsignalmap[opname + ".str"] = &option.signal_str;
-		vsignalmap[opname] = &option.signal_val;
-		vactionmap[opname] = &option.set_val;
-		nactionmap[opname + ".nth"] = &option.set_nth;
-		actionmap[opname + ".next"] = &option.set_next;
-		actionmap[opname + ".prev"] = &option.set_prev;
+		vsignalmap[name + ".nth"] = &op.signal_nth;
+		vsignalmap[name + ".str"] = &op.signal_str;
+		vsignalmap[name] = &op.signal_val;
+		vactionmap[name].bind<GuiOption, &GuiOption::SetCurrentValue>(&op);
+		nactionmap[name + ".nth"].bind<GuiOption, &GuiOption::SetToNthValue>(&op);
+		actionmap[name + ".next"].bind<GuiOption, &GuiOption::Increment>(&op);
+		actionmap[name + ".prev"].bind<GuiOption, &GuiOption::Decrement>(&op);
 	}
 }
 

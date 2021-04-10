@@ -21,22 +21,6 @@
 #include "guiwidget.h"
 #include <sstream>
 
-GuiWidgetList::GuiWidgetList()
-{
-	// override widget callbacks
-	GuiWidget::set_opacity.bind<GuiWidgetList, &GuiWidgetList::SetOpacityAll>(this);
-	GuiWidget::set_hue.bind<GuiWidgetList, &GuiWidgetList::SetHueAll>(this);
-	GuiWidget::set_sat.bind<GuiWidgetList, &GuiWidgetList::SetSatAll>(this);
-	GuiWidget::set_val.bind<GuiWidgetList, &GuiWidgetList::SetValAll>(this);
-
-	setn_opacity.bind<GuiWidgetList, &GuiWidgetList::SetOpacity>(this);
-	setn_hue.bind<GuiWidgetList, &GuiWidgetList::SetHue>(this);
-	setn_sat.bind<GuiWidgetList, &GuiWidgetList::SetSat>(this);
-	setn_val.bind<GuiWidgetList, &GuiWidgetList::SetVal>(this);
-	scroll.bind<GuiWidgetList, &GuiWidgetList::ScrollList>(this);
-	update_list.bind<GuiWidgetList, &GuiWidgetList::UpdateList>(this);
-}
-
 GuiWidgetList::~GuiWidgetList()
 {
 	for (auto element : m_elements)
@@ -67,19 +51,34 @@ void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 	}
 }
 
-bool GuiWidgetList::GetProperty(const std::string & name, Delegated<int, const std::string &> *& slot)
+bool GuiWidgetList::GetProperty(const std::string & name, Delegated<int, const std::string &> & slot)
 {
 	if (name == "hue")
-		return (slot = &setn_hue);
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetHue>(this);
+		return true;
+	}
 	if (name == "sat")
-		return (slot = &setn_sat);
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetSat>(this);
+		return true;
+	}
 	if (name == "val")
-		return (slot = &setn_val);
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetVal>(this);
+		return true;
+	}
 	if (name == "opacity")
-		return (slot = &setn_opacity);
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetOpacity>(this);
+		return true;
+	}
 	if (name == "scroll")
-		return (slot = &scroll);
-	return (slot = NULL);
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::ScrollList>(this);
+		return true;
+	}
+	return false;
 }
 
 void GuiWidgetList::SetOpacity(int n, const std::string & value)

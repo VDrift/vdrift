@@ -43,7 +43,7 @@ public:
 	virtual Drawable & GetDrawable(SceneNode & scene) = 0;
 
 	/// properties
-	virtual bool GetProperty(const std::string & name, Delegated<const std::string &> *& slot);
+	virtual bool GetProperty(const std::string & name, Delegated<const std::string &> & slot);
 
 	void SetOpacity(float value);
 	void SetHue(float value);
@@ -55,12 +55,6 @@ public:
 	void SetHue(const std::string & value);
 	void SetSat(const std::string & value);
 	void SetVal(const std::string & value);
-
-	Delegated<const std::string &> set_visible;
-	Delegated<const std::string &> set_opacity;
-	Delegated<const std::string &> set_hue;
-	Delegated<const std::string &> set_sat;
-	Delegated<const std::string &> set_val;
 
 protected:
 	float m_rgb[3];

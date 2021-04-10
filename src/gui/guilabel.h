@@ -29,9 +29,7 @@ class Font;
 class GuiLabel : public GuiWidget
 {
 public:
-	GuiLabel();
-
-	virtual ~GuiLabel();
+	GuiLabel() {};
 
 	// align: -1 left, 0 center, +1 right
 	void SetupDrawable(
@@ -40,20 +38,19 @@ public:
 		float scalex, float scaley,
 		float xywh[4], float z);
 
-	bool GetProperty(const std::string & name, Delegated<const std::string &> *& slot);
+	bool GetProperty(const std::string & name, Delegated<const std::string &> & slot) override;
 
 	void SetText(const std::string & text);
-
-	Delegated<const std::string &> set_value;
 
 private:
 	SceneNode::DrawableHandle m_draw;
 	TextDraw m_text_draw;
 	std::string m_text;
-	const Font * m_font;
-	float m_x, m_y, m_w, m_h;
-	float m_scalex, m_scaley;
-	int m_align;
+	const Font * m_font = 0;
+	float m_x = 0, m_y = 0;
+	float m_w = 0, m_h = 0;
+	float m_scalex = 0, m_scaley = 0;
+	int m_align = 0;
 
 	Drawable & GetDrawable(SceneNode & scene);
 	GuiLabel(const GuiLabel & other);

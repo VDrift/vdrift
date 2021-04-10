@@ -21,20 +21,6 @@
 #include <minmax.h>
 #include <sstream>
 
-GuiControlList::GuiControlList() :
-	m_active_element(0)
-{
-	update_list.bind<GuiControlList, &GuiControlList::UpdateList>(this);
-	set_nth.bind<GuiControlList, &GuiControlList::SetToNth>(this);
-	scroll_fwd.bind<GuiControlList, &GuiControlList::ScrollFwd>(this);
-	scroll_rev.bind<GuiControlList, &GuiControlList::ScrollRev>(this);
-}
-
-GuiControlList::~GuiControlList()
-{
-	// dtor
-}
-
 bool GuiControlList::Focus(float x, float y)
 {
 	if (GuiControl::Focus(x, y))

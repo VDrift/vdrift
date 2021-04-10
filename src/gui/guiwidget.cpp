@@ -28,11 +28,6 @@ GuiWidget::GuiWidget() :
 {
 	m_rgb[0] = 1, m_rgb[1] = 1, m_rgb[2] = 1;
 	m_hsv[0] = 0, m_hsv[1] = 0, m_hsv[2] = 1;
-	set_visible.bind<GuiWidget, &GuiWidget::SetVisible>(this);
-	set_opacity.bind<GuiWidget, &GuiWidget::SetOpacity>(this);
-	set_hue.bind<GuiWidget, &GuiWidget::SetHue>(this);
-	set_sat.bind<GuiWidget, &GuiWidget::SetSat>(this);
-	set_val.bind<GuiWidget, &GuiWidget::SetVal>(this);
 }
 
 void GuiWidget::Update(SceneNode & scene, float /*dt*/)
@@ -51,19 +46,34 @@ void GuiWidget::SetAlpha(SceneNode & scene, float value)
 	GetDrawable(scene).SetColor(m_rgb[0], m_rgb[1], m_rgb[2], m_alpha * value);
 }
 
-bool GuiWidget::GetProperty(const std::string & name, Delegated<const std::string &> *& slot)
+bool GuiWidget::GetProperty(const std::string & name, Delegated<const std::string &> & slot)
 {
 	if (name == "hue")
-		return (slot = &set_hue);
+	{
+		slot.bind<GuiWidget, &GuiWidget::SetHue>(this);
+		return true;
+	}
 	if (name == "sat")
-		return (slot = &set_sat);
+	{
+		slot.bind<GuiWidget, &GuiWidget::SetSat>(this);
+		return true;
+	}
 	if (name == "val")
-		return (slot = &set_val);
+	{
+		slot.bind<GuiWidget, &GuiWidget::SetVal>(this);
+		return true;
+	}
 	if (name == "opacity")
-		return (slot = &set_opacity);
+	{
+		slot.bind<GuiWidget, &GuiWidget::SetOpacity>(this);
+		return true;
+	}
 	if (name == "visible")
-		return (slot = &set_visible);
-	return (slot = NULL);
+	{
+		slot.bind<GuiWidget, &GuiWidget::SetVisible>(this);
+		return true;
+	}
+	return false;
 }
 
 void GuiWidget::SetOpacity(float value)

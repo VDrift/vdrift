@@ -110,14 +110,14 @@ static Rect LoadRect(
 	return re;
 }
 
-template <class LIST>
+template <class List>
 static bool LoadList(
 	const Config & pagefile,
 	const Config::const_iterator & section,
 	const float x0, const float y0,
 	const float x1, const float y1,
 	const float hwratio,
-	LIST *& list)
+	List *& list)
 {
 	unsigned rows(1), cols(1);
 	if (pagefile.get(section, "rows", rows) | pagefile.get(section, "cols", cols))
@@ -193,7 +193,7 @@ static bool LoadList(
 		bool vert(true);
 		pagefile.get(section, "vertical", vert);
 
-		list = new LIST();
+		list = new List();
 		list->SetupList(rows, cols, x0, y0, x1, y1, pl, pt, pr, pb, vert);
 		return true;
 	}
@@ -249,7 +249,7 @@ static void ConnectActions(
 
 		auto it = actionmap.find(action);
 		if (it != actionmap.end())
-			signal.connect(*it->second);
+			signal.connect(it->second);
 		else
 			error << "Widget ConnectActions failed: " << actionstr << " " << action << std::endl;
 	}
@@ -283,14 +283,14 @@ static void ConnectActions(
 		auto it = actionmap.find(action);
 		if (it != actionmap.end())
 		{
-			signal.connect(*it->second);
+			signal.connect(it->second);
 			continue;
 		}
 
 		auto nit = nactionmap.find(action);
 		if (nit != nactionmap.end())
 		{
-			nsignal.connect(*nit->second);
+			nsignal.connect(nit->second);
 			continue;
 		}
 
@@ -353,9 +353,9 @@ static void ParseActions(
 		auto wi = widgetmap.find(wname);
 		if (wi != widgetmap.end())
 		{
-			Delegated<const std::string &> * pslot;
-			if (wi->second->GetProperty(pname, pslot))
-				action_val_set.emplace(action, pslot);
+			Delegated<const std::string &> d;
+			if (wi->second->GetProperty(pname, d))
+				action_val_set.emplace(action, d);
 			else
 			{
 				error << "ParseActions: Widget " << wname
@@ -368,9 +368,9 @@ static void ParseActions(
 		auto wli = widgetlistmap.find(wname);
 		if (wli != widgetlistmap.end())
 		{
-			Delegated<int, const std::string &> * pslot;
-			if (wli->second->GetProperty(pname, pslot))
-				action_valn_set.emplace(action, pslot);
+			Delegated<int, const std::string &> d;
+			if (wli->second->GetProperty(pname, d))
+				action_valn_set.emplace(action, d);
 			else
 			{
 				error << "ParseActions: WidgetList " << wname
@@ -390,20 +390,20 @@ static void RegisterActions(
 	SignalValVec & signalvs,
 	ActionMap & actionmap)
 {
+	using S = typename SignalValVec::value_type;
 	signalvs.reserve(actionvs.size());
 	for (const auto & av : actionvs)
 	{
-		signalvs.push_back(typename SignalValVec::value_type());
-
-		const std::string & action = av.first;
+		signalvs.push_back(S());
+		auto & s = signalvs.back();
+		auto & action = av.first;
 		size_t n = action.find(':') + 1;
 		if (action[n] == '"')
-			signalvs.back().value = lang(action.substr(n + 1, action.size() - n - 2));
+			s.value = lang(action.substr(n + 1, action.size() - n - 2));
 		else
-			signalvs.back().value = action.substr(n);
-		signalvs.back().signal.connect(*av.second);
-
-		actionmap[action] = &signalvs.back().action;
+			s.value = action.substr(n);
+		s.signal.connect(av.second);
+		actionmap[action].template bind<S, &S::call>(&s);
 	}
 }
 
@@ -415,12 +415,14 @@ static void RegisterControls(
 	ControlCbVec & controlcbs,
 	ActionMap & actionmap)
 {
+	using C = typename ControlCbVec::value_type;
 	for (size_t i = 0; i < controlsecs.size(); ++i)
 	{
-		controlcbs.push_back(typename ControlCbVec::value_type());
-		controlcbs.back().page = page;
-		controlcbs.back().control = controls[i];
-		actionmap[controlsecs[i]->first] = &controlcbs.back().action;
+		controlcbs.push_back(C());
+		auto & c = controlcbs.back();
+		c.page = page;
+		c.control = controls[i];
+		actionmap[controlsecs[i]->first].template bind<C, &C::call>(&c);
 	}
 }
 
@@ -509,8 +511,10 @@ bool GuiPage::Load(
 					auto vsi = vsignalmap.find(value + ".update");
 					if (vsi != vsignalmap.end())
 					{
-						vsi->second->connect(widget_list->update_list);
-						widget_list->get_values.connect(*vni->second);
+						Delegated<const std::string &> d;
+						d.bind<GuiWidgetList, &GuiWidgetList::UpdateList>(widget_list);
+						vsi->second->connect(d);
+						widget_list->get_values.connect(vni->second);
 					}
 				}
 
@@ -532,7 +536,9 @@ bool GuiPage::Load(
 				new_widget->SetupDrawable(
 					node, font, align, scalex, scaley, r.xywh, r.z);
 
-				ConnectAction(value, vsignalmap, new_widget->set_value);
+				Delegated<const std::string &> d;
+				d.bind<GuiLabel, &GuiLabel::SetText>(new_widget);
+				ConnectAction(value, vsignalmap, d);
 
 				std::string name;
 				if (pagefile.get(section, "name", name))
@@ -566,8 +572,10 @@ bool GuiPage::Load(
 					auto vsi = vsignalmap.find(value + ".update");
 					if (vsi != vsignalmap.end())
 					{
-						vsi->second->connect(widget_list->update_list);
-						widget_list->get_values.connect(*vni->second);
+						Delegated<const std::string &> d;
+						d.bind<GuiWidgetList, &GuiWidgetList::UpdateList>(widget_list);
+						vsi->second->connect(d);
+						widget_list->get_values.connect(vni->second);
 					}
 				}
 				else
@@ -616,14 +624,22 @@ bool GuiPage::Load(
 					slider = lslider;
 				}
 
+				Delegated<const std::string &> d;
 				if (!slider_val.empty())
-					ConnectAction(slider_val, vsignalmap, slider->set_value);
-
+				{
+					d.bind<GuiSlider, &GuiSlider::SetValue>(slider);
+					ConnectAction(slider_val, vsignalmap, d);
+				};
 				if (!slider_min.empty())
-					ConnectAction(slider_min, vsignalmap, slider->set_min_value);
-
+				{
+					d.bind<GuiSlider, &GuiSlider::SetMinValue>(slider);
+					ConnectAction(slider_min, vsignalmap, d);
+				}
 				if (!slider_max.empty())
-					ConnectAction(slider_max, vsignalmap, slider->set_max_value);
+				{
+					d.bind<GuiSlider, &GuiSlider::SetMaxValue>(slider);
+					ConnectAction(slider_max, vsignalmap, d);
+				}
 
 				widgetmap[section->first] = slider;
 				widget = slider;
@@ -634,7 +650,9 @@ bool GuiPage::Load(
 				new_widget->SetupDrawable(
 					node, content, path, ext, r.xywh, uv, r.z);
 
-				ConnectAction(value, vsignalmap, new_widget->set_image);
+				Delegated<const std::string &> d;
+				d.bind<GuiImage, &GuiImage::SetImage>(new_widget);
+				ConnectAction(value, vsignalmap, d);
 
 				widgetmap[section->first] = new_widget;
 				widget = new_widget;
@@ -645,16 +663,32 @@ bool GuiPage::Load(
 		if (widget)
 		{
 			std::string val;
+			Delegated<const std::string &> d;
 			if (pagefile.get(section, "visible", val))
-				ConnectAction(val, vsignalmap, widget->set_visible);
+			{
+				d.bind<GuiWidget, &GuiWidget::SetVisible>(widget);
+				ConnectAction(val, vsignalmap, d);
+			}
 			if (pagefile.get(section, "opacity", val))
-				ConnectAction(val, vsignalmap, widget->set_opacity);
+			{
+				d.bind<GuiWidget, &GuiWidget::SetOpacity>(widget);
+				ConnectAction(val, vsignalmap, d);
+			}
 			if (pagefile.get(section, "hue", val))
-				ConnectAction(val, vsignalmap, widget->set_hue);
+			{
+				d.bind<GuiWidget, &GuiWidget::SetHue>(widget);
+				ConnectAction(val, vsignalmap, d);
+			}
 			if (pagefile.get(section, "sat", val))
-				ConnectAction(val, vsignalmap, widget->set_sat);
+			{
+				d.bind<GuiWidget, &GuiWidget::SetSat>(widget);
+				ConnectAction(val, vsignalmap, d);
+			}
 			if (pagefile.get(section, "val", val))
-				ConnectAction(val, vsignalmap, widget->set_val);
+			{
+				d.bind<GuiWidget, &GuiWidget::SetVal>(widget);
+				ConnectAction(val, vsignalmap, d);
+			}
 
 			widgets.push_back(widget);
 		}
@@ -668,8 +702,8 @@ bool GuiPage::Load(
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, control_list))
 			{
 				// register control list scroll actions
-				actionmap[section->first + ".scrollf"] = &control_list->scroll_fwd;
-				actionmap[section->first + ".scrollr"] = &control_list->scroll_rev;
+				actionmap[section->first + ".scrollf"].bind<GuiControlList, &GuiControlList::ScrollFwd>(control_list);
+				actionmap[section->first + ".scrollr"].bind<GuiControlList, &GuiControlList::ScrollRev>(control_list);
 
 				// connect with item list
 				if (pagefile.get(section, "list", value))
@@ -678,8 +712,11 @@ bool GuiPage::Load(
 					auto vsn = vsignalmap.find(value + ".nth");
 					if (vsu != vsignalmap.end() && vsn != vsignalmap.end())
 					{
-						vsu->second->connect(control_list->update_list);
-						vsn->second->connect(control_list->set_nth);
+						Delegated<const std::string &> d;
+						d.bind<GuiControlList, &GuiControlList::UpdateList>(control_list);
+						vsu->second->connect(d);
+						d.bind<GuiControlList, &GuiControlList::SetToNth>(control_list);
+						vsn->second->connect(d);
 					}
 					else
 					{
@@ -707,8 +744,8 @@ bool GuiPage::Load(
 	// load control actions (connect control signals)
 
 	// parse control event actions with values(arguments)
-	using ActionValn = std::pair<std::string, Delegated<int, const std::string &>*>;
-	using ActionVal = std::pair<std::string, Delegated<const std::string &>*>;
+	using ActionValn = std::pair<std::string, Delegated<int, const std::string &>>;
+	using ActionVal = std::pair<std::string, Delegated<const std::string &>>;
 	std::set<ActionValn> action_valn_set;
 	std::set<ActionVal> action_val_set;
 	std::string actionstr;
@@ -918,79 +955,4 @@ void GuiPage::SetActiveControl(GuiControl & control)
 		active_control = &control;
 		active_control->SignalEvent(GuiControl::FOCUS);
 	}
-}
-
-
-GuiPage::ControlCb::ControlCb()
-{
-	action.bind<ControlCb, &ControlCb::call>(this);
-	page = 0;
-	control = 0;
-}
-
-GuiPage::ControlCb::ControlCb(const ControlCb & other)
-{
-	*this = other;
-}
-
-GuiPage::ControlCb & GuiPage::ControlCb::operator=(const ControlCb & other)
-{
-	action.bind<ControlCb, &ControlCb::call>(this);
-	page = other.page;
-	control = other.control;
-	return *this;
-}
-
-void GuiPage::ControlCb::call()
-{
-	assert(page && control);
-	page->SetActiveControl(*control);
-}
-
-
-GuiPage::SignalVal::SignalVal()
-{
-	action.bind<SignalVal, &SignalVal::call>(this);
-}
-
-GuiPage::SignalVal::SignalVal(const SignalVal & other)
-{
-	*this = other;
-}
-
-GuiPage::SignalVal & GuiPage::SignalVal::operator=(const SignalVal & other)
-{
-	action.bind<SignalVal, &SignalVal::call>(this);
-	signal = other.signal;
-	value = other.value;
-	return *this;
-}
-
-void GuiPage::SignalVal::call()
-{
-	signal(value);
-}
-
-
-GuiPage::SignalValn::SignalValn()
-{
-	action.bind<SignalValn, &SignalValn::call>(this);
-}
-
-GuiPage::SignalValn::SignalValn(const SignalValn & other)
-{
-	*this = other;
-}
-
-GuiPage::SignalValn & GuiPage::SignalValn::operator=(const SignalValn & other)
-{
-	action.bind<SignalValn, &SignalValn::call>(this);
-	signal = other.signal;
-	value = other.value;
-	return *this;
-}
-
-void GuiPage::SignalValn::call(int n)
-{
-	signal(n, value);
 }

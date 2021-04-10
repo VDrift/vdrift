@@ -57,6 +57,11 @@ public:
 		return m_func(m_inst, p...);
 	}
 
+	bool operator<(const Delegate<R, P...> & d) const
+	{
+		return m_func < d.m_func;
+	}
+
 private:
 	InstancePtr m_inst;
 	FunctionPtr m_func;

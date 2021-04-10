@@ -448,7 +448,7 @@ bool Game::InitGUI()
 	PopulateValueLists(valuelists);
 
 	std::map<std::string, Signald<const std::string &>*> vsignalmap;
-	std::map<std::string, Delegated<>*> actionmap;
+	std::map<std::string, Delegated<>> actionmap;
 	InitSignalMap(vsignalmap);
 	InitActionMap(actionmap);
 
@@ -3177,57 +3177,57 @@ void Game::SetControl(const std::string & value)
 
 void Game::BindActions()
 {
-	#define BIND(option, func, n)\
-		gui.GetOption(option).signal_val.connect(stractions[n]);\
-		stractions[n].bind<Game, &Game::func>(this)
-	BIND("game.startlist",     SetCarToEdit,   0);
-	BIND("game.car",           SetCarName,     1);
-	BIND("game.car_startpos",  SetCarStartPos, 2);
-	BIND("game.car_variant",   SetCarVariant,  3);
-	BIND("game.car_paint",     SetCarPaint,    4);
-	BIND("game.car_tire",      SetCarTire,     5);
-	BIND("game.car_wheel",     SetCarWheel,    6);
-	BIND("game.car_color_hue", SetCarColorHue, 7);
-	BIND("game.car_color_sat", SetCarColorSat, 8);
-	BIND("game.car_color_val", SetCarColorVal, 9);
-	BIND("game.cars_num",      SetCarsNum,    10);
-	BIND("game.driver",        SetCarDriver,  11);
-	BIND("game.ai_level",      SetCarAILevel, 12);
-	BIND("controledit.string", SetControl,    13);
+	Delegated<const std::string &> d;
+	#define BIND(option, func)\
+		d.bind<Game, &Game::func>(this);\
+		gui.GetOption(option).signal_val.connect(d);
+	BIND("game.startlist",     SetCarToEdit)
+	BIND("game.car",           SetCarName)
+	BIND("game.car_startpos",  SetCarStartPos)
+	BIND("game.car_variant",   SetCarVariant)
+	BIND("game.car_paint",     SetCarPaint)
+	BIND("game.car_tire",      SetCarTire)
+	BIND("game.car_wheel",     SetCarWheel)
+	BIND("game.car_color_hue", SetCarColorHue)
+	BIND("game.car_color_sat", SetCarColorSat)
+	BIND("game.car_color_val", SetCarColorVal)
+	BIND("game.cars_num",      SetCarsNum)
+	BIND("game.driver",        SetCarDriver)
+	BIND("game.ai_level",      SetCarAILevel)
+	BIND("controledit.string", SetControl)
 	#undef BIND
 }
 
-void Game::InitActionMap(std::map<std::string, Delegated<>*> & actionmap)
+void Game::InitActionMap(std::map<std::string, Delegated<>> & actionmap)
 {
-	#define BIND(func, n)\
-		actionmap[#func] = &actions[n];\
-		actions[n].bind<Game, &Game::func>(this)
-	BIND(QuitGame,             0);
-	BIND(LoadGarage,           1);
-	BIND(StartRace,            2);
-	BIND(PauseGame,            3);
-	BIND(ContinueGame,         4);
-	BIND(RestartGame,          5);
-	BIND(StartReplay,          6);
-	BIND(StartCheckForUpdates, 7);
-	BIND(CancelDownload,       8);
-	BIND(StartCarManager,      9);
-	BIND(CarManagerNext,      10);
-	BIND(CarManagerPrev,      11);
-	BIND(ApplyCarUpdate,      12);
-	BIND(StartTrackManager,   13);
-	BIND(TrackManagerNext,    14);
-	BIND(TrackManagerPrev,    15);
-	BIND(ApplyTrackUpdate,    16);
-	BIND(CancelControl,       17);
-	BIND(DeleteControl,       18);
-	BIND(SetButtonControl,    19);
-	BIND(SetAnalogControl,    20);
-	BIND(LoadControls,        21);
-	BIND(SaveControls,        22);
-	BIND(SyncOptions,         23);
-	BIND(SyncSettings,        24);
-	BIND(SelectPlayerCar,     25);
+	#define BIND(func)\
+		actionmap[#func].bind<Game, &Game::func>(this);
+	BIND(QuitGame)
+	BIND(LoadGarage)
+	BIND(StartRace)
+	BIND(PauseGame)
+	BIND(ContinueGame)
+	BIND(RestartGame)
+	BIND(StartReplay)
+	BIND(StartCheckForUpdates)
+	BIND(CancelDownload)
+	BIND(StartCarManager)
+	BIND(CarManagerNext)
+	BIND(CarManagerPrev)
+	BIND(ApplyCarUpdate)
+	BIND(StartTrackManager)
+	BIND(TrackManagerNext)
+	BIND(TrackManagerPrev)
+	BIND(ApplyTrackUpdate)
+	BIND(CancelControl)
+	BIND(DeleteControl)
+	BIND(SetButtonControl)
+	BIND(SetAnalogControl)
+	BIND(LoadControls)
+	BIND(SaveControls)
+	BIND(SyncOptions)
+	BIND(SyncSettings)
+	BIND(SelectPlayerCar)
 	#undef BIND
 }
 

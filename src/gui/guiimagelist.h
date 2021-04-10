@@ -27,9 +27,7 @@ class ContentManager;
 class GuiImageList : public GuiWidgetList
 {
 public:
-	GuiImageList();
-
-	~GuiImageList();
+	GuiImageList() {};
 
 	/// Create image elements. To be called after SetupList!
 	void SetupDrawable(
@@ -44,7 +42,6 @@ public:
 	void SetImage(const std::string & value);
 
 protected:
-	/// verboten
 	GuiImageList(const GuiImageList & other);
 	GuiImageList & operator=(const GuiImageList & other);
 

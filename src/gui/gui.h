@@ -120,10 +120,6 @@ private:
 	float next_animation_count_start;
 	bool ingame;
 
-	/// page activation callbacks
-	Delegated<const std::string&> activate_page;
-	Delegated<> activate_prev_page;
-
 	/// return false on failure
 	bool ActivatePage(
 		const std::string & pagename,

@@ -41,7 +41,7 @@ public:
 	void SetAlpha(SceneNode & scene, float value);
 
 	/// element properties
-	virtual bool GetProperty(const std::string & name, Delegated<int, const std::string &> *& slot);
+	virtual bool GetProperty(const std::string & name, Delegated<int, const std::string &> & slot);
 
 	void SetOpacity(int n, const std::string & value);
 	void SetHue(int n, const std::string & value);
@@ -54,13 +54,6 @@ public:
 	/// update list, parameter holds list item count
 	void UpdateList(const std::string & vnum);
 
-	Delegated<int, const std::string &> setn_opacity;
-	Delegated<int, const std::string &> setn_hue;
-	Delegated<int, const std::string &> setn_sat;
-	Delegated<int, const std::string &> setn_val;
-	Delegated<int, const std::string &> scroll;
-	Delegated<const std::string &> update_list;
-
 	/// value list range access signal
 	Signald<int, std::vector<std::string> &> get_values;
 
@@ -68,8 +61,7 @@ protected:
 	std::vector<GuiWidget*> m_elements;
 	std::vector<std::string> m_values;
 
-	/// verboten
-	GuiWidgetList();
+	GuiWidgetList() {};
 	GuiWidgetList(const GuiWidgetList & other);
 	GuiWidgetList & operator=(const GuiWidgetList & other);
 

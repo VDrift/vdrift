@@ -265,11 +265,8 @@ private:
 	void SetControl(const std::string & value);
 
 	void BindActions();
-	void InitActionMap(std::map<std::string, Delegated<>*> & actionmap);
+	void InitActionMap(std::map<std::string, Delegated<>> & actionmap);
 	void InitSignalMap(std::map<std::string, Signald<const std::string &>*> & signalmap);
-
-	Delegated<const std::string &> stractions[14];
-	Delegated<> actions[26];
 
 	enum GameSignal {
 		// game info signals
