@@ -106,15 +106,15 @@ private:
 	struct SignalVal
 	{
 		std::string value;
-		Signald<const std::string &> signal;
-		void call() { signal(value); };
+		Delegated<const std::string &> delegate;
+		void call() { delegate(value); };
 	};
 	// allow a control list to signal slots with an extra parameter
 	struct SignalValn
 	{
 		std::string value;
-		Signald<int, const std::string&> signal;
-		void call(int n) { signal(n, value); };
+		Delegated<int, const std::string&> delegate;
+		void call(int n) { delegate(n, value); };
 	};
 	std::vector<ControlCb> control_set;		// control focus callbacks
 	std::vector<SignalVal> action_set;		// action value callbacks

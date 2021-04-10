@@ -402,7 +402,7 @@ static void RegisterActions(
 			s.value = lang(action.substr(n + 1, action.size() - n - 2));
 		else
 			s.value = action.substr(n);
-		s.signal.connect(av.second);
+		s.delegate = av.second;
 		actionmap[action].template bind<S, &S::call>(&s);
 	}
 }
