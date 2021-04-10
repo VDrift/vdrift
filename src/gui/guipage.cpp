@@ -666,27 +666,27 @@ bool GuiPage::Load(
 			Delegated<const std::string &> d;
 			if (pagefile.get(section, "visible", val))
 			{
-				d.bind<GuiWidget, &GuiWidget::SetVisible>(widget);
+				widget->GetProperty("visible", d);
 				ConnectAction(val, vsignalmap, d);
 			}
 			if (pagefile.get(section, "opacity", val))
 			{
-				d.bind<GuiWidget, &GuiWidget::SetOpacity>(widget);
+				widget->GetProperty("opacity", d);
 				ConnectAction(val, vsignalmap, d);
 			}
 			if (pagefile.get(section, "hue", val))
 			{
-				d.bind<GuiWidget, &GuiWidget::SetHue>(widget);
+				widget->GetProperty("hue", d);
 				ConnectAction(val, vsignalmap, d);
 			}
 			if (pagefile.get(section, "sat", val))
 			{
-				d.bind<GuiWidget, &GuiWidget::SetSat>(widget);
+				widget->GetProperty("sat", d);
 				ConnectAction(val, vsignalmap, d);
 			}
 			if (pagefile.get(section, "val", val))
 			{
-				d.bind<GuiWidget, &GuiWidget::SetVal>(widget);
+				widget->GetProperty("val", d);
 				ConnectAction(val, vsignalmap, d);
 			}
 
