@@ -40,6 +40,8 @@ public:
 	/// scale alpha [0, 1]
 	void SetAlpha(SceneNode & scene, float value);
 
+	bool GetProperty(const std::string & name, Delegated<const std::string &> & slot) override;
+
 	/// element properties
 	virtual bool GetProperty(const std::string & name, Delegated<int, const std::string &> & slot);
 

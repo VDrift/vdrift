@@ -51,6 +51,31 @@ void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 	}
 }
 
+bool GuiWidgetList::GetProperty(const std::string & name, Delegated<const std::string &> & slot)
+{
+	if (name == "hue")
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetHueAll>(this);
+		return true;
+	}
+	if (name == "sat")
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetSatAll>(this);
+		return true;
+	}
+	if (name == "val")
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetValAll>(this);
+		return true;
+	}
+	if (name == "opacity")
+	{
+		slot.bind<GuiWidgetList, &GuiWidgetList::SetOpacityAll>(this);
+		return true;
+	}
+	return false;
+}
+
 bool GuiWidgetList::GetProperty(const std::string & name, Delegated<int, const std::string &> & slot)
 {
 	if (name == "hue")
