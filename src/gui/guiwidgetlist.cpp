@@ -53,55 +53,36 @@ void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 
 bool GuiWidgetList::GetProperty(const std::string & name, Delegated<const std::string &> & slot)
 {
-	if (name == "hue")
+	#define HASH(s) (s[2] & 0xf)
+	#define CASE(s, fn)\
+		case HASH(s):\
+			if (name == s) {\
+				slot.bind<GuiWidgetList, &GuiWidgetList::fn>(this);\
+				return true;\
+			} break;
+	if (name.size() < 3)
+		return false;
+	switch (HASH(name.c_str()))
 	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetHueAll>(this);
-		return true;
-	}
-	if (name == "sat")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetSatAll>(this);
-		return true;
-	}
-	if (name == "val")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetValAll>(this);
-		return true;
-	}
-	if (name == "opacity")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetOpacityAll>(this);
-		return true;
+		CASE("hue", SetHueAll)
+		CASE("sat", SetSatAll)
+		CASE("val", SetValAll)
+		CASE("opacity", SetOpacityAll)
 	}
 	return false;
 }
 
 bool GuiWidgetList::GetProperty(const std::string & name, Delegated<int, const std::string &> & slot)
 {
-	if (name == "hue")
+	if (name.size() < 3)
+		return false;
+	switch (HASH(name.c_str()))
 	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetHue>(this);
-		return true;
-	}
-	if (name == "sat")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetSat>(this);
-		return true;
-	}
-	if (name == "val")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetVal>(this);
-		return true;
-	}
-	if (name == "opacity")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::SetOpacity>(this);
-		return true;
-	}
-	if (name == "scroll")
-	{
-		slot.bind<GuiWidgetList, &GuiWidgetList::ScrollList>(this);
-		return true;
+		CASE("hue", SetHue)
+		CASE("sat", SetSat)
+		CASE("val", SetVal)
+		CASE("opacity", SetOpacity)
+		CASE("scroll", ScrollList)
 	}
 	return false;
 }

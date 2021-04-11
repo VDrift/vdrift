@@ -48,30 +48,22 @@ void GuiWidget::SetAlpha(SceneNode & scene, float value)
 
 bool GuiWidget::GetProperty(const std::string & name, Delegated<const std::string &> & slot)
 {
-	if (name == "hue")
+	#define HASH(s) (s[2] & 0xf)
+	#define CASE(s, fn)\
+		case HASH(s):\
+			if (name == s) {\
+				slot.bind<GuiWidget, &GuiWidget::fn>(this);\
+				return true;\
+			} break;
+	if (name.size() < 3)
+		return false;
+	switch (HASH(name.c_str()))
 	{
-		slot.bind<GuiWidget, &GuiWidget::SetHue>(this);
-		return true;
-	}
-	if (name == "sat")
-	{
-		slot.bind<GuiWidget, &GuiWidget::SetSat>(this);
-		return true;
-	}
-	if (name == "val")
-	{
-		slot.bind<GuiWidget, &GuiWidget::SetVal>(this);
-		return true;
-	}
-	if (name == "opacity")
-	{
-		slot.bind<GuiWidget, &GuiWidget::SetOpacity>(this);
-		return true;
-	}
-	if (name == "visible")
-	{
-		slot.bind<GuiWidget, &GuiWidget::SetVisible>(this);
-		return true;
+		CASE("hue", SetHue)
+		CASE("sat", SetSat)
+		CASE("val", SetVal)
+		CASE("opacity", SetOpacity)
+		CASE("visible", SetVisible)
 	}
 	return false;
 }
