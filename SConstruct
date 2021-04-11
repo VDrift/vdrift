@@ -70,7 +70,7 @@ elif sys.platform == 'darwin':
 
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src', '#vdrift-mac/Frameworks', '#vdrift-mac/Frameworks/SDL2.framework/Headers', '#vdrift-mac/Libraries'],
-        CCFLAGS = ['-std=c++11', '-Wall', '-Wextra'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
         FRAMEWORKPATH = ['vdrift-mac/Frameworks/'],
@@ -118,7 +118,7 @@ elif sys.platform == 'darwin':
 #---------------#
 elif sys.platform in ['win32', 'msys', 'cygwin']:
     env = Environment(ENV = os.environ, tools = ['mingw'],
-        CCFLAGS = ['-std=c++11', '-Wall', '-Wextra', '-mwindows'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra', '-mwindows'],
         CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
         #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
@@ -134,7 +134,7 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
 else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src'],
-        CCFLAGS = ['-std=c++11', '-Wall', '-Wextra'],#, '-pthread'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra'],#, '-pthread'],
         LIBPATH = ['.', '#lib'],
         #LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
