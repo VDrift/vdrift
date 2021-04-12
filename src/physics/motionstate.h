@@ -35,7 +35,7 @@ struct MotionState : public btMotionState {
 	}
 
 	/// from user to physics
-	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const
+	void getWorldTransform(btTransform& centerOfMassWorldTrans) const override
 	{
 		//centerOfMassWorldTrans = m_graphicsWorldTrans * m_centerOfMassOffset.inverse();
 		btQuaternion rot = rotation * massCenterRotation.inverse();
@@ -45,7 +45,7 @@ struct MotionState : public btMotionState {
 	}
 
 	/// from physics to user (for active objects)
-	virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans)
+	void setWorldTransform(const btTransform& centerOfMassWorldTrans) override
 	{
 		//m_graphicsWorldTrans = centerOfMassWorldTrans * m_centerOfMassOffset;
 		rotation = centerOfMassWorldTrans * massCenterRotation;
