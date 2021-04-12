@@ -32,17 +32,12 @@ struct JoeObject;
 class ModelJoe03 : public Model
 {
 public:
-	virtual ~ModelJoe03()
-	{
-		Clear();
-	}
-
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output)
+	bool Load(const std::string & strFileName, std::ostream & error_output) override
 	{
 		return Load(strFileName, error_output, 0);
 	}
 
-	virtual bool CanSave() const
+	bool CanSave() const override
 	{
 		return false;
 	}

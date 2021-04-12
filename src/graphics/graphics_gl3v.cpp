@@ -48,11 +48,6 @@ GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	initDrawableAttributes(drawAttribs, stringMap);
 }
 
-GraphicsGL3::~GraphicsGL3()
-{
-	// dtor
-}
-
 bool GraphicsGL3::Init(
 	const std::string & shader_path,
 	unsigned resx,

@@ -27,7 +27,7 @@ class RenderModelExtDrawable : public RenderModelExt
 {
 friend class Drawable;
 public:
-	virtual void draw(GLWrapper & gl) const
+	void draw(GLWrapper & gl) const override
 	{
 		assert(vsegment);
 		gl.GetVertexBuffer().Draw(gl.GetActiveVertexArray(), *vsegment);

@@ -224,13 +224,6 @@ GraphicsGL2::GraphicsGL2() :
 	screen_quad.SetVertArray(&screen_quad_verts);
 }
 
-GraphicsGL2::~GraphicsGL2()
-{
-	render_outputs.clear();
-	texture_outputs.clear();
-	texture_inputs.clear();
-}
-
 bool GraphicsGL2::Init(
 	const std::string & newshaderpath,
 	unsigned resx, unsigned resy,

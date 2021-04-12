@@ -46,7 +46,7 @@ class GraphicsGL3 : public Graphics
 public:
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
-	virtual bool Init(
+	bool Init(
 		const std::string & shaderpath,
 		unsigned resx, unsigned resy,
 		unsigned antialiasing,
@@ -59,52 +59,50 @@ public:
 		bool newnormalmaps, bool dynamicsky,
 		const std::string & renderconfig,
 		std::ostream & info_output,
-		std::ostream & error_output);
+		std::ostream & error_output) override;
 
-	virtual void Deinit();
+	void Deinit() override;
 
-	virtual void BindDynamicVertexData(std::vector<SceneNode*> nodes);
+	void BindDynamicVertexData(std::vector<SceneNode*> nodes) override;
 
-	virtual void BindStaticVertexData(std::vector<SceneNode*> nodes);
+	void BindStaticVertexData(std::vector<SceneNode*> nodes) override;
 
-	virtual void AddDynamicNode(SceneNode & node);
+	void AddDynamicNode(SceneNode & node) override;
 
-	virtual void AddStaticNode(SceneNode & node);
+	void AddStaticNode(SceneNode & node) override;
 
-	virtual void ClearDynamicDrawables();
+	void ClearDynamicDrawables() override;
 
-	virtual void ClearStaticDrawables();
+	void ClearStaticDrawables() override;
 
-	virtual void SetupScene(
+	void SetupScene(
 		float fov, float new_view_distance,
 		const Vec3 cam_position,
 		const Quat & cam_rotation,
 		const Vec3 & dynamic_reflection_sample_pos,
-		std::ostream & error_output);
+		std::ostream & error_output) override;
 
-	virtual void DrawScene(std::ostream & error_output);
+	void DrawScene(std::ostream & error_output) override;
 
-	virtual int GetMaxAnisotropy() const;
+	int GetMaxAnisotropy() const override;
 
-	virtual bool AntialiasingSupported() const;
+	bool AntialiasingSupported() const override;
 
-	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output);
+	bool ReloadShaders(std::ostream & info_output, std::ostream & error_output) override;
 
-	virtual void SetCloseShadow ( float value );
+	void SetCloseShadow(float value) override;
 
-	virtual bool GetShadows() const;
+	bool GetShadows() const override;
 
-	virtual void SetFixedSkybox(bool enable);
+	void SetFixedSkybox(bool enable) override;
 
-	virtual void SetSunDirection(const Vec3 & value);
+	void SetSunDirection(const Vec3 & value) override;
 
-	virtual void SetContrast(float value);
+	void SetContrast(float value) override;
 
-	virtual void printProfilingInfo(std::ostream & out) const {renderer.printProfilingInfo(out);}
+	void printProfilingInfo(std::ostream & out) const override {renderer.printProfilingInfo(out);}
 
 	GraphicsGL3(StringIdMap & map);
-
-	~GraphicsGL3();
 
 private:
 	StringIdMap & stringMap;
