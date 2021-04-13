@@ -53,7 +53,7 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 	const btCollisionShape * m_shape;
 	const btCollisionObject * m_exclude;
 
-	virtual	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
 	{
 		if (rayResult.m_collisionObject == m_exclude) return 1.0;
 

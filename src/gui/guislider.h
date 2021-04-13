@@ -50,7 +50,7 @@ protected:
 
 	GuiSlider(const GuiSlider & other);
 
-	Drawable & GetDrawable(SceneNode & node);
+	Drawable & GetDrawable(SceneNode & node) override;
 
 	void InitDrawable(
 		SceneNode & node,

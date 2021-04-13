@@ -80,9 +80,9 @@ private:
 	template <class T>
 	class CacheShared : public Cache, public std::map<std::string, std::shared_ptr<T> >
 	{
-		void log(std::ostream & log) const;
-		size_t size() const;
-		void sweep();
+		void log(std::ostream & log) const override;
+		size_t size() const override;
+		void sweep() override;
 	};
 
 	/// register content factories

@@ -28,9 +28,9 @@ class CameraMount : public Camera
 public:
 	CameraMount(const std::string & name);
 
-	void Reset(const Vec3 & newpos, const Quat & newquat);
+	void Reset(const Vec3 & newpos, const Quat & newquat) override;
 
-	void Update(const Vec3 & newpos, const Quat & newdir, float dt);
+	void Update(const Vec3 & newpos, const Quat & newdir, float dt) override;
 
 	void SetOffset(const Vec3 & lookfrom, const Vec3 & lookat)
 	{

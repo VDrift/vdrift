@@ -34,7 +34,7 @@ class GuiImage : public GuiWidget
 public:
 	GuiImage() {};
 
-	virtual void Update(SceneNode & scene, float dt);
+	void Update(SceneNode & scene, float dt) override;
 
 	void SetupDrawable(
 		SceneNode & scene,
@@ -57,7 +57,7 @@ private:
 	VertexArray m_varray;
 	bool m_load = false;
 
-	Drawable & GetDrawable(SceneNode & scene)
+	Drawable & GetDrawable(SceneNode & scene) override
 	{
 		return scene.GetDrawList().twodim.get(m_draw);
 	}

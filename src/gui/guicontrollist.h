@@ -28,10 +28,10 @@ class GuiControlList : public GuiControl, public GuiList
 {
 public:
 	/// Return true if control contains x, y
-	bool Focus(float x, float y);
+	bool Focus(float x, float y) override;
 
 	/// Signal slots attached to events
-	void SignalEvent(Event ev);
+	void SignalEvent(Event ev) override;
 
 	/// Update list, parameter holds list item count
 	void UpdateList(const std::string & value);

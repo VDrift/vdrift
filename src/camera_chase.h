@@ -29,9 +29,9 @@ public:
 
 	void SetOffset(const Vec3 & value);
 
-	void Reset(const Vec3 & newfocus, const Quat & focus_facing);
+	void Reset(const Vec3 & newfocus, const Quat & focus_facing) override;
 
-	void Update(const Vec3 & newfocus, const Quat & focus_facing, float dt);
+	void Update(const Vec3 & newfocus, const Quat & focus_facing, float dt) override;
 
 private:
 	Vec3 focus;

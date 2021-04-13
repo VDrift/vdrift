@@ -408,7 +408,7 @@ struct AeroDeviceFracture : public FractureCallback
 		// dtor
 	}
 
-	void operator()(FractureBody::Connection & /*connection*/)
+	void operator()(FractureBody::Connection & /*connection*/) override
 	{
 		int last = aerodevice.size() - 1;
 		if (id < last)

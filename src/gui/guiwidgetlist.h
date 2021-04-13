@@ -35,10 +35,10 @@ public:
 	virtual ~GuiWidgetList();
 
 	/// update state
-	void Update(SceneNode & scene, float dt);
+	void Update(SceneNode & scene, float dt) override;
 
 	/// scale alpha [0, 1]
-	void SetAlpha(SceneNode & scene, float value);
+	void SetAlpha(SceneNode & scene, float value) override;
 
 	bool GetProperty(const std::string & name, Delegated<const std::string &> & slot) override;
 
@@ -77,7 +77,7 @@ protected:
 	void SetValAll(const std::string & value);
 
 	/// ugh, dead weight
-	Drawable & GetDrawable(SceneNode & scene);
+	Drawable & GetDrawable(SceneNode & scene) override;
 };
 
 #endif // _GUIWIDGETLIST_H

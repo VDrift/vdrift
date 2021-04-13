@@ -89,8 +89,8 @@ public:
 	void Update(const std::vector<float> & inputs);
 
 	// bullet interface
-	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
-	void debugDraw(btIDebugDraw * debugDrawer);
+	void updateAction(btCollisionWorld * collisionWorld, btScalar dt) override;
+	void debugDraw(btIDebugDraw * debugDrawer) override;
 
 	// graphics interpolated
 	btVector3 GetEnginePosition() const;

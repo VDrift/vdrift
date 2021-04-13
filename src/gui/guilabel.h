@@ -52,7 +52,7 @@ private:
 	float m_scalex = 0, m_scaley = 0;
 	int m_align = 0;
 
-	Drawable & GetDrawable(SceneNode & scene);
+	Drawable & GetDrawable(SceneNode & scene) override;
 	GuiLabel(const GuiLabel & other);
 };
 
