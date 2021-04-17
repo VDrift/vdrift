@@ -29,14 +29,9 @@ class Delegate
 	typedef R (*FunctionPtr)(InstancePtr, P...);
 
 public:
-	Delegate(void) : m_inst(0), m_func(0)
-	{
-		// ctor
-	}
-
 	// Bind a function
 	template <R (*Function)(P...)>
-	void bind(void)
+	constexpr void bind(void)
 	{
 		m_inst = 0;
 		m_func = &callFunction<Function>;
@@ -44,10 +39,15 @@ public:
 
 	// Bind a class method
 	template <class C, R (C::*Function)(P...)>
-	void bind(C* inst)
+	constexpr void bind(C* inst)
 	{
 		m_inst = inst;
 		m_func = &callClassMethod<C, Function>;
+	}
+
+	constexpr bool operator<(const Delegate<R, P...> & d) const
+	{
+		return m_func < d.m_func;
 	}
 
 	// Invoke delegate
@@ -57,14 +57,9 @@ public:
 		return m_func(m_inst, p...);
 	}
 
-	bool operator<(const Delegate<R, P...> & d) const
-	{
-		return m_func < d.m_func;
-	}
-
 private:
-	InstancePtr m_inst;
-	FunctionPtr m_func;
+	InstancePtr m_inst = 0;
+	FunctionPtr m_func = 0;
 
 	// Free function call wrapper
 	template <R (*Function)(P...)>
