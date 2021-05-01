@@ -30,12 +30,6 @@ constexpr int size(const T (&array)[N])
 	return N;
 }
 
-// sin(2 * atan(x))
-constexpr btScalar Sin2Atan(btScalar x)
-{
-	return 2 * x / (x * x + 1);
-}
-
 // approximate asin(x) = x + x^3/6 for +-18 deg range
 inline btScalar ComputeCamberAngle(btScalar sin_camber)
 {
@@ -157,7 +151,7 @@ btScalar CarTire1::getMaxDy(btScalar load, btScalar camber) const
 	auto & a = lateral;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
-	btScalar BCD = a[3] * Sin2Atan(Fz / a[4]) * (1 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * btFabs(gamma));
 	return BCD;
 }
 
@@ -225,7 +219,7 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
-	btScalar BCD = a[3] * Sin2Atan(Fz / a[4]) * (1 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * btFabs(gamma));
 
 	// stiffness factor
 	btScalar B = BCD / (C * D);
@@ -253,24 +247,19 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	return Fy;
 }
 
-inline btScalar btCosAtan(btScalar x)
-{
-	return btRecipSqrt(1 + x * x);
-}
-
 btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
 {
 	auto & p = combining;
-	btScalar B = p[2] * btCosAtan(p[3] * sigma);
-	btScalar G = btCosAtan(B * alpha);
+	btScalar B = p[2] * CosAtan(p[3] * sigma);
+	btScalar G = CosAtan(B * alpha);
 	return G;
 }
 
 btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
 {
 	auto & p = combining;
-	btScalar B = p[0] * btCosAtan(p[1] * alpha);
-	btScalar G = btCosAtan(B * sigma);
+	btScalar B = p[0] * CosAtan(p[1] * alpha);
+	btScalar G = CosAtan(B * sigma);
 	return G;
 }
 

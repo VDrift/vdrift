@@ -117,4 +117,46 @@ T Sin3Pi2(T x)
     return SinPi2(y);
 }
 
+template <typename T>
+T Rsqrt(T x)
+{
+    return 1 / std::sqrt(x);
+}
+
+template <typename T>
+T CosAtan(T x)
+{
+    return Rsqrt(x * x + 1);
+}
+
+template <typename T>
+T SinAtan(T x)
+{
+    return x * Rsqrt(x * x + 1);
+}
+
+template <typename T>
+T Cos2Atan(T x)
+{
+    return (1 - x * x) / (x * x + 1);
+}
+
+template <typename T>
+T Sin2Atan(T x)
+{
+    return 2 * x / (x * x + 1);
+}
+
+template <typename T>
+T Cos2Atan(T y, T x)
+{
+    return (x * x - y * y) / (x * x + y * y);
+}
+
+template <typename T>
+T Sin2Atan(T y, T x)
+{
+    return 2 * x * y / (x * x + y * y);
+}
+
 #endif // _FASTMATH_H
