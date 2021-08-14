@@ -82,7 +82,7 @@ btVector3 CarTire1::getForce(
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
-	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar rcp_lon_velocity = 1 / Max(std::abs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
 	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
 	btScalar gamma = camber * rad2deg;
@@ -132,7 +132,7 @@ btScalar CarTire1::getMaxDx(btScalar load) const
 {
 	auto & b = longitudinal;
 	btScalar Fz = load * btScalar(1E-3);
-	btScalar BCD = (b[3] * Fz + b[4]) * Fz * btExp(-b[5] * Fz);
+	btScalar BCD = (b[3] * Fz + b[4]) * Fz * std::exp(-b[5] * Fz);
 	return BCD;
 }
 
@@ -151,7 +151,7 @@ btScalar CarTire1::getMaxDy(btScalar load, btScalar camber) const
 	auto & a = lateral;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
-	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * std::abs(gamma));
 	return BCD;
 }
 
@@ -185,13 +185,13 @@ btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coef
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 
 	// stifness at sigma = 0
-	btScalar BCD = (b[3] * Fz + b[4]) * Fz * btExp(-b[5] * Fz);
+	btScalar BCD = (b[3] * Fz + b[4]) * Fz * std::exp(-b[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
+	btScalar E = (b[6] * Fz + b[7]) * Fz + b[8];
 
 	// horizontal shift
 	btScalar Sh = b[9] * Fz + b[10];
@@ -221,7 +221,7 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
 	// stifness at alpha = 0
-	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * btFabs(gamma));
+	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * std::abs(gamma));
 
 	// stiffness factor
 	btScalar B = BCD / (C * D);
@@ -260,13 +260,13 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
 	// stifness at alpha = 0
-	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * btFabs(gamma)) * btExp(-c[5] * Fz);
+	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * std::abs(gamma)) * std::exp(-c[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1 - c[10] * btFabs(gamma));
+	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1 - c[10] * std::abs(gamma));
 
 	// horizontal shift
 	btScalar Sh = c[11] * gamma + c[12] * Fz + c[13];
