@@ -184,6 +184,7 @@ btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coef
 	// peak factor
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 
+	// stifness at sigma = 0
 	btScalar BCD = (b[3] * Fz + b[4]) * Fz * btExp(-b[5] * Fz);
 
 	// stiffness factor
@@ -219,6 +220,7 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
+	// stifness at alpha = 0
 	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * btFabs(gamma));
 
 	// stiffness factor
@@ -251,11 +253,13 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 {
 	auto & c = aligning;
 
+	// shape factor
 	btScalar C = c[0];
 
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
+	// stifness at alpha = 0
 	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * btFabs(gamma)) * btExp(-c[5] * Fz);
 
 	// stiffness factor
