@@ -71,7 +71,6 @@ btVector3 CarTire2::getForce(
 		slip = slip_angle = 0;
 		ideal_slip = ideal_slip_angle = 1;
 		fx = fy = mz = 0;
-		vx = vy = 0;
 		return btVector3(0, 0, 0);
 	}
 
@@ -114,8 +113,6 @@ btVector3 CarTire2::getForce(
 	fx = Fx;
 	fy = Fy;
 	mz = Mz0;
-	vx = slip_velocity;
-	vy = lat_velocity;
 
 	return btVector3(Fx, Fy, Mz0);
 }

@@ -114,8 +114,6 @@ public:
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
 private:
-	btScalar vx = 0, vy = 0; ///< contact velocity in tire space
-
 	/// longitudinal friction
 	btScalar PacejkaFx(
 		btScalar sigma,
