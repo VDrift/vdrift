@@ -88,7 +88,7 @@ void CarTire1::ComputeState(
 	btScalar rcp_lon_velocity = 1 / Max(std::abs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
 	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
-	btScalar gamma = s.camber * rad2deg;
+	btScalar gamma = camber * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
