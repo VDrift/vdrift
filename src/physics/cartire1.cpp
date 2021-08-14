@@ -247,22 +247,6 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	return Fy;
 }
 
-btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
-{
-	auto & p = combining;
-	btScalar B = p[2] * CosAtan(p[3] * sigma);
-	btScalar G = CosAtan(B * alpha);
-	return G;
-}
-
-btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
-{
-	auto & p = combining;
-	btScalar B = p[0] * CosAtan(p[1] * alpha);
-	btScalar G = CosAtan(B * sigma);
-	return G;
-}
-
 btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
 {
 	auto & c = aligning;
@@ -298,6 +282,30 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 
 	btAssert(Mz == Mz);
 	return Mz;
+}
+
+btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
+{
+	auto & p = combining;
+	//btScalar B = p[2] * CosAtan(p[3] * sigma);
+	//btScalar G = CosAtan(B * alpha);
+	//return G;
+	btScalar a = p[3] * sigma;
+	btScalar b = p[2] * alpha;
+	btScalar c = a * a + 1;
+	return std::sqrt(c / (c + b * b));
+}
+
+btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
+{
+	auto & p = combining;
+	//btScalar B = p[0] * CosAtan(p[1] * alpha);
+	//btScalar G = CosAtan(B * sigma);
+	//return G;
+	btScalar a = p[1] * alpha;
+	btScalar b = p[0] * sigma;
+	btScalar c = a * a + 1;
+	return std::sqrt(c / (c + b * b));
 }
 
 void CarTire1::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
