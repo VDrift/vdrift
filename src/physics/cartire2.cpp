@@ -116,7 +116,7 @@ btVector3 CarTire2::getForce(
 
 	return btVector3(Fx, Fy, Mz0);
 }
-
+/*
 btScalar CarTire2::getSqueal() const
 {
 	btScalar squeal = 0;
@@ -133,7 +133,7 @@ btScalar CarTire2::getSqueal() const
 	}
 	return squeal;
 }
-
+*/
 btScalar CarTire2::getMaxFx(btScalar load) const
 {
 	const btScalar * p = coefficients;

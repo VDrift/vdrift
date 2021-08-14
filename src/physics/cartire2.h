@@ -103,7 +103,7 @@ public:
 		const btScalar resistance_factor) const;
 
 	/// calculate tire squeal factor [0, 1] based on ideal slide/slip
-	btScalar getSqueal() const;
+	//btScalar getSqueal() const;
 
 	/// load is the normal force in N
 	btScalar getMaxFx(btScalar load) const;
