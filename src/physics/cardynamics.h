@@ -28,6 +28,7 @@
 #include "carsuspension.h"
 #include "carwheel.h"
 #include "cartire.h"
+#include "cartirestate.h"
 #include "carbrake.h"
 #include "carwheelposition.h"
 #include "aerodevice.h"
@@ -131,7 +132,6 @@ public:
 	const CarTransmission & GetTransmission() const {return transmission;}
 	const CarBrake & GetBrake(WheelPosition pos) const {return brake[pos];}
 	const CarWheel & GetWheel(WheelPosition pos) const {return wheel[pos];}
-	const CarTire & GetTire(WheelPosition pos) const {return tire[pos];}
 	btScalar GetFuelAmount() const {return fuel_tank.FuelPercent();}
 	btScalar GetNosAmount() const {return engine.GetNosAmount();}
 	bool GetABSEnabled() const;
@@ -207,6 +207,7 @@ protected:
 	CarBrake brake[WHEEL_COUNT];
 	CarWheel wheel[WHEEL_COUNT];
 	CarTire tire[WHEEL_COUNT];
+	CarTireState tire_state[WHEEL_COUNT];
 	CarSuspension suspension[WHEEL_COUNT];
 	WheelConstraint wheel_constraint[WHEEL_COUNT];
 	Driveline driveline;
@@ -351,15 +352,15 @@ inline Stream & operator << (Stream & os, const btVector3 & v)
 }
 
 template <class Stream>
-inline Stream & operator << (Stream & os, const CarTire & tire)
+inline Stream & operator << (Stream & os, const CarTireState & t)
 {
-	os	<< "Camber: " << tire.getCamber() * btScalar(180 / M_PI)
-		<< "\nFx: " << tire.getFx()
-		<< "\nFy: " << tire.getFy()
-		<< "\nSlip Ang: " << tire.getSlipAngle() * btScalar(180 / M_PI)
-		<< " / " << tire.getIdealSlipAngle() * btScalar(180 / M_PI)
-		<< "\nSlip: " << tire.getSlip()
-		<< " / " << tire.getIdealSlip()
+	os	<< "Camber: " << t.camber * btScalar(180 / M_PI)
+		<< "\nFx: " << t.fx
+		<< "\nFy: " << t.fy
+		<< "\nSlip Ang: " << t.slip_angle * btScalar(180 / M_PI)
+		<< " / " << t.ideal_slip_angle * btScalar(180 / M_PI)
+		<< "\nSlip: " << t.slip
+		<< " / " << t.ideal_slip
 		<< "\n";
 	return os;
 }
@@ -393,7 +394,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[FRONT_LEFT].DebugPrint(out);
 		out << "\n";
 		wheel[FRONT_LEFT].DebugPrint(out);
-		out << tire[FRONT_LEFT] << "\n";
+		out << tire_state[FRONT_LEFT] << "\n";
 
 		out << "(rear left)" << "\n";
 		brake[REAR_LEFT].DebugPrint(out);
@@ -401,7 +402,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[REAR_LEFT].DebugPrint(out);
 		out << "\n";
 		wheel[REAR_LEFT].DebugPrint(out);
-		out << tire[REAR_LEFT] << "\n";
+		out << tire_state[REAR_LEFT] << "\n";
 	}
 
 	if (p3)
@@ -412,7 +413,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[FRONT_RIGHT].DebugPrint(out);
 		out << "\n";
 		wheel[FRONT_RIGHT].DebugPrint(out);
-		out << tire[FRONT_RIGHT] << "\n";
+		out << tire_state[FRONT_RIGHT] << "\n";
 
 		out << "(rear right)" << "\n";
 		brake[REAR_RIGHT].DebugPrint(out);
@@ -420,7 +421,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[REAR_RIGHT].DebugPrint(out);
 		out << "\n";
 		wheel[REAR_RIGHT].DebugPrint(out);
-		out << tire[REAR_RIGHT] << "\n";
+		out << tire_state[REAR_RIGHT] << "\n";
 	}
 
 	if (p4)

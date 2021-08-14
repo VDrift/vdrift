@@ -193,45 +193,42 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	btScalar aspect_ratio = tire_size[1] * 0.01f;
 	btScalar radius = tire_size[2] * 0.5f * 0.0254f + width * aspect_ratio;
 
-	CarTireInfo info;
-	info.radius = radius;
-	info.width = width;
-	info.ar = aspect_ratio;
+	tire.radius = radius;
+	tire.width = width;
+	tire.ar = aspect_ratio;
 
-	if (!cfg.get("pt", info.pt, error_output)) return false;
-	if (!cfg.get("ktx", info.ktx, error_output)) return false;
-	if (!cfg.get("kty", info.kty, error_output)) return false;
-	if (!cfg.get("kcb", info.kcb, error_output)) return false;
-	if (!cfg.get("ccb", info.ccb, error_output)) return false;
-	if (!cfg.get("cfy", info.cfy, error_output)) return false;
-	if (!cfg.get("dz0", info.dz0, error_output)) return false;
-	if (!cfg.get("p0", info.p0, error_output)) return false;
-	if (!cfg.get("mus", info.mus, error_output)) return false;
-	if (!cfg.get("muc", info.muc, error_output)) return false;
-	if (!cfg.get("vs", info.vs, error_output)) return false;
-	if (!cfg.get("cr0", info.cr0, error_output)) return false;
-	if (!cfg.get("cr2", info.cr2, error_output)) return false;
-	if (!cfg.get("tread", info.tread, error_output)) return false;
+	if (!cfg.get("pt", tire.pt, error_output)) return false;
+	if (!cfg.get("ktx", tire.ktx, error_output)) return false;
+	if (!cfg.get("kty", tire.kty, error_output)) return false;
+	if (!cfg.get("kcb", tire.kcb, error_output)) return false;
+	if (!cfg.get("ccb", tire.ccb, error_output)) return false;
+	if (!cfg.get("cfy", tire.cfy, error_output)) return false;
+	if (!cfg.get("dz0", tire.dz0, error_output)) return false;
+	if (!cfg.get("p0", tire.p0, error_output)) return false;
+	if (!cfg.get("mus", tire.mus, error_output)) return false;
+	if (!cfg.get("muc", tire.muc, error_output)) return false;
+	if (!cfg.get("vs", tire.vs, error_output)) return false;
+	if (!cfg.get("cr0", tire.cr0, error_output)) return false;
+	if (!cfg.get("cr2", tire.cr2, error_output)) return false;
+	if (!cfg.get("tread", tire.tread, error_output)) return false;
 
-	tire.init(info);
+	tire.init();
 	return true;
 }
 #elif defined(VDRIFTN)
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
-	CarTireInfo info;
-
-	if (!cfg.get("tread", info.tread, error_output)) return false;
+	if (!cfg.get("tread", tire.tread, error_output)) return false;
 
 	btVector3 roll_resistance;
 	if (!cfg.get("rolling-resistance", roll_resistance, error_output)) return false;
-	info.roll_resistance_lin = roll_resistance[0];
-	info.roll_resistance_quad = roll_resistance[1];
+	tire.roll_resistance_lin = roll_resistance[0];
+	tire.roll_resistance_quad = roll_resistance[1];
 
-	if (!cfg.get("FZ0", info.nominal_load, error_output)) return false;
-	for (int i = 0; i < CarTireInfo::CNUM; ++i)
+	if (!cfg.get("FZ0", tire.nominal_load, error_output)) return false;
+	for (int i = 0; i < CarTire::CNUM; ++i)
 	{
-		if (!cfg.get(info.coeffname[i], info.coefficients[i], error_output))
+		if (!cfg.get(tire.coeffname[i], tire.coefficients[i], error_output))
 			return false;
 	}
 
@@ -242,40 +239,38 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	std::string facing;
 	if (cfg_wheel.get("tire.facing", facing))
 		side_factor = (facing != "left") ? 1 : -1;
-	info.coefficients[CarTireInfo::PEY3] *= side_factor;
-	info.coefficients[CarTireInfo::PEY4] *= side_factor;
-	info.coefficients[CarTireInfo::PVY1] *= side_factor;
-	info.coefficients[CarTireInfo::PVY2] *= side_factor;
-	info.coefficients[CarTireInfo::PHY1] *= side_factor;
-	info.coefficients[CarTireInfo::PHY2] *= side_factor;
-	info.coefficients[CarTireInfo::PHY3] *= side_factor;
-	info.coefficients[CarTireInfo::RBY3] *= side_factor;
-	info.coefficients[CarTireInfo::RHX1] *= side_factor;
-	info.coefficients[CarTireInfo::RHY1] *= side_factor;
-	info.coefficients[CarTireInfo::RVY5] *= side_factor;
+	tire.coefficients[CarTire::PEY3] *= side_factor;
+	tire.coefficients[CarTire::PEY4] *= side_factor;
+	tire.coefficients[CarTire::PVY1] *= side_factor;
+	tire.coefficients[CarTire::PVY2] *= side_factor;
+	tire.coefficients[CarTire::PHY1] *= side_factor;
+	tire.coefficients[CarTire::PHY2] *= side_factor;
+	tire.coefficients[CarTire::PHY3] *= side_factor;
+	tire.coefficients[CarTire::RBY3] *= side_factor;
+	tire.coefficients[CarTire::RHX1] *= side_factor;
+	tire.coefficients[CarTire::RHY1] *= side_factor;
+	tire.coefficients[CarTire::RVY5] *= side_factor;
 
 	btScalar size_factor = 1;
 	btVector3 size;
 	if (cfg_wheel.get("tire.size", size))
 		size_factor = ComputeFrictionFactor(cfg, size);
-	info.coefficients[CarTireInfo::PDX1] *= size_factor;
-	info.coefficients[CarTireInfo::PDY1] *= size_factor;
+	tire.coefficients[CarTire::PDX1] *= size_factor;
+	tire.coefficients[CarTire::PDY1] *= size_factor;
 
-	tire.init(info);
+	tire.init();
 
 	return true;
 }
 #else
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
-	CarTireInfo info;
-
-	if (!cfg.get("tread", info.tread, error_output)) return false;
+	if (!cfg.get("tread", tire.tread, error_output)) return false;
 
 	btVector3 rolling_resistance;
 	if (!cfg.get("rolling-resistance", rolling_resistance, error_output)) return false;
-	info.rolling_resistance_lin = rolling_resistance[0];
-	info.rolling_resistance_quad = rolling_resistance[1];
+	tire.rolling_resistance_lin = rolling_resistance[0];
+	tire.rolling_resistance_quad = rolling_resistance[1];
 
 	// read lateral
 	int numinfile;
@@ -290,7 +285,7 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 			numinfile -= 1;
 		std::ostringstream s;
 		s << "a" << numinfile;
-		if (!cfg.get(s.str(), info.lateral[i], error_output)) return false;
+		if (!cfg.get(s.str(), tire.lateral[i], error_output)) return false;
 	}
 
 	// read longitudinal
@@ -298,7 +293,7 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	{
 		std::ostringstream s;
 		s << "b" << i;
-		if (!cfg.get(s.str(), info.longitudinal[i], error_output)) return false;
+		if (!cfg.get(s.str(), tire.longitudinal[i], error_output)) return false;
 	}
 
 	// read aligning
@@ -306,14 +301,14 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	{
 		std::ostringstream s;
 		s << "c" << i;
-		if (!cfg.get(s.str(), info.aligning[i], error_output)) return false;
+		if (!cfg.get(s.str(), tire.aligning[i], error_output)) return false;
 	}
 
 	// read combining
-	if (!cfg.get("gy1", info.combining[0], error_output)) return false;
-	if (!cfg.get("gy2", info.combining[1], error_output)) return false;
-	if (!cfg.get("gx1", info.combining[2], error_output)) return false;
-	if (!cfg.get("gx2", info.combining[3], error_output)) return false;
+	if (!cfg.get("gy1", tire.combining[0], error_output)) return false;
+	if (!cfg.get("gy2", tire.combining[1], error_output)) return false;
+	if (!cfg.get("gx1", tire.combining[2], error_output)) return false;
+	if (!cfg.get("gx2", tire.combining[3], error_output)) return false;
 
 	// asymmetric tires support (left right facing direction)
 	// default facing direction is right
@@ -322,17 +317,17 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	std::string facing;
 	if (cfg_wheel.get("tire.facing", facing))
 		side_factor = (facing != "left") ? 1 : -1;
-	info.lateral[13] *= side_factor;
-	info.lateral[14] *= side_factor;
+	tire.lateral[13] *= side_factor;
+	tire.lateral[14] *= side_factor;
 
 	btScalar size_factor = 1;
 	btVector3 size;
 	if (cfg_wheel.get("tire.size", size))
 		size_factor = ComputeFrictionFactor(cfg, size);
-	info.longitudinal[2] *= size_factor;
-	info.lateral[2] *= size_factor;
+	tire.longitudinal[2] *= size_factor;
+	tire.lateral[2] *= size_factor;
 
-	tire.init(info);
+	tire.init();
 
 	return true;
 }
@@ -1002,9 +997,9 @@ btScalar CarDynamics::GetTireSqueal(WheelPosition i) const
 	btScalar v1 = wheel_velocity[i][1];
 	btScalar vq = Min(v0 * v0 + v1 * v1, btScalar(1));
 
-	auto tire = GetTire(i);
-	btScalar sr = tire.getSlip() / tire.getIdealSlip();
-	btScalar ar = tire.getSlipAngle() / tire.getIdealSlipAngle();
+	auto & t = tire_state[i];
+	btScalar sr = t.slip / t.ideal_slip;
+	btScalar ar = t.slip_angle / t.ideal_slip_angle;
 	btScalar sq = sr * sr + ar * ar;
 
 	return Clamp(sq * vq - btScalar(0.4), btScalar(0), btScalar(1));
@@ -1104,9 +1099,10 @@ void CarDynamics::ApplyTCS(int i)
 	btScalar gas = engine.GetThrottle();
 	if (gas > btScalar(0.1))
 	{
-		btScalar slip_angle = tire[i].getSlipAngle();
-		btScalar slip_ideal = tire[i].getIdealSlip() * CosPi2(slip_angle);
-		btScalar slip = std::abs(tire[i].getSlip());
+		auto & t = tire_state[i];
+		btScalar slip_angle = t.slip_angle;
+		btScalar slip_ideal = t.ideal_slip_angle * CosPi2(slip_angle);
+		btScalar slip = std::abs(t.slip);
 		btScalar slip_engage = slip_ideal * btScalar(1.2);
 		btScalar slip_disengage = slip_ideal * btScalar(0.8);
 
@@ -1130,13 +1126,13 @@ void CarDynamics::ApplyTCS(int i)
 void CarDynamics::ApplyABS(int i)
 {
 	// only active if speed exceeds 4 m/s
-	btScalar slip = tire[i].getSlip();
+	btScalar slip = tire_state[i].slip;
 	if (brake_value > 0.01f && body->getLinearVelocity().length2() > 16)
 	{
 		// limit brake value based on normalized predicted slip
 		btScalar slip_delta = slip - wheel_slip[i];
 		btScalar slip_predicted = slip + slip_delta;
-		btScalar slip_ideal = tire[i].getIdealSlip();
+		btScalar slip_ideal = tire_state[i].ideal_slip;
 		btScalar sr = std::abs(slip_predicted) / slip_ideal;
 		btScalar brake_delta_limit = (1 - sr) * 2;
 
@@ -1222,7 +1218,7 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 	tacho_rpm += (engine.GetRPM() - tacho_rpm) * tacho_factor;
 
 	// update steering feedback
-	feedback = feedback_scale * (tire[FRONT_LEFT].getMz() + tire[FRONT_RIGHT].getMz());
+	feedback = feedback_scale * (tire_state[FRONT_LEFT].mz + tire_state[FRONT_RIGHT].mz);
 
 	// update body transform
 	body->predictIntegratedTransform(dt, transform);
@@ -1436,15 +1432,16 @@ void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		auto & c = wheel_constraint[i];
+		auto & t = tire_state[i];
 		btScalar v[3];
 		c.getContactVelocity(v);
 		btScalar suspension_force = c.constraint[2].impulse * rdt;
-		btVector3 tire_force = tire[i].getForce(suspension_force, c.friction, c.camber, v[2], v[0], v[1]);
-		c.constraint[0].upper_impulse_limit = Max(tire_force[0] * sdt, btScalar(0));
-		c.constraint[0].lower_impulse_limit = Min(tire_force[0] * sdt, btScalar(0));
+		tire[i].ComputeState(suspension_force, c.friction, c.camber, v[2], v[0], v[1], t);
+		c.constraint[0].upper_impulse_limit = Max(t.fx * sdt, btScalar(0));
+		c.constraint[0].lower_impulse_limit = Min(t.fx * sdt, btScalar(0));
 		c.constraint[0].impulse = 0;
-		c.constraint[1].upper_impulse_limit = Max(tire_force[1] * sdt, btScalar(0));
-		c.constraint[1].lower_impulse_limit = Min(tire_force[1] * sdt, btScalar(0));
+		c.constraint[1].upper_impulse_limit = Max(t.fy * sdt, btScalar(0));
+		c.constraint[1].lower_impulse_limit = Min(t.fy * sdt, btScalar(0));
 		c.constraint[1].impulse = 0;
 	}
 }
@@ -1739,7 +1736,7 @@ void CarDynamics::SetSteering(btScalar value)
 {
 	if (steering_assist)
 	{
-		btScalar ideal_angle = tire[0].getIdealSlipAngle();
+		btScalar ideal_angle = tire_state[0].ideal_slip_angle;
 		btScalar max_angle = suspension[0].GetMaxSteeringAngle();
 		btScalar ideal_value = btScalar(180/M_PI) * ideal_angle / max_angle;
 

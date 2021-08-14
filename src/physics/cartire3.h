@@ -20,11 +20,60 @@
 #ifndef _CARTIRE3_H
 #define _CARTIRE3_H
 
-#include "LinearMath/btVector3.h"
-#include "cartirestate.h"
+#include "LinearMath/btScalar.h"
 
-struct CarTireInfo3
+struct CarTireState;
+
+class CarTire3
 {
+public:
+	/// normal_force: tire load in N
+	/// friction_coeff: contact surface friction coefficient
+	/// sin_camber: dot product of wheel axis and contact surface normal
+	/// rot_velocity: tire contact velocity (w * r)
+	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
+	/// lat_velocty: tire lateral velocity relative to surface in m/s
+	void ComputeState(
+		btScalar normal_force,
+		btScalar friction_coeff,
+		btScalar sin_camber,
+		btScalar rot_velocity,
+		btScalar lon_velocity,
+		btScalar lat_velocity,
+		CarTireState & s) const;
+
+	btScalar getTread() const { return tread; }
+
+	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
+
+	/// load is the normal force in newtons.
+	btScalar getMaxFx(btScalar load) const;
+
+	/// load is the normal force in newtons, camber is in degrees
+	btScalar getMaxFy(btScalar load, btScalar camber) const;
+
+	/// load is the normal force in newtons, camber is in degrees
+	btScalar getMaxMz(btScalar load, btScalar camber) const;
+
+	/// init LUTs
+	void init();
+
+	CarTire3();
+
+private:
+	void getMaxForce(
+		btScalar fz,
+		btScalar * pfx,
+		btScalar * pfy,
+		btScalar * pmz) const;
+
+	void findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
+
+	void getIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
+
+	void initSlipTables();
+
+public:
 	btScalar radius; // Tire radius [m]
 	btScalar width;	// Tire width [m]
 	btScalar ar; // Tire aspect ratio
@@ -43,42 +92,6 @@ struct CarTireInfo3
 	btScalar cr2; // Rolling resistance velocity^2 coefficient
 	btScalar tread; // 1.0 pure off-road tire, 0.0 pure road tire
 
-	CarTireInfo3();
-};
-
-class CarTire3 : public CarTireState, private CarTireInfo3
-{
-public:
-	void init(const CarTireInfo3 & info);
-
-	/// normal_force: tire load in N
-	/// friction_coeff: contact surface friction coefficient
-	/// sin_camber: dot product of wheel axis and contact surface normal
-	/// rot_velocity: tire contact velocity (w * r)
-	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
-	/// lat_velocty: tire lateral velocity relative to surface in m/s
-	btVector3 getForce(
-		btScalar normal_force,
-		btScalar friction_coeff,
-		btScalar sin_camber,
-		btScalar rot_velocity,
-		btScalar lon_velocity,
-		btScalar lat_velocity);
-
-	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
-
-	btScalar getTread() const;
-
-	/// load is the normal force in newtons.
-	btScalar getMaxFx(btScalar load) const;
-
-	/// load is the normal force in newtons, camber is in degrees
-	btScalar getMaxFy(btScalar load, btScalar camber) const;
-
-	/// load is the normal force in newtons, camber is in degrees
-	btScalar getMaxMz(btScalar load, btScalar camber) const;
-
-private:
 	// cached derived parameters
 	btScalar rkz; // 1 / tire vertical stiffness
 	btScalar rkb; // 1 / carcass bending stiffness
@@ -89,34 +102,6 @@ private:
 	static const unsigned slip_table_size = 20;
 	btScalar ideal_slips[slip_table_size];
 	btScalar ideal_slip_angles[slip_table_size];
-
-	btVector3 getMaxForce(btScalar fz, bool needfx=true, bool needfy=true) const;
-
-	void findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
-
-	void getIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
-
-	void initSlipTables();
 };
-
-inline btScalar CarTire3::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
-{
-	// surface influence on rolling resistance
-	btScalar rolling_resistance = cr0 * resistance_factor;
-
-	// heat due to tire deformation increases rolling resistance
-	// approximate by quadratic function
-	rolling_resistance += cr2 * velocity * velocity;
-
-	// rolling resistance direction
-	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
-
-	return resistance;
-}
-
-inline btScalar CarTire3::getTread() const
-{
-	return tread;
-}
 
 #endif // _CARTIRE3_H

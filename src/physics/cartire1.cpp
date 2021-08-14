@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "cartire1.h"
+#include "cartirestate.h"
 #include "fastmath.h"
 #include <cassert>
 
@@ -37,7 +38,7 @@ inline btScalar ComputeCamberAngle(btScalar sin_camber)
 	return (btScalar(1/6.0) * sc) * (sc * sc) + sc;
 }
 
-CarTireInfo1::CarTireInfo1() :
+CarTire1::CarTire1() :
 	sigma_hat(),
 	alpha_hat(),
 	longitudinal(),
@@ -51,28 +52,30 @@ CarTireInfo1::CarTireInfo1() :
 	// ctor
 }
 
-void CarTire1::init(const CarTireInfo1 & info)
+void CarTire1::init()
 {
-	CarTireInfo1::operator=(info);
 	initSigmaHatAlphaHat();
 }
 
-btVector3 CarTire1::getForce(
-	btScalar normal_force,
-	btScalar friction_coeff,
-	btScalar sin_camber,
-	btScalar rot_velocity,
-	btScalar lon_velocity,
-	btScalar lat_velocity)
+void CarTire1::ComputeState(
+		btScalar normal_force,
+		btScalar friction_coeff,
+		btScalar sin_camber,
+		btScalar rot_velocity,
+		btScalar lon_velocity,
+		btScalar lat_velocity,
+		CarTireState & s) const
 {
 	if (normal_force * friction_coeff < btScalar(1E-6))
 	{
-		return btVector3(0, 0, 0);
+		s.slip = s.slip_angle = 0;
+		s.ideal_slip = s.ideal_slip_angle = 1;
+		s.fx = s.fy = s.mz = 0;
+		return;
 	}
 
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
-
-	camber = ComputeCamberAngle(sin_camber);
+	btScalar camber = ComputeCamberAngle(sin_camber);
 
 	// get ideal slip ratio and slip angle
 	btScalar sigma_hat(0);
@@ -85,7 +88,7 @@ btVector3 CarTire1::getForce(
 	btScalar rcp_lon_velocity = 1 / Max(std::abs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
 	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
-	btScalar gamma = camber * rad2deg;
+	btScalar gamma = s.camber * rad2deg;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
@@ -96,16 +99,14 @@ btVector3 CarTire1::getForce(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	slip = sigma;
-	slip_angle = alpha * deg2rad;
-	ideal_slip = sigma_hat;
-	ideal_slip_angle = alpha_hat * deg2rad;
-	fx = Fx;
-	fy = Fy;
-	mz = Mz;
-
-	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
-	return btVector3(Fx, Fy, Mz);
+	s.camber = camber;
+	s.slip = sigma;
+	s.slip_angle = alpha * deg2rad;
+	s.ideal_slip = sigma_hat;
+	s.ideal_slip_angle = alpha_hat * deg2rad;
+	s.fx = Fx;
+	s.fy = Fy;
+	s.mz = Mz;
 }
 
 btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const

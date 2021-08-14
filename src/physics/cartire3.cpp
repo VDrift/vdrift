@@ -18,11 +18,12 @@
 /************************************************************************/
 
 #include "cartire3.h"
+#include "cartirestate.h"
 #include "fastmath.h"
 #include "minmax.h"
 #include <cassert>
 
-CarTireInfo3::CarTireInfo3():
+CarTire3::CarTire3():
 	radius(0.28),
 	width(0.2),
 	ar(0.45),
@@ -44,10 +45,8 @@ CarTireInfo3::CarTireInfo3():
 	// ctor
 }
 
-void CarTire3::init(const CarTireInfo3 & info)
+void CarTire3::init()
 {
-	CarTireInfo3::operator=(info);
-
 	// vertical stiffness ~200000 N/m
 	btScalar cf = 0.28f * btSqrt((1.03f - 0.4f * ar) * width * radius * 2);
 	btScalar kz = 9.81f * (1E5f * pt * cf + 3450);
@@ -58,6 +57,21 @@ void CarTire3::init(const CarTireInfo3 & info)
 	rvs = 1 / vs;
 
 	initSlipTables();
+}
+
+btScalar CarTire3::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
+{
+	// surface influence on rolling resistance
+	btScalar rolling_resistance = cr0 * resistance_factor;
+
+	// heat due to tire deformation increases rolling resistance
+	// approximate by quadratic function
+	rolling_resistance += cr2 * velocity * velocity;
+
+	// rolling resistance direction
+	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
+
+	return resistance;
 }
 
 static inline btScalar Poly4(btScalar c[5], btScalar x)
@@ -111,23 +125,24 @@ static inline btScalar ComputeSlipPoint(btScalar qp2, btScalar qx2, btScalar qy,
 	return -1;
 }
 
-btVector3 CarTire3::getForce(
+void CarTire3::ComputeState(
 	btScalar normal_force,
 	btScalar friction_coeff,
 	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
-	btScalar lat_velocity)
+	btScalar lat_velocity,
+	CarTireState & s) const
 {
 	btScalar vrx = lon_velocity - rot_velocity;
 	btScalar vry = lat_velocity;
 	btScalar vr2 = vrx * vrx + vry * vry;
 	if (normal_force < 1E-6f || friction_coeff < 1E-6f || vr2 < 1E-12f)
 	{
-		ideal_slip = ideal_slip_angle = 1;
-		slip = slip_angle = 0;
-		fx = fy = mz = 0;
-		return btVector3(0, 0, 0);
+		s.ideal_slip = s.ideal_slip_angle = 1;
+		s.slip = s.slip_angle = 0;
+		s.fx = s.fy = s.mz = 0;
+		return;
 	}
 
 	btScalar fz = Min(normal_force, btScalar(20E3));
@@ -210,11 +225,11 @@ btVector3 CarTire3::getForce(
 		fcy = fc * ny;
 		fyn = cfy * (ts * qy - tb * ym + fcy) / (tb * rkb + 1);
 	}
-	fy = fyn;
+	btScalar fy = fyn;
 
 	btScalar fcx = fc * nx;
 	btScalar fsx = ts * qx;
-	fx = fsx + fcx;
+	btScalar fx = fsx + fcx;
 
 	// msz = integrate w * (x * qy(x) - ycb(x) * qx(x)) from xc to a
 	btScalar tsy = ((4 * uc + 2) * qy - (3 * qb) * (ud * ud)) * (a * ts);
@@ -226,33 +241,44 @@ btVector3 CarTire3::getForce(
 	btScalar tcx = (((5 * uc + 9) * uc - 57) * uc + 59) * (0.5f * ud) * (yb * nx);
 	btScalar mcz = -1/60.0f * tc * (tcy + tcx);
 
-	mz = msz + mcz;
+	btScalar mz = msz + mcz;
 
 	// update slip and slip angle
-	getIdealSlip(fz, ideal_slip, ideal_slip_angle);
 	btScalar rcp_lon_velocity = 1 / Max(std::abs(lon_velocity), 1E-3f);
-	slip = (rot_velocity - lon_velocity) * rcp_lon_velocity;
-	slip_angle = -Atan(lat_velocity * rcp_lon_velocity);
-
-	return btVector3(fx, fy, mz);
+	s.slip = (rot_velocity - lon_velocity) * rcp_lon_velocity;
+	s.slip_angle = -Atan(lat_velocity * rcp_lon_velocity);
+	getIdealSlip(fz, s.ideal_slip, s.ideal_slip_angle);
+	s.fx = fx;
+	s.fy = fy;
+	s.mz = mz;
 }
 
 btScalar CarTire3::getMaxFx(btScalar load) const
 {
-	return getMaxForce(load, true, false)[0];
+	btScalar fx;
+	getMaxForce(load, &fx, 0, 0);
+	return fx;
 }
 
-btScalar CarTire3::getMaxFy(btScalar load, btScalar) const
+btScalar CarTire3::getMaxFy(btScalar load, btScalar /*camber*/) const
 {
-	return getMaxForce(load, false, true)[1];
+	btScalar fy, mz;
+	getMaxForce(load, 0, &fy, &mz);
+	return fy;
 }
 
-btScalar CarTire3::getMaxMz(btScalar load, btScalar) const
+btScalar CarTire3::getMaxMz(btScalar load, btScalar /*camber*/) const
 {
-	return getMaxForce(load, false, true)[2];
+	btScalar fy, mz;
+	getMaxForce(load, 0, &fy, &mz);
+	return mz;
 }
 
-btVector3 CarTire3::getMaxForce(btScalar fz, bool needfx, bool needfy) const
+void CarTire3::getMaxForce(
+	btScalar fz,
+	btScalar * pfx,
+	btScalar * pfy,
+	btScalar * pmz) const
 {
 	btScalar vcx = 20; // sample at 72 kph
 
@@ -275,7 +301,7 @@ btVector3 CarTire3::getMaxForce(btScalar fz, bool needfx, bool needfy) const
 	btScalar mup = p * btPow(p * rp0, -1/3.0f);
 
 	btScalar fx = 0;
-	if (needfx)
+	if (pfx)
 	{
 		btScalar vr = vcx * s;
 		btScalar nx = 1;
@@ -300,11 +326,13 @@ btVector3 CarTire3::getMaxForce(btScalar fz, bool needfx, bool needfy) const
 		btScalar fcx = fc * nx;
 		btScalar fsx = ts * qx;
 		fx = fsx + fcx;
+
+		*pfx = fx;
 	}
 
 	btScalar fy = 0;
 	btScalar mz = 0;
-	if (needfy)
+	if (pfy)
 	{
 		btScalar ta = btTan(sa);
 		btScalar vr = vcx * ta;
@@ -350,9 +378,10 @@ btVector3 CarTire3::getMaxForce(btScalar fz, bool needfx, bool needfy) const
 		btScalar msz = 1/6.0f * tsy;
 		btScalar mcz = -1/60.0f * tc * tcy;
 		mz = msz + mcz;
-	}
 
-	return btVector3(fx, fy, mz);
+		*pfy = fy;
+		*pmz = mz;
+	}
 }
 
 void CarTire3::findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const
