@@ -240,10 +240,8 @@ void CarTire3::ComputeState(
 
 	btScalar mz = msz + mcz;
 
-	// update slip and slip angle
-	btScalar rcp_lon_velocity = 1 / Max(std::abs(lon_velocity), 1E-3f);
-	s.slip = (rot_velocity - lon_velocity) * rcp_lon_velocity;
-	s.slip_angle = -Atan(lat_velocity * rcp_lon_velocity);
+	s.camber = ComputeCamberAngle(sin_camber);
+	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, s.slip, s.slip_angle);
 	getIdealSlip(fz, s.ideal_slip, s.ideal_slip_angle);
 	s.fx = fx;
 	s.fy = fy;

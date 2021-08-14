@@ -64,15 +64,11 @@ void CarTire2::ComputeState(
 		return;
 	}
 
-	// approximate asin(x) = x + x^3/6 for +-18 deg range
-	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
-	btScalar camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
+	btScalar camber = ComputeCamberAngle(sin_camber);
 
-	// sigma and alpha
-	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar slip_velocity = lon_velocity - rot_velocity;
-	btScalar sigma = -slip_velocity * rcp_lon_velocity;
-	btScalar alpha = btAtan(lat_velocity * rcp_lon_velocity);
+	btScalar sigma, alpha;
+	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, sigma, alpha);
+	alpha = -alpha; // fixup
 
 	// force parameters
 	btScalar Fz = Clamp(normal_load, btScalar(0), btScalar(max_load));
@@ -93,7 +89,7 @@ void CarTire2::ComputeState(
 	btScalar Fy = Gy * Fy0 + Svy;
 
 	// ideal slip and angle
-	btScalar sigma_hat(0), alpha_hat(0);
+	btScalar sigma_hat, alpha_hat;
 	getSigmaHatAlphaHat(normal_load, sigma_hat, alpha_hat);
 
 	s.camber = camber;

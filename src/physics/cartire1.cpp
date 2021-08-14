@@ -31,13 +31,6 @@ constexpr int size(const T (&array)[N])
 	return N;
 }
 
-// approximate asin(x) = x + x^3/6 for +-18 deg range
-inline btScalar ComputeCamberAngle(btScalar sin_camber)
-{
-	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
-	return (btScalar(1/6.0) * sc) * (sc * sc) + sc;
-}
-
 CarTire1::CarTire1() :
 	sigma_hat(),
 	alpha_hat(),
@@ -77,31 +70,35 @@ void CarTire1::ComputeState(
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
 	btScalar camber = ComputeCamberAngle(sin_camber);
 
-	// get ideal slip ratio and slip angle
-	btScalar sigma_hat(0);
-	btScalar alpha_hat(0);
-	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+	btScalar slip, slip_angle;
+	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, slip, slip_angle);
 
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
-	btScalar rcp_lon_velocity = 1 / Max(std::abs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
-	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
+	btScalar sigma = slip;
+	btScalar alpha = slip_angle * rad2deg;
 	btScalar gamma = camber * rad2deg;
-	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
+	// pure slip
+	btScalar max_Fx, max_Fy, max_Mz;
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
-	btScalar Gx = PacejkaGx(sigma, alpha * deg2rad);
-	btScalar Gy = PacejkaGy(sigma, alpha * deg2rad);
+
+	// combined slip
+	btScalar Gx = PacejkaGx(slip, slip_angle);
+	btScalar Gy = PacejkaGy(slip, slip_angle);
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
+	// ideal slip
+	btScalar sigma_hat, alpha_hat;
+	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+
 	s.camber = camber;
-	s.slip = sigma;
-	s.slip_angle = alpha * deg2rad;
+	s.slip = slip;
+	s.slip_angle = slip_angle;
 	s.ideal_slip = sigma_hat;
 	s.ideal_slip_angle = alpha_hat * deg2rad;
 	s.fx = Fx;
