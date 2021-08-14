@@ -106,20 +106,14 @@ void CarTire2::ComputeState(
 	s.mz = Mz0;
 }
 
-btScalar CarTire2::getRollingResistance(
-	const btScalar velocity,
-	const btScalar resistance_factor) const
+btScalar CarTire2::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
-	btScalar rolling_resistance = resistance_factor * roll_resistance_lin;
+	btScalar resistance = resistance_factor * roll_resistance_lin;
 
 	// heat due to tire deformation increases rolling resistance
 	// approximate by quadratic function
-	rolling_resistance += velocity * velocity * roll_resistance_quad;
-
-	// rolling resistance direction
-	btScalar resistance = -rolling_resistance;
-	if (velocity < 0) resistance = -resistance;
+	resistance += velocity * velocity * roll_resistance_quad;
 
 	return resistance;
 }

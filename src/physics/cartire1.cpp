@@ -109,7 +109,7 @@ void CarTire1::ComputeState(
 	s.mz = Mz;
 }
 
-btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
+btScalar CarTire1::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
 	btScalar resistance = rolling_resistance_lin * resistance_factor;

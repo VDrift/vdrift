@@ -44,6 +44,7 @@ public:
 
 	btScalar getTread() const { return tread; }
 
+	/// rolling resistance magnitude
 	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
 
 	/// load is the normal force in newtons.

@@ -45,10 +45,8 @@ public:
 	/// get tire tread fraction
 	btScalar getTread() const { return tread; }
 
-	/// compute rolling resistance
-	btScalar getRollingResistance(
-		const btScalar velocity,
-		const btScalar resistance_factor) const;
+	/// rolling resistance magnitude
+	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
 
 	/// load is the normal force in N
 	btScalar getMaxFx(btScalar load) const;
