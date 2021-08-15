@@ -23,6 +23,7 @@
 #include "LinearMath/btScalar.h"
 
 struct CarTireState;
+struct CarTireSlipLUT;
 
 class CarTire1
 {
@@ -66,8 +67,8 @@ public:
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
-	/// init LUTs
-	void init();
+	/// init peak force slip lut
+	void initSlipLUT(CarTireSlipLUT & t) const;
 
 	CarTire1();
 
@@ -87,20 +88,9 @@ private:
 	/// pacejka magic formula for the lateral combining factor
 	btScalar PacejkaGy(btScalar sigma, btScalar alpha) const;
 
-	/// slip and slip_angle at max force
-	void getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
-
-	void findSigmaHatAlphaHat(
-		btScalar load,
-		btScalar & output_sigmahat,
-		btScalar & output_alphahat,
-		int iterations = 200) const;
-
-	void initSigmaHatAlphaHat();
+	void findIdealSlip(btScalar load, btScalar output_slip[2], int iterations = 200) const;
 
 public:
-	btScalar sigma_hat[20]; ///< maximum grip in the longitudinal direction
-	btScalar alpha_hat[20]; ///< maximum grip in the lateral direction
 	btScalar longitudinal[11]; ///< the parameters of the longitudinal pacejka equation.  this is series b
 	btScalar lateral[15]; ///< the parameters of the lateral pacejka equation.  this is series a
 	btScalar aligning[18]; ///< the parameters of the aligning moment pacejka equation.  this is series c

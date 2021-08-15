@@ -23,6 +23,7 @@
 #include "LinearMath/btScalar.h"
 
 struct CarTireState;
+struct CarTireSlipLUT;
 
 class CarTire3
 {
@@ -56,7 +57,10 @@ public:
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
-	/// init LUTs
+	/// init peak force slip lut
+	void initSlipLUT(CarTireSlipLUT & t) const;
+
+	/// init derived parameters
 	void init();
 
 	CarTire3();
@@ -68,11 +72,7 @@ private:
 		btScalar * pfy,
 		btScalar * pmz) const;
 
-	void findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
-
-	void getIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
-
-	void initSlipTables();
+	void findIdealSlip(btScalar fz, btScalar slip[2]) const;
 
 public:
 	btScalar radius; // Tire radius [m]
@@ -98,11 +98,6 @@ public:
 	btScalar rkb; // 1 / carcass bending stiffness
 	btScalar rp0; // 1 / nominal contact pressure
 	btScalar rvs; // 1 / stribeck velocity
-
-	// ideal slip ratio and angle lookup tables
-	static const unsigned slip_table_size = 20;
-	btScalar ideal_slips[slip_table_size];
-	btScalar ideal_slip_angles[slip_table_size];
 };
 
 #endif // _CARTIRE3_H

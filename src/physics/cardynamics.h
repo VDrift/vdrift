@@ -28,7 +28,6 @@
 #include "carsuspension.h"
 #include "carwheel.h"
 #include "cartire.h"
-#include "cartirestate.h"
 #include "carbrake.h"
 #include "carwheelposition.h"
 #include "aerodevice.h"
@@ -207,6 +206,7 @@ protected:
 	CarBrake brake[WHEEL_COUNT];
 	CarWheel wheel[WHEEL_COUNT];
 	CarTire tire[WHEEL_COUNT];
+	CarTireSlipLUT tire_slip_lut[WHEEL_COUNT];
 	CarTireState tire_state[WHEEL_COUNT];
 	CarSuspension suspension[WHEEL_COUNT];
 	WheelConstraint wheel_constraint[WHEEL_COUNT];

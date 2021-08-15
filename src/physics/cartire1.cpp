@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "cartire1.h"
-#include "cartirestate.h"
+#include "cartirebase.h"
 #include "fastmath.h"
 #include <cassert>
 
@@ -32,8 +32,6 @@ constexpr int size(const T (&array)[N])
 }
 
 CarTire1::CarTire1() :
-	sigma_hat(),
-	alpha_hat(),
 	longitudinal(),
 	lateral(),
 	aligning(),
@@ -43,11 +41,6 @@ CarTire1::CarTire1() :
 	tread(0)
 {
 	// ctor
-}
-
-void CarTire1::init()
-{
-	initSigmaHatAlphaHat();
 }
 
 void CarTire1::ComputeState(
@@ -62,7 +55,6 @@ void CarTire1::ComputeState(
 	if (normal_force * friction_coeff < btScalar(1E-6))
 	{
 		s.slip = s.slip_angle = 0;
-		s.ideal_slip = s.ideal_slip_angle = 1;
 		s.fx = s.fy = s.mz = 0;
 		return;
 	}
@@ -92,15 +84,9 @@ void CarTire1::ComputeState(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	// ideal slip
-	btScalar sigma_hat, alpha_hat;
-	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
-
 	s.camber = camber;
 	s.slip = slip;
 	s.slip_angle = slip_angle;
-	s.ideal_slip = sigma_hat;
-	s.ideal_slip_angle = alpha_hat * deg2rad;
 	s.fx = Fx;
 	s.fy = Fy;
 	s.mz = Mz;
@@ -310,36 +296,19 @@ btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
 	return std::sqrt(c / (c + b * b));
 }
 
-void CarTire1::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
-{
-	const btScalar rdelta = 1 / 500.0; // 500 N table delta
-	const int table_size = size(sigma_hat);
-	assert(table_size > 1);
-
-	btScalar n = Clamp(load * rdelta - 1, btScalar(0), btScalar(table_size - 1 - 1E-3));
-	int i = n;
-	btScalar blend = n - i;
-
-	sh = sigma_hat[i] * (1-blend) + sigma_hat[i+1] * blend;
-	ah = alpha_hat[i] * (1-blend) + alpha_hat[i+1] * blend;
-}
-
-void CarTire1::findSigmaHatAlphaHat(
-	btScalar load,
-	btScalar & output_sigmahat,
-	btScalar & output_alphahat,
-	int iterations) const
+void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2], int iterations) const
 {
 	btScalar junk;
 	btScalar fmax = 0;
 	btScalar xmax = 1;
 	btScalar dx = xmax / iterations;
+	btScalar sigmahat = 0;
 	for (btScalar x = 0; x < xmax; x += dx)
 	{
 		btScalar f = PacejkaFx(x, load, 1, junk);
 		if (f > fmax)
 		{
-			output_sigmahat = x;
+			sigmahat = x;
 			fmax = f;
 		}
 		else if (f < fmax && fmax > 0)
@@ -352,12 +321,13 @@ void CarTire1::findSigmaHatAlphaHat(
 	fmax = 0;
 	xmax = 40;
 	dx = xmax / iterations;
+	btScalar alphahat = 0;
 	for (btScalar x = 0; x < xmax; x += dx)
 	{
 		btScalar f = PacejkaFy(x, load, 0, 1, junk);
 		if (f > fmax)
 		{
-			output_alphahat = x;
+			alphahat = x;
 			fmax = f;
 		}
 		else if (f < fmax && fmax > 0)
@@ -366,13 +336,16 @@ void CarTire1::findSigmaHatAlphaHat(
 		}
 	}
 	btAssert(fmax > 0);
+
+	output_slip[0] = sigmahat;
+	output_slip[1] = alphahat * deg2rad;
 }
 
-void CarTire1::initSigmaHatAlphaHat()
+void CarTire1::initSlipLUT(CarTireSlipLUT & t) const
 {
-	for (int i = 0; i < size(sigma_hat); i++)
+	for (int i = 0; i < t.size(); i++)
 	{
-		btScalar hat_load = (i + 1) * btScalar(0.5);
-		findSigmaHatAlphaHat(hat_load, sigma_hat[i], alpha_hat[i]);
+		btScalar load = (i + 1) * t.delta() * btScalar(1E-3);
+		findIdealSlip(load, t.ideal_slip_lut[i]);
 	}
 }

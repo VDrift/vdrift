@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "cartire3.h"
-#include "cartirestate.h"
+#include "cartirebase.h"
 #include "fastmath.h"
 #include "minmax.h"
 #include <cassert>
@@ -55,8 +55,6 @@ void CarTire3::init()
 	rkb = 1 / kcb;
 	rp0 = 1 / p0;
 	rvs = 1 / vs;
-
-	initSlipTables();
 }
 
 btScalar CarTire3::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
@@ -136,7 +134,6 @@ void CarTire3::ComputeState(
 	btScalar vr2 = vrx * vrx + vry * vry;
 	if (normal_force < 1E-6f || friction_coeff < 1E-6f || vr2 < 1E-12f)
 	{
-		s.ideal_slip = s.ideal_slip_angle = 1;
 		s.slip = s.slip_angle = 0;
 		s.fx = s.fy = s.mz = 0;
 		return;
@@ -242,7 +239,6 @@ void CarTire3::ComputeState(
 
 	s.camber = ComputeCamberAngle(sin_camber);
 	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, s.slip, s.slip_angle);
-	getIdealSlip(fz, s.ideal_slip, s.ideal_slip_angle);
 	s.fx = fx;
 	s.fy = fy;
 	s.mz = mz;
@@ -277,8 +273,8 @@ void CarTire3::getMaxForce(
 {
 	btScalar vcx = 20; // sample at 72 kph
 
-	btScalar s, sa;
-	getIdealSlip(fz, s, sa);
+	btScalar s = 0.12, sa = 0.21;
+	//getIdealSlip(fz, s, sa); FIXME
 
 	btScalar dz = fz * rkz;
 	btScalar w = width;
@@ -379,7 +375,7 @@ void CarTire3::getMaxForce(
 	}
 }
 
-void CarTire3::findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const
+void CarTire3::findIdealSlip(btScalar fz, btScalar slip[2]) const
 {
 	btScalar vcx = 20; // sample at 72 kph
 
@@ -429,13 +425,14 @@ void CarTire3::findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) c
 		fsx = ts * qx;
 		btScalar fx = fsx + fcx;
 
+		// stop if slip > 0.5
 		if (fx < fxn || s > 0.5f)
 			break;
 
 		fxn = fx;
 		s += ds;
 	}
-	islip = s - ds;
+	slip[0] = s - ds;
 
 	btScalar dta = 0.02f;
 	btScalar ta = dta;
@@ -488,25 +485,14 @@ void CarTire3::findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) c
 		fyn = fy;
 		ta += dta;
 	}
-	iangle = Atan(ta - dta);
+	slip[1] = Atan(ta - dta);
 }
 
-void CarTire3::getIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const
+void CarTire3::initSlipLUT(CarTireSlipLUT & t) const
 {
-	btScalar f = fz * 1/500.0f - 1;
-	f = Clamp(f, btScalar(0), btScalar(slip_table_size - 1));
-	unsigned n = Min(unsigned(f), slip_table_size - 2);
-
-	btScalar blend = f - n;
-	islip = ideal_slips[n] * (1 - blend) + ideal_slips[n + 1] * blend;
-	iangle = ideal_slip_angles[n] * (1 - blend) + ideal_slip_angles[n + 1] * blend;
-}
-
-void CarTire3::initSlipTables()
-{
-	for (unsigned i = 0; i < slip_table_size; i++)
+	for (int i = 0; i < t.size(); i++)
 	{
-		btScalar load = (i + 1) * 500.0f;
-		findIdealSlip(load, ideal_slips[i], ideal_slip_angles[i]);
+		btScalar load = (i + 1) * t.delta();
+		findIdealSlip(load, t.ideal_slip_lut[i]);
 	}
 }

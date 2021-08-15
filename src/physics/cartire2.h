@@ -23,6 +23,7 @@
 #include "LinearMath/btScalar.h"
 
 struct CarTireState;
+struct CarTireSlipLUT;
 
 class CarTire2
 {
@@ -57,8 +58,8 @@ public:
 	/// load is the normal force in N, camber is in rad
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
-	/// init LUTs
-	void init();
+	/// init peak force slip lut
+	void initSlipLUT(CarTireSlipLUT & t) const;
 
 	CarTire2();
 
@@ -117,14 +118,10 @@ private:
 		btScalar & ah) const;
 
 	/// find ideal slip, slip angle
-	void findSigmaHatAlphaHat(
+	void findIdealSlip(
 		btScalar load,
-		btScalar & output_sigmahat,
-		btScalar & output_alphahat,
+		btScalar output_slip[2],
 		int iterations = 200) const;
-
-	/// init sigma_hat, alpha_hat tables
-	void initSigmaHatAlphaHat();
 
 // currently public for the loader
 public:
@@ -165,9 +162,6 @@ public:
 	#undef ENTRY
 
 	static const char * coeffname[]; ///< tire coefficients names
-	static const int tablesize = 18; ///< sigma/alpha hat tablesize
-	btScalar sigma_hat[tablesize];	///< maximum grip in the longitudinal direction
-	btScalar alpha_hat[tablesize];	///< maximum grip in the lateral direction
 	btScalar coefficients[CNUM];	///< pacejka tire coefficients
 	btScalar nominal_load;			///< tire nominal load Fz0 in N
 	btScalar max_load;				///< tire maximum load in N

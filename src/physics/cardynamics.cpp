@@ -258,8 +258,6 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	tire.coefficients[CarTire::PDX1] *= size_factor;
 	tire.coefficients[CarTire::PDY1] *= size_factor;
 
-	tire.init();
-
 	return true;
 }
 #else
@@ -326,8 +324,6 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 		size_factor = ComputeFrictionFactor(cfg, size);
 	tire.longitudinal[2] *= size_factor;
 	tire.lateral[2] *= size_factor;
-
-	tire.init();
 
 	return true;
 }
@@ -607,6 +603,7 @@ bool CarDynamics::Load(
 		#endif
 		content.load(cfg_tire, cardir, tirestr);
 		if (!LoadTire(cfg_wheel, *cfg_tire, tire[i], error)) return false;
+		tire[i].initSlipLUT(tire_slip_lut[i]);
 
 		const PTree * cfg_brake;
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
@@ -1498,10 +1495,15 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 			wheel_constraint[i].solveSuspension();
 	}
 
+	// update wheel state
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		wheel_constraint[i].getContactVelocity(wheel_velocity[i]);
 		wheel[i].Integrate(dt);
+
+		auto fz = wheel_constraint[i].constraint[2].impulse * rdt;
+		auto & t = tire_state[i];
+		tire_slip_lut[i].get(fz, t.ideal_slip, t.ideal_slip_angle);
 	}
 }
 

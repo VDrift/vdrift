@@ -1,6 +1,8 @@
 #ifndef _CARTIRE_H
 #define _CARTIRE_H
 
+#include "cartirebase.h"
+
 //#define VDRIFTP
 
 #if defined(VDRIFTP)
