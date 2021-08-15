@@ -76,7 +76,7 @@ void CarTire1::ComputeState(
 	btScalar max_Fx, max_Fy, max_Mz;
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
+	//btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
 
 	// combined slip
 	btScalar Gx = PacejkaGx(slip, slip_angle);
@@ -89,6 +89,19 @@ void CarTire1::ComputeState(
 	s.slip_angle = slip_angle;
 	s.fx = Fx;
 	s.fy = Fy;
+	//s.mz = Mz;
+}
+
+void CarTire1::ComputeAligningTorque(
+		btScalar normal_force,
+		btScalar friction_coeff,
+		CarTireState & s) const
+{
+	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
+	btScalar alpha = s.slip_angle * rad2deg;
+	btScalar gamma = s.camber * rad2deg;
+	btScalar max_Mz;
+	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
 	s.mz = Mz;
 }
 

@@ -1495,15 +1495,16 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 			wheel_constraint[i].solveSuspension();
 	}
 
-	// update wheel state
+	// update wheel and tire state
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		wheel_constraint[i].getContactVelocity(wheel_velocity[i]);
-		wheel[i].Integrate(dt);
-
-		auto fz = wheel_constraint[i].constraint[2].impulse * rdt;
+		auto & c = wheel_constraint[i];
 		auto & t = tire_state[i];
+		c.getContactVelocity(wheel_velocity[i]);
+		btScalar fz = c.constraint[2].impulse * rdt;
 		tire_slip_lut[i].get(fz, t.ideal_slip, t.ideal_slip_angle);
+		tire[i].ComputeAligningTorque(fz, c.friction, t);
+		wheel[i].Integrate(dt);
 	}
 }
 

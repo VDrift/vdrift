@@ -43,6 +43,12 @@ public:
 		btScalar lat_velocity,
 		CarTireState & s) const;
 
+	/// separate mz computation from ComputeState for performance
+	void ComputeAligningTorque(
+		btScalar normal_force,
+		btScalar friction_coeff,
+		CarTireState & s) const;
+
 	/// get tire tread fraction
 	btScalar getTread() const { return tread; }
 
