@@ -97,6 +97,11 @@ void CarTire1::ComputeAligningTorque(
 		btScalar friction_coeff,
 		CarTireState & s) const
 {
+	if (normal_force * friction_coeff < btScalar(1E-6))
+	{
+		s.mz = 0;
+		return;
+	}
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
 	btScalar alpha = s.slip_angle * rad2deg;
 	btScalar gamma = s.camber * rad2deg;
