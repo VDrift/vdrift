@@ -1434,6 +1434,7 @@ void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
 		c.getContactVelocity(v);
 		btScalar suspension_force = c.constraint[2].impulse * rdt;
 		tire[i].ComputeState(suspension_force, c.friction, c.camber, v[2], v[0], v[1], t);
+		c.vcam = t.vcam;
 		c.constraint[0].upper_impulse_limit = Max(t.fx * sdt, btScalar(0));
 		c.constraint[0].lower_impulse_limit = Min(t.fx * sdt, btScalar(0));
 		c.constraint[0].impulse = 0;

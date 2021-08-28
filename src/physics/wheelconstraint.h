@@ -70,6 +70,7 @@ struct WheelConstraint
 	ConstraintRow constraint[3];
 	btVector3 position;
 	btScalar radius;
+	btScalar vcam;
 	btScalar camber;
 	btScalar friction;
 
@@ -112,6 +113,7 @@ struct WheelConstraint
 		btScalar ve[3];
 		getContactVelocity(ve);
 		ve[0] -= ve[2];
+		ve[1] -= vcam;
 
 		btScalar dp[2];
 		btVector3 w[2];

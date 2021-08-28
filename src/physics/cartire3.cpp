@@ -238,6 +238,7 @@ void CarTire3::ComputeState(
 	btScalar mz = msz + mcz;
 
 	s.camber = ComputeCamberAngle(sin_camber);
+	s.vcam = 0; // FIXME
 	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, s.slip, s.slip_angle);
 	s.fx = fx;
 	s.fy = fy;

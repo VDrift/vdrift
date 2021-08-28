@@ -80,13 +80,13 @@ public:
 
 private:
 	/// pacejka magic formula for longitudinal force
-	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
+	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff) const;
 
 	/// pacejka magic formula for lateral force
-	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const;
+	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & camber_alpha) const;
 
 	/// pacejka magic formula for aligning torque
-	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
+	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff) const;
 
 	/// pacejka magic formula for the longitudinal combining factor
 	btScalar PacejkaGx(btScalar sigma, btScalar alpha) const;

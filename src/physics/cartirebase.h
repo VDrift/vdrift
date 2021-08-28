@@ -9,7 +9,14 @@
 inline btScalar ComputeCamberAngle(btScalar sin_camber)
 {
 	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
-	return (btScalar(1/6.0) * sc) * (sc * sc) + sc;
+	return (btScalar(1/6.0) * (sc * sc) + 1 ) * sc;
+}
+
+/// induced lateral slip velocity from camber induced slip angle sa and lon velocity vx
+inline btScalar ComputeCamberVelocity(btScalar sa, btScalar vx)
+{
+	btScalar tansa = (btScalar(1/3.0) * (sa * sa) + 1) * sa; // small angle tan approximation
+	return tansa * vx;
 }
 
 /// slip and slip angle from longitudinal (vx), lateral (vy), rotational (wr) velocity
@@ -52,6 +59,7 @@ struct CarTireSlipLUT
 struct CarTireState
 {
 	btScalar camber = 0; ///< tire camber angle relative to track surface
+	btScalar vcam = 0; ///< camber thrust induced lateral slip velocity
 	btScalar slip = 0; ///< ratio of tire contact patch speed to road speed
 	btScalar slip_angle = 0; ///< the angle between the wheel heading and the wheel velocity
 	btScalar ideal_slip = 0; ///< peak force slip ratio

@@ -83,6 +83,7 @@ void CarTire2::ComputeState(
 	btScalar Fy = Gy * Fy0 + Svy;
 
 	s.camber = camber;
+	s.vcam = 0; // FIXME
 	s.slip = sigma;
 	s.slip_angle = alpha;
 	s.fx = Fx;
