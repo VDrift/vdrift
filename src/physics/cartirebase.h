@@ -58,6 +58,7 @@ struct CarTireSlipLUT
 
 struct CarTireState
 {
+	btScalar friction = 0; ///< surface friction coefficient
 	btScalar camber = 0; ///< tire camber angle relative to track surface
 	btScalar vcam = 0; ///< camber thrust induced lateral slip velocity
 	btScalar slip = 0; ///< ratio of tire contact patch speed to road speed

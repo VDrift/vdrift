@@ -44,21 +44,17 @@ CarTire2::CarTire2() :
 
 void CarTire2::ComputeState(
 	btScalar normal_load,
-	btScalar friction_coeff,
-	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
 	btScalar lat_velocity,
 	CarTireState & s) const
 {
-	if (normal_load * friction_coeff  < btScalar(1E-6))
+	if (normal_load * s.friction < btScalar(1E-6))
 	{
 		s.slip = s.slip_angle = 0;
 		s.fx = s.fy = s.mz = 0;
 		return;
 	}
-
-	btScalar camber = ComputeCamberAngle(sin_camber);
 
 	btScalar sigma, alpha;
 	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, sigma, alpha);
@@ -71,18 +67,17 @@ void CarTire2::ComputeState(
 
 	// pure slip
 	btScalar Dy, BCy, Shf;
-	btScalar Fx0 = PacejkaFx(sigma, Fz, dFz, friction_coeff);
-	btScalar Fy0 = PacejkaFy(alpha, camber, Fz, dFz, friction_coeff, Dy, BCy, Shf);
-	btScalar Mz0 = PacejkaMz(alpha, camber, Fz, dFz, friction_coeff, Fy0, BCy, Shf);
+	btScalar Fx0 = PacejkaFx(sigma, Fz, dFz, s.friction);
+	btScalar Fy0 = PacejkaFy(alpha, s.camber, Fz, dFz, s.friction, Dy, BCy, Shf);
+	btScalar Mz0 = PacejkaMz(alpha, s.camber, Fz, dFz, s.friction, Fy0, BCy, Shf);
 
 	// combined slip
 	btScalar Gx = PacejkaGx(sigma, alpha);
 	btScalar Gy = PacejkaGy(sigma, alpha);
-	btScalar Svy = PacejkaSvy(sigma, alpha, camber, dFz, Dy);
+	btScalar Svy = PacejkaSvy(sigma, alpha, s.camber, dFz, Dy);
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0 + Svy;
 
-	s.camber = camber;
 	s.vcam = 0; // FIXME
 	s.slip = sigma;
 	s.slip_angle = alpha;

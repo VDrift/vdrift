@@ -1374,12 +1374,16 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 		w.shaft = &wheel[i].GetShaft();
 		w.position = wheel_position[i];
 		w.radius = wheel[i].GetRadius();
-		w.camber = camber;
-		w.friction = friction;
 		w.constraint[0].axis = y;
 		w.constraint[1].axis = x;
 		w.constraint[2].axis = z;
 		w.init(stiffness, damping, displacement, dt);
+
+		auto & t = tire_state[i];
+		t.friction = friction;
+#if !defined(VDRIFTP)
+		t.camber = ComputeCamberAngle(camber);
+#endif
 	}
 }
 
@@ -1433,7 +1437,7 @@ void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
 		btScalar v[3];
 		c.getContactVelocity(v);
 		btScalar suspension_force = c.constraint[2].impulse * rdt;
-		tire[i].ComputeState(suspension_force, c.friction, c.camber, v[2], v[0], v[1], t);
+		tire[i].ComputeState(suspension_force, v[2], v[0], v[1], t);
 		c.vcam = t.vcam;
 		c.constraint[0].upper_impulse_limit = Max(t.fx * sdt, btScalar(0));
 		c.constraint[0].lower_impulse_limit = Min(t.fx * sdt, btScalar(0));
@@ -1504,7 +1508,7 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 		c.getContactVelocity(wheel_velocity[i]);
 		btScalar fz = c.constraint[2].impulse * rdt;
 		tire_slip_lut[i].get(fz, t.ideal_slip, t.ideal_slip_angle);
-		tire[i].ComputeAligningTorque(fz, c.friction, t);
+		tire[i].ComputeAligningTorque(fz, t);
 		wheel[i].Integrate(dt);
 	}
 }

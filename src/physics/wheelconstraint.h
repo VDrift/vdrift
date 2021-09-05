@@ -71,8 +71,6 @@ struct WheelConstraint
 	btVector3 position;
 	btScalar radius;
 	btScalar vcam;
-	btScalar camber;
-	btScalar friction;
 
 	void init(btScalar softness, btScalar error)
 	{

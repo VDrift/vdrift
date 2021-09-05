@@ -45,14 +45,12 @@ CarTire1::CarTire1() :
 
 void CarTire1::ComputeState(
 		btScalar normal_force,
-		btScalar friction_coeff,
-		btScalar sin_camber,
 		btScalar rot_velocity,
 		btScalar lon_velocity,
 		btScalar lat_velocity,
 		CarTireState & s) const
 {
-	if (normal_force * friction_coeff < btScalar(1E-6))
+	if (normal_force * s.friction < btScalar(1E-6))
 	{
 		s.slip = s.slip_angle = 0;
 		s.fx = s.fy = s.mz = 0;
@@ -60,7 +58,6 @@ void CarTire1::ComputeState(
 	}
 
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
-	btScalar camber = ComputeCamberAngle(sin_camber);
 
 	btScalar slip, slip_angle;
 	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, slip, slip_angle);
@@ -70,13 +67,13 @@ void CarTire1::ComputeState(
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
 	btScalar sigma = slip;
 	btScalar alpha = slip_angle * rad2deg;
-	btScalar gamma = camber * rad2deg;
+	btScalar gamma = s.camber * rad2deg;
 
 	// pure slip
 	btScalar camber_alpha;
-	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff);
-	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, camber_alpha);
-	//btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff);
+	btScalar Fx0 = PacejkaFx(sigma, Fz, s.friction);
+	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, s.friction, camber_alpha);
+	//btScalar Mz = PacejkaMz(alpha, Fz, gamma, s.friction);
 
 	// combined slip
 	btScalar Gx = PacejkaGx(slip, slip_angle);
@@ -84,7 +81,6 @@ void CarTire1::ComputeState(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	s.camber = camber;
 	s.vcam = ComputeCamberVelocity(camber_alpha * deg2rad, lon_velocity);
 	s.slip = slip;
 	s.slip_angle = slip_angle;
@@ -95,10 +91,9 @@ void CarTire1::ComputeState(
 
 void CarTire1::ComputeAligningTorque(
 		btScalar normal_force,
-		btScalar friction_coeff,
 		CarTireState & s) const
 {
-	if (normal_force * friction_coeff < btScalar(1E-6))
+	if (normal_force * s.friction < btScalar(1E-6))
 	{
 		s.mz = 0;
 		return;
@@ -106,7 +101,7 @@ void CarTire1::ComputeAligningTorque(
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
 	btScalar alpha = s.slip_angle * rad2deg;
 	btScalar gamma = s.camber * rad2deg;
-	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff);
+	btScalar Mz = PacejkaMz(alpha, Fz, gamma, s.friction);
 	s.mz = Mz;
 }
 

@@ -122,8 +122,6 @@ static inline btScalar ComputeSlipPoint(btScalar qp2, btScalar qx2, btScalar qy,
 
 void CarTire3::ComputeState(
 	btScalar normal_force,
-	btScalar friction_coeff,
-	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
 	btScalar lat_velocity,
@@ -132,7 +130,7 @@ void CarTire3::ComputeState(
 	btScalar vrx = lon_velocity - rot_velocity;
 	btScalar vry = lat_velocity;
 	btScalar vr2 = vrx * vrx + vry * vry;
-	if (normal_force < 1E-6f || friction_coeff < 1E-6f || vr2 < 1E-12f)
+	if (normal_force < 1E-6f || s.friction < 1E-6f || vr2 < 1E-12f)
 	{
 		s.slip = s.slip_angle = 0;
 		s.fx = s.fy = s.mz = 0;
@@ -140,7 +138,7 @@ void CarTire3::ComputeState(
 	}
 
 	btScalar fz = Min(normal_force, btScalar(20E3));
-	sin_camber = Clamp(sin_camber, -0.3f, 0.3f); // +-18 deg
+	btScalar sin_camber = Clamp(s.camber, -0.3f, 0.3f); // +-18 deg
 
 	btScalar vr = btSqrt(vr2);
 	btScalar rvr = 1 / vr;
@@ -175,7 +173,7 @@ void CarTire3::ComputeState(
 	// friction coeff
 	btScalar mu = muc + (mus - muc) * btExp(-btSqrt(vr * rvs));
 	mu *= btPow(p * rp0, -1/3.0f);
-	mu *= friction_coeff;
+	mu *= s.friction;
 
 	// carcass bending: yb = fy / kcb * (1 - u^2)
 	//                  ym = ccb * dz * sin(camber) * (1 - u^2)
@@ -237,7 +235,6 @@ void CarTire3::ComputeState(
 
 	btScalar mz = msz + mcz;
 
-	s.camber = ComputeCamberAngle(sin_camber);
 	s.vcam = 0; // FIXME
 	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, s.slip, s.slip_angle);
 	s.fx = fx;

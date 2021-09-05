@@ -29,15 +29,12 @@ class CarTire3
 {
 public:
 	/// normal_force: tire load in N
-	/// friction_coeff: contact surface friction coefficient
-	/// sin_camber: dot product of wheel axis and contact surface normal
 	/// rot_velocity: tire contact velocity (w * r)
 	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
 	/// lat_velocty: tire lateral velocity relative to surface in m/s
+	/// s: tire state (friction and camber should have valid values)
 	void ComputeState(
 		btScalar normal_force,
-		btScalar friction_coeff,
-		btScalar sin_camber,
 		btScalar rot_velocity,
 		btScalar lon_velocity,
 		btScalar lat_velocity,
@@ -45,7 +42,6 @@ public:
 
 	void ComputeAligningTorque(
 		btScalar normal_load,
-		btScalar friction_coeff,
 		CarTireState & s)
 	{
 		// Already computed in ComputeState
