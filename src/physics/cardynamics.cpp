@@ -1365,7 +1365,6 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 		btScalar coszyw = z.dot(yw);
 		btVector3 x = (xw - z * coszxw).normalized();
 		btVector3 y = (yw - z * coszyw).normalized();
-		btScalar camber = btScalar(M_PI_2) - btAcos(coszxw);
 		btScalar friction = tire[i].getTread() * wheel_contact[i].GetSurface().frictionTread +
 			(1 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
@@ -1381,8 +1380,10 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 
 		auto & t = tire_state[i];
 		t.friction = friction;
-#if !defined(VDRIFTP)
-		t.camber = ComputeCamberAngle(camber);
+#if defined(VDRIFTP)
+		t.camber = coszxw;
+#else
+		t.camber = ComputeCamberAngle(coszxw);
 #endif
 	}
 }
