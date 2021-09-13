@@ -22,15 +22,6 @@
 #include "fastmath.h"
 #include <cassert>
 
-static const btScalar deg2rad = M_PI / 180;
-static const btScalar rad2deg = 180 / M_PI;
-
-template <class T, int N>
-constexpr int size(const T (&array)[N])
-{
-	return N;
-}
-
 CarTire1::CarTire1() :
 	longitudinal(),
 	lateral(),
@@ -66,8 +57,8 @@ void CarTire1::ComputeState(
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
 	btScalar sigma = slip;
-	btScalar alpha = slip_angle * rad2deg;
-	btScalar gamma = s.camber * rad2deg;
+	btScalar alpha = RadToDeg(slip_angle);
+	btScalar gamma = RadToDeg(s.camber);
 
 	// pure slip
 	btScalar camber_alpha;
@@ -81,7 +72,7 @@ void CarTire1::ComputeState(
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	s.vcam = ComputeCamberVelocity(camber_alpha * deg2rad, lon_velocity);
+	s.vcam = ComputeCamberVelocity(DegToRad(camber_alpha), lon_velocity);
 	s.slip = slip;
 	s.slip_angle = slip_angle;
 	s.fx = Fx;
@@ -99,8 +90,8 @@ void CarTire1::ComputeAligningTorque(
 		return;
 	}
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
-	btScalar alpha = s.slip_angle * rad2deg;
-	btScalar gamma = s.camber * rad2deg;
+	btScalar alpha = RadToDeg(s.slip_angle);
+	btScalar gamma = RadToDeg(s.camber);
 	btScalar Mz = PacejkaMz(alpha, Fz, gamma, s.friction);
 	s.mz = Mz;
 }
@@ -283,28 +274,92 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	return Mz;
 }
 
-btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
+btScalar CarTire1::PacejkaGx(btScalar s, btScalar a) const
 {
-	auto & p = combining;
-	//btScalar B = p[2] * CosAtan(p[3] * sigma);
-	//btScalar G = CosAtan(B * alpha);
-	//return G;
-	btScalar a = p[3] * sigma;
-	btScalar b = p[2] * alpha;
-	btScalar c = a * a + 1;
-	return std::sqrt(c / (c + b * b));
+	return PacejkaG(&combining[2], s, a);
 }
 
-btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
+btScalar CarTire1::PacejkaGy(btScalar s, btScalar a) const
 {
-	auto & p = combining;
-	//btScalar B = p[0] * CosAtan(p[1] * alpha);
-	//btScalar G = CosAtan(B * sigma);
-	//return G;
-	btScalar a = p[1] * alpha;
-	btScalar b = p[0] * sigma;
-	btScalar c = a * a + 1;
-	return std::sqrt(c / (c + b * b));
+	return PacejkaG(combining, a, s);
+}
+
+void CarTire1::PacejkaParamFx(btScalar Fz, btScalar p[6]) const
+{
+	auto & b = longitudinal;
+
+	// shape factor C
+	p[1] = b[0];
+
+	// peak factor D
+	p[2] = (b[1] * Fz + b[2]) * Fz;
+
+	// slope at zero slip
+	btScalar bcd = (b[3] * Fz + b[4]) * Fz * std::exp(-b[5] * Fz);
+
+	// stiffness factor B
+	p[0] =  bcd / (p[1] * p[2]);
+
+	// curvature factor E
+	p[3] = (b[6] * Fz + b[7]) * Fz + b[8];
+
+	// horizontal shift Sh
+	p[4] = b[9] * Fz + b[10];
+
+	// vertical shift Sv
+	p[5] = 0;
+}
+
+void CarTire1::PacejkaParamFy(btScalar Fz, btScalar gamma, btScalar p[6]) const
+{
+	auto & a = lateral;
+
+	// shape factor C
+	p[1] = a[0];
+
+	// peak factor D
+	p[2] = (a[1] * Fz + a[2]) * Fz;
+
+	// slope at zero slip
+	btScalar bcd = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * std::abs(gamma));
+
+	// stiffness factor B
+	p[0] = bcd / (p[1] * p[2]);
+
+	// curvature factor E
+	p[3] = a[6] * Fz + a[7];
+
+	// horizontal shift Sh
+	p[4] = a[8] * gamma + a[9] * Fz + a[10];
+
+	// vertical shift Sv
+	p[5] = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
+}
+
+void CarTire1::PacejkaParamMz(btScalar Fz, btScalar gamma, btScalar p[6]) const
+{
+	auto & c = aligning;
+
+	// shape factor C
+	p[1] = c[0];
+
+	// peak factor D
+	p[2] = (c[1] * Fz + c[2]) * Fz;
+
+	// slope at zero
+	auto bcd = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * std::abs(gamma)) * std::exp(-c[5] * Fz);
+
+	// stiffness factor B
+	p[0] = bcd / (p[1] * p[2]);
+
+	// curvature factor E
+	p[3] = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1 - c[10] * std::abs(gamma));
+
+	// horizontal shift Sh
+	p[4] = c[11] * gamma + c[12] * Fz + c[13];
+
+	// vertical shift Sv
+	p[5] = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
 }
 
 void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2], int iterations) const
@@ -349,7 +404,7 @@ void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2], int iterati
 	btAssert(fmax > 0);
 
 	output_slip[0] = sigmahat;
-	output_slip[1] = alphahat * deg2rad;
+	output_slip[1] = DegToRad(alphahat);
 }
 
 void CarTire1::initSlipLUT(CarTireSlipLUT & t) const
@@ -359,4 +414,44 @@ void CarTire1::initSlipLUT(CarTireSlipLUT & t) const
 		btScalar load = (i + 1) * t.delta() * btScalar(1E-3);
 		findIdealSlip(load, t.ideal_slip_lut[i]);
 	}
+}
+
+btScalar PacejkaF(const btScalar p[6], btScalar s)
+{
+	btScalar bs = p[0] * (s + p[4]);
+	btScalar g = bs - p[3] * (bs - Atan(bs));
+	btScalar h = p[1] * Atan(g);
+	return p[2] * Sin3Pi2(h) + p[5];
+}
+
+btScalar PacejkaF(const btScalar p[6], btScalar s, btScalar & df)
+{
+	btScalar bs = p[0] * (s + p[4]);
+	btScalar g = bs - p[3] * (bs - Atan(bs));
+	btScalar h = p[1] * Atan(g);
+	btScalar j = (g * g + 1) * (bs * bs + 1);
+	btScalar k = (1 - p[3]) * (bs * bs) + 1;
+	btScalar bcd = p[0] * p[1] * p[2];
+	df = Cos3Pi2(h) * (bcd * k) / j;
+	return p[2] * Sin3Pi2(h) + p[5];
+}
+
+btScalar PacejkaG(const btScalar p[2], btScalar s, btScalar a)
+{
+	btScalar u = p[0] * a;
+	btScalar v = p[1] * s;
+	btScalar w = v * v + 1;
+	return std::sqrt(w / (w + u * u));
+}
+
+btScalar PacejkaG(const btScalar p[2], btScalar s, btScalar a, btScalar & dgs)
+{
+	btScalar u = p[0] * a;
+	btScalar v = p[1] * s;
+	btScalar w = v * v + 1;
+	btScalar n = u * u;
+	btScalar m = w + n;
+	btScalar g = std::sqrt(w / m);
+	dgs = p[1] * v * n / (g * m * m);
+	return g;
 }

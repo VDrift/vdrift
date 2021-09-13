@@ -22,6 +22,7 @@
 
 #include "minmax.h"
 #include "driveshaft.h"
+#include "cartire.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 
 struct ConstraintRow
@@ -63,6 +64,8 @@ struct ConstraintRow
 	}
 };
 
+#include <fstream>
+
 struct WheelConstraint
 {
 	btRigidBody * body;
@@ -72,6 +75,8 @@ struct WheelConstraint
 	btScalar radius;
 	btScalar vcam;
 
+	static std::ofstream dlog;
+	
 	void init(btScalar softness, btScalar error)
 	{
 		constraint[0].initMassInertia(*body, position);
@@ -128,6 +133,95 @@ struct WheelConstraint
 		body->setAngularVelocity(body->getAngularVelocity() + dw);
 		body->setLinearVelocity(body->getLinearVelocity() + dv);
 		shaft->applyImpulse(-dp[0] * radius);
+	}
+
+	void solveFriction(btScalar px[8], btScalar py[8], btScalar rdt)
+	{
+		btScalar v[3];
+		getContactVelocity(v);
+		btScalar vxe = v[0] - v[2];
+		btScalar vye = v[1];
+		btScalar ravbx = 1 / Max(std::abs(v[0]), btScalar(1E-9));
+
+		auto & cx = constraint[0];
+		auto & cy = constraint[1];
+		btScalar mx = cx.mass * rdt;
+		btScalar my = cy.mass * rdt;
+		btScalar vxo = vxe + cx.impulse;
+		btScalar vyo = vye + cy.impulse;
+		btScalar fxmax = px[2];
+		btScalar fymax = py[2];
+		dlog << vxo << " " << vyo << "\n";
+
+		// initial slip velocity estimate
+		btScalar vx = (mx * vxo) / (mx + (px[0] * px[1]) * (100 * fxmax) * ravbx);
+		btScalar vy = (my * vyo) / (my + (py[0] * py[1]) * RadToDeg(fymax) * ravbx);
+		if (std::abs(mx * vxo - mx * vx) > fxmax) vx = vxo - std::copysign(fxmax, vxo) / mx;
+		if (std::abs(my * vyo - my * vy) > fymax) vy = vyo - std::copysign(fymax, vyo) / my;
+
+		// iterative slip velocity solver
+		btScalar s, a;
+		btScalar fx, fy;
+		btScalar gx, gy;
+		btScalar dvx = -vx;
+		btScalar dvy = -vy;
+		for (int n = 0; n < 3; ++n)
+		{
+			btScalar sn = vx * ravbx;
+			btScalar an = Atan(vy * ravbx);
+			s = sn * 100;
+			a = RadToDeg(an);
+
+			btScalar dfx, dgxx;
+			btScalar dfy, dgyy;
+			fx = PacejkaF(px, s, dfx);
+			gx = PacejkaG(&px[6], sn, an, dgxx);
+			fy = PacejkaF(py, a, dfy);
+			gy = PacejkaG(&py[6], an, sn, dgyy);
+
+			btScalar ds = ravbx; // d/dvx vx * ravbx
+			btScalar da = ravbx / ((ravbx * ravbx) * (vy * vy) + 1); // d/dvy atan(vy * ravbx)
+			btScalar dfgx = (fx * dgxx + 100 * (dfx * gx)) * ds;
+			btScalar dfgy = (fy * dgyy + RadToDeg(dfy * gy)) * da;
+
+			btScalar dx = mx + dfgx;
+			btScalar dy = my + dfgy;
+			btScalar vxn = (mx * vxo + dfgx * vx - fx * gx) / (dx + std::copysign(1E-30f, dx));
+			btScalar vyn = (my * vyo + dfgy * vy - fy * gy) / (dy + std::copysign(1E-30f, dy));
+			btScalar dvxn = vxn - vx;
+			btScalar dvyn = vyn - vy;
+			// when overshoot limit backstep to half of previous step
+			btScalar dvxmax = std::abs(dvx * 0.5f);
+			btScalar dvymax = std::abs(dvy * 0.5f);
+			dvx = (dvx * dvxn < 0) ? Clamp(dvxn, -dvxmax, dvxmax) : dvxn;
+			dvy = (dvy * dvyn < 0) ? Clamp(dvyn, -dvymax, dvymax) : dvyn;
+			vx += dvx;
+			vy += dvy;
+
+			dlog << n << " " << vx << " " << vy << " " << fx << " " << fy << "\n";
+		}
+
+		btScalar dvxn = vx - vxo;
+		btScalar dvyn = vy - vyo;
+		dvx = dvxn - cx.impulse;
+		dvy = dvyn - cy.impulse;
+		//dlog << dvxn << " " << dvyn << " " << dvx << " " << dvy << "\n";
+		
+		cx.impulse = dvxn;
+		cy.impulse = dvyn;
+		btScalar dpx = cx.mass * dvx;
+		btScalar dpy = cy.mass * dvy;
+		btVector3 dw = cx.inv_inertia * dpx + cy.inv_inertia * dpy;
+		btVector3 dv = (cx.axis * dpx + cy.axis * dpy) * body->getInvMass();
+
+		body->setAngularVelocity(body->getAngularVelocity() + dw);
+		body->setLinearVelocity(body->getLinearVelocity() + dv);
+		shaft->applyImpulse(-dpx * radius);
+		
+		getContactVelocity(v);
+		vxe = v[0] - v[2];
+		vye = v[1];
+		//dlog << vx << " " << vy << " " << vxe << " " << vye << "\n";
 	}
 
 	void solveSuspension()

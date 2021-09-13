@@ -69,12 +69,6 @@ public:
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
-	/// init peak force slip lut
-	void initSlipLUT(CarTireSlipLUT & t) const;
-
-	CarTire1();
-
-private:
 	/// pacejka magic formula for longitudinal force
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff) const;
 
@@ -85,12 +79,26 @@ private:
 	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff) const;
 
 	/// pacejka magic formula for the longitudinal combining factor
-	btScalar PacejkaGx(btScalar sigma, btScalar alpha) const;
+	btScalar PacejkaGx(btScalar s, btScalar a) const;
 
 	/// pacejka magic formula for the lateral combining factor
-	btScalar PacejkaGy(btScalar sigma, btScalar alpha) const;
+	btScalar PacejkaGy(btScalar s, btScalar a) const;
+
+	/// longitudinal pacejka formula parameters
+	void PacejkaParamFx(btScalar Fz, btScalar p[6]) const;
+
+	/// lateral pacejka formula parameters
+	void PacejkaParamFy(btScalar Fz, btScalar gamma, btScalar p[6]) const;
+
+	/// aligning torque pacejka formula parameters
+	void PacejkaParamMz(btScalar Fz, btScalar gamma, btScalar p[6]) const;
 
 	void findIdealSlip(btScalar load, btScalar output_slip[2], int iterations = 200) const;
+
+	/// init peak force slip lut
+	void initSlipLUT(CarTireSlipLUT & t) const;
+
+	CarTire1();
 
 public:
 	btScalar longitudinal[11]; ///< the parameters of the longitudinal pacejka equation.  this is series b
@@ -101,5 +109,15 @@ public:
 	btScalar rolling_resistance_lin; ///< linear rolling resistance on a hard surface
 	btScalar tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
 };
+
+/// Pacejka function
+/// p[6] function params {B, C, D, E, Sh, Sv}
+/// d function slope
+btScalar PacejkaF(const btScalar p[6], btScalar s);
+btScalar PacejkaF(const btScalar p[6], btScalar s, btScalar & df);
+
+/// Pacejka combining function
+btScalar PacejkaG(const btScalar p[2], btScalar s, btScalar a);
+btScalar PacejkaG(const btScalar p[2], btScalar s, btScalar a, btScalar & dgs);
 
 #endif

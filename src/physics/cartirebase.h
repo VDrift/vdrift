@@ -5,6 +5,16 @@
 #include "fastmath.h"
 #include "minmax.h"
 
+constexpr btScalar DegToRad(btScalar x)
+{
+	return x * btScalar(M_PI / 180);
+}
+
+constexpr btScalar RadToDeg(btScalar x)
+{
+	return x * btScalar(180 / M_PI);
+}
+
 /// approximate asin(x) = x + x^3/6 for +-18 deg range
 inline btScalar ComputeCamberAngle(btScalar sin_camber)
 {

@@ -283,7 +283,7 @@ protected:
 
 	void ApplyRollingResistance(int i);
 
-	void UpdateWheelConstraints(btScalar rdt, btScalar sdt);
+	void UpdateWheelConstraints(btScalar tireparam[WHEEL_COUNT*2][8], btScalar rdt);
 
 	// run driveline constraint solver
 	void UpdateDriveline(btScalar dt);

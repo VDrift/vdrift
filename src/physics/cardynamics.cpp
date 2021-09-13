@@ -1302,12 +1302,12 @@ void CarDynamics::UpdateDrivelineGearRatio()
 void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt)
 {
 	auto & c = driveline.clutch[0];
-	c.impulse_limit_delta = (clutch.GetTorque() * dt - c.impulse_limit) * rsubsteps;
+	c.impulse_limit = clutch.GetTorque() * dt;
 
 	auto & m = driveline.motor[0];
 	m.shaft = &engine.GetShaft();
 	m.target_velocity = engine.GetTorque() > 0 ? 100000 : 0;
-	m.impulse_limit_delta = (std::abs(engine.GetTorque()) * dt - m.impulse_limit) * rsubsteps;
+	m.impulse_limit = std::abs(engine.GetTorque()) * dt;
 	m.computeInertia(*body, body->getWorldTransform().getBasis().getColumn(Direction::RIGHT));
 
 	driveline.motor_count = 1;
@@ -1316,9 +1316,11 @@ void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT
 		auto & m = driveline.motor[driveline.motor_count++];
 		m.shaft = &wheel[i].GetShaft();
 		m.target_velocity = 0;
-		m.impulse_limit_delta = (brake[i].GetTorque() * dt - m.impulse_limit) * rsubsteps;
+		m.impulse_limit = brake[i].GetTorque() * dt;
 		m.computeInertia(*body, wheel_orientation[i].getColumn(Direction::RIGHT));
 	}
+
+	driveline.clearImpulses();
 }
 
 void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt)
@@ -1429,31 +1431,32 @@ void CarDynamics::ApplyRollingResistance(int i)
 	shaft.applyImpulse(impulse);
 }
 
-void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
+void CarDynamics::UpdateWheelConstraints(btScalar tireparam[WHEEL_COUNT*2][8], btScalar rdt)
 {
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		auto & c = wheel_constraint[i];
-		auto & t = tire_state[i];
-		btScalar v[3];
-		c.getContactVelocity(v);
-		btScalar suspension_force = c.constraint[2].impulse * rdt;
-		tire[i].ComputeState(suspension_force, v[2], v[0], v[1], t);
-		c.vcam = t.vcam;
-		c.constraint[0].upper_impulse_limit = Max(t.fx * sdt, btScalar(0));
-		c.constraint[0].lower_impulse_limit = Min(t.fx * sdt, btScalar(0));
-		c.constraint[0].impulse = 0;
-		c.constraint[1].upper_impulse_limit = Max(t.fy * sdt, btScalar(0));
-		c.constraint[1].lower_impulse_limit = Min(t.fy * sdt, btScalar(0));
-		c.constraint[1].impulse = 0;
+		btScalar fz = wheel_constraint[i].constraint[2].impulse * rdt;
+		fz = Clamp(fz, btScalar(1E-12), btScalar(2E4));
+		auto & t = tire[i];
+		auto & px = tireparam[i * 2];
+		auto & py = tireparam[i * 2 + 1];
+		fz *= btScalar(1E-3); // kN
+		t.PacejkaParamFx(fz, px);
+		t.PacejkaParamFy(fz, RadToDeg(tire_state[i].camber), py);
+		py[6] = t.combining[0];
+		py[7] = t.combining[1];
+		px[6] = t.combining[2];
+		px[7] = t.combining[3];
+
+		WheelConstraint::dlog << i << " fz " << fz * 1000 << "\n";
 	}
 }
 
+std::ofstream WheelConstraint::dlog("log.txt");
+
 void CarDynamics::UpdateDriveline(btScalar dt)
 {
-	const int solver_iterations = 4;
 	const btScalar rdt = 1 / dt;
-	const btScalar sdt = dt * rsubsteps;
 
 	UpdateWheelContacts();
 	btMatrix3x3 wheel_orientation[WHEEL_COUNT];
@@ -1465,9 +1468,10 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	}
 
 	SetupWheelConstraints(wheel_orientation, dt);
+	SetupDriveline(wheel_orientation, dt);
 
 	// presolve suspension
-	for (int n = 0; n < solver_iterations; ++n)
+	for (int n = 0; n < 4; ++n)
 	{
 		for (int i = 0; i < WHEEL_COUNT; ++i)
 			wheel_constraint[i].solveSuspension();
@@ -1477,26 +1481,35 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 		ApplyRollingResistance(i);
 
-	SetupDriveline(wheel_orientation, sdt);
-
 	// solve driveline
-	for (int n = 0; n < substeps; ++n)
-	{
-		UpdateWheelConstraints(rdt, sdt);
+	btScalar tireparam[WHEEL_COUNT*2][8];
 
-		driveline.clearImpulses();
-		driveline.updateImpulseLimits();
-		for (int m = 0; m < solver_iterations; ++m)
+	for (int n = 0; n < 3; ++n)
+	{
+		WheelConstraint::dlog << "n " << n << "\n";
+		UpdateWheelConstraints(tireparam, rdt);
+
+		for (int m = 0; m < 4; ++m)
 		{
+			WheelConstraint::dlog << "m "<< m << "\n";
+
 			if (drive != AWD)
 				driveline.solve2(*body);
 			else
 				driveline.solve4(*body);
 
 			for (int i = 0; i < WHEEL_COUNT; ++i)
-				wheel_constraint[i].solveFriction();
+			{
+				WheelConstraint::dlog << "w " << i << "\n";
+
+				auto & px = tireparam[i * 2];
+				auto & py = tireparam[i * 2 + 1];
+				wheel_constraint[i].solveFriction(px, py, rdt);
+			}
 		}
 
+		for (int i = 0; i < WHEEL_COUNT; ++i)
+			wheel_constraint[i].solveSuspension();
 		for (int i = 0; i < WHEEL_COUNT; ++i)
 			wheel_constraint[i].solveSuspension();
 	}
