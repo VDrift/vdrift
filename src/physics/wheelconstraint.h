@@ -147,17 +147,23 @@ struct WheelConstraint
 		auto & cy = constraint[1];
 		btScalar mx = cx.mass * rdt;
 		btScalar my = cy.mass * rdt;
-		btScalar vxo = vxe + cx.impulse;
-		btScalar vyo = vye + cy.impulse;
-		btScalar fxmax = px[2];
-		btScalar fymax = py[2];
-		dlog << vxo << " " << vyo << "\n";
+		btScalar vxo = vxe - cx.impulse;
+		btScalar vyo = vye - cy.impulse;
+		//dlog << vxo << " " << vyo << " " << vxe << " " << vye << "\n";
 
 		// initial slip velocity estimate
-		btScalar vx = (mx * vxo) / (mx + (px[0] * px[1]) * (100 * fxmax) * ravbx);
-		btScalar vy = (my * vyo) / (my + (py[0] * py[1]) * RadToDeg(fymax) * ravbx);
-		if (std::abs(mx * vxo - mx * vx) > fxmax) vx = vxo - std::copysign(fxmax, vxo) / mx;
-		if (std::abs(my * vyo - my * vy) > fymax) vy = vyo - std::copysign(fymax, vyo) / my;
+		btScalar fxmax = px[2];
+		btScalar fymax = py[2];
+		btScalar dfx0 = (px[0] * px[1]) * (100 * fxmax) * ravbx;
+		btScalar dfy0 = (py[0] * py[1]) * RadToDeg(fymax) * ravbx;
+		btScalar vxa = (mx * vxo) / (mx + dfx0);
+		btScalar vya = (my * vyo) / (my + dfy0);
+		btScalar vxb = vxa;
+		btScalar vyb = vya;
+		if (std::abs(dfx0 * vxb) > fxmax) vxb = vxo - std::copysign(fxmax, vxo) / mx;
+		if (std::abs(dfy0 * vyb) > fymax) vyb = vyo - std::copysign(fymax, vyo) / my;
+		btScalar vx = vxb;
+		btScalar vy = vyb;
 
 		// iterative slip velocity solver
 		btScalar s, a;
@@ -181,24 +187,45 @@ struct WheelConstraint
 
 			btScalar ds = ravbx; // d/dvx vx * ravbx
 			btScalar da = ravbx / ((ravbx * ravbx) * (vy * vy) + 1); // d/dvy atan(vy * ravbx)
-			btScalar dfgx = (fx * dgxx + 100 * (dfx * gx)) * ds;
-			btScalar dfgy = (fy * dgyy + RadToDeg(dfy * gy)) * da;
+			btScalar dfgx = (fx * dgxx + (100 * dfx) * gx) * ds;
+			btScalar dfgy = (fy * dgyy + RadToDeg(dfy) * gy) * da;
+			btScalar fgx = fx * gx;
+			btScalar fgy = fy * gy;
 
 			btScalar dx = mx + dfgx;
 			btScalar dy = my + dfgy;
-			btScalar vxn = (mx * vxo + dfgx * vx - fx * gx) / (dx + std::copysign(1E-30f, dx));
-			btScalar vyn = (my * vyo + dfgy * vy - fy * gy) / (dy + std::copysign(1E-30f, dy));
+			btScalar vxn = (dx > 0) ? (mx * vxo - fgx + dfgx * vx) / dx : vxo - fgx / mx;
+			btScalar vyn = (dy > 0) ? (my * vyo - fgy + dfgy * vy) / dy : vyo - fgy / my;
+			/*if (vx * vxn < 0)
+			{
+				dlog << n << " "
+					<< vxa << " " << vxb << " "
+					<< vx << " " << vxn << " "
+					<< dfgx << " * x + " << fx * gx - dfgx * vx << ", "
+					<< mx << " * (" << vxo << " - x), "
+					<< gx << " * " << px[2] << " * sin(" << px[1] << " * atan("
+					<< px[0] * (100 * ravbx) << "* x - " << px[3] << " * ("
+					<< px[0] * (100 * ravbx) << "* x - atan("
+					<< px[0] * (100 * ravbx) << "* x))))\n";
+			}*/
+			// when overshoot limit backstep to 0.618 of previous step
 			btScalar dvxn = vxn - vx;
 			btScalar dvyn = vyn - vy;
-			// when overshoot limit backstep to half of previous step
-			btScalar dvxmax = std::abs(dvx * 0.5f);
-			btScalar dvymax = std::abs(dvy * 0.5f);
-			dvx = (dvx * dvxn < 0) ? Clamp(dvxn, -dvxmax, dvxmax) : dvxn;
-			dvy = (dvy * dvyn < 0) ? Clamp(dvyn, -dvymax, dvymax) : dvyn;
+			btScalar dvxh = -0.618f * dvx;
+			btScalar dvyh = -0.618f * dvy;
+			if (dvx * dvxn < dvx * dvxh) {
+				//dlog << n << " x " << dvx << " " << dvxn << " " << vx << " " << vxn << "\n";
+				dvxn = dvxh;
+			}
+			if (dvy * dvyn < dvy * dvyh) {
+				//dlog << n << " y " << dvy << " " << dvyn << " " << vy << " " << vyn << "\n";
+				dvyn = dvyh;
+			}
+			dvx = dvxn;
+			dvy = dvyn;
 			vx += dvx;
 			vy += dvy;
-
-			dlog << n << " " << vx << " " << vy << " " << fx << " " << fy << "\n";
+			//dlog << n << " " << vx << " " << vy << " " << fx << " " << fy << "\n";
 		}
 
 		btScalar dvxn = vx - vxo;
@@ -206,7 +233,7 @@ struct WheelConstraint
 		dvx = dvxn - cx.impulse;
 		dvy = dvyn - cy.impulse;
 		//dlog << dvxn << " " << dvyn << " " << dvx << " " << dvy << "\n";
-		
+
 		cx.impulse = dvxn;
 		cy.impulse = dvyn;
 		btScalar dpx = cx.mass * dvx;
@@ -217,11 +244,11 @@ struct WheelConstraint
 		body->setAngularVelocity(body->getAngularVelocity() + dw);
 		body->setLinearVelocity(body->getLinearVelocity() + dv);
 		shaft->applyImpulse(-dpx * radius);
-		
-		getContactVelocity(v);
-		vxe = v[0] - v[2];
-		vye = v[1];
-		//dlog << vx << " " << vy << " " << vxe << " " << vye << "\n";
+
+		//getContactVelocity(v);
+		//vxe = v[0] - v[2];
+		//vye = v[1];
+		//dlog << vxe << " " << vye << " " << cx.impulse << " " << cy.impulse << "\n";
 	}
 
 	void solveSuspension()

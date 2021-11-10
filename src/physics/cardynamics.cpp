@@ -1431,6 +1431,8 @@ void CarDynamics::ApplyRollingResistance(int i)
 	shaft.applyImpulse(impulse);
 }
 
+std::ofstream WheelConstraint::dlog("log.txt");
+
 void CarDynamics::UpdateWheelConstraints(btScalar tireparam[WHEEL_COUNT*2][8], btScalar rdt)
 {
 	for (int i = 0; i < WHEEL_COUNT; ++i)
@@ -1442,17 +1444,14 @@ void CarDynamics::UpdateWheelConstraints(btScalar tireparam[WHEEL_COUNT*2][8], b
 		auto & py = tireparam[i * 2 + 1];
 		fz *= btScalar(1E-3); // kN
 		t.PacejkaParamFx(fz, px);
-		t.PacejkaParamFy(fz, RadToDeg(tire_state[i].camber), py);
+		t.PacejkaParamFy(fz, -RadToDeg(tire_state[i].camber), py);
 		py[6] = t.combining[0];
 		py[7] = t.combining[1];
 		px[6] = t.combining[2];
 		px[7] = t.combining[3];
-
-		WheelConstraint::dlog << i << " fz " << fz * 1000 << "\n";
+		//WheelConstraint::dlog << i << " fz " << fz * 1000 << "\n";
 	}
 }
-
-std::ofstream WheelConstraint::dlog("log.txt");
 
 void CarDynamics::UpdateDriveline(btScalar dt)
 {
@@ -1486,22 +1485,19 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 
 	for (int n = 0; n < 3; ++n)
 	{
-		WheelConstraint::dlog << "n " << n << "\n";
+		//WheelConstraint::dlog << "n " << n << "\n";
 		UpdateWheelConstraints(tireparam, rdt);
 
 		for (int m = 0; m < 4; ++m)
 		{
-			WheelConstraint::dlog << "m "<< m << "\n";
-
+			//WheelConstraint::dlog << "m "<< m << "\n";
 			if (drive != AWD)
 				driveline.solve2(*body);
 			else
 				driveline.solve4(*body);
-
 			for (int i = 0; i < WHEEL_COUNT; ++i)
 			{
-				WheelConstraint::dlog << "w " << i << "\n";
-
+				//WheelConstraint::dlog << "w " << i << "\n";
 				auto & px = tireparam[i * 2];
 				auto & py = tireparam[i * 2 + 1];
 				wheel_constraint[i].solveFriction(px, py, rdt);
@@ -1519,8 +1515,10 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	{
 		auto & c = wheel_constraint[i];
 		auto & t = tire_state[i];
-		c.getContactVelocity(wheel_velocity[i]);
+		auto & v = wheel_velocity[i];
 		btScalar fz = c.constraint[2].impulse * rdt;
+		c.getContactVelocity(v);
+		ComputeSlip(v[0], v[1], v[2], t.slip, t.slip_angle);
 		tire_slip_lut[i].get(fz, t.ideal_slip, t.ideal_slip_angle);
 		tire[i].ComputeAligningTorque(fz, t);
 		wheel[i].Integrate(dt);
@@ -1944,7 +1942,7 @@ bool CarDynamics::WheelContactCallback(
 		const btCollisionShape * root_shape = obj0->getCollisionShape();
 		const btCompoundShape * car_shape = static_cast<const btCompoundShape *>(root_shape);
 		const btCylinderShapeX * wheel_shape = static_cast<const btCylinderShapeX *>(shape0);
-		btVector3 up_dir = obj0->getWorldTransform ().getBasis().getColumn(Direction::UP);
+		//btVector3 up_dir = obj0->getWorldTransform ().getBasis().getColumn(Direction::UP);
 		btVector3 wheel_center = car_shape->getChildTransform(cp.m_index0).getOrigin();
 		btVector3 contact_vec = wheel_center - cp.m_localPointA;
 		// only invalidate if contact point in the lower quarter of the wheel

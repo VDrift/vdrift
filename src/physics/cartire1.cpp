@@ -301,7 +301,7 @@ void CarTire1::PacejkaParamFx(btScalar Fz, btScalar p[6]) const
 	p[0] =  bcd / (p[1] * p[2]);
 
 	// curvature factor E
-	p[3] = (b[6] * Fz + b[7]) * Fz + b[8];
+	p[3] = Min((b[6] * Fz + b[7]) * Fz + b[8], btScalar(1));
 
 	// horizontal shift Sh
 	p[4] = b[9] * Fz + b[10];
@@ -327,7 +327,7 @@ void CarTire1::PacejkaParamFy(btScalar Fz, btScalar gamma, btScalar p[6]) const
 	p[0] = bcd / (p[1] * p[2]);
 
 	// curvature factor E
-	p[3] = a[6] * Fz + a[7];
+	p[3] = Min(a[6] * Fz + a[7], btScalar(1));
 
 	// horizontal shift Sh
 	p[4] = a[8] * gamma + a[9] * Fz + a[10];
