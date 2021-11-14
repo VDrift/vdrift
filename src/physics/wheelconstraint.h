@@ -113,21 +113,28 @@ struct WheelConstraint
 		ve[0] -= ve[2];
 		ve[1] -= vcam;
 
-		btScalar dp[2];
-		btVector3 w[2];
-		btVector3 p[2];
-		for (int i = 0; i < 2; i++)
-		{
-			dp[i] = constraint[i].solveHard(ve[i]);
-			w[i] = constraint[i].inv_inertia * dp[i];
-			p[i] = constraint[i].axis * dp[i];
-		}
-		btVector3 dw = w[0] + w[1];
-		btVector3 dv = (p[0] + p[1]) * body->getInvMass();
+		auto & cx = constraint[0];
+		auto & cy = constraint[1];
+
+		// constraint forces combining factors
+		btScalar s = ve[0] * rvr;
+		btScalar a = Atan(ve[1] * rvr);
+		btScalar gx = ComputeCombiningFactor(g[0], g[1], s, a);
+		btScalar gy = ComputeCombiningFactor(g[2], g[3], a, s);
+
+		btScalar dpx, dpy, px, py, wx, wy
+		btScalar impulse_delta = cx.cfm * cx.impulse - ve[0] * cx.mass;
+		btScalar impulse_old = cx.impulse;
+		btScalar upper_limit = cx.upper_impulse_limit * gx;
+		cx.impulse = Clamp(impulse_new, lower_limit, upper_limit);
+		dpx = cx.impulse - impulse_old;
+
+		btVector3 dw = cx.inv_inertia * dpx + cy.inv_inertia * dpy;
+		btVector3 dv = (cx.axis * dpx + cy.axis * dpy) * body->getInvMass();
 
 		body->setAngularVelocity(body->getAngularVelocity() + dw);
 		body->setLinearVelocity(body->getLinearVelocity() + dv);
-		shaft->applyImpulse(-dp[0] * radius);
+		shaft->applyImpulse(-dpx * radius);
 	}
 
 	void solveSuspension()

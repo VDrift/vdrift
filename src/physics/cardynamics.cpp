@@ -1431,21 +1431,22 @@ void CarDynamics::ApplyRollingResistance(int i)
 
 void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
 {
+	CartTireFrictionParams p[2];
+	btScalar v[3];
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		auto & c = wheel_constraint[i];
-		auto & t = tire_state[i];
-		btScalar v[3];
 		c.getContactVelocity(v);
 		btScalar suspension_force = c.constraint[2].impulse * rdt;
-		tire[i].ComputeState(suspension_force, v[2], v[0], v[1], t);
-		c.vcam = t.vcam;
-		c.constraint[0].upper_impulse_limit = Max(t.fx * sdt, btScalar(0));
-		c.constraint[0].lower_impulse_limit = Min(t.fx * sdt, btScalar(0));
-		c.constraint[0].impulse = 0;
-		c.constraint[1].upper_impulse_limit = Max(t.fy * sdt, btScalar(0));
-		c.constraint[1].lower_impulse_limit = Min(t.fy * sdt, btScalar(0));
-		c.constraint[1].impulse = 0;
+		tire[i].ComputeFrictionParams(suspension_force, v[2], v[0], v[1], p);
+
+		for (int n = 0; n < 2; ++n)
+		{
+			c.constraint[n].upper_impulse_limit = p[n].pf * sdt;
+			c.constraint[n].lower_impulse_limit = p[n].g
+			c.constraint[n].impulse = 0;
+		}
+		c.vcam = p.vcam;
 	}
 }
 

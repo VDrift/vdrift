@@ -89,6 +89,28 @@ void CarTire1::ComputeState(
 	//s.mz = Mz;
 }
 
+void CarTire1::ComputeFrictionParams(
+		btScalar normal_force,
+		btScalar rot_velocity,
+		btScalar lon_velocity,
+		btScalar lat_velocity,
+		CarTireFrictionParams p[2]) const
+{
+	btScalar fz = Min(normal_force * btScalar(1E-3), btScalar(30));
+
+	btScalar slip, slip_angle;
+	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, slip, slip_angle);
+
+	btScalar gx = PacejkaGx(slip, slip_angle);
+	btScalar gy = PacejkaGy(slip, slip_angle);
+
+	p[0].pf = PacejkaMaxFx(fz) * gx;
+	p[0].df = PacejkaMaxDx(fz) * gx;
+
+	p[1].pf = PacejkaMaxFy(fz) * gy;
+	p[1].df = PacejkaMaxDy(fz) * gy;
+}
+
 void CarTire1::ComputeAligningTorque(
 		btScalar normal_force,
 		CarTireState & s) const
@@ -283,28 +305,24 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	return Mz;
 }
 
+inline btScalar ComputeCombiningFactor(btScalar p[2], btScalar s, btScalar a)
+{
+	//btScalar B = p[0] * CosAtan(p[1] * sigma);
+	//btScalar G = CosAtan(B * alpha);
+	btScalar u = p[1] * s;
+	btScalar v = p[0] * a;
+	btScalar w = u * u + 1;
+	return std::sqrt(w / (w + v * v));
+}
+
 btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
 {
-	auto & p = combining;
-	//btScalar B = p[2] * CosAtan(p[3] * sigma);
-	//btScalar G = CosAtan(B * alpha);
-	//return G;
-	btScalar a = p[3] * sigma;
-	btScalar b = p[2] * alpha;
-	btScalar c = a * a + 1;
-	return std::sqrt(c / (c + b * b));
+	return ComputeCombiningFactor(combining + 2, sigma, alpha);
 }
 
 btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
 {
-	auto & p = combining;
-	//btScalar B = p[0] * CosAtan(p[1] * alpha);
-	//btScalar G = CosAtan(B * sigma);
-	//return G;
-	btScalar a = p[1] * alpha;
-	btScalar b = p[0] * sigma;
-	btScalar c = a * a + 1;
-	return std::sqrt(c / (c + b * b));
+	return ComputeCombiningFactor(combining, alpha, sigma);
 }
 
 void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2], int iterations) const

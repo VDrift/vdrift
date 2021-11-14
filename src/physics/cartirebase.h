@@ -32,6 +32,8 @@ inline void ComputeSlip(
 
 struct CarTireSlipLUT
 {
+	btScalar ideal_slip_lut[20][2];  ///< peak force slip ratio and angle [rad]
+
 	/// slip and slip_angle at peak force for given fz
 	void get(btScalar fz, btScalar & s, btScalar & a) const
 	{
@@ -52,8 +54,6 @@ struct CarTireSlipLUT
 	constexpr btScalar delta() const { return btScalar(500); }
 
 	constexpr btScalar rdelta() const { return btScalar(1/500.0); }
-
-	btScalar ideal_slip_lut[20][2];  ///< peak force slip ratio and angle [rad]
 };
 
 struct CarTireState
@@ -68,6 +68,14 @@ struct CarTireState
 	btScalar fx = 0; ///< positive during traction
 	btScalar fy = 0; ///< positive in a right turn
 	btScalar mz = 0; ///< positive in a left turn
+};
+
+struct CarTireFrictionParams
+{
+	btScalar pf; ///< force peak
+	btScalar df; ///< force slope
+	btScalar e; ///< fall-off factor
+	btScalar vcam; ///< camber thrust induced lateral slip velocity
 };
 
 #endif
