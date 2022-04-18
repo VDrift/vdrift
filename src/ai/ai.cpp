@@ -78,7 +78,7 @@ const std::vector<float> & Ai::GetInputs(unsigned id) const
 
 void Ai::AddFactory(const std::string & type_name, AiFactory * factory)
 {
-	ai_factories.insert(std::make_pair(type_name, factory));
+	ai_factories.emplace(type_name, factory);
 }
 
 std::vector<std::string> Ai::ListFactoryTypes()

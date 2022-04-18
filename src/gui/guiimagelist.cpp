@@ -20,16 +20,6 @@
 #include "guiimagelist.h"
 #include "guiimage.h"
 
-GuiImageList::GuiImageList()
-{
-	//ctor
-}
-
-GuiImageList::~GuiImageList()
-{
-	//dtor
-}
-
 void GuiImageList::SetupDrawable(
 	SceneNode & scene,
 	ContentManager & content,

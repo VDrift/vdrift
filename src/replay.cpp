@@ -28,7 +28,7 @@
 #include <fstream>
 
 Replay::Replay(float framerate) :
-	version_info("VDRIFTREPLAYV16", CarInput::INVALID, framerate),
+	version_info("VDRIFTREPLAYV17", CarInput::INVALID, framerate),
 	replaymode(IDLE)
 {
 	// ctor

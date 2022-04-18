@@ -29,11 +29,11 @@ public:
 
 	void SetOffset(const Vec3 & value);
 
-	void Reset(const Vec3 & newpos, const Quat & newquat);
+	void Reset(const Vec3 & newpos, const Quat & newquat) override;
 
-	void Rotate(float up, float left);
+	void Rotate(float up, float left) override;
 
-	void Move(float dx, float dy, float dz);
+	void Move(float dx, float dy, float dz) override;
 
 private:
 	Vec3 offset;

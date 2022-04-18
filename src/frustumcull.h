@@ -161,7 +161,7 @@ struct FrustumCullerPersp
 };
 
 template <typename T4, typename T3, typename T>
-static inline FrustumCullerPersp<T4, T3, T> MakeFrustumCullerPersp(T4 (&frustum)[6], T3 campos, T cull_threshold)
+static inline FrustumCullerPersp<T4, T3, T> MakeFrustumCullerPersp(T4 (&frustum)[6], T3 & campos, T cull_threshold)
 {
 	return FrustumCullerPersp<T4, T3, T>(frustum, campos, cull_threshold);
 }

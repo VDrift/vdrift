@@ -48,6 +48,7 @@
 #include "replay.h"
 #include "forcefeedback.h"
 #include "particle.h"
+#include "skidmarks.h"
 #include "ai/ai.h"
 #include "content/contentmanager.h"
 #include "updatemanager.h"
@@ -153,13 +154,15 @@ private:
 
 	void PopulateTrackList(GuiOption::List & tracklist);
 
-	void PopulateCarList(GuiOption::List & carlist, bool cardironly = false);
+	void PopulateCarList(GuiOption::List & carlist);
 
-	void PopulateCarPaintList(const std::string & carname, GuiOption::List & paintlist);
+	void PopulateCarVariantList(const std::string & carname, GuiOption::List & variants);
 
-	void PopulateCarTireList(const std::string & carname, GuiOption::List & tirelist);
+	void PopulateCarPaintList(const std::string & carname, GuiOption::List & paints);
 
-	void PopulateCarWheelList(const std::string & carname, GuiOption::List & wheellist);
+	void PopulateCarTireList(const std::string & carname, GuiOption::List & tires);
+
+	void PopulateCarWheelList(const std::string & carname, GuiOption::List & wheels);
 
 	void PopulateCarSpecList(GuiOption::List & speclist);
 
@@ -191,6 +194,8 @@ private:
 	void LoadControlsIntoGUI();
 
 	void UpdateForceFeedback(float dt);
+
+	void UpdateSkidMarks(const int carid);
 
 	void AddTireSmokeParticles(const CarDynamics & car, float dt);
 
@@ -231,6 +236,7 @@ private:
 	void TrackManagerNext();
 	void TrackManagerPrev();
 	void ApplyTrackUpdate();
+	void CancelDownload();
 	void ActivateEditControlPage();
 	void CancelControl();
 	void DeleteControl();
@@ -245,6 +251,7 @@ private:
 	void SetCarToEdit(const std::string & value);
 	void SetCarStartPos(const std::string & value);
 	void SetCarName(const std::string & value);
+	void SetCarVariant(const std::string & value);
 	void SetCarPaint(const std::string & value);
 	void SetCarTire(const std::string & value);
 	void SetCarWheel(const std::string & value);
@@ -257,53 +264,45 @@ private:
 	void SetCarsNum(const std::string & value);
 	void SetControl(const std::string & value);
 
-	void BindActionsToGUI();
-	void RegisterActions();
-	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
-	void InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap);
+	void BindActions();
+	void InitActionMap(std::map<std::string, Delegated<>> & actionmap);
+	void InitSignalMap(std::map<std::string, Signald<const std::string &>*> & signalmap);
 
-	Slot1<const std::string &> set_car_toedit;
-	Slot1<const std::string &> set_car_startpos;
-	Slot1<const std::string &> set_car_name;
-	Slot1<const std::string &> set_car_paint;
-	Slot1<const std::string &> set_car_tire;
-	Slot1<const std::string &> set_car_wheel;
-	Slot1<const std::string &> set_car_color_hue;
-	Slot1<const std::string &> set_car_color_sat;
-	Slot1<const std::string &> set_car_color_val;
-	Slot1<const std::string &> set_car_driver;
-	Slot1<const std::string &> set_car_ailevel;
-	Slot1<const std::string &> set_cars_num;
-	Slot1<const std::string &> set_control;
-	std::vector<Slot0> actions;
-
-	// game info signals
-	Signal1<const std::string &> signal_loading;
-	Signal1<const std::string &> signal_fps;
-
-	// hud info signals
-	Signal1<const std::string &> signal_debug_info[4];
-	Signal1<const std::string &> signal_message;
-	Signal1<const std::string &> signal_lap_time[3];
-	Signal1<const std::string &> signal_lap;
-	Signal1<const std::string &> signal_pos;
-	Signal1<const std::string &> signal_score;
-	Signal1<const std::string &> signal_steering;
-	Signal1<const std::string &> signal_throttle;
-	Signal1<const std::string &> signal_brake;
-	Signal1<const std::string &> signal_gear;
-	Signal1<const std::string &> signal_shift;
-	Signal1<const std::string &> signal_speedometer;
-	Signal1<const std::string &> signal_speed_norm;
-	Signal1<const std::string &> signal_speed;
-	Signal1<const std::string &> signal_tachometer;
-	Signal1<const std::string &> signal_rpm_norm;
-	Signal1<const std::string &> signal_rpm_red;
-	Signal1<const std::string &> signal_rpm;
-	Signal1<const std::string &> signal_abs;
-	Signal1<const std::string &> signal_tcs;
-	Signal1<const std::string &> signal_gas;
-	Signal1<const std::string &> signal_nos;
+	enum GameSignal {
+		// game info signals
+		LOADING,
+		FPS,
+		// hud info signals
+		DEBUG0,
+		DEBUG1,
+		DEBUG2,
+		DEBUG3,
+		MSG,
+		TIME0,
+		TIME1,
+		TIME2,
+		LAP,
+		POS,
+		SCORE,
+		STEER,
+		ACCEL,
+		BRAKE,
+		GEAR,
+		SHIFT,
+		SPEEDO,
+		SPEEDN,
+		SPEED,
+		TACHO,
+		RPMN,
+		RPMR,
+		RPM,
+		ABS,
+		TCS,
+		GAS,
+		NOS,
+		SIGNALNUM
+	};
+	Signald<const std::string &> signals[SIGNALNUM];
 
 	std::ostream & info_output;
 	std::ostream & error_output;
@@ -369,6 +368,7 @@ private:
 	DynamicsWorld dynamics;
 	int dynamics_drawmode;
 
+	SkidMarks skid_marks;
 	ParticleSystem tire_smoke;
 	unsigned int particle_timer;
 

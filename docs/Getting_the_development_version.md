@@ -17,7 +17,12 @@ Dependencies for Windows and OS X can be downloaded in the same way as the sourc
 
 ### Data
 
-The data can be downloaded from <http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/> - just click "Download GNU tarball" near the bottom of the page. Uncompress to **vdrift/data**.
+The data can be downloaded from the Sourceforge website or from the Subversion repository. Instructions for [using Subversion are below](#cloningchecking-out).
+
+To download using the Sourceforge snapshot feature:
+
+1. Visit [Sourceforge to generate a snapshot](https://sourceforge.net/p/vdrift/code/HEAD/tarball?path=/vdrift-data). The snapshot is very large, 1.5GB at time of writing, and could take some time.
+1. Uncompress the file to the **data** folder in your vdrift location.
 
 Cloning/Checking out
 --------------------
@@ -50,7 +55,7 @@ Cloning the dependencies for Windows and OS X is similar to cloning the source c
 
 The data can be checked out into the **vdrift/data** folder with the following command. Make sure you are still in the **vdrift** folder.
 
-    svn co https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+    svn co https://svn.code.sf.net/p/vdrift/code/vdrift-data data
 
 This will take a while to complete as the data is quite big.
 

@@ -22,7 +22,6 @@
 
 #include "LinearMath/btVector3.h"
 #include "LinearMath/btQuaternion.h"
-#include "linearinterp.h"
 #include "macros.h"
 #include "minmax.h"
 
@@ -55,8 +54,6 @@ struct CarSuspensionInfo
 	btScalar bounce; ///< suspension compression damping
 	btScalar rebound; ///< suspension decompression damping
 	btScalar travel; ///< how far the suspension can travel from the zero-g fully extended position around the hinge arc before wheel travel is stopped
-	LinearInterp<btScalar> damper_factors;
-	LinearInterp<btScalar> spring_factors;
 
 	// suspension geometry(const)
 	btVector3 position; ///< the position of the wheel when the suspension is fully extended (zero g)
@@ -121,11 +118,6 @@ public:
 	/// wheel displacement
 	btScalar GetDisplacement() const {return displacement;}
 
-	/// displacement fraction: 0.0 fully extended, 1.0 fully compressed
-	btScalar GetDisplacementFraction() const {return displacement / info.travel;}
-
-	btScalar GetDisplacement(btScalar force) const;
-
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
 	void SetSteering(btScalar value);
 
@@ -156,6 +148,7 @@ public:
 	static bool Load(
 		const PTree & cfg_wheel,
 		btScalar wheel_mass,
+		btScalar wheel_load,
 		CarSuspension & suspension,
 		std::ostream & error);
 

@@ -19,6 +19,7 @@
 
 #include "guicontrol.h"
 #include "minmax.h"
+#include <sstream>
 
 static const std::string names[] = {
 	"onfocus",
@@ -60,7 +61,7 @@ bool GuiControl::Focus(float x, float y)
 	return false;
 }
 
-void GuiControl::Signal(Event ev)
+void GuiControl::SignalEvent(Event ev)
 {
 	if (ev == SELECTDOWN)
 	{

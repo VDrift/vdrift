@@ -29,11 +29,12 @@ using std::endl;
 using std::vector;
 using std::ostringstream;
 
-bool Timer::Load(const std::string & trackrecordspath, float stagingtime)
+bool Timer::Load(const std::string & trackrecordspath, float stagingtime, unsigned num_cars)
 {
 	Unload();
 
 	car.clear();
+	car.reserve(num_cars);
 
 	pretime = stagingtime;
 

@@ -133,6 +133,11 @@ public:
 		return !data.vertical_tracking_skyboxes;
 	}
 
+	Vec3 GetSunDirection() const
+	{
+		return data.sun_direction;
+	}
+
 	const std::vector<TrackSurface> & GetSurfaces() const
 	{
 		return data.surfaces;
@@ -185,6 +190,7 @@ private:
 		SceneNode racingline_node;
 
 		// track state
+		Vec3 sun_direction;
 		bool reverse;
 		bool loaded;
 		bool cull;

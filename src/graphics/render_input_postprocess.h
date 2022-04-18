@@ -63,7 +63,7 @@ public:
 
 	void SetContrast(float value);
 
-	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
+	void Render(GraphicsState & glstate, std::ostream & error_output) override;
 
 private:
 	VertexBuffer & vertex_buffer;

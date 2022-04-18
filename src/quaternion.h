@@ -53,11 +53,6 @@ public:
 		SetEulerZYX(x, y, z);
 	}
 
-	Quaternion(const Quaternion <T> & other)
-	{
-		*this = other;
-	}
-
 	void Set(const T & val1, const T & val2, const T & val3, const T & val4)
 	{
 		v[0] = val1;

@@ -32,20 +32,7 @@ class Texture;
 class GuiSlider : public GuiWidget
 {
 public:
-	GuiSlider();
-
-	~GuiSlider();
-
-	Slot1<const std::string &> set_value;
-	Slot1<const std::string &> set_min_value;
-	Slot1<const std::string &> set_max_value;
-
-protected:
-	std::shared_ptr<Texture> m_texture;
-	SceneNode::DrawableHandle m_draw;
-	VertexArray m_varray;
-	float m_x, m_y, m_w, m_h;
-	float m_min_value, m_max_value;  // relative slider element extents
+	GuiSlider() {};
 
 	void SetValue(const std::string & value);
 
@@ -53,9 +40,17 @@ protected:
 
 	void SetMaxValue(const std::string & value);
 
+protected:
+	std::shared_ptr<Texture> m_texture;
+	SceneNode::DrawableHandle m_draw;
+	VertexArray m_varray;
+	float m_x = 0, m_y = 0;
+	float m_w = 0, m_h = 0;
+	float m_min_value = 0.02, m_max_value = 0.02;  // relative slider element extents
+
 	GuiSlider(const GuiSlider & other);
 
-	Drawable & GetDrawable(SceneNode & node);
+	Drawable & GetDrawable(SceneNode & node) override;
 
 	void InitDrawable(
 		SceneNode & node,

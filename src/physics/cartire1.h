@@ -20,153 +20,86 @@
 #ifndef _CARTIRE1_H
 #define _CARTIRE1_H
 
-#include "LinearMath/btVector3.h"
-#include "macros.h"
+#include "LinearMath/btScalar.h"
 
-#include <vector>
+struct CarTireState;
+struct CarTireSlipLUT;
 
-struct CarTireInfo1
-{
-	std::vector<btScalar> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
-	std::vector<btScalar> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
-	std::vector<btScalar> aligning; ///< the parameters of the aligning moment pacejka equation.  this is series c
-	std::vector<btScalar> combining; ///< force combining parameters
-	std::vector<btScalar> sigma_hat; ///< maximum grip in the longitudinal direction
-	std::vector<btScalar> alpha_hat; ///< maximum grip in the lateral direction
-	btScalar rolling_resistance_quad; ///< quadratic rolling resistance on a hard surface
-	btScalar rolling_resistance_lin; ///< linear rolling resistance on a hard surface
-	btScalar tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
-	CarTireInfo1();
-};
-
-class CarTire1 : private CarTireInfo1
+class CarTire1
 {
 public:
-	CarTire1();
-
-	void init(const CarTireInfo1 & info);
-
-	/// get tire tread fraction
-	btScalar getTread() const;
-
 	/// normal_force: tire load in N
-	/// friction_coeff: contact surface friction coefficient
-	/// sin_camber: dot product of wheel axis and contact surface normal
-	/// rot_velocity: tire contact velocity (w * r)
+	/// rot_velocity: tire contact velocity (w * r) in m/s
 	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
 	/// lat_velocty: tire lateral velocity relative to surface in m/s
-	btVector3 getForce(
+	/// s: tire state (friction and camber should have valid values)
+	void ComputeState(
 		btScalar normal_force,
-		btScalar friction_coeff,
-		btScalar sin_camber,
 		btScalar rot_velocity,
-		btScalar lon_velocty,
-		btScalar lat_velocity);
+		btScalar lon_velocity,
+		btScalar lat_velocity,
+		CarTireState & s) const;
 
-	btScalar getRollingResistance(
-		const btScalar velocity,
-		const btScalar resistance_factor) const;
+	/// separate mz computation from ComputeState for performance
+	void ComputeAligningTorque(
+		btScalar normal_force,
+		CarTireState & s) const;
 
-	btScalar getSlip() const;
-	btScalar getSlipAngle() const;
-	btScalar getIdealSlip() const;
-	btScalar getIdealSlipAngle() const;
-	btScalar getFx() const;
-	btScalar getFy() const;
-	btScalar getMz() const;
+	/// get tire tread fraction
+	btScalar getTread() const { return tread; }
+
+	/// rolling resistance magnitude
+	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
 
 	/// load is the normal force in newtons.
 	btScalar getMaxFx(btScalar load) const;
 
+	/// longitudinal force derivative at zero slip
+	btScalar getMaxDx(btScalar load) const;
+
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxFy(btScalar load, btScalar camber) const;
+
+	/// lateral force derivative at zero slip angle
+	btScalar getMaxDy(btScalar load, btScalar camber) const;
+
+	/// horizontal and vertical fy function shift due to camber
+	void getCamberShift(btScalar load, btScalar camber, btScalar & sh, btScalar & sv) const;
 
 	/// load is the normal force in newtons, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
-	template <class Serializer>
-	bool Serialize(Serializer & s);
+	/// init peak force slip lut
+	void initSlipLUT(CarTireSlipLUT & t) const;
+
+	CarTire1();
 
 private:
-	btScalar camber; ///< tire camber relative to track surface
-	btScalar slide; ///< ratio of tire contact patch speed to road speed, minus one
-	btScalar slip; ///< the angle (in degrees) between the wheel heading and the wheel's actual velocity
-	btScalar ideal_slide; ///< ideal slide ratio
-	btScalar ideal_slip; ///< ideal slip angle
-	btScalar fx, fy, fz, mz;
+	/// pacejka magic formula for longitudinal force
+	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff) const;
 
-	/// pacejka magic formula function, longitudinal
-	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
+	/// pacejka magic formula for lateral force
+	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & camber_alpha) const;
 
-	/// pacejka magic formula function, lateral
-	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const;
+	/// pacejka magic formula for aligning torque
+	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff) const;
 
-	/// pacejka magic formula function, aligning
-	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
+	/// pacejka magic formula for the longitudinal combining factor
+	btScalar PacejkaGx(btScalar sigma, btScalar alpha) const;
 
-	/// pacejka magic formula longitudinal combining factor
-	btScalar PacejkaGx(btScalar sigma, btScalar alpha);
+	/// pacejka magic formula for the lateral combining factor
+	btScalar PacejkaGy(btScalar sigma, btScalar alpha) const;
 
-	/// pacejka magic formula lateral combining factor
-	btScalar PacejkaGy(btScalar sigma, btScalar alpha);
+	void findIdealSlip(btScalar load, btScalar output_slip[2], int iterations = 200) const;
 
-	void getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
-
-	void findSigmaHatAlphaHat(
-		btScalar load,
-		btScalar & output_sigmahat,
-		btScalar & output_alphahat,
-		int iterations = 200);
-
-	void initSigmaHatAlphaHat(int tablesize = 20);
+public:
+	btScalar longitudinal[11]; ///< the parameters of the longitudinal pacejka equation.  this is series b
+	btScalar lateral[15]; ///< the parameters of the lateral pacejka equation.  this is series a
+	btScalar aligning[18]; ///< the parameters of the aligning moment pacejka equation.  this is series c
+	btScalar combining[4]; ///< force combining parameters
+	btScalar rolling_resistance_quad; ///< quadratic rolling resistance on a hard surface
+	btScalar rolling_resistance_lin; ///< linear rolling resistance on a hard surface
+	btScalar tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
 };
-
-// implementation
-
-inline btScalar CarTire1::getTread() const
-{
-	return tread;
-}
-
-inline btScalar CarTire1::getSlip() const
-{
-	return slide;
-}
-
-inline btScalar CarTire1::getSlipAngle() const
-{
-	return slip;
-}
-
-inline btScalar CarTire1::getIdealSlip() const
-{
-	return ideal_slide;
-}
-
-inline btScalar CarTire1::getIdealSlipAngle() const
-{
-	return ideal_slip;
-}
-
-inline btScalar CarTire1::getFx() const
-{
-	return fx;
-}
-
-inline btScalar CarTire1::getFy() const
-{
-	return fy;
-}
-
-inline btScalar CarTire1::getMz() const
-{
-	return mz;
-}
-
-template <class Serializer>
-inline bool CarTire1::Serialize(Serializer & /*s*/)
-{
-	return true;
-}
 
 #endif

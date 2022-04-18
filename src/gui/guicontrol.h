@@ -21,9 +21,8 @@
 #define _GUICONTROL_H
 
 #include "signalslot.h"
-#include "cfg/config.h"
 #include <string>
-#include <map>
+#include <vector>
 
 class SceneNode;
 
@@ -59,7 +58,7 @@ public:
 	virtual bool Focus(float x, float y);
 
 	/// Signal to slots attached to events
-	virtual void Signal(Event ev);
+	virtual void SignalEvent(Event ev);
 
 	/// Set control rectangle
 	void SetRect(float xmin, float ymin, float xmax, float ymax);
@@ -67,8 +66,8 @@ public:
 	/// available control signals
 	static const std::vector<std::string> signal_names;
 
-	Signal0 m_signal[EVENTNUM];
-	Signal1<const std::string &> m_signalv[EVENTVNUM];
+	Signald<> m_signal[EVENTNUM];
+	Signald<const std::string &> m_signalv[EVENTVNUM];
 
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;

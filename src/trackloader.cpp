@@ -189,6 +189,20 @@ bool Track::Loader::BeginLoad()
 	info.get("cull faces", data.cull);
 	info.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
 
+	float sun_elevation = 50.0f;
+	float sun_azimuth = 200.0f;
+	info.get("sun elevation", sun_elevation);
+	info.get("sun azimuth", sun_azimuth);
+	sun_elevation = Clamp(sun_elevation, 10.0f, 90.0f);
+	sun_azimuth = Clamp(sun_azimuth, -360.0f, 360.0f);
+	float e = sun_elevation * float(M_PI/180);
+	float a = sun_azimuth * float(M_PI/180);
+	float z = std::sin(e);
+	float r = std::cos(e);
+	float x = r * std::sin(a);
+	float y = r * std::cos(a);
+	data.sun_direction.Set(x, y, z);
+
 	if (!LoadStartPositions(info))
 	{
 		return false;
@@ -471,7 +485,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided);
 
-	return bodies.insert(std::make_pair(name, body)).first;
+	return bodies.emplace(name, body).first;
 }
 
 void Track::Loader::AddBody(SceneNode & scene, const Body & body)
@@ -1087,30 +1101,48 @@ bool Track::Loader::LoadStartPositions(const PTree & info)
 
 bool Track::Loader::LoadLapSections(const PTree & info)
 {
-	// get timing sectors
+	if (data.roads.empty())
+	{
+		info_output << "No roads loaded. Skip loading lap timing sectors. Lap timing will not be possible." << std::endl;
+		return true;
+	}
+
+	// get lap timing sectors
 	unsigned num_roads = data.roads.size();
 	unsigned lapmarkers = 0;
-	if (info.get("lap sequences", lapmarkers))
+	info.get("lap sequences", lapmarkers);
+	for (unsigned i = 0; i < lapmarkers; i++)
 	{
-		for (unsigned l = 0; l < lapmarkers; l++)
+		std::vector<unsigned> lapraw(2);
+		std::ostringstream lapname;
+		lapname << "lap sequence " << i;
+		if (!info.get(lapname.str(), lapraw))
 		{
-			std::vector<unsigned> lapraw(2);
-			std::ostringstream lapname;
-			lapname << "lap sequence " << l;
-			info.get(lapname.str(), lapraw);
-
-			unsigned roadid = Min(num_roads, lapraw[0]);
-			auto & road = data.roads[roadid];
-
-			unsigned num_patches = road.GetPatches().size();
-			unsigned patchid = Min(num_patches, lapraw[1]);
-
-			// adjust id for reverse case
-			if (data.reverse)
-				patchid = num_patches - patchid;
-
-			data.lap.push_back(&road.GetPatches()[patchid]);
+			info_output << "Failed to load " << lapname.str() << "." << std::endl;
+			continue;
 		}
+
+		unsigned roadid = lapraw[0];
+		if (roadid >= num_roads)
+		{
+			info_output << "Ignore " << lapname.str() << ". Road id exceeds number of available roads." << std::endl;
+			continue;
+		}
+
+		auto & road = data.roads[roadid];
+		unsigned num_patches = road.GetPatches().size();
+		unsigned patchid = lapraw[1];
+		if (patchid >= num_patches)
+		{
+			info_output << "Ignore " << lapname.str() << ". Patch id exceeds number of available road patches." << std::endl;
+			continue;
+		}
+
+		// adjust id for reverse case
+		if (data.reverse)
+			patchid = num_patches - patchid;
+
+		data.lap.push_back(&road.GetPatches()[patchid]);
 	}
 
 	if (data.lap.empty())

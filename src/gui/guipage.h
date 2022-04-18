@@ -37,11 +37,11 @@ class Config;
 class ContentManager;
 class PathManager;
 
-typedef std::map<std::string, Signal1<const std::string &>*> StrSignalMap;
-typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> StrVecSlotMap;
-typedef std::map<std::string, Slot1<const std::string &>*> StrSlotMap;
-typedef std::map<std::string, Slot1<int>*> IntSlotMap;
-typedef std::map<std::string, Slot0*> SlotMap;
+using StrSignalMap = std::map<std::string, Signald<const std::string &>*>;
+using StrVecSlotMap = std::map<std::string, Delegated<int, std::vector<std::string> &>>;
+using StrSlotMap = std::map<std::string, Delegated<const std::string &>>;
+using IntSlotMap = std::map<std::string, Delegated<int>>;
+using SlotMap = std::map<std::string, Delegated<>>;
 
 class GuiPage
 {
@@ -94,48 +94,32 @@ private:
 	SceneNode node;
 	std::string name;
 
-	// each control registers a ControlCB
+	// each control registers a ControlCb
 	// which other controls can signal to focus(activate) it
-	// it uses PAGE::SetActiveControl
 	struct ControlCb
 	{
-		GuiPage * page;
-		GuiControl * control;
-		Slot0 action;
-
-		ControlCb();
-		ControlCb(const ControlCb & other);
-		ControlCb & operator=(const ControlCb & other);
-		void call();
+		GuiPage * page = 0;
+		GuiControl * control = 0;
+		void call() { assert(page && control); page->SetActiveControl(*control); };
 	};
 	// allow a conrol to signal slots with an extra parameter
 	struct SignalVal
 	{
 		std::string value;
-		Signal1<const std::string &> signal;
-		Slot0 action;
-
-		SignalVal();
-		SignalVal(const SignalVal & other);
-		SignalVal & operator=(const SignalVal & other);
-		void call();
+		Delegated<const std::string &> delegate;
+		void call() { delegate(value); };
 	};
 	// allow a control list to signal slots with an extra parameter
 	struct SignalValn
 	{
 		std::string value;
-		Signal2<int, const std::string&> signal;
-		Slot1<int> action;
-
-		SignalValn();
-		SignalValn(const SignalValn & other);
-		SignalValn & operator=(const SignalValn & other);
-		void call(int n);
+		Delegated<int, const std::string&> delegate;
+		void call(int n) { delegate(n, value); };
 	};
 	std::vector<ControlCb> control_set;		// control focus callbacks
 	std::vector<SignalVal> action_set;		// action value callbacks
 	std::vector<SignalValn> action_setn;	// action value nth callbacks
-	Signal0 onfocus, oncancel;				// page action signals
+	Signald<> onfocus, oncancel;			// page action signals
 
 	void Clear(SceneNode & parentnode);
 

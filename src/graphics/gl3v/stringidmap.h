@@ -99,8 +99,8 @@ inline StringId StringIdMap::addStringId(const std::string & str)
 		return i->second;
 
 	StringId newId = makeStringId(idmap.size()+1);
-	idmap.insert(std::make_pair(str,newId));
-	stringmap.insert(std::make_pair(newId,str));
+	idmap.emplace(str, newId);
+	stringmap.emplace(newId, str);
 	return newId;
 }
 

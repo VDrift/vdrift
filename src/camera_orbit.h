@@ -29,13 +29,13 @@ public:
 
 	void SetOffset(const Vec3 & value);
 
-	void Reset(const Vec3 & newfocus, const Quat & newquat);
+	void Reset(const Vec3 & newfocus, const Quat & newquat) override;
 
-	void Update(const Vec3 & newfocus, const Quat & newquat, float dt);
+	void Update(const Vec3 & newfocus, const Quat & newquat, float dt) override;
 
-	void Rotate(float up, float left);
+	void Rotate(float up, float left) override;
 
-	void Move(float dx, float dy, float dz);
+	void Move(float dx, float dy, float dz) override;
 
 private:
 	Vec3 focus;

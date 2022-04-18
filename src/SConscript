@@ -43,6 +43,7 @@ src = Split("""
 		downloadable.cpp
 		dynamicsdraw.cpp
 		eventsystem.cpp
+		fastmath.cpp
 		forcefeedback.cpp
 		game.cpp
 		graphics/bcndecode.cpp
@@ -125,6 +126,7 @@ src = Split("""
 		roadpatch.cpp
 		roadstrip.cpp
 		settings.cpp
+		skidmarks.cpp
 		sound/soundbuffer.cpp
 		sound/sound.cpp
 		sound/soundfilter.cpp
@@ -140,7 +142,7 @@ src = Split("""
 		utils.cpp
 		window.cpp""")
 
-src.sort(lambda x, y: cmp(x.lower(),y.lower()))
+src.sort(key = str.lower)
 
 #------------------------#
 # Copy Build Environment #

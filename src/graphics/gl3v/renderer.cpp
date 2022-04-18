@@ -72,7 +72,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 		for (const auto & rt : passes.back().getRenderTargets())
 		{
 			StringId nameId = rt.first;
-			sharedTextures.insert(std::make_pair(nameId, RenderTextureEntry(nameId, rt.second.handle, rt.second.target)));
+			sharedTextures.emplace(nameId, RenderTextureEntry(nameId, rt.second.handle, rt.second.target));
 		}
 
 		// Remember the pass index.
@@ -251,7 +251,7 @@ void Renderer::removeModelUniform(RenderModelHandle handle, StringId name)
 
 void Renderer::setGlobalTexture(StringId name, const RenderTextureEntry & texture)
 {
-	sharedTextures.insert(std::make_pair(name,texture));
+	sharedTextures.emplace(name, texture);
 
 	// Inform the passes.
 	for (auto & pass : passes)
@@ -488,7 +488,7 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 		RenderShader shader;
 		shader.handle = handle;
 		shader.defines = defines; // for debug only
-		shaders.insert(std::make_pair(name, shader));
+		shaders.emplace(name, shader);
 	}
 	else
 		errorOutput << "Unable to compile shader " << name << " from file " << path << ":\n" << shaderOutput.str() << std::endl;

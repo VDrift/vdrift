@@ -20,24 +20,6 @@
 #include "guilabel.h"
 #include <cassert>
 
-GuiLabel::GuiLabel() :
-	m_font(0),
-	m_x(0),
-	m_y(0),
-	m_w(0),
-	m_h(0),
-	m_scalex(0),
-	m_scaley(0),
-	m_align(0)
-{
-	set_value.call.bind<GuiLabel, &GuiLabel::SetText>(this);
-}
-
-GuiLabel::~GuiLabel()
-{
-	// destructor
-}
-
 void GuiLabel::SetupDrawable(
 	SceneNode & scene,
 	const Font & font, int align,
@@ -60,10 +42,13 @@ void GuiLabel::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, m_x, m_y, scalex, scaley, m_rgb[0], m_rgb[1], m_rgb[2]);
 }
 
-bool GuiLabel::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
+bool GuiLabel::GetProperty(const std::string & name, Delegated<const std::string &> & slot)
 {
 	if (name == "text")
-		return (slot = &set_value);
+	{
+		slot.bind<GuiLabel, &GuiLabel::SetText>(this);
+		return true;
+	}
 	return GuiWidget::GetProperty(name, slot);
 }
 

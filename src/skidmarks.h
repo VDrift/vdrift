@@ -17,71 +17,73 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "contentmanager.h"
+#ifndef _SKIDMARKS_H
+#define _SKIDMARKS_H
 
-#include <ostream>
+#include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
+#include "mathvector.h"
+#include "quaternion.h"
 
-ContentManager::ContentManager(std::ostream & error) :
-	error(error)
+#include <memory>
+#include <string>
+#include <vector>
+
+class ContentManager;
+class Texture;
+
+class SkidMarks
 {
-	// ctor
-}
+public:
+	/// Load texture
+	void Load(
+		const std::string & texpath,
+		const std::string & texname,
+		int anisotropy,
+		ContentManager & content);
 
-ContentManager::~ContentManager()
-{
-	sweep();
-	_logleaks();
-}
+	void Clear();
 
-void ContentManager::addSharedPath(const std::string & path)
-{
-	sharedpaths.push_back(path);
-}
+	void Reset(int num_emitters, int max_marks = 1024);
 
-void ContentManager::addPath(const std::string & path)
-{
-	basepaths.push_back(path);
-}
+	void UpdateEmitter(int id, float intensity, Vec3 corner_left, Vec3 corner_right);
 
-void ContentManager::sweep()
-{
-	for (auto & cache : factory_cached.m_caches)
+	void UpdateGraphics(
+		const Quat & camdir,
+		const Vec3 & campos,
+		float znear, float zfar,
+		float sinfovh);
+
+	SceneNode & GetNode() { return node; }
+
+private:
+	struct Mark
 	{
-		cache->sweep();
-	}
-}
+		Vec3 corners[4];
+		Vec3 center;
+		float radius;
+		float fade;
+	};
+	struct Emitter
+	{
+		float energy = 0;
+		int markid = -1;
+	};
+	std::vector<Mark> marks;
+	std::vector<Emitter> emitters;
 
-void ContentManager::_logleaks()
-{
-	size_t n = 0;
-	for (const auto & cache : factory_cached.m_caches)
-	{
-		n += cache->size();
-	}
-	if (n == 0)
-		return;
+	SceneNode::DrawableHandle draw;
+	std::shared_ptr<Texture> texture;
+	VertexArray varray;
+	SceneNode node;
 
-	error << "Leaked " << n << " cached objects:";
-	for (const auto & cache : factory_cached.m_caches)
-	{
-		error << "\n";
-		cache->log(error);
-	}
-	error << std::endl;
-}
+	int first_mark = 0;
+	int next_mark = 0;
+	int max_marks = 0;
+	float max_mark_length_sq = (0.2f * 0.2f);
+	float min_emission_energy = 5.0f;
 
-void ContentManager::_logerror(
-	const std::string & path,
-	const std::string & name)
-{
-	error << "Failed to load \"" << name << "\" from:";
-	for (const auto & basepath : basepaths)
-	{
-		error << "\n" << basepath + '/' + path;
-	}
-	for (const auto & sharedpath : sharedpaths)
-	{
-		error << "\n" << sharedpath;
-	}
-	error << std::endl;
-}
+	void NewMark(Emitter & e, float energy = 0);
+};
+
+#endif // _SKIDMARKS_H

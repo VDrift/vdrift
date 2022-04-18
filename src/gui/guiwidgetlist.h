@@ -35,15 +35,16 @@ public:
 	virtual ~GuiWidgetList();
 
 	/// update state
-	void Update(SceneNode & scene, float dt);
+	void Update(SceneNode & scene, float dt) override;
 
 	/// scale alpha [0, 1]
-	void SetAlpha(SceneNode & scene, float value);
+	void SetAlpha(SceneNode & scene, float value) override;
+
+	bool GetProperty(const std::string & name, Delegated<const std::string &> & slot) override;
 
 	/// element properties
-	virtual bool GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot);
+	virtual bool GetProperty(const std::string & name, Delegated<int, const std::string &> & slot);
 
-	void SetColor(int n, const std::string & value);
 	void SetOpacity(int n, const std::string & value);
 	void SetHue(int n, const std::string & value);
 	void SetSat(int n, const std::string & value);
@@ -55,23 +56,14 @@ public:
 	/// update list, parameter holds list item count
 	void UpdateList(const std::string & vnum);
 
-	Slot2<int, const std::string &> setn_color;
-	Slot2<int, const std::string &> setn_opacity;
-	Slot2<int, const std::string &> setn_hue;
-	Slot2<int, const std::string &> setn_sat;
-	Slot2<int, const std::string &> setn_val;
-	Slot2<int, const std::string &> scroll;
-	Slot1<const std::string &> update_list;
-
 	/// value list range access signal
-	Signal2<int, std::vector<std::string> &> get_values;
+	Signald<int, std::vector<std::string> &> get_values;
 
 protected:
 	std::vector<GuiWidget*> m_elements;
 	std::vector<std::string> m_values;
 
-	/// verboten
-	GuiWidgetList();
+	GuiWidgetList() {};
 	GuiWidgetList(const GuiWidgetList & other);
 	GuiWidgetList & operator=(const GuiWidgetList & other);
 
@@ -79,14 +71,13 @@ protected:
 	virtual void UpdateElements(SceneNode & scene) = 0;
 
 	/// override widget property callbacks
-	void SetColorAll(const std::string & value);
 	void SetOpacityAll(const std::string & value);
 	void SetHueAll(const std::string & value);
 	void SetSatAll(const std::string & value);
 	void SetValAll(const std::string & value);
 
 	/// ugh, dead weight
-	Drawable & GetDrawable(SceneNode & scene);
+	Drawable & GetDrawable(SceneNode & scene) override;
 };
 
 #endif // _GUIWIDGETLIST_H

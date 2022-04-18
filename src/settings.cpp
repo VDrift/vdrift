@@ -45,12 +45,14 @@ Settings::Settings() :
 	fullscreen(false),
 	vsync(false),
 	renderer("gl3/deferred.conf"),
+	menu_room(".room"),
 	skin("simple"),
 	language("en"),
 	show_fps(false),
 	music_volume(0.5),
 	sound_volume(0.5),
 	sound_sources(64),
+	sound_buffer_size_log2(10),
 	mph(true),
 	track("ruudskogen"),
 	antialiasing(0),
@@ -90,7 +92,8 @@ Settings::Settings() :
 	bloom(false),
 	motionblur(false),
 	normalmaps(false),
-	car("XS/XS"),
+	car("XS"),
+	car_variant("XS"),
 	car_paint("default"),
 	car_tire("default"),
 	car_wheel("default"),
@@ -106,9 +109,10 @@ Settings::Settings() :
 	ai_level(1.0),
 	vehicle_damage(false),
 	particles(512),
-	sky_dynamic(false),
+	skidmarks(1024),
 	sky_time(17),
-	sky_time_speed(1)
+	sky_time_speed(1),
+	sky_dynamic(false)
 {
 	resolution[0] = 800;
 	resolution[1] = 600;
@@ -139,6 +143,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "record", recordreplay);
 	Param(config, write, section, "selected_replay", selected_replay);
 	Param(config, write, section, "car", car);
+	Param(config, write, section, "car_variant", car_variant);
 	Param(config, write, section, "car_paint", car_paint);
 	Param(config, write, section, "car_tire", car_tire);
 	Param(config, write, section, "car_wheel", car_wheel);
@@ -158,6 +163,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "fullscreen", fullscreen);
 	Param(config, write, section, "vsync", vsync);
 	Param(config, write, section, "renderer", renderer);
+	Param(config, write, section, "menu_room", menu_room);
 	Param(config, write, section, "skin", skin);
 	Param(config, write, section, "language", language);
 	Param(config, write, section, "show_fps", show_fps);
@@ -184,9 +190,10 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
 	Param(config, write, section, "particles", particles);
-	Param(config, write, section, "sky_dynamic", sky_dynamic);
+	Param(config, write, section, "skidmarks", skidmarks);
 	Param(config, write, section, "sky_time", sky_time);
 	Param(config, write, section, "sky_time_speed", sky_time_speed);
+	Param(config, write, section, "sky_dynamic", sky_dynamic);
 
 	config.get("sound", section);
 	Param(config, write, section, "attenuation_scale", sound_attenuation[0]);
@@ -194,6 +201,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "attenuation_exponent", sound_attenuation[2]);
 	Param(config, write, section, "attenuation_offset", sound_attenuation[3]);
 	Param(config, write, section, "sources", sound_sources);
+	Param(config, write, section, "buffer_size_log2", sound_buffer_size_log2);
 	Param(config, write, section, "volume", sound_volume);
 	Param(config, write, section, "music_volume", music_volume);
 

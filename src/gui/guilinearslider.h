@@ -29,7 +29,7 @@ public:
 
 	~GuiLinearSlider();
 
-	virtual void Update(SceneNode & scene, float dt);
+	void Update(SceneNode & scene, float dt) override;
 
 	void SetupDrawable(
 		SceneNode & node,

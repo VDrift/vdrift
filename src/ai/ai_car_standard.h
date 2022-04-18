@@ -32,7 +32,7 @@ class CarDynamics;
 
 class AiCarStandardFactory : public AiFactory
 {
-	AiCar * Create(unsigned carid, float difficulty);
+	AiCar * Create(unsigned carid, float difficulty) override;
 };
 
 class AiCarStandard : public AiCar
@@ -42,10 +42,10 @@ public:
 
 	~AiCarStandard();
 
-	void Update(float dt, const CarDynamics cars[], const unsigned cars_num);
+	void Update(float dt, const CarDynamics cars[], const unsigned cars_num) override;
 
 #ifdef VISUALIZE_AI_DEBUG
-	void Visualize();
+	void Visualize() override;
 #endif
 
 private:

@@ -74,6 +74,11 @@ public:
 		return renderer;
 	}
 
+	const std::string & GetMenuRoom() const
+	{
+		return menu_room;
+	}
+
 	const std::string & GetSkin() const
 	{
 		return skin;
@@ -97,6 +102,12 @@ public:
 	int GetMaxSoundSources() const
 	{
 		return sound_sources;
+	}
+
+	// log2 sound buffer size
+	int GetSoundBufferSizeLog2() const
+	{
+		return sound_buffer_size_log2;
 	}
 
 	// get sound attenuation[4] coefficients
@@ -322,6 +333,11 @@ public:
 		return car;
 	}
 
+	const std::string & GetCarVariant() const
+	{
+		return car_variant;
+	}
+
 	const std::string & GetCarPaint() const
 	{
 		return car_paint;
@@ -357,9 +373,14 @@ public:
 		return contrast;
 	}
 
-	float GetParticles() const
+	int GetParticles() const
 	{
 		return particles;
+	}
+
+	int GetSkidMarks() const
+	{
+		return skidmarks;
 	}
 
 	int GetCamera() const
@@ -410,12 +431,14 @@ private:
 	bool fullscreen;
 	bool vsync;
 	std::string renderer;
+	std::string menu_room;
 	std::string skin;
 	std::string language;
 	bool show_fps;
 	float music_volume;
 	float sound_volume;
 	int sound_sources;
+	int sound_buffer_size_log2;
 	float sound_attenuation[4];
 	bool mph; //if false, KPH
 	std::string track;
@@ -457,6 +480,7 @@ private:
 	bool motionblur;
 	bool normalmaps;
 	std::string car;
+	std::string car_variant;
 	std::string car_paint;
 	std::string car_tire;
 	std::string car_wheel;
@@ -472,9 +496,10 @@ private:
 	float ai_level;
 	bool vehicle_damage;
 	int particles;
-	bool sky_dynamic;
+	int skidmarks;
 	int sky_time;
 	int sky_time_speed;
+	bool sky_dynamic;
 };
 
 #endif

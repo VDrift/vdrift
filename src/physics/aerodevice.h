@@ -82,7 +82,7 @@ public:
 		drag_vector = drag_coefficient * bodyspace_wind_vector.length() * bodyspace_wind_vector;
 
 		//positive wind speed when the wind is heading at us
-		btScalar wind_speed = -Direction::forward.dot(bodyspace_wind_vector);
+		btScalar wind_speed = -bodyspace_wind_vector[Direction::FORWARD];
 
 		//assume the surface doesn't generate much lift when in reverse
 		if (wind_speed < 0) wind_speed = -wind_speed * btScalar(0.2);

@@ -27,38 +27,26 @@
 class GuiControlList : public GuiControl, public GuiList
 {
 public:
-	GuiControlList();
-
-	~GuiControlList();
-
 	/// Return true if control contains x, y
-	bool Focus(float x, float y);
+	bool Focus(float x, float y) override;
 
 	/// Signal slots attached to events
-	void Signal(Event ev);
+	void SignalEvent(Event ev) override;
 
-	/// List update slot, parameter holds list item count
-	Slot1<const std::string &> update_list;
-
-	/// Set active element, parameter holds list item index
-	Slot1<const std::string &> set_nth;
-
-	/// List scroll slots
-	Slot0 scroll_fwd;
-	Slot0 scroll_rev;
-
-	Signal1<int> m_signaln[EVENTNUM];
-
-private:
-	int m_active_element;
-
+	/// Update list, parameter holds list item count
 	void UpdateList(const std::string & value);
 
+	/// Set active element, parameter holds list item index
 	void SetToNth(const std::string & value);
 
 	void ScrollFwd();
 
 	void ScrollRev();
+
+	Signald<int> m_signaln[EVENTNUM];
+
+private:
+	int m_active_element = 0;
 
 	void SetActiveElement(int active_element);
 };

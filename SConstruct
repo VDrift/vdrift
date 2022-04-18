@@ -1,5 +1,4 @@
-import os, sys, errno, SCons
-from time import gmtime, strftime
+import os, sys, time, errno, SCons
 
 #---------------#
 # Build Options #
@@ -71,7 +70,7 @@ elif sys.platform == 'darwin':
 
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src', '#vdrift-mac/Frameworks', '#vdrift-mac/Frameworks/SDL2.framework/Headers', '#vdrift-mac/Libraries'],
-        CCFLAGS = ['-std=c++11', '-Wall', '-Wextra'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
         FRAMEWORKPATH = ['vdrift-mac/Frameworks/'],
@@ -92,9 +91,9 @@ elif sys.platform == 'darwin':
 
     for a in env['universal']:
         if not sdk_path:
-            print 'Building a universal binary require access to an ' + \
+            print('Building a universal binary require access to an ' + \
                 'SDK that has universal \nbinary support.If you know ' + \
-                'the location of such an SDK, specify it using the \n"SDK" option'
+                'the location of such an SDK, specify it using the \n"SDK" option')
             Exit(1)
         env.Append( CCFLAGS = ['-arch', a],  LINKFLAGS = ['-arch', a] )
 
@@ -119,7 +118,7 @@ elif sys.platform == 'darwin':
 #---------------#
 elif sys.platform in ['win32', 'msys', 'cygwin']:
     env = Environment(ENV = os.environ, tools = ['mingw'],
-        CCFLAGS = ['-std=c++11', '-Wall', '-Wextra', '-mwindows'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra', '-mwindows'],
         CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
         #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
@@ -135,17 +134,17 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
 else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#src'],
-        CCFLAGS = ['-std=c++11', '-Wall', '-Wextra'],#, '-pthread'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra'],#, '-pthread'],
         LIBPATH = ['.', '#lib'],
         #LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     # Take environment variables into account
-    if os.environ.has_key('CXX'):
+    if 'CXX' in os.environ:
         env['CXX'] = os.environ['CXX']
-    if os.environ.has_key('CXXFLAGS'):
+    if 'CXXFLAGS' in os.environ:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
-    if os.environ.has_key('LDFLAGS'):
+    if 'LDFLAGS' in os.environ:
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
     check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
@@ -232,7 +231,7 @@ def distcopy (target, source, env):
 def tarballer (target, source, env):            
     cmd = 'tar -jcf "%s" -C "%s" .'  % ( str(target[0]), str(source[0]) )
     #cmd = 'tar -jcf ' + str (target[0]) +  ' ' + str(source[0]) + "  --exclude '*~' "
-    print 'running ', cmd, ' ... '
+    print('running ', cmd, ' ... ')
     p = os.popen (cmd)
     return p.close ()
 
@@ -362,11 +361,11 @@ env.ParseConfig(env['pkg_config'] + ' bullet --libs --cflags')
 conf = Configure(env)
 for header in check_headers:
     if not conf.CheckCXXHeader(header):
-        print 'You do not have the %s headers installed. Exiting.' % header
+        print('You do not have the %s headers installed. Exiting.' % header)
         Exit(1)
 for lib in check_libs:
     if not conf.CheckLibWithHeader(lib[0], lib[1], 'C', lib[2]):
-        print lib[3]
+        print(lib[3])
         Exit(1)
 
 env = conf.Finish()
@@ -395,7 +394,7 @@ else:
 #------------------------#
 # Version, debug/release #
 #------------------------#
-version = strftime("%Y-%m-%d")
+version = time.strftime("%Y-%m-%d", time.gmtime(int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))))
 build_dir = 'build'
 if env['release']:
     # release build, debugging off, optimizations on
@@ -516,7 +515,7 @@ if 'install' in COMMAND_LINE_TARGETS:
     SConscript('data/SConscript')
     # desktop appdata installation
     install_desktop = env.Install(env['destdir'] + env['prefix'] + '/share/applications', 'vdrift.desktop')
-    install_appdata = env.Install(env['destdir'] + env['prefix'] + '/share/appdata', 'vdrift.appdata.xml')
+    install_appdata = env.Install(env['destdir'] + env['prefix'] + '/share/metainfo', 'vdrift.appdata.xml')
     env.Alias('install', [install_desktop, install_appdata])
 
 if 'src-package' in COMMAND_LINE_TARGETS:

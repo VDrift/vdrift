@@ -183,6 +183,7 @@ std::pair <Vec3, Quat > Track::GetStart(unsigned int index) const
 
 Track::Data::Data() :
 	world(0),
+	sun_direction(-0.250, -0.588, 0.769),
 	reverse(false),
 	loaded(false),
 	cull(true),

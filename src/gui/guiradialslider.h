@@ -29,14 +29,14 @@ public:
 
 	~GuiRadialSlider();
 
-	void Update(SceneNode & scene, float dt);
+	void Update(SceneNode & scene, float dt) override;
 
 	void SetupDrawable(
 		SceneNode & node,
 		const std::shared_ptr<Texture> & texture,
 		float xywh[4], float z,
 		float start_angle, float end_angle,
-		float radius, float dar,
+		float radius, float dar, bool pointer,
 		std::ostream & error_output);
 
 private:
@@ -44,6 +44,7 @@ private:
 	float m_end_angle;
 	float m_radius;
 	float m_dar;
+	bool m_pointer;
 
 	GuiRadialSlider(const GuiRadialSlider & other);
 

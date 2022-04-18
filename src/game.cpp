@@ -133,7 +133,6 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	ff_update_time(0)
 {
 	dynamics.setContactAddedCallback(&CarDynamics::WheelContactCallback);
-	RegisterActions();
 }
 
 Game::~Game()
@@ -182,7 +181,7 @@ void Game::Start(std::list <std::string> & args)
 	else
 	{
 		// send GUI value lists to the carupdater so it knows about the cars on disk
-		PopulateCarList(carupdater.GetValueList(), true);
+		PopulateCarList(carupdater.GetValueList());
 	}
 
 	// Init track update manager
@@ -218,6 +217,8 @@ void Game::Start(std::list <std::string> & args)
 		error_output << "Error initializing graphical user interface" << std::endl;
 		return;
 	}
+
+	skid_marks.Load(pathmanager.GetEffectsTextureDir(), "skidmark.png", settings.GetAnisotropy(), content);
 
 	// Load particle system.
 	Vec3 smokedir(0.4, 0.2, 1.0);
@@ -386,11 +387,8 @@ bool Game::InitCoreSubsystems()
 		return false;
 	}
 
-	Vec3 ldir(-0.250, -0.588, 0.769);
-	ldir = ldir.Normalize();
-	graphics->SetSunDirection(ldir);
-	graphics->SetLocalTime(settings.GetSkyTime());
-	graphics->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
+	//graphics->SetLocalTime(settings.GetSkyTime());
+	//graphics->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
 
 	// Init content factories
 	content.getFactory<Texture>().init(texture_size, using_gl3, settings.GetTextureCompress());
@@ -417,6 +415,7 @@ void Game::InitPlayerCar()
 
 	car_info[0].driver = "";
 	car_info[0].name = settings.GetCar();
+	car_info[0].variant = settings.GetCarVariant();
 	car_info[0].paint = settings.GetCarPaint();
 	car_info[0].ailevel = settings.GetAILevel();
 	car_info[0].hsv = hsv;
@@ -448,10 +447,14 @@ bool Game::InitGUI()
 	std::map<std::string, GuiOption::List> valuelists;
 	PopulateValueLists(valuelists);
 
-	std::map<std::string, Signal1<const std::string &>*> vsignalmap;
-	std::map<std::string, Slot0*> actionmap;
+	std::map<std::string, Signald<const std::string &>*> vsignalmap;
+	std::map<std::string, Delegated<>> actionmap;
 	InitSignalMap(vsignalmap);
 	InitActionMap(actionmap);
+
+	// make sure signals are disconnected in case of a gui reload
+	for (auto & s : signals)
+		s.disconnect();
 
 	if (!gui.Load(
 		menufiles,
@@ -471,8 +474,7 @@ bool Game::InitGUI()
 		return false;
 	}
 
-	// Connect game actions to gui options
-	BindActionsToGUI();
+	BindActions();
 
 	// Set options from game settings.
 	std::map<std::string, std::string> optionmap;
@@ -492,7 +494,7 @@ bool Game::InitGUI()
 
 bool Game::InitSound()
 {
-	if (sound.Init(2048, info_output, error_output))
+	if (sound.Init(1<<settings.GetSoundBufferSizeLog2(), info_output, error_output))
 	{
 		sound.SetVolume(settings.GetSoundVolume());
 		content.getFactory<SoundBuffer>().init(sound.GetDeviceInfo());
@@ -693,10 +695,11 @@ void Game::Draw(float dt)
 	PROFILER.beginBlock("scenegraph");
 
 	std::vector<SceneNode*> nodes;
-	nodes.reserve(5);
+	nodes.reserve(6);
 
 	nodes.push_back(&dynamicsdraw.getNode());
 	nodes.push_back(&trackmap.GetNode());
+	nodes.push_back(&skid_marks.GetNode());
 	nodes.push_back(&tire_smoke.GetNode());
 
 	if (gui.GetNodes().first)
@@ -712,6 +715,7 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(track.GetBodyNode());
 	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
+	graphics->AddDynamicNode(skid_marks.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
 
 	for (auto & car : car_graphics)
@@ -728,6 +732,7 @@ void Game::Draw(float dt)
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
 	graphics->SetContrast(settings.GetContrast());
+	graphics->SetSunDirection(track.GetSunDirection());
 	if (active_camera)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
@@ -1217,6 +1222,7 @@ void Game::UpdateCarInfo()
 	const CarInfo & info = car_info[car_edit_id];
 	gui.SetOptionValue("game.driver", info.driver);
 	gui.SetOptionValue("game.car", info.name);
+	gui.SetOptionValue("game.car_variant", info.variant);
 	gui.SetOptionValue("game.car_paint", info.paint);
 	gui.SetOptionValue("game.car_color_hue", cast(info.hsv[0]));
 	gui.SetOptionValue("game.car_color_sat", cast(info.hsv[1]));
@@ -1281,13 +1287,17 @@ void Game::UpdateCars(float dt)
 	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
 		car_graphics[i].Update(car_dynamics[i]);
-
 		car_sounds[i].Update(car_dynamics[i], dt);
-
-		AddTireSmokeParticles(car_dynamics[i], dt);
-
 		UpdateDriftScore(i, dt);
 	}
+
+	if (settings.GetParticles())
+		for (int i = 0; i < car_dynamics.size(); ++i)
+			AddTireSmokeParticles(car_dynamics[i], dt);
+
+	if (settings.GetSkidMarks())
+		for (int i = 0; i < car_dynamics.size(); ++i)
+			UpdateSkidMarks(i);
 }
 
 void Game::ProcessCarInputs()
@@ -1455,18 +1465,18 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 			car.DebugPrint(debug_info[2], false, false, true, false);
 			car.DebugPrint(debug_info[3], false, false, false, true);
 
-			signal_debug_info[0](debug_info[0].str());
-			signal_debug_info[1](debug_info[1].str());
-			signal_debug_info[2](debug_info[2].str());
-			signal_debug_info[3](debug_info[3].str());
+			signals[DEBUG0](debug_info[0].str());
+			signals[DEBUG1](debug_info[1].str());
+			signals[DEBUG2](debug_info[2].str());
+			signals[DEBUG3](debug_info[3].str());
 		}
 		else if (frame % 10 == 0)
 		{
 			std::ostringstream gpu_profile;
 			graphics->printProfilingInfo(gpu_profile);
 
-			signal_debug_info[0](PROFILER.getAvgSummary(quickprof::MICROSECONDS));
-			signal_debug_info[1](gpu_profile.str());
+			signals[DEBUG0](PROFILER.getAvgSummary(quickprof::MICROSECONDS));
+			signals[DEBUG1](gpu_profile.str());
 		}
 	}
 
@@ -1477,9 +1487,9 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 		throttlestr << carinputs[CarInput::THROTTLE];
 		brakestr << carinputs[CarInput::BRAKE];
 
-		signal_steering(steeringstr.str());
-		signal_throttle(throttlestr.str());
-		signal_brake(brakestr.str());
+		signals[STEER](steeringstr.str());
+		signals[ACCEL](throttlestr.str());
+		signals[BRAKE](brakestr.str());
 	}
 
 	std::pair <int, int> curplace = timer.GetCarPlace(carid);
@@ -1550,31 +1560,31 @@ void Game::UpdateHUD(const size_t carid, const std::vector<float> & carinputs)
 	gasstr << (car.GetFuelAmount() ? 0.3 : 1.0);
 	nosstr << ((car.GetNosAmount() && carinputs[CarInput::NOS]) ? 1.0 : 0.3);
 
-	signal_lap_time[0](GetTimeString(timer.GetTime(carid)));
-	signal_lap_time[1](GetTimeString(timer.GetLastLap(carid)));
-	signal_lap_time[2](GetTimeString(timer.GetBestLap(carid)));
+	signals[TIME0](GetTimeString(timer.GetTime(carid)));
+	signals[TIME1](GetTimeString(timer.GetLastLap(carid)));
+	signals[TIME2](GetTimeString(timer.GetBestLap(carid)));
 
-	signal_pos(placestr.str());
-	signal_lap(lapstr.str());
-	signal_score(scorestr.str());
-	signal_message(msgstr.str());
+	signals[POS](placestr.str());
+	signals[LAP](lapstr.str());
+	signals[SCORE](scorestr.str());
+	signals[MSG](msgstr.str());
 
-	signal_gear(gearstr.str());
-	signal_shift(shiftstr.str());
+	signals[GEAR](gearstr.str());
+	signals[SHIFT](shiftstr.str());
 
-	signal_speedometer(speedostr.str());
-	signal_speed_norm(speednstr.str());
-	signal_speed(speedstr.str());
+	signals[SPEEDO](speedostr.str());
+	signals[SPEEDN](speednstr.str());
+	signals[SPEED](speedstr.str());
 
-	signal_tachometer(tachostr.str());
-	signal_rpm_norm(rpmnstr.str());
-	signal_rpm_red(rpmrstr.str());
-	signal_rpm(rpmstr.str());
+	signals[TACHO](tachostr.str());
+	signals[RPMN](rpmnstr.str());
+	signals[RPMR](rpmrstr.str());
+	signals[RPM](rpmstr.str());
 
-	signal_abs(absstr.str());
-	signal_tcs(tcsstr.str());
-	signal_gas(gasstr.str());
-	signal_nos(nosstr.str());
+	signals[ABS](absstr.str());
+	signals[TCS](tcsstr.str());
+	signals[GAS](gasstr.str());
+	signals[NOS](nosstr.str());
 }
 
 bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
@@ -1627,7 +1637,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Load timer.
 	float pretime = (num_laps > 0) ? 3.0f : 0.0f;
-	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime))
+	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, cars_num))
 	{
 		error_output << "Unable to load timer" << std::endl;
 		return false;
@@ -1655,41 +1665,47 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Record a replay.
 	if (settings.GetRecordReplay() && !playreplay)
 	{
-		std::string prev_car_name;
+		std::string prev_car_name, prev_variant_name;
 		for (size_t i = 0; i < car_info.size(); ++i)
 		{
 			// load car config
 			CarInfo & info = car_info[i];
-			if (prev_car_name == info.name)
+			if (prev_car_name == info.name && prev_variant_name == info.variant)
 			{
 				info.config = car_info[i - 1].config;
 			}
 			else
 			{
-				const size_t n0 = info.name.find("/");
-				const size_t n1 = info.name.length();
-				const std::string carname = info.name.substr(n0 + 1, n1 - n0 - 1);
-				const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n0);
 				std::shared_ptr<PTree> carcfg;
-				content.load(carcfg, cardir, carname + ".car");
+				content.load(carcfg, pathmanager.GetCarsDir() + "/" + info.name, info.variant + ".car");
 
 				std::ostringstream carstream;
 				write_ini(*carcfg, carstream);
 				info.config = carstream.str();
 
 				prev_car_name = info.name;
+				prev_variant_name = info.variant;
 			}
 		}
 
 		replay.StartRecording(car_info, settings.GetTrack(), error_output);
 	}
 
+	if (settings.GetRecordReplay() || playreplay)
+	{
+		// clear replay car configs
+		for (size_t i = 0; i < car_info.size(); ++i)
+			car_info[i].config.clear();
+	}
+
 	// Clean up asset cache.
 	content.sweep();
 
+	skid_marks.Reset(cars_num * 4, settings.GetSkidMarks());
+
 	// Set up GUI.
 	gui.SetInGame(true);
-	gui.ActivatePage("Hud", 0.25, error_output);
+	gui.ActivatePage(settings.GetHUD(), 0.25, error_output);
 
 	// not strictly needed, is expected to be called by Hud page onfocus event
 	ContinueGame();
@@ -1720,18 +1736,15 @@ bool Game::LoadCar(
 	const Quat & orientation,
 	const bool sound_enabled)
 {
-	const size_t n0 = info.name.find("/");
-	const size_t n1 = info.name.length();
-	const std::string carname = info.name.substr(n0 + 1, n1 - n0 - 1);
-	const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n0);
+	const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name;
 
 	std::shared_ptr<PTree> carconf;
 	if (info.config.empty())
 	{
-		content.load(carconf, cardir, carname + ".car");
+		content.load(carconf, cardir, info.variant + ".car");
 		if (!carconf->size())
 		{
-			error_output << "Failed to load car config: " << info.name << std::endl;
+			error_output << "Failed to load car config: " << info.name << "/" << info.variant << std::endl;
 			return false;
 		}
 	}
@@ -1748,20 +1761,20 @@ bool Game::LoadCar(
 	car_graphics.push_back(CarGraphics());
 	CarGraphics & car_gfx = car_graphics.back();
 	if (!car_gfx.Load(
-		*carconf, cardir, carname, info.wheel, info.paint, color,
+		*carconf, cardir, info.wheel, info.paint, color,
 		settings.GetAnisotropy(), settings.GetCameraBounce(),
 		content, error_output))
 	{
-		error_output << "Failed to load graphics for car: " << info.name << std::endl;
+		error_output << "Failed to load graphics for car: " << info.name << " " << info.variant << std::endl;
 		car_graphics.pop_back();
 		return false;
 	}
 
 	car_sounds.push_back(CarSound());
 	CarSound & car_snd = car_sounds.back();
-	if (sound_enabled && !car_snd.Load(cardir, carname, sound, content, error_output))
+	if (sound_enabled && !car_snd.Load(cardir, info.name, sound, content, error_output))
 	{
-		error_output << "Failed to load sounds for car: " << info.name << std::endl;
+		error_output << "Failed to load sounds for car: " << info.name << " " << info.variant << std::endl;
 		car_graphics.pop_back();
 		car_sounds.pop_back();
 		return false;
@@ -1777,7 +1790,7 @@ bool Game::LoadCar(
 		settings.GetVehicleDamage(),
 		dynamics, content, error_output))
 	{
-		error_output << "Failed to load physics for car: " << info.name << std::endl;
+		error_output << "Failed to load physics for car: " << info.name << " " << info.variant << std::endl;
 		car_graphics.pop_back();
 		car_sounds.pop_back();
 		car_dynamics.pop_back();
@@ -1898,15 +1911,15 @@ void Game::LoadGarage()
 	if (!track.DeferredLoad(
 		content, dynamics,
 		info_output, error_output,
-		pathmanager.GetSkinsPath() + "/" + settings.GetSkin(),
-		pathmanager.GetSkinsDir() + "/" + settings.GetSkin(),
+		pathmanager.GetTracksPath(settings.GetMenuRoom()),
+		pathmanager.GetTracksDir()+"/"+settings.GetMenuRoom(),
 		pathmanager.GetEffectsTextureDir(),
 		pathmanager.GetTrackPartsPath(),
 		settings.GetAnisotropy(),
 		track_reverse, track_dynamic,
 		graphics->GetShadows()))
 	{
-		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
+		error_output << "Error loading menu room: " << settings.GetMenuRoom() << std::endl;
 		return;
 	}
 
@@ -1925,7 +1938,7 @@ void Game::LoadGarage()
 
 	if (!success)
 	{
-		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
+		error_output << "Error loading menu room: " << settings.GetMenuRoom() << std::endl;
 		return;
 	}
 
@@ -1964,11 +1977,12 @@ void Game::SetGarageCar()
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
-	Vec3 offset(0.5, -2.5, 0.5);
-	Vec3 pos = car_pos + offset;
-	Quat rot = LookAt(pos, car_pos, Direction::Up);
-	garage_camera.SetOffset(offset);
-	garage_camera.Reset(pos, rot);
+	Vec3 cam_offset(2, 4, 1);
+	car_rot.RotateVector(cam_offset);
+	Vec3 cam_pos = car_pos + cam_offset;
+	Quat cam_rot = LookAt(cam_pos, car_pos, Direction::Up);
+	garage_camera.SetOffset(cam_offset);
+	garage_camera.Reset(car_pos, cam_rot);
 	active_camera = &garage_camera;
 
 	UpdateCarSpecs();
@@ -2013,7 +2027,7 @@ void Game::CalculateFPS()
 	{
 		fps_avg += fps_track[i];
 	}
-	fps_avg /= 10.0;
+	fps_avg *= 0.1f;
 
 	// Don't start looking an min/max until we've put out a few frames.
 	if (fps_min == 0 && frame > 20)
@@ -2034,41 +2048,22 @@ void Game::CalculateFPS()
 	{
 		std::ostringstream fpsstr;
 		fpsstr << (int)fps_avg;
-		signal_fps(fpsstr.str());
+		signals[FPS](fpsstr.str());
 	}
 }
 
 static void PopulateCarSet(
 	std::set<std::pair<std::string, std::string> > & set,
 	const std::string & path,
-	const PathManager & pathmanager,
-	const bool cardironly)
+	const PathManager & pathmanager)
 {
-	const std::string ext(".car");
 	std::list<std::string> folders;
 	pathmanager.GetFileList(path, folders);
-	if (cardironly)
+	for (const auto & folder : folders)
 	{
-		for (const auto & folder : folders)
-		{
-			std::ifstream file((path + "/" + folder + "/" + folder + ext).c_str());
-			if (file)
-				set.insert(std::make_pair(folder, folder));
-		}
-	}
-	else
-	{
-		for (const auto & folder : folders)
-		{
-			std::list<std::string> files;
-			pathmanager.GetFileList(path + "/" + folder, files, ext);
-			for (const auto & file : files)
-			{
-				const std::string opt = file.substr(0, file.length() - ext.length());
-				const std::string val = folder + "/" + opt;
-				set.insert(std::make_pair(val, opt));
-			}
-		}
+		std::ifstream file((path + "/" + folder + "/" + folder + ".car").c_str());
+		if (file)
+			set.emplace(folder, folder);
 	}
 }
 
@@ -2086,7 +2081,7 @@ static void PopulateTrackSet(
 		{
 			std::string name;
 			getline(file, name);
-			set.insert(std::make_pair(folder, name));
+			set.emplace(folder, name);
 		}
 	}
 }
@@ -2116,12 +2111,12 @@ void Game::PopulateTrackList(GuiOption::List & tracklist)
 	std::sort(tracklist.begin(), tracklist.end(), SortPairBySecond<std::string, std::string>());
 }
 
-void Game::PopulateCarList(GuiOption::List & carlist, bool cardironly)
+void Game::PopulateCarList(GuiOption::List & carlist)
 {
 	// Use set to avoid duplicate entries.
 	std::set <std::pair<std::string, std::string> > carset;
-	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager, cardironly);
-	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager, cardironly);
+	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager);
+	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager);
 
 	carlist.clear();
 	for (const auto & car : carset)
@@ -2130,52 +2125,66 @@ void Game::PopulateCarList(GuiOption::List & carlist, bool cardironly)
 	}
 }
 
-void Game::PopulateCarPaintList(const std::string & carname, GuiOption::List & paintlist)
+void Game::PopulateCarVariantList(const std::string & carname, GuiOption::List & variants)
 {
-	paintlist.clear();
-	paintlist.push_back(std::make_pair("default", "default"));
+	variants.clear();
 
-	std::list<std::string> filelist;
-	const std::string cardir = carname.substr(0, carname.find("/"));
-	const std::string paintdir = pathmanager.GetCarPaintPath(cardir);
-	if (pathmanager.GetFileList(paintdir, filelist, ".png"))
+	std::list<std::string> files;
+	if (pathmanager.GetFileList(pathmanager.GetCarPath(carname), files, ".car"))
 	{
-		for (const auto & file : filelist)
+		for (const auto & file : files)
 		{
-			std::string paintname = file.substr(0, file.find('.'));
-			paintlist.push_back(std::make_pair("skins/" + file, paintname));
+			std::string name(file, 0, file.length() - 4);
+			variants.push_back(std::make_pair(name, name));
 		}
 	}
 }
 
-void Game::PopulateCarTireList(const std::string & /*carname*/, GuiOption::List & tirelist)
+void Game::PopulateCarPaintList(const std::string & carname, GuiOption::List & paints)
 {
-	tirelist.clear();
-	tirelist.push_back(std::make_pair("default", "default"));
+	paints.clear();
+	paints.push_back(std::make_pair("default", "default"));
 
-	std::list<std::string> filelist;
-	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/tire", filelist, ".tire"))
+	std::list<std::string> files;
+	const std::string paintdir = pathmanager.GetCarPaintPath(carname);
+	if (pathmanager.GetFileList(paintdir, files, ".png"))
 	{
-		for (const auto & file : filelist)
+		for (const auto & file : files)
 		{
-			std::string name = file.substr(0, file.find('.'));
-			tirelist.push_back(std::make_pair("tire/" + file, name));
+			std::string name(file, 0, file.length() - 4);
+			paints.push_back(std::make_pair("skins/" + file, name));
 		}
 	}
 }
 
-void Game::PopulateCarWheelList(const std::string & /*carname*/, GuiOption::List & wheellist)
+void Game::PopulateCarTireList(const std::string & /*carname*/, GuiOption::List & tires)
 {
-	wheellist.clear();
-	wheellist.push_back(std::make_pair("default", "default"));
+	tires.clear();
+	tires.push_back(std::make_pair("default", "default"));
 
-	std::list<std::string> filelist;
-	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/wheel", filelist, ".wheel"))
+	std::list<std::string> files;
+	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/tire", files, ".tire"))
 	{
-		for (const auto & file : filelist)
+		for (const auto & file : files)
 		{
-			std::string name = file.substr(0, file.find('.'));
-			wheellist.push_back(std::make_pair("wheel/" + file, name));
+			std::string name(file, 0, file.length() - 5);
+			tires.push_back(std::make_pair("tire/" + file, name));
+		}
+	}
+}
+
+void Game::PopulateCarWheelList(const std::string & /*carname*/, GuiOption::List & wheels)
+{
+	wheels.clear();
+	wheels.push_back(std::make_pair("default", "default"));
+
+	std::list<std::string> files;
+	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/wheel", files, ".wheel"))
+	{
+		for (const auto & file : files)
+		{
+			std::string name(file, 0, file.length() - 6);
+			wheels.push_back(std::make_pair("wheel/" + file, name));
 		}
 	}
 }
@@ -2303,6 +2312,8 @@ void Game::PopulateValueLists(std::map<std::string, GuiOption::List> & valuelist
 
 	PopulateCarList(valuelists["cars"]);
 
+	PopulateCarVariantList(settings.GetCar(), valuelists["car_variants"]);
+
 	PopulateCarPaintList(settings.GetCar(), valuelists["car_paints"]);
 
 	PopulateCarTireList(settings.GetCar(), valuelists["tires"]);
@@ -2356,7 +2367,7 @@ void Game::ShowLoadingScreen(float progress, float progress_max, const std::stri
 
 	std::ostringstream loadstr;
 	loadstr << progress / progress_max;
-	signal_loading(loadstr.str());
+	signals[LOADING](loadstr.str());
 
 	// Tick the gui.
 	eventsystem.BeginFrame();
@@ -2454,7 +2465,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 
 			std::ostringstream loadstr;
 			loadstr << fmod(info.downloaded, total) / total;
-			signal_loading(loadstr.str());
+			signals[LOADING](loadstr.str());
 
 			Advance();
 		}
@@ -2498,6 +2509,22 @@ void Game::UpdateForceFeedback(float dt)
 	forcefeedback->update(feedback, ffdt, error_output);
 }
 
+void Game::UpdateSkidMarks(const int carid)
+{
+	auto & car = car_dynamics[carid];
+	for (int j = 0; j < 4; ++j)
+	{
+		float squeal = car.GetTireSqueal(WheelPosition(j));
+		float hw = car.GetWheel(WheelPosition(j)).GetWidth() * 0.5f;
+		auto & wc = car.GetWheelContact(WheelPosition(j));
+		Vec3 v = ToMathVector<float>(car.GetVelocity(wc.GetPosition()));
+		Vec3 n = ToMathVector<float>(wc.GetNormal());
+		Vec3 p = ToMathVector<float>(wc.GetPosition()) + n * 0.005f;
+		Vec3 r = v.cross(n).Normalize() * hw;
+		skid_marks.UpdateEmitter(carid * 4 + j, squeal, p + r, p - r);
+	}
+}
+
 void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 {
 	// Only spawn particles every so often...
@@ -2532,7 +2559,16 @@ void Game::UpdateParticleGraphics()
 		Vec3 campos = active_camera->GetPosition();
 		float znear = 0.1f; // hardcoded in graphics
 		float zfar = settings.GetViewDistance();
+		float fovy = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
+		float sy = std::sin(fovy * float(M_PI/360.0));
+		// compute sin(fov/2) of screen diagonal
+		float rx = settings.GetResolutionX();
+		float ry = settings.GetResolutionY();
+		float rx2 = rx * rx;
+		float ry2 = ry * ry;
+		float s = sy * std::sqrt((rx2 + ry2) / (sy * sy * rx2 + ry2));
 		tire_smoke.UpdateGraphics(camorient, campos, znear, zfar);
+		skid_marks.UpdateGraphics(active_camera->GetOrientation(), campos, znear, zfar, s);
 	}
 }
 
@@ -2641,6 +2677,7 @@ void Game::LeaveGame()
 
 	graphics->ClearStaticDrawables();
 
+	skid_marks.Clear();
 	tire_smoke.Clear();
 	track.Clear();
 	car_dynamics.clear();
@@ -2790,6 +2827,11 @@ void Game::ActivateEditControlPage()
 	}
 }
 
+void Game::CancelDownload()
+{
+	http.CancelAllRequests();
+}
+
 void Game::CancelControl()
 {
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
@@ -2848,6 +2890,7 @@ void Game::SyncOptions()
 	// hack: store player car info only
 	CarInfo & info = car_info[player_car_id];
 	info.name = optionmap["game.car"];
+	info.variant = optionmap["game.car_variant"];
 	info.paint = optionmap["game.car_paint"];
 	info.tire = optionmap["game.car_tire"];
 	info.wheel = optionmap["game.car_wheel"];
@@ -2858,6 +2901,7 @@ void Game::SyncOptions()
 	{
 		optionmap.erase("game.driver");
 		optionmap.erase("game.car");
+		optionmap.erase("game.car_variant");
 		optionmap.erase("game.car_paint");
 		optionmap.erase("game.car_tire");
 		optionmap.erase("game.car_wheel");
@@ -2879,6 +2923,7 @@ void Game::SyncSettings()
 	const CarInfo & info = car_info[player_car_id];
 	optionmap["game.driver"] = info.driver;
 	optionmap["game.car"] = info.name;
+	optionmap["game.car_variant"] = info.variant;
 	optionmap["game.car_paint"] = info.paint;
 	optionmap["game.car_tire"] = info.tire;
 	optionmap["game.car_wheel"] = info.wheel;
@@ -2908,7 +2953,7 @@ void Game::SetCarToEdit(const std::string & value)
 	// if car differs from last car force reload
 	const CarInfo & info_prev = car_info[prev_edit_id];
 	const CarInfo & info = car_info[car_edit_id];
-	if (info.name != info_prev.name)
+	if (info.name != info_prev.name || info.variant != info_prev.variant)
 	{
 		SetGarageCar();
 	}
@@ -2946,13 +2991,27 @@ void Game::SetCarName(const std::string & value)
 
 	car_info[car_edit_id].name = value;
 
-	GuiOption::List paintlist;
-	PopulateCarPaintList(value, paintlist);
-	gui.SetOptionValues("game.car_paint", info.paint, paintlist, error_output);
+	GuiOption::List variants;
+	PopulateCarVariantList(value, variants);
+	gui.SetOptionValues("game.car_variant", info.variant, variants, error_output);
+
+	GuiOption::List paints;
+	PopulateCarPaintList(value, paints);
+	gui.SetOptionValues("game.car_paint", info.paint, paints, error_output);
 
 	UpdateStartList();
 
 	SetGarageCar();
+}
+
+void Game::SetCarVariant(const std::string & value)
+{
+	CarInfo & info = car_info[car_edit_id];
+	if (info.variant != value)
+	{
+		info.variant = value;
+		SetGarageCar();
+	}
 }
 
 void Game::SetCarPaint(const std::string & value)
@@ -3116,128 +3175,96 @@ void Game::SetControl(const std::string & value)
 	}
 }
 
-void Game::BindActionsToGUI()
+void Game::BindActions()
 {
-	set_car_toedit.connect(gui.GetOption("game.startlist").signal_val);
-	set_car_startpos.connect(gui.GetOption("game.car_startpos").signal_val);
-	set_car_name.connect(gui.GetOption("game.car").signal_val);
-	set_car_paint.connect(gui.GetOption("game.car_paint").signal_val);
-	set_car_tire.connect(gui.GetOption("game.car_tire").signal_val);
-	set_car_wheel.connect(gui.GetOption("game.car_wheel").signal_val);
-	set_car_color_hue.connect(gui.GetOption("game.car_color_hue").signal_val);
-	set_car_color_sat.connect(gui.GetOption("game.car_color_sat").signal_val);
-	set_car_color_val.connect(gui.GetOption("game.car_color_val").signal_val);
-	set_car_driver.connect(gui.GetOption("game.driver").signal_val);
-	set_car_ailevel.connect(gui.GetOption("game.ai_level").signal_val);
-	set_cars_num.connect(gui.GetOption("game.cars_num").signal_val);
-	set_control.connect(gui.GetOption("controledit.string").signal_val);
+	Delegated<const std::string &> d;
+	#define BIND(option, func)\
+		d.bind<Game, &Game::func>(this);\
+		gui.GetOption(option).signal_val.connect(d);
+	BIND("game.startlist",     SetCarToEdit)
+	BIND("game.car",           SetCarName)
+	BIND("game.car_startpos",  SetCarStartPos)
+	BIND("game.car_variant",   SetCarVariant)
+	BIND("game.car_paint",     SetCarPaint)
+	BIND("game.car_tire",      SetCarTire)
+	BIND("game.car_wheel",     SetCarWheel)
+	BIND("game.car_color_hue", SetCarColorHue)
+	BIND("game.car_color_sat", SetCarColorSat)
+	BIND("game.car_color_val", SetCarColorVal)
+	BIND("game.cars_num",      SetCarsNum)
+	BIND("game.driver",        SetCarDriver)
+	BIND("game.ai_level",      SetCarAILevel)
+	BIND("controledit.string", SetControl)
+	#undef BIND
 }
 
-void Game::RegisterActions()
+void Game::InitActionMap(std::map<std::string, Delegated<>> & actionmap)
 {
-	set_car_toedit.call.bind<Game, &Game::SetCarToEdit>(this);
-	set_car_startpos.call.bind<Game, &Game::SetCarStartPos>(this);
-	set_car_name.call.bind<Game, &Game::SetCarName>(this);
-	set_car_paint.call.bind<Game, &Game::SetCarPaint>(this);
-	set_car_tire.call.bind<Game, &Game::SetCarTire>(this);
-	set_car_wheel.call.bind<Game, &Game::SetCarWheel>(this);
-	set_car_color_hue.call.bind<Game, &Game::SetCarColorHue>(this);
-	set_car_color_sat.call.bind<Game, &Game::SetCarColorSat>(this);
-	set_car_color_val.call.bind<Game, &Game::SetCarColorVal>(this);
-	set_car_driver.call.bind<Game, &Game::SetCarDriver>(this);
-	set_car_ailevel.call.bind<Game, &Game::SetCarAILevel>(this);
-	set_cars_num.call.bind<Game, &Game::SetCarsNum>(this);
-	set_control.call.bind<Game, &Game::SetControl>(this);
-
-	actions.resize(26);
-	actions[0].call.bind<Game, &Game::QuitGame>(this);
-	actions[1].call.bind<Game, &Game::LoadGarage>(this);
-	actions[2].call.bind<Game, &Game::StartRace>(this);
-	actions[3].call.bind<Game, &Game::PauseGame>(this);
-	actions[4].call.bind<Game, &Game::ContinueGame>(this);
-	actions[5].call.bind<Game, &Game::RestartGame>(this);
-	actions[6].call.bind<Game, &Game::StartReplay>(this);
-	actions[7].call.bind<Game, &Game::StartCheckForUpdates>(this);
-	actions[8].call.bind<Http, &Http::CancelAllRequests>(&http);
-	actions[9].call.bind<Game, &Game::StartCarManager>(this);
-	actions[10].call.bind<Game, &Game::CarManagerNext>(this);
-	actions[11].call.bind<Game, &Game::CarManagerPrev>(this);
-	actions[12].call.bind<Game, &Game::ApplyCarUpdate>(this);
-	actions[13].call.bind<Game, &Game::StartTrackManager>(this);
-	actions[14].call.bind<Game, &Game::TrackManagerNext>(this);
-	actions[15].call.bind<Game, &Game::TrackManagerPrev>(this);
-	actions[16].call.bind<Game, &Game::ApplyTrackUpdate>(this);
-	actions[17].call.bind<Game, &Game::CancelControl>(this);
-	actions[18].call.bind<Game, &Game::DeleteControl>(this);
-	actions[19].call.bind<Game, &Game::SetButtonControl>(this);
-	actions[20].call.bind<Game, &Game::SetAnalogControl>(this);
-	actions[21].call.bind<Game, &Game::LoadControls>(this);
-	actions[22].call.bind<Game, &Game::SaveControls>(this);
-	actions[23].call.bind<Game, &Game::SyncOptions>(this);
-	actions[24].call.bind<Game, &Game::SyncSettings>(this);
-	actions[25].call.bind<Game, &Game::SelectPlayerCar>(this);
+	#define BIND(func)\
+		actionmap[#func].bind<Game, &Game::func>(this);
+	BIND(QuitGame)
+	BIND(LoadGarage)
+	BIND(StartRace)
+	BIND(PauseGame)
+	BIND(ContinueGame)
+	BIND(RestartGame)
+	BIND(StartReplay)
+	BIND(StartCheckForUpdates)
+	BIND(CancelDownload)
+	BIND(StartCarManager)
+	BIND(CarManagerNext)
+	BIND(CarManagerPrev)
+	BIND(ApplyCarUpdate)
+	BIND(StartTrackManager)
+	BIND(TrackManagerNext)
+	BIND(TrackManagerPrev)
+	BIND(ApplyTrackUpdate)
+	BIND(CancelControl)
+	BIND(DeleteControl)
+	BIND(SetButtonControl)
+	BIND(SetAnalogControl)
+	BIND(LoadControls)
+	BIND(SaveControls)
+	BIND(SyncOptions)
+	BIND(SyncSettings)
+	BIND(SelectPlayerCar)
+	#undef BIND
 }
 
-void Game::InitActionMap(std::map<std::string, Slot0*> & actionmap)
+void Game::InitSignalMap(std::map<std::string, Signald<const std::string &>*> & signalmap)
 {
-	actionmap["QuitGame"] = &actions[0];
-	actionmap["LeaveGame"] = &actions[1];
-	actionmap["StartRace"] = &actions[2];
-	actionmap["PauseGame"] = &actions[3];
-	actionmap["ContinueGame"] = &actions[4];
-	actionmap["RestartGame"] = &actions[5];
-	actionmap["StartReplay"] = &actions[6];
-	actionmap["StartCheckForUpdates"] = &actions[7];
-	actionmap["CancelDownload"] = &actions[8];
-	actionmap["StartCarManager"] = &actions[9];
-	actionmap["CarManagerNext"] = &actions[10];
-	actionmap["CarManagerPrev"] = &actions[11];
-	actionmap["ApplyCarUpdate"] = &actions[12];
-	actionmap["StartTrackManager"] = &actions[13];
-	actionmap["TrackManagerNext"] = &actions[14];
-	actionmap["TrackManagerPrev"] = &actions[15];
-	actionmap["ApplyTrackUpdate"] = &actions[16];
-	actionmap["CancelControl"] = &actions[17];
-	actionmap["DeleteControl"] = &actions[18];
-	actionmap["SetButtonControl"] = &actions[19];
-	actionmap["SetAnalogControl"] = &actions[20];
-	actionmap["LoadControls"] = &actions[21];
-	actionmap["SaveControls"] = &actions[22];
-	actionmap["gui.options.load"] = &actions[23];
-	actionmap["gui.options.save"] = &actions[24];
-	actionmap["SelectPlayerCar"] = &actions[25];
-}
+	for (int i = 0; i < SIGNALNUM; ++i)
+		signals[i].disconnect();
 
-void Game::InitSignalMap(std::map<std::string, Signal1<const std::string &>*> & signalmap)
-{
-	signalmap["game.loading"] = &signal_loading;
-	signalmap["game.fps"] = &signal_fps;
-
-	signalmap["car.debug0"] = &signal_debug_info[0];
-	signalmap["car.debug1"] = &signal_debug_info[1];
-	signalmap["car.debug2"] = &signal_debug_info[2];
-	signalmap["car.debug3"] = &signal_debug_info[3];
-	signalmap["car.message"] = &signal_message;
-	signalmap["car.cur_lap_time"] = &signal_lap_time[0];
-	signalmap["car.last_lap_time"] = &signal_lap_time[1];
-	signalmap["car.best_lap_time"] = &signal_lap_time[2];
-	signalmap["car.lap"] = &signal_lap;
-	signalmap["car.pos"] = &signal_pos;
-	signalmap["car.score"] = &signal_score;
-	signalmap["car.steering"] = &signal_steering;
-	signalmap["car.throttle"] = &signal_throttle;
-	signalmap["car.brake"] = &signal_brake;
-	signalmap["car.gear"] = &signal_gear;
-	signalmap["car.shift"] = &signal_shift;
-	signalmap["car.speedometer"] = &signal_speedometer;
-	signalmap["car.speed.norm"] = &signal_speed_norm;
-	signalmap["car.speed"] = &signal_speed;
-	signalmap["car.tachometer"] = &signal_tachometer;
-	signalmap["car.rpm.norm"] = &signal_rpm_norm;
-	signalmap["car.rpm.red"] = &signal_rpm_red;
-	signalmap["car.rpm"] = &signal_rpm;
-	signalmap["car.abs"] = &signal_abs;
-	signalmap["car.tcs"] = &signal_tcs;
-	signalmap["car.gas"] = &signal_gas;
-	signalmap["car.nos"] = &signal_nos;
+	#define BIND(s, n) signalmap[s] = &signals[n];
+	BIND("game.loading",      0);
+	BIND("game.fps",          1);
+	BIND("car.debug0",        2);
+	BIND("car.debug1",        3);
+	BIND("car.debug2",        4);
+	BIND("car.debug3",        5);
+	BIND("car.message",       6);
+	BIND("car.cur_lap_time",  7);
+	BIND("car.last_lap_time", 8);
+	BIND("car.best_lap_time", 9);
+	BIND("car.lap",          10);
+	BIND("car.pos",          11);
+	BIND("car.score",        12);
+	BIND("car.steering",     13);
+	BIND("car.throttle",     14);
+	BIND("car.brake",        15);
+	BIND("car.gear",         16);
+	BIND("car.shift",        17);
+	BIND("car.speedometer",  18);
+	BIND("car.speed.norm",   19);
+	BIND("car.speed",        20);
+	BIND("car.tachometer",   21);
+	BIND("car.rpm.norm",     22);
+	BIND("car.rpm.red",      23);
+	BIND("car.rpm",          24);
+	BIND("car.abs",          25);
+	BIND("car.tcs",          26);
+	BIND("car.gas",          27);
+	BIND("car.nos",          28);
+	#undef BIND
 }

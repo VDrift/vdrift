@@ -33,7 +33,8 @@ public:
 
 	~Timer() {Unload();}
 
-	bool Load(const std::string & trackrecordspath, float stagingtime);
+	///stagingtime in seconds, num_cars hint of expected number of cars
+	bool Load(const std::string & trackrecordspath, float stagingtime, unsigned num_cars);
 
 	///add a car of the given type and return the integer identifier that the track system will use
 	int AddCar(const std::string & cartype);
@@ -50,11 +51,11 @@ public:
 
 	void UpdateDistance(const unsigned int carid, const double newdistance);
 
-	float GetTime(unsigned int index) {assert(index<car.size());return car[index].GetTime();}
+	float GetTime(unsigned int index) const {assert(index<car.size());return car[index].GetTime();}
 
-	float GetLastLap(unsigned int index) {assert(index<car.size());return car[index].GetLastLap();}
+	float GetLastLap(unsigned int index) const {assert(index<car.size());return car[index].GetLastLap();}
 
-	float GetBestLap(unsigned int index) {assert(index<car.size());return car[index].GetBestLap();}
+	float GetBestLap(unsigned int index) const {assert(index<car.size());return car[index].GetBestLap();}
 
 	int GetCurrentLap(unsigned int index) const {assert(index<car.size()); return car[index].GetCurrentLap();}
 

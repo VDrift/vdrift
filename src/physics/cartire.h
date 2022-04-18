@@ -1,20 +1,19 @@
 #ifndef _CARTIRE_H
 #define _CARTIRE_H
 
+#include "cartirebase.h"
+
 //#define VDRIFTP
 
 #if defined(VDRIFTP)
 	#include "physics/cartire3.h"
-	typedef CarTire3 CarTire;
-	typedef CarTireInfo3 CarTireInfo;
+	using CarTire = CarTire3;
 #elif defined(VDRIFTN)
 	#include "physics/cartire2.h"
-	typedef CarTire2 CarTire;
-	typedef CarTireInfo2 CarTireInfo;
+	using CarTire = CarTire2;
 #else
 	#include "physics/cartire1.h"
-	typedef CarTire1 CarTire;
-	typedef CarTireInfo1 CarTireInfo;
+	using CarTire = CarTire1;
 #endif
 
 #endif

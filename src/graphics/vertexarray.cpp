@@ -102,77 +102,55 @@ void VertexArray::GetFaces(const unsigned * & output_array_pointer, unsigned & o
 	output_array_pointer = faces.empty() ? NULL : faces.data();
 }
 
+template <typename T>
+void SetData(std::vector<T> & vec, const T array[], unsigned count, unsigned offset, unsigned stride)
+{
+	if (count == 0) return;
+
+	unsigned size = offset + count;
+	assert(size % stride == 0); // check stride
+
+	if (size != vec.size())
+		vec.resize(size);
+
+	auto myarray = &(vec[offset]);
+	std::memcpy(myarray, array, sizeof(T) * count);
+}
+
 void VertexArray::SetColors(const unsigned char array[], unsigned count, unsigned offset)
 {
-	unsigned size = offset + count;
-
-	// Tried to assign values that aren't in sets of 4
-	assert(size % 4 == 0);
-
-	if (size != colors.size())
-		colors.resize(size);
-
-	unsigned char * myarray = &(colors[offset]);
-	std::memcpy(myarray, array, sizeof(unsigned char) * count);
+	SetData(colors, array, count, offset, 4);
 }
 
 void VertexArray::SetTexCoords(const float array[], unsigned count, unsigned offset)
 {
-	// Tried to assign values that aren't in sets of 2
-	assert(count % 2 == 0);
 
-	unsigned size = offset + count;
-
-	if (size != texcoords.size())
-		texcoords.resize(size);
-
-	float * myarray = &(texcoords[offset]);
-	std::memcpy(myarray, array, sizeof(float) * count);
+	SetData(texcoords, array, count, offset, 2);
 }
 
 void VertexArray::SetNormals(const float array[], unsigned count, unsigned offset)
 {
-	unsigned size = offset + count;
-
-	// Tried to assign values that aren't in sets of 3
-	assert(size % 3 == 0);
-
-	if (size != normals.size())
-		normals.resize(size);
-
-	float * myarray = &(normals[offset]);
-	std::memcpy(myarray, array, sizeof(float) * count);
+	SetData(normals, array, count, offset, 3);
 }
 
 void VertexArray::SetVertices(const float array[], unsigned count, unsigned offset)
 {
-	unsigned size = offset + count;
-
-	// Tried to assign values that aren't in sets of 3
-	assert(size % 3 == 0);
-
-	if (size != vertices.size())
-		vertices.resize(size);
-
-	float * myarray = &(vertices[offset]);
-	std::memcpy(myarray, array, sizeof(float) * count);
+	SetData(vertices, array, count, offset, 3);
 }
 
 void VertexArray::SetFaces(const unsigned int array[], unsigned count, unsigned offset, unsigned idoffset)
 {
-	// Tried to assign values that aren't in sets of 3
-	assert (count % 3 == 0);
+	if (count == 0) return;
 
 	unsigned size = offset + count;
+	assert(size % 3 == 0); // check stride
 
 	if (size != faces.size())
 		faces.resize(size);
 
-	unsigned int * myarray = &(faces[offset]);
+	auto myarray = &(faces[offset]);
 	for (unsigned i = 0; i < count; ++i)
-	{
 		myarray[i] = array[i] + idoffset;
-	}
 }
 
 void VertexArray::Add(

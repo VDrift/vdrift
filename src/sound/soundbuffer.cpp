@@ -237,17 +237,17 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 
 	name = filename;
 
-	FILE * fp = fopen(filename.c_str(), "rb");
-	if (!fp)
-	{
-		error_output << "Can't open sound file: " + filename << std::endl;
-		return false;
-	}
-
 	int bytespersample = sound_device_info.bytespersample;
 	if (bytespersample != 2 && bytespersample != 4)
 	{
 		error_output << "Sound buffer with " << bytespersample << " bytes per sample not supported" << std::endl;
+		return false;
+	}
+
+	FILE * fp = fopen(filename.c_str(), "rb");
+	if (!fp)
+	{
+		error_output << "Can't open sound file: " + filename << std::endl;
 		return false;
 	}
 

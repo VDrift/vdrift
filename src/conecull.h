@@ -17,71 +17,51 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "contentmanager.h"
+#ifndef _CONECULL_H
+#define _CONECULL_H
 
-#include <ostream>
+#include "mathvector.h"
+#include "minmax.h"
 
-ContentManager::ContentManager(std::ostream & error) :
-	error(error)
+struct Cone
 {
-	// ctor
-}
-
-ContentManager::~ContentManager()
-{
-	sweep();
-	_logleaks();
-}
-
-void ContentManager::addSharedPath(const std::string & path)
-{
-	sharedpaths.push_back(path);
-}
-
-void ContentManager::addPath(const std::string & path)
-{
-	basepaths.push_back(path);
-}
-
-void ContentManager::sweep()
-{
-	for (auto & cache : factory_cached.m_caches)
+	Vec3 pos;
+	Vec3 dir;
+	float sina;
+	float rcosa2;
+	
+	Cone(Vec3 cpos, Vec3 cdir, float csina)
 	{
-		cache->sweep();
+		pos = cpos;
+		dir = cdir;
+		sina = csina;
+		rcosa2 = 1 / (1 - csina * csina);
 	}
-}
 
-void ContentManager::_logleaks()
-{
-	size_t n = 0;
-	for (const auto & cache : factory_cached.m_caches)
+	// cull sphere agains cone
+	bool cull(Vec3 sphere_pos, float sphere_radius)
 	{
-		n += cache->size();
+		Vec3 r = sphere_pos - pos;
+/*
+		// cone plane (shifted by -radius sina) vs point
+		float rd = r.dot(dir);
+		if (rd > sphere_radius * sina)
+		{
+			// cone vs sphere center shifted by radius / sina
+			float cd = rd * sina + sphere_radius;
+			return r.dot(r) > cd * cd * rcosa2 + rd * rd;
+		}
+		// cone origin vs sphere
+		return r.dot(r) > sphere_radius * sphere_radius;
+*/
+		// optimized
+		float rd = r.dot(dir);
+		float rr = r.dot(r);
+		float cd = rd * sina + sphere_radius;
+		float e = sphere_radius * sphere_radius;
+		float f = cd * cd * rcosa2 + rd * rd;
+		return rr > Max(e, f); // rr > e && rr > f
 	}
-	if (n == 0)
-		return;
+};
 
-	error << "Leaked " << n << " cached objects:";
-	for (const auto & cache : factory_cached.m_caches)
-	{
-		error << "\n";
-		cache->log(error);
-	}
-	error << std::endl;
-}
-
-void ContentManager::_logerror(
-	const std::string & path,
-	const std::string & name)
-{
-	error << "Failed to load \"" << name << "\" from:";
-	for (const auto & basepath : basepaths)
-	{
-		error << "\n" << basepath + '/' + path;
-	}
-	for (const auto & sharedpath : sharedpaths)
-	{
-		error << "\n" << sharedpath;
-	}
-	error << std::endl;
-}
+#endif // _CONECULL_H

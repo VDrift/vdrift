@@ -21,18 +21,6 @@
 #include "content/contentmanager.h"
 #include "graphics/texture.h"
 
-GuiImage::GuiImage() :
-	m_content(0),
-	m_load(false)
-{
-	set_image.call.bind<GuiImage, &GuiImage::SetImage>(this);
-}
-
-GuiImage::~GuiImage()
-{
-	// dtor
-}
-
 void GuiImage::Update(SceneNode & scene, float /*dt*/)
 {
 	if (m_update)
@@ -83,10 +71,13 @@ void GuiImage::SetupDrawable(
 	d.SetDrawEnable(false);
 }
 
-bool GuiImage::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
+bool GuiImage::GetProperty(const std::string & name, Delegated<const std::string &> & slot)
 {
 	if (name == "image")
-		return (slot = &set_image);
+	{
+		slot.bind<GuiImage, &GuiImage::SetImage>(this);
+		return true;
+	}
 	return GuiWidget::GetProperty(name, slot);
 }
 

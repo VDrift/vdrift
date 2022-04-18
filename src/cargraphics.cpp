@@ -145,14 +145,14 @@ static bool LoadWheel(
 	if (cfg_wheel.get("brake", cfg_brake, error_output) &&
 		cfg_brake->get("texture", texname))
 	{
-		float radius;
-		std::string radiusstr;
-		cfg_brake->get("radius", radius);
-		cfg_brake->get("radius", radiusstr);
-
 		meshname.clear();
 		if (!cfg_brake->get("mesh", meshname))
 		{
+			float radius;
+			std::string radiusstr;
+			cfg_brake->get("radius", radius);
+			cfg_brake->get("radius", radiusstr);
+
 			// gen brake disk mesh
 			meshname = "brake" + radiusstr;
 			if (!content.get(mesh, path, meshname))
@@ -208,7 +208,6 @@ CarGraphics::~CarGraphics()
 bool CarGraphics::Load(
 	const PTree & cfg,
 	const std::string & carpath,
-	const std::string & /*carname*/,
 	const std::string & carwheel,
 	const std::string & carpaint,
 	const Vec3 & carcolor,

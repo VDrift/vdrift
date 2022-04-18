@@ -20,10 +20,65 @@
 #ifndef _CARTIRE3_H
 #define _CARTIRE3_H
 
-#include "LinearMath/btVector3.h"
+#include "LinearMath/btScalar.h"
 
-struct CarTireInfo3
+struct CarTireState;
+struct CarTireSlipLUT;
+
+class CarTire3
 {
+public:
+	/// normal_force: tire load in N
+	/// rot_velocity: tire contact velocity (w * r)
+	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
+	/// lat_velocty: tire lateral velocity relative to surface in m/s
+	/// s: tire state (friction and camber should have valid values)
+	void ComputeState(
+		btScalar normal_force,
+		btScalar rot_velocity,
+		btScalar lon_velocity,
+		btScalar lat_velocity,
+		CarTireState & s) const;
+
+	void ComputeAligningTorque(
+		btScalar normal_load,
+		CarTireState & s)
+	{
+		// Already computed in ComputeState
+	}
+
+	btScalar getTread() const { return tread; }
+
+	/// rolling resistance magnitude
+	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
+
+	/// load is the normal force in newtons.
+	btScalar getMaxFx(btScalar load) const;
+
+	/// load is the normal force in newtons, camber is in degrees
+	btScalar getMaxFy(btScalar load, btScalar camber) const;
+
+	/// load is the normal force in newtons, camber is in degrees
+	btScalar getMaxMz(btScalar load, btScalar camber) const;
+
+	/// init peak force slip lut
+	void initSlipLUT(CarTireSlipLUT & t) const;
+
+	/// init derived parameters
+	void init();
+
+	CarTire3();
+
+private:
+	void getMaxForce(
+		btScalar fz,
+		btScalar * pfx,
+		btScalar * pfy,
+		btScalar * pmz) const;
+
+	void findIdealSlip(btScalar fz, btScalar slip[2]) const;
+
+public:
 	btScalar radius; // Tire radius [m]
 	btScalar width;	// Tire width [m]
 	btScalar ar; // Tire aspect ratio
@@ -42,134 +97,11 @@ struct CarTireInfo3
 	btScalar cr2; // Rolling resistance velocity^2 coefficient
 	btScalar tread; // 1.0 pure off-road tire, 0.0 pure road tire
 
-	CarTireInfo3();
-};
-
-class CarTire3 : private CarTireInfo3
-{
-public:
-	CarTire3();
-
-	void init(const CarTireInfo3 & info);
-
-	/// normal_force: tire load in N
-	/// friction_coeff: contact surface friction coefficient
-	/// sin_camber: dot product of wheel axis and contact surface normal
-	/// rot_velocity: tire contact velocity (w * r)
-	/// lon_velocty: tire longitudinal velocity relative to surface in m/s
-	/// lat_velocty: tire lateral velocity relative to surface in m/s
-	btVector3 getForce(
-		btScalar normal_force,
-		btScalar friction_coeff,
-		btScalar sin_camber,
-		btScalar rot_velocity,
-		btScalar lon_velocity,
-		btScalar lat_velocity);
-
-	btScalar getRollingResistance(btScalar velocity, btScalar resistance_factor) const;
-
-	btScalar getTread() const;
-
-	btScalar getSlip() const;
-	btScalar getSlipAngle() const;
-	btScalar getIdealSlip() const;
-	btScalar getIdealSlipAngle() const;
-	btScalar getFx() const;
-	btScalar getFy() const;
-	btScalar getMz() const;
-
-	/// load is the normal force in newtons.
-	btScalar getMaxFx(btScalar load) const;
-
-	/// load is the normal force in newtons, camber is in degrees
-	btScalar getMaxFy(btScalar load, btScalar camber) const;
-
-	/// load is the normal force in newtons, camber is in degrees
-	btScalar getMaxMz(btScalar load, btScalar camber) const;
-
-private:
-	btScalar ideal_slip;
-	btScalar ideal_slip_angle;
-	btScalar slip;
-	btScalar slip_angle;
-	btScalar fx;
-	btScalar fy;
-	btScalar mz;
-
 	// cached derived parameters
 	btScalar rkz; // 1 / tire vertical stiffness
 	btScalar rkb; // 1 / carcass bending stiffness
 	btScalar rp0; // 1 / nominal contact pressure
 	btScalar rvs; // 1 / stribeck velocity
-
-	// ideal slip ratio and angle lookup tables
-	static const unsigned slip_table_size = 20;
-	btScalar ideal_slips[slip_table_size];
-	btScalar ideal_slip_angles[slip_table_size];
-
-	btVector3 getMaxForce(btScalar fz, bool needfx=true, bool needfy=true) const;
-
-	void findIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
-
-	void getIdealSlip(btScalar fz, btScalar & islip, btScalar & iangle) const;
-
-	void initSlipTables();
 };
-
-
-inline btScalar CarTire3::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
-{
-	// surface influence on rolling resistance
-	btScalar rolling_resistance = cr0 * resistance_factor;
-
-	// heat due to tire deformation increases rolling resistance
-	// approximate by quadratic function
-	rolling_resistance += cr2 * velocity * velocity;
-
-	// rolling resistance direction
-	btScalar resistance = (velocity < 0) ? rolling_resistance : -rolling_resistance;
-
-	return resistance;
-}
-
-inline btScalar CarTire3::getTread() const
-{
-	return tread;
-}
-
-inline btScalar CarTire3::getSlip() const
-{
-	return slip;
-}
-
-inline btScalar CarTire3::getSlipAngle() const
-{
-	return slip_angle;
-}
-
-inline btScalar CarTire3::getIdealSlip() const
-{
-	return ideal_slip;
-}
-
-inline btScalar CarTire3::getIdealSlipAngle() const
-{
-	return ideal_slip_angle;
-}
-
-inline btScalar CarTire3::getFx() const
-{
-	return fx;
-}
-
-inline btScalar CarTire3::getFy() const
-{
-	return fy;
-}
-
-inline btScalar CarTire3::getMz() const
-{
-	return mz;
-}
 
 #endif // _CARTIRE3_H

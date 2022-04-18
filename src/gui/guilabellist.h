@@ -27,9 +27,7 @@ class Font;
 class GuiLabelList : public GuiWidgetList
 {
 public:
-	GuiLabelList();
-
-	~GuiLabelList();
+	GuiLabelList() {};
 
 	/// Create label elements. To be called after SetupList!
 	void SetupDrawable(
@@ -37,7 +35,6 @@ public:
 		float scalex, float scaley, float z);
 
 protected:
-	/// verboten
 	GuiLabelList(const GuiLabelList & other);
 
 	/// called during Update to process m_values

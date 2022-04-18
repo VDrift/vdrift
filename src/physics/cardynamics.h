@@ -89,8 +89,8 @@ public:
 	void Update(const std::vector<float> & inputs);
 
 	// bullet interface
-	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
-	void debugDraw(btIDebugDraw * debugDrawer);
+	void updateAction(btCollisionWorld * collisionWorld, btScalar dt) override;
+	void debugDraw(btIDebugDraw * debugDrawer) override;
 
 	// graphics interpolated
 	btVector3 GetEnginePosition() const;
@@ -112,6 +112,7 @@ public:
 	// body
 	const btVector3 & GetCenterOfMass() const;
 	const btVector3 & GetVelocity() const;
+	btVector3 GetVelocity(const btVector3 & pos) const;
 	btScalar GetInvMass() const;
 	btScalar GetSpeed() const;
 
@@ -130,7 +131,6 @@ public:
 	const CarTransmission & GetTransmission() const {return transmission;}
 	const CarBrake & GetBrake(WheelPosition pos) const {return brake[pos];}
 	const CarWheel & GetWheel(WheelPosition pos) const {return wheel[pos];}
-	const CarTire & GetTire(WheelPosition pos) const {return tire[pos];}
 	btScalar GetFuelAmount() const {return fuel_tank.FuelPercent();}
 	btScalar GetNosAmount() const {return engine.GetNosAmount();}
 	bool GetABSEnabled() const;
@@ -206,6 +206,8 @@ protected:
 	CarBrake brake[WHEEL_COUNT];
 	CarWheel wheel[WHEEL_COUNT];
 	CarTire tire[WHEEL_COUNT];
+	CarTireSlipLUT tire_slip_lut[WHEEL_COUNT];
+	CarTireState tire_state[WHEEL_COUNT];
 	CarSuspension suspension[WHEEL_COUNT];
 	WheelConstraint wheel_constraint[WHEEL_COUNT];
 	Driveline driveline;
@@ -216,6 +218,7 @@ protected:
 	btScalar wheel_velocity[WHEEL_COUNT][3];
 
 	// traction control state
+	btScalar wheel_slip[WHEEL_COUNT];
 	bool abs_active[WHEEL_COUNT];
 	bool tcs_active[WHEEL_COUNT];
 
@@ -349,14 +352,16 @@ inline Stream & operator << (Stream & os, const btVector3 & v)
 }
 
 template <class Stream>
-inline Stream & operator << (Stream & os, const CarTire & tire)
+inline Stream & operator << (Stream & os, const CarTireState & t)
 {
-	os << "Fx: " << tire.getFx() << "\n";
-	os << "Fy: " << tire.getFy() << "\n";
-	os << "Slip Ang: " << tire.getSlipAngle() * btScalar(180 / M_PI) << " / ";
-	os << tire.getIdealSlipAngle() * btScalar(180 / M_PI) << "\n";
-	os << "Slip: " << tire.getSlip() << " / ";
-	os << tire.getIdealSlip() << "\n";
+	os	<< "Camber: " << t.camber * btScalar(180 / M_PI)
+		<< "\nFx: " << t.fx
+		<< "\nFy: " << t.fy
+		<< "\nSlip Ang: " << t.slip_angle * btScalar(180 / M_PI)
+		<< " / " << t.ideal_slip_angle * btScalar(180 / M_PI)
+		<< "\nSlip: " << t.slip
+		<< " / " << t.ideal_slip
+		<< "\n";
 	return os;
 }
 
@@ -389,7 +394,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[FRONT_LEFT].DebugPrint(out);
 		out << "\n";
 		wheel[FRONT_LEFT].DebugPrint(out);
-		out << tire[FRONT_LEFT] << "\n";
+		out << tire_state[FRONT_LEFT] << "\n";
 
 		out << "(rear left)" << "\n";
 		brake[REAR_LEFT].DebugPrint(out);
@@ -397,7 +402,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[REAR_LEFT].DebugPrint(out);
 		out << "\n";
 		wheel[REAR_LEFT].DebugPrint(out);
-		out << tire[REAR_LEFT] << "\n";
+		out << tire_state[REAR_LEFT] << "\n";
 	}
 
 	if (p3)
@@ -408,7 +413,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[FRONT_RIGHT].DebugPrint(out);
 		out << "\n";
 		wheel[FRONT_RIGHT].DebugPrint(out);
-		out << tire[FRONT_RIGHT] << "\n";
+		out << tire_state[FRONT_RIGHT] << "\n";
 
 		out << "(rear right)" << "\n";
 		brake[REAR_RIGHT].DebugPrint(out);
@@ -416,7 +421,7 @@ inline void CarDynamics::DebugPrint(Stream & out, bool p1, bool p2, bool p3, boo
 		suspension[REAR_RIGHT].DebugPrint(out);
 		out << "\n";
 		wheel[REAR_RIGHT].DebugPrint(out);
-		out << tire[REAR_RIGHT] << "\n";
+		out << tire_state[REAR_RIGHT] << "\n";
 	}
 
 	if (p4)
@@ -506,6 +511,7 @@ inline bool CarDynamics::Serialize(Serializer & s)
 		_SERIALIZE_(s, suspension[i]);
 		_SERIALIZE_(s, wheel[i]);
 		_SERIALIZE_(s, brake[i]);
+		_SERIALIZE_(s, wheel_slip[i]);
 		_SERIALIZE_(s, abs_active[i]);
 		_SERIALIZE_(s, tcs_active[i]);
 	}

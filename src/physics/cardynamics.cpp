@@ -56,17 +56,16 @@ static bool LoadClutch(
 	CarClutch & clutch,
 	std::ostream & error_output)
 {
-	btScalar sliding, radius, area, max_pressure;
-
 	const PTree * cfg_clutch;
 	if (!cfg.get("clutch", cfg_clutch, error_output)) return false;
-	if (!cfg_clutch->get("sliding", sliding, error_output)) return false;
-	if (!cfg_clutch->get("radius", radius, error_output)) return false;
-	if (!cfg_clutch->get("area", area, error_output)) return false;
-	if (!cfg_clutch->get("max-pressure", max_pressure, error_output)) return false;
 
-	clutch.Set(sliding, max_pressure, area, radius);
+	CarClutchInfo info;
+	cfg_clutch->get("sliding", info.friction, error_output);
+	cfg_clutch->get("max-pressure", info.max_pressure, error_output);
+	cfg_clutch->get("radius", info.radius, error_output);
+	cfg_clutch->get("area", info.area, error_output);
 
+	clutch.Init(info);
 	return true;
 }
 
@@ -105,16 +104,14 @@ static bool LoadFuelTank(
 	btScalar capacity;
 	btScalar volume;
 	btScalar fuel_density;
-	std::vector<btScalar> pos(3);
+	btVector3 position;
 
 	const PTree * cfg_fuel;
 	if (!cfg.get("fuel-tank", cfg_fuel, error_output)) return false;
 	if (!cfg_fuel->get("capacity", capacity, error_output)) return false;
 	if (!cfg_fuel->get("volume", volume, error_output)) return false;
 	if (!cfg_fuel->get("fuel-density", fuel_density, error_output)) return false;
-	if (!cfg_fuel->get("position", pos, error_output)) return false;
-
-	btVector3 position(pos[0], pos[1], pos[2]);
+	if (!cfg_fuel->get("position", position, error_output)) return false;
 
 	fuel_tank.SetCapacity(capacity);
 	fuel_tank.SetVolume(volume);
@@ -144,22 +141,15 @@ static bool LoadBrake(
 	CarBrake & brake,
 	std::ostream & error_output)
 {
-	btScalar friction, max_pressure, area, bias, radius, handbrake(0);
+	CarBrakeInfo info;
+	cfg.get("friction", info.friction, error_output);
+	cfg.get("max-pressure", info.max_pressure, error_output);
+	cfg.get("radius", info.radius, error_output);
+	cfg.get("area", info.area, error_output);
+	cfg.get("bias", info.brake_bias, error_output);
+	cfg.get("handbrake", info.handbrake_bias);
 
-	if (!cfg.get("friction", friction, error_output)) return false;
-	if (!cfg.get("area", area, error_output)) return false;
-	if (!cfg.get("radius", radius, error_output)) return false;
-	if (!cfg.get("bias", bias, error_output)) return false;
-	if (!cfg.get("max-pressure", max_pressure, error_output)) return false;
-	cfg.get("handbrake", handbrake);
-
-	brake.SetFriction(friction);
-	brake.SetArea(area);
-	brake.SetRadius(radius);
-	brake.SetBias(bias);
-	brake.SetMaxPressure(max_pressure*bias);
-	brake.SetHandbrake(handbrake);
-
+	brake.Init(info);
 	return true;
 }
 
@@ -203,45 +193,42 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	btScalar aspect_ratio = tire_size[1] * 0.01f;
 	btScalar radius = tire_size[2] * 0.5f * 0.0254f + width * aspect_ratio;
 
-	CarTireInfo info;
-	info.radius = radius;
-	info.width = width;
-	info.ar = aspect_ratio;
+	tire.radius = radius;
+	tire.width = width;
+	tire.ar = aspect_ratio;
 
-	if (!cfg.get("pt", info.pt, error_output)) return false;
-	if (!cfg.get("ktx", info.ktx, error_output)) return false;
-	if (!cfg.get("kty", info.kty, error_output)) return false;
-	if (!cfg.get("kcb", info.kcb, error_output)) return false;
-	if (!cfg.get("ccb", info.ccb, error_output)) return false;
-	if (!cfg.get("cfy", info.cfy, error_output)) return false;
-	if (!cfg.get("dz0", info.dz0, error_output)) return false;
-	if (!cfg.get("p0", info.p0, error_output)) return false;
-	if (!cfg.get("mus", info.mus, error_output)) return false;
-	if (!cfg.get("muc", info.muc, error_output)) return false;
-	if (!cfg.get("vs", info.vs, error_output)) return false;
-	if (!cfg.get("cr0", info.cr0, error_output)) return false;
-	if (!cfg.get("cr2", info.cr2, error_output)) return false;
-	if (!cfg.get("tread", info.tread, error_output)) return false;
+	if (!cfg.get("pt", tire.pt, error_output)) return false;
+	if (!cfg.get("ktx", tire.ktx, error_output)) return false;
+	if (!cfg.get("kty", tire.kty, error_output)) return false;
+	if (!cfg.get("kcb", tire.kcb, error_output)) return false;
+	if (!cfg.get("ccb", tire.ccb, error_output)) return false;
+	if (!cfg.get("cfy", tire.cfy, error_output)) return false;
+	if (!cfg.get("dz0", tire.dz0, error_output)) return false;
+	if (!cfg.get("p0", tire.p0, error_output)) return false;
+	if (!cfg.get("mus", tire.mus, error_output)) return false;
+	if (!cfg.get("muc", tire.muc, error_output)) return false;
+	if (!cfg.get("vs", tire.vs, error_output)) return false;
+	if (!cfg.get("cr0", tire.cr0, error_output)) return false;
+	if (!cfg.get("cr2", tire.cr2, error_output)) return false;
+	if (!cfg.get("tread", tire.tread, error_output)) return false;
 
-	tire.init(info);
+	tire.init();
 	return true;
 }
 #elif defined(VDRIFTN)
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
-	CarTireInfo info;
-
-	if (!cfg.get("tread", info.tread, error_output)) return false;
+	if (!cfg.get("tread", tire.tread, error_output)) return false;
 
 	btVector3 roll_resistance;
 	if (!cfg.get("rolling-resistance", roll_resistance, error_output)) return false;
-	info.roll_resistance_lin = roll_resistance[0];
-	info.roll_resistance_quad = roll_resistance[1];
+	tire.roll_resistance_lin = roll_resistance[0];
+	tire.roll_resistance_quad = roll_resistance[1];
 
-	if (!cfg.get("FZ0", info.nominal_load, error_output)) return false;
-	for (int i = 0; i < CarTireInfo::CNUM; ++i)
+	if (!cfg.get("FZ0", tire.nominal_load, error_output)) return false;
+	for (int i = 0; i < CarTire::CNUM; ++i)
 	{
-		if (!cfg.get(info.coeffname[i], info.coefficients[i], error_output))
+		if (!cfg.get(tire.coeffname[i], tire.coefficients[i], error_output))
 			return false;
 	}
 
@@ -252,40 +239,36 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	std::string facing;
 	if (cfg_wheel.get("tire.facing", facing))
 		side_factor = (facing != "left") ? 1 : -1;
-	info.coefficients[CarTireInfo::PEY3] *= side_factor;
-	info.coefficients[CarTireInfo::PEY4] *= side_factor;
-	info.coefficients[CarTireInfo::PVY1] *= side_factor;
-	info.coefficients[CarTireInfo::PVY2] *= side_factor;
-	info.coefficients[CarTireInfo::PHY1] *= side_factor;
-	info.coefficients[CarTireInfo::PHY2] *= side_factor;
-	info.coefficients[CarTireInfo::PHY3] *= side_factor;
-	info.coefficients[CarTireInfo::RBY3] *= side_factor;
-	info.coefficients[CarTireInfo::RHX1] *= side_factor;
-	info.coefficients[CarTireInfo::RHY1] *= side_factor;
-	info.coefficients[CarTireInfo::RVY5] *= side_factor;
+	tire.coefficients[CarTire::PEY3] *= side_factor;
+	tire.coefficients[CarTire::PEY4] *= side_factor;
+	tire.coefficients[CarTire::PVY1] *= side_factor;
+	tire.coefficients[CarTire::PVY2] *= side_factor;
+	tire.coefficients[CarTire::PHY1] *= side_factor;
+	tire.coefficients[CarTire::PHY2] *= side_factor;
+	tire.coefficients[CarTire::PHY3] *= side_factor;
+	tire.coefficients[CarTire::RBY3] *= side_factor;
+	tire.coefficients[CarTire::RHX1] *= side_factor;
+	tire.coefficients[CarTire::RHY1] *= side_factor;
+	tire.coefficients[CarTire::RVY5] *= side_factor;
 
 	btScalar size_factor = 1;
 	btVector3 size;
 	if (cfg_wheel.get("tire.size", size))
 		size_factor = ComputeFrictionFactor(cfg, size);
-	info.coefficients[CarTireInfo::PDX1] *= size_factor;
-	info.coefficients[CarTireInfo::PDY1] *= size_factor;
-
-	tire.init(info);
+	tire.coefficients[CarTire::PDX1] *= size_factor;
+	tire.coefficients[CarTire::PDY1] *= size_factor;
 
 	return true;
 }
 #else
 static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire, std::ostream & error_output)
 {
-	CarTireInfo info;
-
-	if (!cfg.get("tread", info.tread, error_output)) return false;
+	if (!cfg.get("tread", tire.tread, error_output)) return false;
 
 	btVector3 rolling_resistance;
 	if (!cfg.get("rolling-resistance", rolling_resistance, error_output)) return false;
-	info.rolling_resistance_lin = rolling_resistance[0];
-	info.rolling_resistance_quad = rolling_resistance[1];
+	tire.rolling_resistance_lin = rolling_resistance[0];
+	tire.rolling_resistance_quad = rolling_resistance[1];
 
 	// read lateral
 	int numinfile;
@@ -300,7 +283,7 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 			numinfile -= 1;
 		std::ostringstream s;
 		s << "a" << numinfile;
-		if (!cfg.get(s.str(), info.lateral[i], error_output)) return false;
+		if (!cfg.get(s.str(), tire.lateral[i], error_output)) return false;
 	}
 
 	// read longitudinal
@@ -308,7 +291,7 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	{
 		std::ostringstream s;
 		s << "b" << i;
-		if (!cfg.get(s.str(), info.longitudinal[i], error_output)) return false;
+		if (!cfg.get(s.str(), tire.longitudinal[i], error_output)) return false;
 	}
 
 	// read aligning
@@ -316,14 +299,14 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	{
 		std::ostringstream s;
 		s << "c" << i;
-		if (!cfg.get(s.str(), info.aligning[i], error_output)) return false;
+		if (!cfg.get(s.str(), tire.aligning[i], error_output)) return false;
 	}
 
 	// read combining
-	if (!cfg.get("gy1", info.combining[0], error_output)) return false;
-	if (!cfg.get("gy2", info.combining[1], error_output)) return false;
-	if (!cfg.get("gx1", info.combining[2], error_output)) return false;
-	if (!cfg.get("gx2", info.combining[3], error_output)) return false;
+	if (!cfg.get("gy1", tire.combining[0], error_output)) return false;
+	if (!cfg.get("gy2", tire.combining[1], error_output)) return false;
+	if (!cfg.get("gx1", tire.combining[2], error_output)) return false;
+	if (!cfg.get("gx2", tire.combining[3], error_output)) return false;
 
 	// asymmetric tires support (left right facing direction)
 	// default facing direction is right
@@ -332,17 +315,15 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 	std::string facing;
 	if (cfg_wheel.get("tire.facing", facing))
 		side_factor = (facing != "left") ? 1 : -1;
-	info.lateral[13] *= side_factor;
-	info.lateral[14] *= side_factor;
+	tire.lateral[13] *= side_factor;
+	tire.lateral[14] *= side_factor;
 
 	btScalar size_factor = 1;
 	btVector3 size;
 	if (cfg_wheel.get("tire.size", size))
 		size_factor = ComputeFrictionFactor(cfg, size);
-	info.longitudinal[2] *= size_factor;
-	info.lateral[2] *= size_factor;
-
-	tire.init(info);
+	tire.longitudinal[2] *= size_factor;
+	tire.lateral[2] *= size_factor;
 
 	return true;
 }
@@ -393,8 +374,8 @@ static bool LoadDifferential(
 	CarDifferential & d,
 	std::ostream & error_output)
 {
-	if (!cfg.get("final-drive", d.final_drive, error_output)) return false;
-	if (!cfg.get("anti-slip", d.anti_slip, error_output)) return false;
+	cfg.get("final-drive", d.final_drive, error_output);
+	cfg.get("anti-slip", d.anti_slip, error_output);
 	cfg.get("anti-slip-torque", d.anti_slip_torque);
 	cfg.get("anti-slip-torque-deceleration-factor", d.anti_slip_torque_deceleration_factor);
 	cfg.get("torque-split", d.torque_split);
@@ -418,7 +399,7 @@ struct AeroDeviceFracture : public FractureCallback
 		// dtor
 	}
 
-	void operator()(FractureBody::Connection & /*connection*/)
+	void operator()(FractureBody::Connection & /*connection*/) override
 	{
 		int last = aerodevice.size() - 1;
 		if (id < last)
@@ -608,7 +589,7 @@ bool CarDynamics::Load(
 	int i = 0;
 	for (const auto & node : *cfg_wheels)
 	{
-		const PTree & cfg_wheel = node.second;
+		const auto & cfg_wheel = node.second;
 		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
 
 		std::string tirestr(cartire);
@@ -622,14 +603,11 @@ bool CarDynamics::Load(
 		#endif
 		content.load(cfg_tire, cardir, tirestr);
 		if (!LoadTire(cfg_wheel, *cfg_tire, tire[i], error)) return false;
+		tire[i].initSlipLUT(tire_slip_lut[i]);
 
 		const PTree * cfg_brake;
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
-
-		if (!CarSuspension::Load(cfg_wheel, wheel[i].GetMass(), suspension[i], error)) return false;
-		if (suspension[i].GetMaxSteeringAngle() > maxangle)
-			maxangle = suspension[i].GetMaxSteeringAngle();
 
 		btScalar mass = wheel[i].GetMass();
 		btScalar width = wheel[i].GetWidth();
@@ -646,10 +624,26 @@ bool CarDynamics::Load(
 		if (!loadBody(node.second, error)) return false;
 	}
 
-	if (bodyinfo.m_shape->getNumChildShapes() == wheel_count)
+	// get suspension load at rest
+	btVector3 f(0, 0, 0), r(0, 0, 0);
+	(cfg_wheels->begin())->second.get("position", f, error);
+	(--cfg_wheels->end())->second.get("position", r, error);
+	btScalar half_car_load = loadBody.info.m_mass * (gravity * 0.5f);
+	btScalar dr = -loadBody.info.m_massCenter[1] / loadBody.info.m_mass;
+	btScalar front_mass_ratio = (r[1] + dr) / (r[1] - f[1]);
+	btScalar fwl = front_mass_ratio * half_car_load;
+	btScalar rwl = half_car_load - fwl;
+	btScalar wheel_load[WHEEL_COUNT] = {fwl, fwl, rwl, rwl};
+
+	// load suspension
+	i = 0;
+	for (const auto & node : *cfg_wheels)
 	{
-		error << "No collision shape defined." << std::endl;
-		return false;
+		if (!CarSuspension::Load( node.second, wheel[i].GetMass(), wheel_load[i], suspension[i], error))
+			return false;
+		if (suspension[i].GetMaxSteeringAngle() > maxangle)
+			maxangle = suspension[i].GetMaxSteeringAngle();
+		i++;
 	}
 
 	if (drive == AWD)
@@ -673,24 +667,10 @@ bool CarDynamics::Load(
 	// move car to fit bounding box front lower edge of the position box
 	btVector3 bmin, bmax;
 	body->getCollisionShape()->getAabb(btTransform::getIdentity(), bmin, bmax);
-	btVector3 fwd = body->getCenterOfMassTransform().getBasis().getColumn(1);
-	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(2);
+	btVector3 fwd = body->getCenterOfMassTransform().getBasis().getColumn(Direction::FORWARD);
+	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(Direction::UP);
 	btVector3 fwd_offset = fwd * (2 - bmax.y());
 	btVector3 up_offset = -up * (btScalar(0.5) + bmin.z());
-
-	// adjust for suspension rest position
-	// a bit hacky here, should use updated aabb
-	btScalar m = 1 / body->getInvMass();
-	btScalar m1 = m * CalculateFrontMassRatio();
-	btScalar m2 = m - m1;
-	btScalar d1 = suspension[0].GetDisplacement(m1 * gravity / 2);
-	btScalar d2 = suspension[3].GetDisplacement(m2 * gravity / 2);
-	suspension[0].SetDisplacement(d1);
-	suspension[1].SetDisplacement(d1);
-	suspension[2].SetDisplacement(d2);
-	suspension[3].SetDisplacement(d2);
-	up_offset -= up * Max(d1, d2);
-
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 	UpdateWheelTransform();
 
@@ -948,6 +928,11 @@ const btVector3 & CarDynamics::GetVelocity() const
 	return body->getLinearVelocity();
 }
 
+btVector3 CarDynamics::GetVelocity(const btVector3 & pos) const
+{
+	return body->getVelocityInLocalPoint(pos - body->getCenterOfMassPosition());
+}
+
 btScalar CarDynamics::GetSpeedMPS() const
 {
 	return wheel[0].GetRadius() * wheel[0].GetAngularVelocity();
@@ -1009,9 +994,9 @@ btScalar CarDynamics::GetTireSqueal(WheelPosition i) const
 	btScalar v1 = wheel_velocity[i][1];
 	btScalar vq = Min(v0 * v0 + v1 * v1, btScalar(1));
 
-	auto tire = GetTire(i);
-	btScalar sr = tire.getSlip() / tire.getIdealSlip();
-	btScalar ar = tire.getSlipAngle() / tire.getIdealSlipAngle();
+	auto & t = tire_state[i];
+	btScalar sr = t.slip / t.ideal_slip;
+	btScalar ar = t.slip_angle / t.ideal_slip_angle;
 	btScalar sq = sr * sr + ar * ar;
 
 	return Clamp(sq * vq - btScalar(0.4), btScalar(0), btScalar(1));
@@ -1061,7 +1046,7 @@ std::vector<float> CarDynamics::GetSpecs() const
 
 btVector3 CarDynamics::GetDownVector() const
 {
-	return -body->getCenterOfMassTransform().getBasis().getColumn(2);
+	return -body->getCenterOfMassTransform().getBasis().getColumn(Direction::UP);
 }
 
 const btVector3 & CarDynamics::GetCenterOfMassOffset() const
@@ -1111,9 +1096,10 @@ void CarDynamics::ApplyTCS(int i)
 	btScalar gas = engine.GetThrottle();
 	if (gas > btScalar(0.1))
 	{
-		btScalar slip_angle = tire[i].getSlipAngle();
-		btScalar slip_ideal = tire[i].getIdealSlip() * CosPi2(slip_angle);
-		btScalar slip = std::abs(tire[i].getSlip());
+		auto & t = tire_state[i];
+		btScalar slip_angle = t.slip_angle;
+		btScalar slip_ideal = t.ideal_slip_angle * CosPi2(slip_angle);
+		btScalar slip = std::abs(t.slip);
 		btScalar slip_engage = slip_ideal * btScalar(1.2);
 		btScalar slip_disengage = slip_ideal * btScalar(0.8);
 
@@ -1136,26 +1122,29 @@ void CarDynamics::ApplyTCS(int i)
 
 void CarDynamics::ApplyABS(int i)
 {
-	// only active if brakes commanded past threshold and speed exceeds 4 m/s
-	if (brake[i].GetBrakeFactor() > btScalar(0.1) &&
-		body->getLinearVelocity().length2() > 16)
+	// only active if speed exceeds 4 m/s
+	btScalar slip = tire_state[i].slip;
+	if (brake_value > 0.01f && body->getLinearVelocity().length2() > 16)
 	{
-		btScalar slip = -tire[i].getSlip();
-		btScalar slip_angle = tire[i].getSlipAngle();
-		btScalar slip_ideal = tire[i].getIdealSlip() * CosPi2(slip_angle);
-		btScalar slip_engage = slip_ideal * btScalar(1.0);
-		btScalar slip_disengage = slip_ideal * btScalar(0.5);
+		// limit brake value based on normalized predicted slip
+		btScalar slip_delta = slip - wheel_slip[i];
+		btScalar slip_predicted = slip + slip_delta;
+		btScalar slip_ideal = tire_state[i].ideal_slip;
+		btScalar sr = std::abs(slip_predicted) / slip_ideal;
+		btScalar brake_delta_limit = (1 - sr) * 2;
 
-		if (slip > slip_engage)
-			abs_active[i] = true;
-		else if (slip < slip_disengage)
-			abs_active[i] = false;
-
-		if (abs_active[i])
-			brake[i].SetBrakeFactor(0);
+		btScalar brake_old = brake[i].GetBrakeFactor();
+		btScalar brake_delta = Min(brake_delta_limit, brake_value - brake_old);
+		btScalar brake_new = Clamp(brake_old + brake_delta, 0.0f, 1.0f);
+		brake[i].SetBrakeFactor(brake_new);
+		abs_active[i] = brake_new < brake_value ? true : false;
 	}
 	else
+	{
+		brake[i].SetBrakeFactor(brake_value);
 		abs_active[i] = false;
+	}
+	wheel_slip[i] = slip;
 }
 
 // even triangle wave with a period and amplitude of 1
@@ -1205,6 +1194,11 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 		for (int i = 0; i < WHEEL_COUNT; ++i)
 			ApplyABS(i);
 	}
+	else
+	{
+		for (int i = 0; i < WHEEL_COUNT; ++i)
+			brake[i].SetBrakeFactor(brake_value);
+	}
 
 	UpdateTransmission(dt);
 
@@ -1221,7 +1215,7 @@ void CarDynamics::updateAction(btCollisionWorld * /*collisionWorld*/, btScalar d
 	tacho_rpm += (engine.GetRPM() - tacho_rpm) * tacho_factor;
 
 	// update steering feedback
-	feedback = feedback_scale * (tire[FRONT_LEFT].getMz() + tire[FRONT_RIGHT].getMz());
+	feedback = feedback_scale * (tire_state[FRONT_LEFT].mz + tire_state[FRONT_RIGHT].mz);
 
 	// update body transform
 	body->predictIntegratedTransform(dt, transform);
@@ -1314,7 +1308,7 @@ void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT
 	m.shaft = &engine.GetShaft();
 	m.target_velocity = engine.GetTorque() > 0 ? 100000 : 0;
 	m.impulse_limit_delta = (std::abs(engine.GetTorque()) * dt - m.impulse_limit) * rsubsteps;
-	m.computeInertia(*body, body->getWorldTransform().getBasis().getColumn(0));
+	m.computeInertia(*body, body->getWorldTransform().getBasis().getColumn(Direction::RIGHT));
 
 	driveline.motor_count = 1;
 	for (int i = 0; i < WHEEL_COUNT; ++i)
@@ -1323,7 +1317,7 @@ void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT
 		m.shaft = &wheel[i].GetShaft();
 		m.target_velocity = 0;
 		m.impulse_limit_delta = (brake[i].GetTorque() * dt - m.impulse_limit) * rsubsteps;
-		m.computeInertia(*body, wheel_orientation[i].getColumn(0));
+		m.computeInertia(*body, wheel_orientation[i].getColumn(Direction::RIGHT));
 	}
 }
 
@@ -1363,18 +1357,14 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 			displacement += overtravel;
 			stiffness += bump_stiffness * overtravel / displacement;
 		}
-		btScalar softness = 1 / (dt * (dt * stiffness + damping));
-		btScalar bias = stiffness / (dt * stiffness + damping);
-		btScalar error = -bias * displacement;
 
-		btVector3 xw = wheel_orientation[i].getColumn(0);
-		btVector3 yw = wheel_orientation[i].getColumn(1);
+		btVector3 xw = wheel_orientation[i].getColumn(Direction::RIGHT);
+		btVector3 yw = wheel_orientation[i].getColumn(Direction::FORWARD);
 		btVector3 z = wheel_contact[i].GetNormal();
 		btScalar coszxw = z.dot(xw);
 		btScalar coszyw = z.dot(yw);
 		btVector3 x = (xw - z * coszxw).normalized();
 		btVector3 y = (yw - z * coszyw).normalized();
-		btScalar camber = btScalar(M_PI_2) - btAcos(coszxw);
 		btScalar friction = tire[i].getTread() * wheel_contact[i].GetSurface().frictionTread +
 			(1 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
@@ -1383,12 +1373,18 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 		w.shaft = &wheel[i].GetShaft();
 		w.position = wheel_position[i];
 		w.radius = wheel[i].GetRadius();
-		w.camber = camber;
-		w.friction = friction;
 		w.constraint[0].axis = y;
 		w.constraint[1].axis = x;
 		w.constraint[2].axis = z;
-		w.init(softness, error);
+		w.init(stiffness, damping, displacement, dt);
+
+		auto & t = tire_state[i];
+		t.friction = friction;
+#if defined(VDRIFTP)
+		t.camber = coszxw;
+#else
+		t.camber = ComputeCamberAngle(coszxw);
+#endif
 	}
 }
 
@@ -1438,15 +1434,17 @@ void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
 		auto & c = wheel_constraint[i];
+		auto & t = tire_state[i];
 		btScalar v[3];
 		c.getContactVelocity(v);
 		btScalar suspension_force = c.constraint[2].impulse * rdt;
-		btVector3 tire_force = tire[i].getForce(suspension_force, c.friction, c.camber, v[2], v[0], v[1]);
-		c.constraint[0].upper_impulse_limit = Max(tire_force[0] * sdt, btScalar(0));
-		c.constraint[0].lower_impulse_limit = Min(tire_force[0] * sdt, btScalar(0));
+		tire[i].ComputeState(suspension_force, v[2], v[0], v[1], t);
+		c.vcam = t.vcam;
+		c.constraint[0].upper_impulse_limit = Max(t.fx * sdt, btScalar(0));
+		c.constraint[0].lower_impulse_limit = Min(t.fx * sdt, btScalar(0));
 		c.constraint[0].impulse = 0;
-		c.constraint[1].upper_impulse_limit = Max(tire_force[1] * sdt, btScalar(0));
-		c.constraint[1].lower_impulse_limit = Min(tire_force[1] * sdt, btScalar(0));
+		c.constraint[1].upper_impulse_limit = Max(t.fy * sdt, btScalar(0));
+		c.constraint[1].lower_impulse_limit = Min(t.fy * sdt, btScalar(0));
 		c.constraint[1].impulse = 0;
 	}
 }
@@ -1503,9 +1501,15 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 			wheel_constraint[i].solveSuspension();
 	}
 
+	// update wheel and tire state
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
-		wheel_constraint[i].getContactVelocity(wheel_velocity[i]);
+		auto & c = wheel_constraint[i];
+		auto & t = tire_state[i];
+		c.getContactVelocity(wheel_velocity[i]);
+		btScalar fz = c.constraint[2].impulse * rdt;
+		tire_slip_lut[i].get(fz, t.ideal_slip, t.ideal_slip_angle);
+		tire[i].ComputeAligningTorque(fz, t);
 		wheel[i].Integrate(dt);
 	}
 }
@@ -1689,9 +1693,9 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 btScalar CarDynamics::CalculateFrontMassRatio() const
 {
 	btScalar dr = GetCenterOfMassOffset()[1];
-	btScalar r1 = suspension[0].GetWheelPosition()[1] + dr;
-	btScalar r2 = suspension[2].GetWheelPosition()[1] + dr;
-	return r2 / (r2 - r1);
+	btScalar r1 = suspension[0].GetWheelPosition()[1];
+	btScalar r2 = suspension[2].GetWheelPosition()[1];
+	return (r2 + dr) / (r2 - r1);
 }
 
 btScalar CarDynamics::CalculateGripBalance() const
@@ -1702,8 +1706,8 @@ btScalar CarDynamics::CalculateGripBalance() const
 	btScalar m = 1 / body->getInvMass();
 	btScalar m1 = m * r2 / (r2 - r1);
 	btScalar m2 = m - m1;
-	btScalar f1 = tire[0].getMaxFy(m1 * gravity * 0.5f, 0);
-	btScalar f2 = tire[2].getMaxFy(m2 * gravity * 0.5f, 0);
+	btScalar f1 = tire[0].getMaxFy(m1 * (gravity * 0.5f), 0);
+	btScalar f2 = tire[2].getMaxFy(m2 * (gravity * 0.5f), 0);
 	btScalar t1 = f1 * r1;
 	btScalar t2 = f2 * r2;
 	return -t1 / (t2 - t1);
@@ -1741,7 +1745,7 @@ void CarDynamics::SetSteering(btScalar value)
 {
 	if (steering_assist)
 	{
-		btScalar ideal_angle = tire[0].getIdealSlipAngle();
+		btScalar ideal_angle = tire_state[0].ideal_slip_angle;
 		btScalar max_angle = suspension[0].GetMaxSteeringAngle();
 		btScalar ideal_value = btScalar(180/M_PI) * ideal_angle / max_angle;
 
@@ -1795,10 +1799,6 @@ void CarDynamics::SetClutch(btScalar value)
 void CarDynamics::SetBrake(btScalar value)
 {
 	brake_value = value;
-	for (int i = 0; i < WHEEL_COUNT; ++i)
-	{
-		brake[i].SetBrakeFactor(value);
-	}
 }
 
 void CarDynamics::SetHandBrake(btScalar value)
@@ -1811,12 +1811,12 @@ void CarDynamics::SetHandBrake(btScalar value)
 
 void CarDynamics::RolloverRecover()
 {
-	btVector3 z(Direction::up);
-	btVector3 y_car = transform.getBasis() * Direction::forward;
+	btVector3 z = Direction::up;
+	btVector3 y_car = transform.getBasis().getColumn(Direction::FORWARD);
 	y_car = y_car - z * z.dot(y_car);
 	y_car.normalize();
 
-	btVector3 z_car = transform.getBasis() * Direction::up;
+	btVector3 z_car = transform.getBasis().getColumn(Direction::UP);
 	z_car = z_car - y_car * y_car.dot(z_car);
 	z_car.normalize();
 
@@ -1902,6 +1902,7 @@ void CarDynamics::Init()
 		wheel_velocity[i][0] = 0;
 		wheel_velocity[i][1] = 0;
 		wheel_velocity[i][2] = 0;
+		wheel_slip[i] = 0;
 		abs_active[i] = 0;
 		tcs_active[i] = 0;
 	}
@@ -1930,8 +1931,11 @@ bool CarDynamics::WheelContactCallback(
 		const btCollisionShape * root_shape = obj0->getCollisionShape();
 		const btCompoundShape * car_shape = static_cast<const btCompoundShape *>(root_shape);
 		const btCylinderShapeX * wheel_shape = static_cast<const btCylinderShapeX *>(shape0);
-		btVector3 contact_point = cp.m_localPointA - car_shape->getChildTransform(cp.m_index0).getOrigin();
-		if (-Direction::up.dot(contact_point) > btScalar(0.5) * wheel_shape->getRadius())
+		btVector3 up_dir = obj0->getWorldTransform ().getBasis().getColumn(Direction::UP);
+		btVector3 wheel_center = car_shape->getChildTransform(cp.m_index0).getOrigin();
+		btVector3 contact_vec = wheel_center - cp.m_localPointA;
+		// only invalidate if contact point in the lower quarter of the wheel
+		if (contact_vec[Direction::UP] > btScalar(0.5) * wheel_shape->getRadius())
 		{
 			cp.m_normalWorldOnB = btVector3(0, 0, 0);
 			cp.m_distance1 = 0;

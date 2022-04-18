@@ -120,10 +120,6 @@ private:
 	float next_animation_count_start;
 	bool ingame;
 
-	/// page activation callbacks
-	Slot1<const std::string&> activate_page;
-	Slot0 activate_prev_page;
-
 	/// return false on failure
 	bool ActivatePage(
 		const std::string & pagename,

@@ -18,19 +18,20 @@
 /************************************************************************/
 
 #include "cartire2.h"
+#include "cartirebase.h"
 #include "minmax.h"
 
 template <typename T>
-inline T sgn(T val)
+inline T sgn(T v)
 {
-	return (T(0) < val) - (val < T(0));
+	return std::copysign(T(1), v);
 }
 
 #define ENTRY(x) #x,
-const char * CarTireInfo2::coeffname[] = { TIRE_COEFF_LIST };
+const char * CarTire2::coeffname[] = { TIRE_COEFF_LIST };
 #undef ENTRY
 
-CarTireInfo2::CarTireInfo2() :
+CarTire2::CarTire2() :
 	nominal_load(5000),
 	max_load(10000),
 	max_camber(15),
@@ -41,61 +42,23 @@ CarTireInfo2::CarTireInfo2() :
 	// ctor
 }
 
-CarTire2::CarTire2() :
-	slip(0),
-	slip_angle(0),
-	ideal_slip(0),
-	ideal_slip_angle(0),
-	vx(0), vy(0),
-	fx(0), fy(0), fz(0),
-	mz(0)
-{
-	// ctor
-}
-
-void CarTire2::init(const CarTireInfo2 & info)
-{
-	CarTireInfo2::operator=(info);
-	initSigmaHatAlphaHat();
-}
-
-void CarTire2::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
-{
-	btScalar rload = load / max_load * tablesize - 1;
-	rload = Clamp(rload, btScalar(0), btScalar(tablesize - 1));
-	int lbound = Min(int(rload), tablesize - 2);
-
-	btScalar blend = rload - lbound;
-	sh = sigma_hat[lbound] * (1 - blend) + sigma_hat[lbound + 1] * blend;
-	ah = alpha_hat[lbound] * (1 - blend) + alpha_hat[lbound + 1] * blend;
-}
-
-btVector3 CarTire2::getForce(
+void CarTire2::ComputeState(
 	btScalar normal_load,
-	btScalar friction_coeff,
-	btScalar sin_camber,
 	btScalar rot_velocity,
 	btScalar lon_velocity,
-	btScalar lat_velocity)
+	btScalar lat_velocity,
+	CarTireState & s) const
 {
-	if (normal_load * friction_coeff  < btScalar(1E-6))
+	if (normal_load * s.friction < btScalar(1E-6))
 	{
-		slip = slip_angle = 0;
-		ideal_slip = ideal_slip_angle = 1;
-		fx = fy = fz = mz = 0;
-		vx = vy = 0;
-		return btVector3(0, 0, 0);
+		s.slip = s.slip_angle = 0;
+		s.fx = s.fy = s.mz = 0;
+		return;
 	}
 
-	// approximate asin(x) = x + x^3/6 for +-18 deg range
-	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
-	btScalar camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
-
-	// sigma and alpha
-	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar slip_velocity = lon_velocity - rot_velocity;
-	btScalar sigma = -slip_velocity * rcp_lon_velocity;
-	btScalar alpha = btAtan(lat_velocity * rcp_lon_velocity);
+	btScalar sigma, alpha;
+	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, sigma, alpha);
+	alpha = -alpha; // fixup
 
 	// force parameters
 	btScalar Fz = Clamp(normal_load, btScalar(0), btScalar(max_load));
@@ -104,50 +67,35 @@ btVector3 CarTire2::getForce(
 
 	// pure slip
 	btScalar Dy, BCy, Shf;
-	btScalar Fx0 = PacejkaFx(sigma, Fz, dFz, friction_coeff);
-	btScalar Fy0 = PacejkaFy(alpha, camber, Fz, dFz, friction_coeff, Dy, BCy, Shf);
-	btScalar Mz0 = PacejkaMz(alpha, camber, Fz, dFz, friction_coeff, Fy0, BCy, Shf);
+	btScalar Fx0 = PacejkaFx(sigma, Fz, dFz, s.friction);
+	btScalar Fy0 = PacejkaFy(alpha, s.camber, Fz, dFz, s.friction, Dy, BCy, Shf);
+	btScalar Mz0 = PacejkaMz(alpha, s.camber, Fz, dFz, s.friction, Fy0, BCy, Shf);
 
 	// combined slip
 	btScalar Gx = PacejkaGx(sigma, alpha);
 	btScalar Gy = PacejkaGy(sigma, alpha);
-	btScalar Svy = PacejkaSvy(sigma, alpha, camber, dFz, Dy);
+	btScalar Svy = PacejkaSvy(sigma, alpha, s.camber, dFz, Dy);
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0 + Svy;
 
-	// ideal slip and angle
-	btScalar sigma_hat(0), alpha_hat(0);
-	getSigmaHatAlphaHat(normal_load, sigma_hat, alpha_hat);
-
-	slip = sigma;
-	slip_angle = alpha;
-	ideal_slip = sigma_hat;
-	ideal_slip_angle = alpha_hat;
-	fx = Fx;
-	fy = Fy;
-	fz = Fz;
-	mz = Mz0;
-	vx = slip_velocity;
-	vy = lat_velocity;
-
-	return btVector3(Fx, Fy, Mz0);
+	s.vcam = 0; // FIXME
+	s.slip = sigma;
+	s.slip_angle = alpha;
+	s.fx = Fx;
+	s.fy = Fy;
+	s.mz = Mz0;
 }
 
-btScalar CarTire2::getSqueal() const
+btScalar CarTire2::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
 {
-	btScalar squeal = 0;
-	if (vx * vx > btScalar(1E-2) && slip * slip > btScalar(1E-6))
-	{
-		btScalar vx_body = vx / slip;
-		btScalar vx_ideal = ideal_slip * vx_body;
-		btScalar vy_ideal = ideal_slip_angle * vx_body; //btTan(ideal_slip_angle) * vx_body;
-		btScalar vx_squeal = btFabs(vx / vx_ideal);
-		btScalar vy_squeal = btFabs(vy / vy_ideal);
-		// start squeal at 80% of the ideal slide/slip, max out at 160%
-		squeal = btScalar(1.25) * btMax(vx_squeal, vy_squeal) - 1;
-		squeal = Clamp(squeal, btScalar(0), btScalar(1));
-	}
-	return squeal;
+	// surface influence on rolling resistance
+	btScalar resistance = resistance_factor * roll_resistance_lin;
+
+	// heat due to tire deformation increases rolling resistance
+	// approximate by quadratic function
+	resistance += velocity * velocity * roll_resistance_quad;
+
+	return resistance;
 }
 
 btScalar CarTire2::getMaxFx(btScalar load) const
@@ -320,7 +268,7 @@ btScalar CarTire2::PacejkaMz(
 
 btScalar CarTire2::PacejkaGx(
 	btScalar sigma,
-	btScalar alpha)
+	btScalar alpha) const
 {
 	const btScalar * p = coefficients;
 	btScalar B = p[RBX1] * btCos(btAtan(p[RBX2] * sigma));
@@ -334,7 +282,7 @@ btScalar CarTire2::PacejkaGx(
 
 btScalar CarTire2::PacejkaGy(
 	btScalar sigma,
-	btScalar alpha)
+	btScalar alpha) const
 {
 	const btScalar * p = coefficients;
 	btScalar B = p[RBY1] * btCos(btAtan(p[RBY2] * (alpha - p[RBY3])));
@@ -351,7 +299,7 @@ btScalar CarTire2::PacejkaSvy(
 	btScalar alpha,
 	btScalar gamma,
 	btScalar dFz,
-	btScalar Dy)
+	btScalar Dy) const
 {
 	const btScalar * p = coefficients;
 	btScalar Dv = Dy * (p[RVY1] + p[RVY2] * dFz + p[RVY3] * gamma) * btCos(btAtan(p[RVY4] * alpha));
@@ -359,11 +307,10 @@ btScalar CarTire2::PacejkaSvy(
 	return Sv;
 }
 
-void CarTire2::findSigmaHatAlphaHat(
+void CarTire2::findIdealSlip(
 	btScalar load,
-	btScalar & output_sigmahat,
-	btScalar & output_alphahat,
-	int iterations)
+	btScalar output_slip[2],
+	int iterations) const
 {
 	btScalar Fz = load;
 	btScalar Fz0 = nominal_load;
@@ -375,12 +322,13 @@ void CarTire2::findSigmaHatAlphaHat(
 	btScalar Fxmax = 0;
 	btScalar smax = 1;
 	btScalar ds = smax / iterations;
+	btScalar sigmahat = 0;
 	for (btScalar s = 0; s < smax; s += ds)
 	{
 		btScalar Fx = PacejkaFx(s, Fz, dFz, mu);
 		if (Fx > Fxmax)
 		{
-			output_sigmahat = s;
+			sigmahat = s;
 			Fxmax = Fx;
 		}
 		else if (Fx < Fxmax && Fxmax > 0)
@@ -393,12 +341,13 @@ void CarTire2::findSigmaHatAlphaHat(
 	btScalar Fymax = 0;
 	btScalar amax = 40 * (M_PI / 180.0);
 	btScalar da = amax / iterations;
+	btScalar alphahat = 0;
 	for (btScalar a = 0; a < amax; a += da)
 	{
 		btScalar Fy = PacejkaFy(a, camber, Fz, dFz, mu, Dy, BCy, Shf);
 		if (Fy > Fymax)
 		{
-			output_alphahat = a;
+			alphahat = a;
 			Fymax = Fy;
 		}
 		else if (Fy < Fymax && Fymax > 0)
@@ -407,13 +356,16 @@ void CarTire2::findSigmaHatAlphaHat(
 		}
 	}
 	btAssert(Fymax > 0);
+
+	output_slip[0] = sigmahat;
+	output_slip[1] = alphahat;
 }
 
-void CarTire2::initSigmaHatAlphaHat()
+void CarTire2::initSlipLUT(CarTireSlipLUT & t) const
 {
-	btScalar load_delta = max_load / tablesize;
-	for (int i = 0; i < tablesize; ++i)
+	for (int i = 0; i < t.size(); ++i)
 	{
-		findSigmaHatAlphaHat((btScalar)(i + 1) * load_delta, sigma_hat[i], alpha_hat[i]);
+		btScalar load = (i + 1) * t.delta();
+		findIdealSlip(load, t.ideal_slip_lut[i]);
 	}
 }

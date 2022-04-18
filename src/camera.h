@@ -40,9 +40,9 @@ public:
 
 	float GetFOV() const { return fov; }
 
-	virtual const Vec3 & GetPosition() const { return position; }
+	const Vec3 & GetPosition() const { return position; }
 
-	virtual const Quat & GetOrientation() const { return rotation; }
+	const Quat & GetOrientation() const { return rotation; }
 
 	// reset position, orientation
 	virtual void Reset(const Vec3 & /*newpos*/, const Quat & /*newquat*/) {};

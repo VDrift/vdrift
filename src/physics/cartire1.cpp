@@ -18,18 +18,24 @@
 /************************************************************************/
 
 #include "cartire1.h"
+#include "cartirebase.h"
 #include "fastmath.h"
-#include "minmax.h"
 #include <cassert>
 
 static const btScalar deg2rad = M_PI / 180;
 static const btScalar rad2deg = 180 / M_PI;
 
-CarTireInfo1::CarTireInfo1() :
-	longitudinal(11),
-	lateral(15),
-	aligning(18),
-	combining(4),
+template <class T, int N>
+constexpr int size(const T (&array)[N])
+{
+	return N;
+}
+
+CarTire1::CarTire1() :
+	longitudinal(),
+	lateral(),
+	aligning(),
+	combining(),
 	rolling_resistance_quad(1E-6),
 	rolling_resistance_lin(1E-3),
 	tread(0)
@@ -37,81 +43,69 @@ CarTireInfo1::CarTireInfo1() :
 	// ctor
 }
 
-CarTire1::CarTire1() :
-	camber(0),
-	slide(0),
-	slip(0),
-	ideal_slide(0),
-	ideal_slip(0),
-	fx(0),
-	fy(0),
-	fz(0),
-	mz(0)
+void CarTire1::ComputeState(
+		btScalar normal_force,
+		btScalar rot_velocity,
+		btScalar lon_velocity,
+		btScalar lat_velocity,
+		CarTireState & s) const
 {
-	// ctor
-}
-
-void CarTire1::init(const CarTireInfo1 & info)
-{
-	CarTireInfo1::operator=(info);
-	initSigmaHatAlphaHat();
-}
-
-btVector3 CarTire1::getForce(
-	btScalar normal_force,
-	btScalar friction_coeff,
-	btScalar sin_camber,
-	btScalar rot_velocity,
-	btScalar lon_velocity,
-	btScalar lat_velocity)
-{
-	if (normal_force * friction_coeff < btScalar(1E-6))
+	if (normal_force * s.friction < btScalar(1E-6))
 	{
-		return btVector3(0, 0, 0);
+		s.slip = s.slip_angle = 0;
+		s.fx = s.fy = s.mz = 0;
+		return;
 	}
 
 	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
 
-	// approximate asin(x) = x + x^3/6 for +-18 deg range
-	btScalar sc = Clamp(sin_camber, btScalar(-0.3), btScalar(0.3));
-	camber = (btScalar(1/6.0) * sc) * (sc * sc) + sc;
-
-	// get ideal slip ratio
-	btScalar sigma_hat(0);
-	btScalar alpha_hat(0);
-	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+	btScalar slip, slip_angle;
+	ComputeSlip(lon_velocity, lat_velocity, rot_velocity, slip, slip_angle);
 
 	// sigma: longitudinal slip is negative when braking, positive for acceleration
 	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
 	// gamma: positive when tire top tilts to the right, viewed from rear in deg
-	btScalar rcp_lon_velocity = 1 / Max(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (rot_velocity - lon_velocity) * rcp_lon_velocity;
-	btScalar alpha = -Atan(lat_velocity * rcp_lon_velocity) * rad2deg;
-	btScalar gamma = camber * rad2deg;
-	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
+	btScalar sigma = slip;
+	btScalar alpha = slip_angle * rad2deg;
+	btScalar gamma = s.camber * rad2deg;
 
-	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
-	btScalar Gx = PacejkaGx(sigma, alpha * deg2rad);
-	btScalar Gy = PacejkaGy(sigma, alpha * deg2rad);
+	// pure slip
+	btScalar camber_alpha;
+	btScalar Fx0 = PacejkaFx(sigma, Fz, s.friction);
+	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, s.friction, camber_alpha);
+	//btScalar Mz = PacejkaMz(alpha, Fz, gamma, s.friction);
+
+	// combined slip
+	btScalar Gx = PacejkaGx(slip, slip_angle);
+	btScalar Gy = PacejkaGy(slip, slip_angle);
 	btScalar Fx = Gx * Fx0;
 	btScalar Fy = Gy * Fy0;
 
-	slide = sigma;
-	slip = alpha * deg2rad;
-	ideal_slide = sigma_hat;
-	ideal_slip = alpha_hat * deg2rad;
-	fx = Fx;
-	fy = Fy;
-	fz = Fz;
-	mz = Mz;
-
-	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
-	return btVector3(Fx, Fy, Mz);
+	s.vcam = ComputeCamberVelocity(camber_alpha * deg2rad, lon_velocity);
+	s.slip = slip;
+	s.slip_angle = slip_angle;
+	s.fx = Fx;
+	s.fy = Fy;
+	//s.mz = Mz;
 }
 
-btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
+void CarTire1::ComputeAligningTorque(
+		btScalar normal_force,
+		CarTireState & s) const
+{
+	if (normal_force * s.friction < btScalar(1E-6))
+	{
+		s.mz = 0;
+		return;
+	}
+	btScalar Fz = Min(normal_force * btScalar(1E-3), btScalar(30));
+	btScalar alpha = s.slip_angle * rad2deg;
+	btScalar gamma = s.camber * rad2deg;
+	btScalar Mz = PacejkaMz(alpha, Fz, gamma, s.friction);
+	s.mz = Mz;
+}
+
+btScalar CarTire1::getRollingResistance(btScalar velocity, btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
 	btScalar resistance = rolling_resistance_lin * resistance_factor;
@@ -125,15 +119,23 @@ btScalar CarTire1::getRollingResistance(const btScalar velocity, const btScalar 
 
 btScalar CarTire1::getMaxFx(btScalar load) const
 {
-	const std::vector<btScalar> & b = longitudinal;
+	auto & b = longitudinal;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 	return D;
 }
 
+btScalar CarTire1::getMaxDx(btScalar load) const
+{
+	auto & b = longitudinal;
+	btScalar Fz = load * btScalar(1E-3);
+	btScalar BCD = (b[3] * Fz + b[4]) * Fz * std::exp(-b[5] * Fz);
+	return BCD;
+}
+
 btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 {
-	const std::vector<btScalar> & a = lateral;
+	auto & a = lateral;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
@@ -141,9 +143,27 @@ btScalar CarTire1::getMaxFy(btScalar load, btScalar camber) const
 	return D + Sv;
 }
 
+btScalar CarTire1::getMaxDy(btScalar load, btScalar camber) const
+{
+	auto & a = lateral;
+	btScalar Fz = load * btScalar(1E-3);
+	btScalar gamma = camber;
+	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * std::abs(gamma));
+	return BCD;
+}
+
+void CarTire1::getCamberShift(btScalar load, btScalar camber, btScalar & sh, btScalar & sv) const
+{
+	auto & a = lateral;
+	btScalar Fz = load * btScalar(1E-3);
+	btScalar gamma = camber;
+	sh = a[8] * gamma + a[9] * Fz + a[10];
+	sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
+}
+
 btScalar CarTire1::getMaxMz(btScalar load, btScalar camber) const
 {
-	const std::vector<btScalar> & c = aligning;
+	auto & c = aligning;
 	btScalar Fz = load * btScalar(1E-3);
 	btScalar gamma = camber;
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
@@ -151,9 +171,9 @@ btScalar CarTire1::getMaxMz(btScalar load, btScalar camber) const
 	return -(D + Sv);
 }
 
-btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
+btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff) const
 {
-	const std::vector<btScalar> & b = longitudinal;
+	auto & b = longitudinal;
 
 	// shape factor
 	btScalar C = b[0];
@@ -161,13 +181,14 @@ btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coef
 	// peak factor
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 
-	btScalar BCD = (b[3] * Fz + b[4]) * Fz * btExp(-b[5] * Fz);
+	// stifness at sigma = 0
+	btScalar BCD = (b[3] * Fz + b[4]) * Fz * std::exp(-b[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
+	btScalar E = (b[6] * Fz + b[7]) * Fz + b[8];
 
 	// horizontal shift
 	btScalar Sh = b[9] * Fz + b[10];
@@ -176,19 +197,18 @@ btScalar CarTire1::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coef
 	btScalar S = 100 * sigma + Sh;
 
 	// longitudinal force
-	btScalar Fx = D * SinPi(C * Atan(B * S - E * (B * S - Atan(B * S))));
+	btScalar Fx = D * Sin3Pi2(C * Atan(B * S - E * (B * S - Atan(B * S))));
 
 	// scale by surface friction
 	Fx = Fx * friction_coeff;
-	max_Fx = D * friction_coeff;
 
 	btAssert(Fx == Fx);
 	return Fx;
 }
 
-btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
+btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & camber_alpha) const
 {
-	const std::vector<btScalar> & a = lateral;
+	auto & a = lateral;
 
 	// shape factor
 	btScalar C = a[0];
@@ -196,7 +216,8 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
-	btScalar BCD = a[3] * SinPi(2 * Atan(Fz / a[4])) * (1 - a[5] * btFabs(gamma));
+	// stifness at alpha = 0
+	btScalar BCD = a[3] * Sin2Atan(Fz, a[4]) * (1 - a[5] * std::abs(gamma));
 
 	// stiffness factor
 	btScalar B = BCD / (C * D);
@@ -214,53 +235,34 @@ btScalar CarTire1::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 	btScalar S = alpha + Sh;
 
 	// lateral force
-	btScalar Fy = D * SinPi(C * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
+	btScalar Fy = D * Sin3Pi2(C * Atan(B * S - E * (B * S - Atan(B * S)))) + Sv;
 
 	// scale by surface friction
 	Fy = Fy * friction_coeff;
-	max_Fy = (D + Sv) * friction_coeff;
+	camber_alpha = Sh + Sv / BCD * friction_coeff;
 
 	btAssert(Fy == Fy);
 	return Fy;
 }
 
-inline btScalar btCosAtan(btScalar x)
+btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff) const
 {
-	return btRecipSqrt(1 + x * x);
-}
+	auto & c = aligning;
 
-btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha)
-{
-	const std::vector<btScalar> & p = combining;
-	btScalar B = p[2] * btCosAtan(p[3] * sigma);
-	btScalar G = btCosAtan(B * alpha);
-	return G;
-}
-
-btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha)
-{
-	const std::vector<btScalar> & p = combining;
-	btScalar B = p[0] * btCosAtan(p[1] * alpha);
-	btScalar G = btCosAtan(B * sigma);
-	return G;
-}
-
-btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
-{
-	const std::vector<btScalar> & c = aligning;
-
+	// shape factor
 	btScalar C = c[0];
 
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
-	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * btFabs(gamma)) * btExp(-c[5] * Fz);
+	// stifness at alpha = 0
+	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1 - c[6] * std::abs(gamma)) * std::exp(-c[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1 - c[10] * btFabs(gamma));
+	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1 - c[10] * std::abs(gamma));
 
 	// horizontal shift
 	btScalar Sh = c[11] * gamma + c[12] * Fz + c[13];
@@ -276,61 +278,48 @@ btScalar CarTire1::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScal
 
 	// scale by surface friction
 	Mz = Mz * friction_coeff;
-	max_Mz = (D + Sv) * friction_coeff;
 
 	btAssert(Mz == Mz);
 	return Mz;
 }
 
-void CarTire1::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
+btScalar CarTire1::PacejkaGx(btScalar sigma, btScalar alpha) const
 {
-	assert(!sigma_hat.empty());
-	assert(!alpha_hat.empty());
-
-	int HAT_ITERATIONS = sigma_hat.size();
-
-	btScalar HAT_LOAD = 0.5;
-	btScalar nf = load * btScalar(1E-3);
-	if (nf < HAT_LOAD)
-	{
-		sh = sigma_hat[0];
-		ah = alpha_hat[0];
-	}
-	else if (nf >= HAT_LOAD * HAT_ITERATIONS)
-	{
-		sh = sigma_hat[HAT_ITERATIONS-1];
-		ah = alpha_hat[HAT_ITERATIONS-1];
-	}
-	else
-	{
-		int lbound = (int)(nf/HAT_LOAD);
-		lbound--;
-		if (lbound < 0)
-			lbound = 0;
-		if (lbound >= (int)sigma_hat.size())
-			lbound = (int)sigma_hat.size()-1;
-		btScalar blend = (nf-HAT_LOAD*(lbound+1))/HAT_LOAD;
-		sh = sigma_hat[lbound]*(1-blend)+sigma_hat[lbound+1]*blend;
-		ah = alpha_hat[lbound]*(1-blend)+alpha_hat[lbound+1]*blend;
-	}
+	auto & p = combining;
+	//btScalar B = p[2] * CosAtan(p[3] * sigma);
+	//btScalar G = CosAtan(B * alpha);
+	//return G;
+	btScalar a = p[3] * sigma;
+	btScalar b = p[2] * alpha;
+	btScalar c = a * a + 1;
+	return std::sqrt(c / (c + b * b));
 }
 
-void CarTire1::findSigmaHatAlphaHat(
-	btScalar load,
-	btScalar & output_sigmahat,
-	btScalar & output_alphahat,
-	int iterations)
+btScalar CarTire1::PacejkaGy(btScalar sigma, btScalar alpha) const
+{
+	auto & p = combining;
+	//btScalar B = p[0] * CosAtan(p[1] * alpha);
+	//btScalar G = CosAtan(B * sigma);
+	//return G;
+	btScalar a = p[1] * alpha;
+	btScalar b = p[0] * sigma;
+	btScalar c = a * a + 1;
+	return std::sqrt(c / (c + b * b));
+}
+
+void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2], int iterations) const
 {
 	btScalar junk;
 	btScalar fmax = 0;
 	btScalar xmax = 1;
 	btScalar dx = xmax / iterations;
+	btScalar sigmahat = 0;
 	for (btScalar x = 0; x < xmax; x += dx)
 	{
-		btScalar f = PacejkaFx(x, load, 1, junk);
+		btScalar f = PacejkaFx(x, load, 1);
 		if (f > fmax)
 		{
-			output_sigmahat = x;
+			sigmahat = x;
 			fmax = f;
 		}
 		else if (f < fmax && fmax > 0)
@@ -343,12 +332,13 @@ void CarTire1::findSigmaHatAlphaHat(
 	fmax = 0;
 	xmax = 40;
 	dx = xmax / iterations;
+	btScalar alphahat = 0;
 	for (btScalar x = 0; x < xmax; x += dx)
 	{
 		btScalar f = PacejkaFy(x, load, 0, 1, junk);
 		if (f > fmax)
 		{
-			output_alphahat = x;
+			alphahat = x;
 			fmax = f;
 		}
 		else if (f < fmax && fmax > 0)
@@ -357,15 +347,16 @@ void CarTire1::findSigmaHatAlphaHat(
 		}
 	}
 	btAssert(fmax > 0);
+
+	output_slip[0] = sigmahat;
+	output_slip[1] = alphahat * deg2rad;
 }
 
-void CarTire1::initSigmaHatAlphaHat(int tablesize)
+void CarTire1::initSlipLUT(CarTireSlipLUT & t) const
 {
-	btScalar HAT_LOAD = 0.5;
-	sigma_hat.resize(tablesize, 0);
-	alpha_hat.resize(tablesize, 0);
-	for (int i = 0; i < tablesize; i++)
+	for (int i = 0; i < t.size(); i++)
 	{
-		findSigmaHatAlphaHat((btScalar)(i+1)*HAT_LOAD, sigma_hat[i], alpha_hat[i]);
+		btScalar load = (i + 1) * t.delta() * btScalar(1E-3);
+		findIdealSlip(load, t.ideal_slip_lut[i]);
 	}
 }

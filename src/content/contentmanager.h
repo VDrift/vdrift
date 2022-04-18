@@ -80,9 +80,9 @@ private:
 	template <class T>
 	class CacheShared : public Cache, public std::map<std::string, std::shared_ptr<T> >
 	{
-		void log(std::ostream & log) const;
-		size_t size() const;
-		void sweep();
+		void log(std::ostream & log) const override;
+		size_t size() const override;
+		void sweep() override;
 	};
 
 	/// register content factories
@@ -122,10 +122,10 @@ private:
 	std::ostream & error;
 
 	/// content leak logger
-	bool _logleaks();
+	void _logleaks();
 
 	/// error logger
-	bool _logerror(
+	void _logerror(
 		const std::string & path,
 		const std::string & name);
 
@@ -146,7 +146,7 @@ private:
 
 	/// get default object instance
 	template <class T>
-	bool _getdefault(std::shared_ptr<T> & sptr);
+	void _getdefault(std::shared_ptr<T> & sptr);
 };
 
 template <class T>
@@ -156,9 +156,11 @@ inline bool ContentManager::get(
 	const std::string & name)
 {
 	// check for the specialised version
+	if (_get(sptr, path + name))
+		return true;
+
 	// fall back to the generic one
-	return 	_get(sptr, path + name) ||
-			_get(sptr, name);
+	return _get(sptr, name);
 }
 
 template <class T>
@@ -178,11 +180,16 @@ inline bool ContentManager::load(
 	const P & param)
 {
 	// check for the specialised version in basepaths
+	if (_load(sptr, basepaths, path, name, param))
+		return true;
+
 	// fall back to the generic one in shared paths
-	return 	_load(sptr, basepaths, path, name, param) ||
-			_load(sptr, sharedpaths, "", name, param) ||
-			_getdefault(sptr) ||
-			_logerror(path, name);
+	if (_load(sptr, sharedpaths, "", name, param))
+		return true;
+
+	_getdefault(sptr);
+	_logerror(path, name);
+	return false;
 }
 
 template <class T>
@@ -232,10 +239,9 @@ inline bool ContentManager::_load(
 }
 
 template <class T>
-inline bool ContentManager::_getdefault(std::shared_ptr<T> & sptr)
+inline void ContentManager::_getdefault(std::shared_ptr<T> & sptr)
 {
 	sptr = Factory<T>(factory_cached).getDefault();
-	return false;
 }
 
 template <class T>

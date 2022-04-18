@@ -29,22 +29,11 @@ class Aabb
 public:
 	Aabb() : radius(0) {}
 
-	Aabb(const Aabb<T> & other) :
-		center(other.center), extent(other.extent), radius(other.radius) {}
-
 	Aabb(const MathVector<T, 3> & min, const MathVector<T, 3> & max)
 	{
 		center = (max + min) * T(0.5);
 		extent = (max - min) * T(0.5);
 		radius = extent.Magnitude();
-	}
-
-	Aabb<T> & operator=(const Aabb<T> & other)
-	{
-		center = other.center;
-		extent = other.extent;
-		radius = other.radius;
-		return *this;
 	}
 
 	const MathVector<T, 3> & GetCenter() const
