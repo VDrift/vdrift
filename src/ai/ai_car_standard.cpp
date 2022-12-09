@@ -503,7 +503,7 @@ void AiCarStandard::UpdateSteer(const CarDynamics & car)
 	else if (angle > 180 && angle <= 360)
 		angle = 360 - angle;
 
-	float steer_value = Clamp(angle / car.GetMaxSteeringAngle(), -1.0f, 1.0f);
+	float steer_value = Clamp(btScalar(angle / car.GetMaxSteeringAngle()), btScalar(-1.0f), btScalar(1.0f));
 
 	inputs[CarInput::STEER_RIGHT] = steer_value;
 }

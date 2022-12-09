@@ -614,7 +614,7 @@ void AiCarExperimental::UpdateSteer(const CarDynamics & car, float dt)
 	else if (angle > 180 && angle <= 360)
 		angle = 360 - angle;
 
-	float steer_value = Clamp(angle / car.GetMaxSteeringAngle(), -1.0f, 1.0f);
+	float steer_value = Clamp(btScalar(angle / car.GetMaxSteeringAngle()), btScalar(-1.0f), btScalar(1.0f));
 
 	// If we are driving backwards, we need to invert steer direction.
 	if (is_recovering)

@@ -1135,7 +1135,7 @@ void CarDynamics::ApplyABS(int i)
 
 		btScalar brake_old = brake[i].GetBrakeFactor();
 		btScalar brake_delta = Min(brake_delta_limit, brake_value - brake_old);
-		btScalar brake_new = Clamp(brake_old + brake_delta, 0.0f, 1.0f);
+		btScalar brake_new = Clamp(btScalar(brake_old + brake_delta), btScalar(0.0f), btScalar(1.0f));
 		brake[i].SetBrakeFactor(brake_new);
 		abs_active[i] = brake_new < brake_value ? true : false;
 	}
@@ -1542,7 +1542,7 @@ void CarDynamics::UpdateTransmission(btScalar dt)
 		ShiftGear(gear);
 	}
 
-	remaining_shift_time = Max(remaining_shift_time - dt, 0.0f);
+	remaining_shift_time = Max(btScalar(remaining_shift_time - dt), btScalar(0.0f));
 	if (remaining_shift_time <= transmission.GetShiftTime() *  btScalar(0.5) && !shifted)
 	{
 		shifted = true;
@@ -1750,7 +1750,7 @@ void CarDynamics::SetSteering(btScalar value)
 		btScalar ideal_value = btScalar(180/M_PI) * ideal_angle / max_angle;
 
 		// transit to ideal value at 10 m/s (36km/h)
-		btScalar transition = Min(body->getLinearVelocity().length2() * 0.01f, 1.0f);
+		btScalar transition = Min(btScalar(body->getLinearVelocity().length2() * 0.01f), btScalar(1.0f));
 		btScalar abs_value = std::abs(value);
 		btScalar max_value = abs_value + (ideal_value - abs_value) * transition;
 

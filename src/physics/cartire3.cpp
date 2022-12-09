@@ -138,14 +138,14 @@ void CarTire3::ComputeState(
 	}
 
 	btScalar fz = Min(normal_force, btScalar(20E3));
-	btScalar sin_camber = Clamp(s.camber, -0.3f, 0.3f); // +-18 deg
+	btScalar sin_camber = Clamp(btScalar(s.camber), btScalar(-0.3f), btScalar(0.3f)); // +-18 deg
 
 	btScalar vr = btSqrt(vr2);
 	btScalar rvr = 1 / vr;
 	btScalar nx = -vrx * rvr;
 	btScalar ny = -vry * rvr;
 
-	btScalar wr = std::copysign(Max(std::abs(rot_velocity), 1E-12f), rot_velocity);
+	btScalar wr = std::copysign(Max(btScalar(std::abs(rot_velocity)), btScalar(1E-12f)), rot_velocity);
 	btScalar rwr = 1 / wr;
 	btScalar sx = -vrx * rwr;
 	btScalar sy = -vry * rwr;
@@ -304,7 +304,7 @@ void CarTire3::getMaxForce(
 
 		// qx * (1 - u) = qp/4 * (1 - u^2) * (4 + u)
 		btScalar t = btSqrt(qx * rq4 + 4.5f);
-		btScalar uc = Min(t - 2.5f, 1.0f);
+		btScalar uc = Min(btScalar(t - 2.5f), btScalar(1.0f));
 		btScalar ud = uc + 1;
 		btScalar ue = uc - 1;
 		btScalar uf = 3 * uc + 5;
@@ -348,7 +348,7 @@ void CarTire3::getMaxForce(
 			btScalar t0 = qb * rq4;
 			btScalar t1 = t0 + 3;
 			btScalar t2 = btSqrt(t1 * t1 + rp4);
-			uc = Min(0.5f * (t2 - t0 - 5), 1.0f);
+			uc = Min(btScalar(0.5f * (t2 - t0 - 5)), btScalar(1.0f));
 			ud = uc + 1;
 			btScalar ue = uc - 1;
 			btScalar uf = 3 * uc + 5;
@@ -411,7 +411,7 @@ void CarTire3::findIdealSlip(btScalar fz, btScalar slip[2]) const
 
 		// qx * (1 - u) = qp/4 * (1 - u^2) * (4 + u)
 		btScalar t = btSqrt(qx * rq4 + 4.5f);
-		btScalar uc = Min(t - 2.5f, 1.0f);
+		btScalar uc = Min(btScalar(t - 2.5f), btScalar(1.0f));
 		btScalar ud = uc + 1;
 		btScalar ue = uc - 1;
 		btScalar uf = 3 * uc + 5;
@@ -462,7 +462,7 @@ void CarTire3::findIdealSlip(btScalar fz, btScalar slip[2]) const
 			btScalar t0 = qb * rq4;
 			btScalar t1 = t0 + 3;
 			btScalar t2 = btSqrt(t1 * t1 + rp4);
-			btScalar uc = Min(0.5f * (t2 - t0 - 5), 1.0f);
+			btScalar uc = Min(btScalar(0.5f * (t2 - t0 - 5)), btScalar(1.0f));
 			btScalar ud = uc + 1;
 			btScalar ue = uc - 1;
 			btScalar uf = 3 * uc + 5;
