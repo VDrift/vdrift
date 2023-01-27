@@ -20,6 +20,7 @@
 #include "carengine.h"
 #include "cfg/ptree.h"
 #include "linearinterp.h"
+#include "minmax.h"
 
 CarEngineInfo::CarEngineInfo():
 	displacement(2E-3),
@@ -216,7 +217,7 @@ void CarEngine::Update(btScalar dt)
 
 			btScalar fuel_consumed = boost * info.fuel_rate * dt;
 			btScalar nos_consumed = info.nos_fuel_ratio * fuel_consumed;
-			nos_mass = btMax(btScalar(0), nos_mass - nos_consumed);
+			nos_mass = Max(nos_mass - nos_consumed, btScalar(0));
 		}
 	}
 
