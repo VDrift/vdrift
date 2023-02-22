@@ -28,8 +28,8 @@
 class Bezier
 {
 public:
-	Bezier() {};
-	~Bezier() {};
+	Bezier() {}
+	~Bezier() {}
 
 	///initialize this bezier to the quad defined by the given corner points
 	void SetFromCorners(const Vec3 & fl, const Vec3 & fr, const Vec3 & bl, const Vec3 & br);

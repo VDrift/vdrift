@@ -25,19 +25,19 @@
 
 struct RenderUniformBase
 {
-	RenderUniformBase() {};
-	RenderUniformBase(const float * newData, int dataSize) : data(newData, dataSize) {};
-	RenderUniformBase(const std::vector <float> & newdata) : data(newdata) {};
-	RenderUniformBase(const RenderUniformVector <float> & newdata) : data(newdata) {};
+	RenderUniformBase() {}
+	RenderUniformBase(const float * newData, int dataSize) : data(newData, dataSize) {}
+	RenderUniformBase(const std::vector <float> & newdata) : data(newdata) {}
+	RenderUniformBase(const RenderUniformVector <float> & newdata) : data(newdata) {}
 
 	RenderUniformVector <float> data;
 };
 
 struct RenderUniformEntry : public RenderUniformBase
 {
-	RenderUniformEntry() {};
+	RenderUniformEntry() {}
 	RenderUniformEntry(StringId newName, const float * newData, int dataSize) :
-		RenderUniformBase(newData, dataSize), name(newName) {};
+		RenderUniformBase(newData, dataSize), name(newName) {}
 
 	StringId name;
 };

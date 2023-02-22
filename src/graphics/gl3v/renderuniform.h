@@ -27,9 +27,9 @@
 /// The bare minimum required to update uniforms.
 struct RenderUniform : public RenderUniformBase
 {
-	RenderUniform() : location(0) {};
-	RenderUniform(GLint loc, const RenderUniformEntry & entry) : RenderUniformBase(entry.data), location(loc) {};
-	RenderUniform(GLint loc, const std::vector <float> & newdata) : RenderUniformBase(newdata), location(loc) {};
+	RenderUniform() : location(0) {}
+	RenderUniform(GLint loc, const RenderUniformEntry & entry) : RenderUniformBase(entry.data), location(loc) {}
+	RenderUniform(GLint loc, const std::vector <float> & newdata) : RenderUniformBase(newdata), location(loc) {}
 
 	GLuint location;
 };
