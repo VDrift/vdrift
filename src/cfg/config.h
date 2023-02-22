@@ -205,12 +205,12 @@ inline bool Config::get(const const_iterator & section, const std::string & para
 		if (out.size() > 0)
 		{
 			// set vector
-			for (size_t i = 0; i < out.size() && !st.eof(); ++i)
+			for (size_t n = 0; n < out.size() && !st.eof(); ++n)
 			{
 				std::string str;
 				std::getline(st, str, ',');
 				std::istringstream s(str);
-				s >> out[i];
+				s >> out[n];
 			}
 		}
 		else
