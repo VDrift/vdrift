@@ -39,7 +39,6 @@ bool Sprite2D::Load(
 	texinfo.mipmap = false;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	texinfo.npot = false;
 	content.load(texture, texturepath, texturename, texinfo);
 
 	node = parent.AddNode();

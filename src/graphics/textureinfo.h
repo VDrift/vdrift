@@ -35,7 +35,6 @@ struct TextureInfo
 	bool compress;			///< can be compressed (not a normal map e.g.)
 	bool repeatu;			///< repeat texture along u coordinate
 	bool repeatv;			///< repeat texture along v coordinate
-	bool npot;				///< is not power of two
 	bool nearest;			///< use nearest-neighbor interpolation filter
 	bool premultiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
 	bool srgb; 				///< apply srgb colorspace correction
@@ -53,7 +52,6 @@ struct TextureInfo
 		compress(true),
 		repeatu(true),
 		repeatv(true),
-		npot(true),
 		nearest(false),
 		premultiply_alpha(false),
 		srgb(false)
