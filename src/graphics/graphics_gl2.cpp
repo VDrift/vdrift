@@ -312,7 +312,6 @@ bool GraphicsGL2::Init(
 	{
 		TextureInfo t;
 		t.cube = true;
-		t.verticalcross = true;
 		t.mipmap = true;
 		t.anisotropy = anisotropy;
 		t.maxsize = TextureInfo::Size(texturesize);
@@ -323,7 +322,6 @@ bool GraphicsGL2::Init(
 	{
 		TextureInfo t;
 		t.cube = true;
-		t.verticalcross = true;
 		t.mipmap = false;
 		t.anisotropy = anisotropy;
 		t.maxsize = TextureInfo::Size(texturesize);

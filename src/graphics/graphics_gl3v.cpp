@@ -111,7 +111,6 @@ bool GraphicsGL3::Init(
 	{
 		TextureInfo t;
 		t.cube = true;
-		t.verticalcross = true;
 		t.mipmap = true;
 		t.anisotropy = anisotropy;
 		t.maxsize = TextureInfo::Size(texturesize);
