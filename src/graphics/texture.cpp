@@ -195,55 +195,6 @@ static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 		glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 }
 
-// i = 0..6, cube face +x, -x, +y, -y, +z, -z
-// cubeface[width * height * bytespp]
-// returns &cubeface[0]
-static char * GetCubeVerticalCrossFace(
-	unsigned i, const SDL_Surface * surface,
-	char cubeface[], unsigned width, unsigned height)
-{
-	const struct {unsigned facex; unsigned facey;} layout[] = {
-		{2, 1},	{0, 1},	{1, 0},	{1, 2},	{1, 1},	{1, 3}
-	};
-
-	int offsetx = layout[i].facex * width;
-	int offsety = layout[i].facey * height;
-	unsigned char bytespp = surface->format->BytesPerPixel;
-	int skip = (surface->w - width) * bytespp;
-	const char * src = (const char *)(surface->pixels);
-	char * dst = cubeface;
-	if (i < 5)
-	{
-		src += (offsety * surface->w + offsetx) * bytespp;
-		for (unsigned y = 0; y < height; y++)
-		{
-			for (unsigned x = 0; x < width * bytespp; x++)
-			{
-				*dst++ = *src++;
-			}
-			src += skip;
-		}
-	}
-	else
-	{
-		// special case for negative z, rotate 180 deg
-		src += ((offsety + height - 1) * surface->w + (offsetx + width - 1)) * bytespp;
-		for (unsigned y = 0; y < height; y++)
-		{
-			for (unsigned x = 0; x < width; x++)
-			{
-				for (unsigned char c = 0; c < bytespp; c++)
-				{
-					*dst++ = *src++;
-				}
-				src -= 2 * bytespp;
-			}
-			src -= skip;
-		}
-	}
-	return cubeface;
-}
-
 Texture::Texture()
 {
 	// ctor
@@ -404,20 +355,12 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 	}
 
 	// get dimensions
-	unsigned wtiles = 1;
-	unsigned htiles = 6;
-	if (info.verticalcross)
-	{
-		wtiles = 3;
-		htiles = 4;
-	}
-	width = surface->w / wtiles;
+	const unsigned htiles = 6;
+	width = surface->w;
 	height = surface->h / htiles;
-	if (width * wtiles != (unsigned)surface->w || height * htiles != (unsigned)surface->h)
+	if (height * htiles != (unsigned)surface->h)
 	{
-		error << "Expected cubemap width x height "
-			<< width << "*" << wtiles << " x " << height << "*" << htiles
-			<< " got " << surface->w << " x " << surface->h << std::endl;
+		error << "Cube map image height not divisible by 6: " << surface->h << std::endl;
 		return false;
 	}
 
@@ -434,15 +377,9 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 
 	const unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 	const unsigned ilen = width * height * surface->format->BytesPerPixel;
-	std::vector<char> face(info.verticalcross ? ilen : 0); // verticalcross face buffer
 	for (int i = 0; i < 6; ++i)
 	{
-		const char * idata;
-		if (info.verticalcross)
-			idata = GetCubeVerticalCrossFace(i, surface, face.data(), width, height);
-		else
-			idata = (const char *)surface->pixels + ilen * i;
-
+		const char * idata = (const char *)surface->pixels + ilen * i;
 		glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, idata);
 	}
 	CheckForOpenGLErrors("Cubemap creation", error);

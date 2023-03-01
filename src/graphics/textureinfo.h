@@ -31,7 +31,6 @@ struct TextureInfo
 	Size maxsize;			///< max texture size 128, 256, 2048
 	bool mipmap;			///< build mip maps
 	bool cube;				///< is a cube map
-	bool verticalcross; 	///< is a vertical cross cube map
 	bool compress;			///< can be compressed (not a normal map e.g.)
 	bool repeatu;			///< repeat texture along u coordinate
 	bool repeatv;			///< repeat texture along v coordinate
@@ -48,7 +47,6 @@ struct TextureInfo
 		maxsize(LARGE),
 		mipmap(true),
 		cube(false),
-		verticalcross(false),
 		compress(true),
 		repeatu(true),
 		repeatv(true),
