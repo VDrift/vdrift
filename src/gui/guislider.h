@@ -46,7 +46,7 @@ protected:
 	VertexArray m_varray;
 	float m_x = 0, m_y = 0;
 	float m_w = 0, m_h = 0;
-	float m_min_value = 0.02, m_max_value = 0.02;  // relative slider element extents
+	float m_min_value = -0.02, m_max_value = 0.02;  // relative slider element extents
 
 	GuiSlider(const GuiSlider & other);
 
