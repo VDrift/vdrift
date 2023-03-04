@@ -23,10 +23,14 @@
 #include "bcndecode.h"
 #include "dds.h"
 
+#ifdef LOADPNG
+#include "png.h"
+#else
 #ifdef __APPLE__
 #include <SDL2_image/SDL_image.h>
 #else
 #include <SDL2/SDL_image.h>
+#endif
 #endif
 
 #include <string>
@@ -324,6 +328,18 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	}
 
 	// load image
+#ifdef LOADPNG
+	std::vector<unsigned char> img;
+	TextureData data;
+	unsigned pret = LoadPNG(path.c_str(), img, data.width, data.height, data.bytespp);
+	if (pret)
+	{
+		error << "Error loading texture file: " << path << "\nLoadPNG: " << LoadPNGError(pret) << std::endl;
+		return false;
+	}
+	data.data = img.data();
+
+#else
 	SDL_Surface * surface = IMG_Load(path.c_str());
 	if (!surface)
 	{
@@ -335,11 +351,14 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	data.width = surface->w;
 	data.height = surface->h;
 	data.bytespp = surface->format->BytesPerPixel;
+#endif
 
 	// load texture
 	bool ret = Load(data, info, error);
 
+#ifndef LOADPNG
 	SDL_FreeSurface(surface);
+#endif
 	return ret;
 }
 

@@ -65,6 +65,7 @@ src = Split("""
 		graphics/model.cpp
 		graphics/model_joe03.cpp
 		graphics/model_obj.cpp
+		graphics/png.cpp
 		graphics/render_input_postprocess.cpp
 		graphics/render_input_scene.cpp
 		graphics/render_output.cpp
