@@ -347,7 +347,7 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 		return false;
 	}
 	TextureData data;
-	data.data = (const unsigned char *)surface->pixels;
+	data.data = (unsigned char *)surface->pixels;
 	data.width = surface->w;
 	data.height = surface->h;
 	data.bytespp = surface->format->BytesPerPixel;
