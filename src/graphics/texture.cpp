@@ -35,6 +35,29 @@
 #include <vector>
 #include <cassert>
 
+// texformat[bytespp - 1]
+static const int texformat[4] =
+{
+	GL_RED,
+	GL_RG,
+#ifdef __APPLE__
+	GL_BGR,
+	GL_BGRA,
+#else
+	GL_RGB,
+	GL_RGBA
+#endif // __APPLE__
+};
+
+// itexformat[compressed][srgb][bytespp-1]
+static const int itexformat[2][2][4] =
+{
+	{{GL_RED, GL_RG, GL_RGB, GL_RGBA},
+	 {GL_RED, GL_RG, GL_SRGB8, GL_SRGB8_ALPHA8}},
+	{{GL_COMPRESSED_RED, GL_COMPRESSED_RG, GL_COMPRESSED_RGB, GL_COMPRESSED_RGBA},
+	 {GL_COMPRESSED_RED, GL_COMPRESSED_RG, GL_COMPRESSED_SRGB, GL_COMPRESSED_SRGB_ALPHA}}
+};
+
 // averaging downsampler
 // bytespp is the size of a pixel (number of channels)
 // dst width/height are multiples of src width, height in pixels
@@ -122,50 +145,54 @@ static void SampleDownAvg(
 	}
 }
 
-static void GetTextureFormat(
-	const SDL_Surface * surface,
-	const TextureInfo & info,
-	int & internalformat,
-	int & format)
+inline unsigned char* DownSample(char size, unsigned bytespp, unsigned & w, unsigned & h,
+								unsigned char * pixels, std::vector<unsigned char> & pixelsd)
 {
-	bool compress = info.compress && (surface->w > 512 || surface->h > 512);
-	bool srgb = info.srgb;
-
-	internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
-	switch (surface->format->BytesPerPixel)
+	unsigned wd = w;
+	unsigned hd = h;
+	if (size == TextureInfo::SMALL)
 	{
-		case 1:
-			internalformat = compress ? GL_COMPRESSED_RED : GL_RED;
-			format = GL_RED;
-			break;
-		case 2:
-			internalformat = compress ? GL_COMPRESSED_RG : GL_RG;
-			format = GL_RG;
-			break;
-		case 3:
-			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
-#ifdef __APPLE__
-			format = GL_BGR;
-#else
-			format = GL_RGB;
-#endif
-			break;
-		case 4:
-			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB_ALPHA : GL_COMPRESSED_RGBA) : (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA);
-#ifdef __APPLE__
-			format = GL_BGRA;
-#else
-			format = GL_RGBA;
-#endif
-			break;
-		default:
-#ifdef __APPLE__
-			format = GL_BGR;
-#else
-			format = GL_RGB;
-#endif
-			break;
+		if (w > 256)
+		{
+			if (!(w & 3)) wd = w / 4;
+		}
+		else if (w > 128)
+		{
+			if (!(w & 1)) wd = w / 2;
+		}
+		if (h > 256)
+		{
+			if (!(h & 3)) hd = h / 4;
+		}
+		else if (h > 128)
+		{
+			if (!(h & 1)) hd = h / 2;
+		}
 	}
+	else if (size == TextureInfo::MEDIUM)
+	{
+		if (w > 256)
+		{
+			if (!(w & 1)) wd = w / 2;
+		}
+		if (h > 256)
+		{
+			if (!(h & 1)) hd = h / 2;
+		}
+	}
+	if (wd < w || hd < h)
+	{
+		pixelsd.resize(wd * hd * bytespp);
+
+		SampleDownAvg(
+			bytespp, w, h, w * bytespp, pixels,
+			wd, hd, wd * bytespp, pixelsd.data());
+
+		w = wd;
+		h = hd;
+		return pixelsd.data();
+	}
+	return pixels;
 }
 
 static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
@@ -205,113 +232,45 @@ Texture::~Texture()
 	Unload();
 }
 
-bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostream & error)
+bool Texture::Load(const TextureData & data, const TextureInfo & info, std::ostream & error)
 {
-	if (texid)
+	if (data.data == 0 || data.width == 0 || data.height == 0)
 	{
-		error << "Tried to double load texture " << path << std::endl;
+		error << "Invalid texture data: " << data.data << " " << data.width << " x " << data.height << std::endl;
 		return false;
 	}
 
-	if (!info.data && path.empty())
+	if (data.bytespp < 1 || data.bytespp > 4)
 	{
-		error << "Tried to load a texture with an empty name" << std::endl;
+		error << "Unsupported bytes per pixel: " << data.bytespp << std::endl;
 		return false;
 	}
 
-	if (!info.data && LoadDDS(path, info, error))
-	{
-		return true;
-	}
-
+	unsigned char * pixels;
+	std::vector<unsigned char> buffer;
 	if (info.cube)
 	{
-		return LoadCube(path, info, error);
-	}
-
-	SDL_Surface * surface = 0;
-	if (info.data)
-	{
-		Uint32 rmask, gmask, bmask, amask;
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		rmask = 0xff000000;
-		gmask = 0x00ff0000;
-		bmask = 0x0000ff00;
-		amask = 0x000000ff;
-#else
-		rmask = 0x000000ff;
-		gmask = 0x0000ff00;
-		bmask = 0x00ff0000;
-		amask = 0xff000000;
-#endif
-		surface = SDL_CreateRGBSurfaceFrom(
-			info.data, info.width, info.height,
-			info.bytespp * 8, info.width * info.bytespp,
-			rmask, gmask, bmask, amask);
+		const unsigned htiles = 6;
+		width = data.width;
+		height = data.height / htiles;
+		pixels = data.data;
+		target = GL_TEXTURE_CUBE_MAP;
+		if (height * htiles != (unsigned)data.height)
+		{
+			error << "Cube map image height not divisible by 6: " << data.height << std::endl;
+			return false;
+		}
 	}
 	else
 	{
-		surface = IMG_Load(path.c_str());
+		width = data.width;
+		height = data.height;
+		pixels = DownSample(info.maxsize, data.bytespp, width, height, data.data, buffer);
+		target = GL_TEXTURE_2D;
 	}
-
-	if (!surface)
-	{
-		error << "Error loading texture file: " << path << std::endl;
-		error << IMG_GetError() << std::endl;
-		return false;
-	}
-
-	const unsigned char * pixels = (const unsigned char *)surface->pixels;
-	const unsigned bytespp = surface->format->BytesPerPixel;
-	unsigned pitch = surface->pitch;
-	unsigned w = surface->w;
-	unsigned h = surface->h;
-
-	// downsample if requested by application
-	std::vector<unsigned char> pixelsd;
-	unsigned wd = w;
-	unsigned hd = h;
-	if (info.maxsize == TextureInfo::SMALL)
-	{
-		if (w > 256)
-			wd = w / 4;
-		else if (w > 128)
-			wd = w / 2;
-
-		if (h > 256)
-			hd = h / 4;
-		else if (h > 128)
-			hd = h / 2;
-	}
-	else if (info.maxsize == TextureInfo::MEDIUM)
-	{
-		if (w > 256)
-			wd = w / 2;
-
-		if (h > 256)
-			hd = h / 2;
-	}
-	if (wd < w || hd < h)
-	{
-		pixelsd.resize(wd * hd * bytespp);
-
-		SampleDownAvg(
-			bytespp, w, h, pitch, pixels,
-			wd, hd, wd * bytespp, pixelsd.data());
-
-		pixels = pixelsd.data();
-		pitch = wd * bytespp;
-		w = wd;
-		h = hd;
-	}
-
-	// store dimensions
-	width = w;
-	height = h;
-
-	target = GL_TEXTURE_2D;
 
 	// gen texture
+	assert(!texid);
 	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Texture ID generation", error);
 
@@ -319,11 +278,27 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	glBindTexture(target, texid);
 	SetSampler(info);
 
-	int iformat, format;
-	GetTextureFormat(surface, info, iformat, format);
+	// get texture format
+	bool compress = info.compress && (width > 512 || height > 512);
+	int format = texformat[data.bytespp - 1];
+	int iformat = itexformat[compress][info.srgb][data.bytespp - 1];
 
 	// upload texture data
-	glTexImage2D(target, 0, iformat, w, h, 0, format, GL_UNSIGNED_BYTE, pixels);
+	if (info.cube)
+	{
+		const unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+		const unsigned ilen = width * height * data.bytespp;
+		for (int i = 0; i < 6; ++i)
+		{
+			const char * idata = (const char *)pixels + ilen * i;
+			glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, idata);
+		}
+	}
+	else
+	{
+		glTexImage2D(target, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
+	}
+
 	CheckForOpenGLErrors("Texture creation", error);
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
@@ -332,9 +307,40 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	if (GLC_ARB_framebuffer_object)
 		glGenerateMipmap(target);
 
-	SDL_FreeSurface(surface);
-
 	return true;
+}
+
+bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostream & error)
+{
+	if (path.empty())
+	{
+		error << "Tried to load a texture with an empty name" << std::endl;
+		return false;
+	}
+
+	if (LoadDDS(path, info, error))
+	{
+		return true;
+	}
+
+	// load image
+	SDL_Surface * surface = IMG_Load(path.c_str());
+	if (!surface)
+	{
+		error << "Error loading texture file: " << path << "IMG_Load: " << IMG_GetError() << std::endl;
+		return false;
+	}
+	TextureData data;
+	data.data = (const unsigned char *)surface->pixels;
+	data.width = surface->w;
+	data.height = surface->h;
+	data.bytespp = surface->format->BytesPerPixel;
+
+	// load texture
+	bool ret = Load(data, info, error);
+
+	SDL_FreeSurface(surface);
+	return ret;
 }
 
 void Texture::Unload()
@@ -342,50 +348,6 @@ void Texture::Unload()
 	if (texid)
 		glDeleteTextures(1, &texid);
 	texid = 0;
-}
-
-bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error)
-{
-	SDL_Surface * surface = IMG_Load(path.c_str());
-	if (!surface)
-	{
-		error << "Error loading texture file: " << path << std::endl;
-		error << IMG_GetError() << std::endl;
-		return false;
-	}
-
-	// get dimensions
-	const unsigned htiles = 6;
-	width = surface->w;
-	height = surface->h / htiles;
-	if (height * htiles != (unsigned)surface->h)
-	{
-		error << "Cube map image height not divisible by 6: " << surface->h << std::endl;
-		return false;
-	}
-
-	target = GL_TEXTURE_CUBE_MAP;
-
-	glGenTextures(1, &texid);
-	CheckForOpenGLErrors("Cubemap texture ID generation", error);
-
-	glBindTexture(target, texid);
-	SetSampler(info);
-
-	int iformat, format;
-	GetTextureFormat(surface, info, iformat, format);
-
-	const unsigned itarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-	const unsigned ilen = width * height * surface->format->BytesPerPixel;
-	for (int i = 0; i < 6; ++i)
-	{
-		const char * idata = (const char *)surface->pixels + ilen * i;
-		glTexImage2D(itarget + i, 0, iformat, width, height, 0, format, GL_UNSIGNED_BYTE, idata);
-	}
-	CheckForOpenGLErrors("Cubemap creation", error);
-
-	SDL_FreeSurface(surface);
-	return true;
 }
 
 bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::ostream & error)

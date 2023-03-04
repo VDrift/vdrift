@@ -43,19 +43,20 @@ void Factory<Texture>::init(int max_size, bool use_srgb, bool compress)
 	unsigned char one[] = {255u, 255u, 255u, 255u};
 	unsigned char zero[] = {0u, 0u, 0u, 0u};
 
-	TextureInfo info;
-	info.width = 1;
-	info.height = 1;
-	info.bytespp = 4;
-	info.maxsize = TextureInfo::Size(m_size);
-	info.mipmap = false;
-	info.srgb = m_srgb;
+	TextureInfo tinfo;
+	tinfo.mipmap = false;
+	tinfo.compress = false;
 
-	info.data = one;
-	m_default->Load("", info, error);
+	TextureData tdata;
+	tdata.width = 1;
+	tdata.height = 1;
+	tdata.bytespp = 4;
 
-	info.data = zero;
-	m_zero->Load("", info, error);
+	tdata.data = one;
+	m_default->Load(tdata, tinfo, error);
+
+	tdata.data = zero;
+	m_zero->Load(tdata, tinfo, error);
 }
 
 template <>
@@ -65,10 +66,10 @@ bool Factory<Texture>::create(
 	const std::string & basepath,
 	const std::string & path,
 	const std::string & name,
-	const TextureInfo& info)
+	const TextureInfo & info)
 {
 	const std::string abspath = basepath + "/" + path + "/" + name;
-	if (info.data || std::ifstream(abspath.c_str()))
+	if (std::ifstream(abspath.c_str()))
 	{
 		TextureInfo info_temp = info;
 		info_temp.srgb = info.compress && m_srgb; 			// non compressible means non color data

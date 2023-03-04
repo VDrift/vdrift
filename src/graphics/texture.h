@@ -33,12 +33,13 @@ public:
 
 	virtual ~Texture();
 
+	bool Load(const TextureData & data, const TextureInfo & info, std::ostream & error);
+
 	bool Load(const std::string & path, const TextureInfo & info, std::ostream & error);
 
 	void Unload();
 
 private:
-	bool LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error);
 
 	bool LoadDDS(const std::string & path, const TextureInfo & info, std::ostream & error);
 };

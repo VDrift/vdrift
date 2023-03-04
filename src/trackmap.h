@@ -92,7 +92,7 @@ private:
 	SceneNode::DrawableHandle mapdraw;
 	VertexArray mapverts;
 
-	std::shared_ptr<Texture> track_map;
+	Texture track_map;
 	std::shared_ptr<Texture> cardot0;
 	std::shared_ptr<Texture> cardot1;
 	std::shared_ptr<Texture> cardot0_focused;

@@ -20,42 +20,27 @@
 #ifndef _TEXTUREINFO_H
 #define _TEXTUREINFO_H
 
+struct TextureData
+{
+	unsigned char* data = 0;	///< raw data pointer
+	unsigned width = 0;			///< texture width, only set if data not null
+	unsigned height = 0;		///< texture height, only set if data not null
+	unsigned char bytespp = 0;	///< bytes per pixel, only set if data not null
+};
+
 struct TextureInfo
 {
-	enum Size { SMALL, LARGE, MEDIUM };
-	unsigned char* data;	///< raw data pointer
-	short width;			///< texture width, only set if data not null
-	short height;			///< texture height, only set if data not null
-	char bytespp;			///< bytes per pixel, only set if data not null
-	char anisotropy;		///< anisotropic filter level
-	Size maxsize;			///< max texture size 128, 256, 2048
-	bool mipmap;			///< build mip maps
-	bool cube;				///< is a cube map
-	bool compress;			///< can be compressed (not a normal map e.g.)
-	bool repeatu;			///< repeat texture along u coordinate
-	bool repeatv;			///< repeat texture along v coordinate
-	bool nearest;			///< use nearest-neighbor interpolation filter
-	bool premultiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
-	bool srgb; 				///< apply srgb colorspace correction
-
-	TextureInfo() :
-		data(0),
-		width(0),
-		height(0),
-		bytespp(4),
-		anisotropy(0),
-		maxsize(LARGE),
-		mipmap(true),
-		cube(false),
-		compress(true),
-		repeatu(true),
-		repeatv(true),
-		nearest(false),
-		premultiply_alpha(false),
-		srgb(false)
-	{
-		// ctor
-	}
+	enum Size { LARGE=0, MEDIUM=1, SMALL=2 };
+	char maxsize = LARGE;			///< max texture size 128, 256, 2048
+	char anisotropy = 0;			///< anisotropic filter level
+	bool mipmap = true;				///< build mip maps
+	bool cube = false;				///< is a cube map
+	bool compress = true;			///< can be compressed (not a normal map e.g.)
+	bool repeatu = true;			///< repeat texture along u coordinate
+	bool repeatv = true;			///< repeat texture along v coordinate
+	bool nearest = false;			///< use nearest-neighbor interpolation filter
+	bool premultiply_alpha = false; ///< pre-multiply the color by the alpha value; allows using glstate.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
+	bool srgb = false;				///< apply srgb colorspace correction
 };
 
 #endif // _TEXTUREINFO_H

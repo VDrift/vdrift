@@ -40,6 +40,7 @@ void TrackMap::Unload()
 	dotlist.clear();
 	mapnode.Clear();
 	mapdraw.invalidate();
+	track_map.Unload();
 }
 
 bool TrackMap::BuildMap(
@@ -49,7 +50,7 @@ bool TrackMap::BuildMap(
 	const std::string & trackname,
 	const std::string & texturepath,
 	ContentManager & content,
-	std::ostream & /*error_output*/)
+	std::ostream & error)
 {
 	Unload();
 
@@ -200,14 +201,16 @@ bool TrackMap::BuildMap(
 		}
 	}
 
+	TextureData texdata;
+	texdata.data = (unsigned char*)pixels.data();
+	texdata.width = map_width;
+	texdata.height = map_height;
+	texdata.bytespp = sizeof(unsigned);
 	TextureInfo texinfo;
-	texinfo.data = (unsigned char*)pixels.data();
-	texinfo.width = map_width;
-	texinfo.height = map_height;
-	texinfo.bytespp = sizeof(unsigned);
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	content.load(track_map, "", trackname, texinfo);
+	if (!track_map.Load(texdata, texinfo, error))
+		return false;
 
 	//std::cout << "Loading track map dots" << std::endl;
 	TextureInfo dotinfo;
@@ -229,7 +232,7 @@ bool TrackMap::BuildMap(
 	mapverts.SetToBillboard(map_min[0], map_min[1], map_max[0], map_max[1]);
 	mapdraw = mapnode.GetDrawList().twodim.insert(Drawable());
 	Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
-	mapdrawref.SetTextures(track_map->GetId());
+	mapdrawref.SetTextures(track_map.GetId());
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetCull(false);
 	//mapdrawref.SetColor(1, 1, 1, 0.7);
