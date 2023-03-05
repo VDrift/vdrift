@@ -8,6 +8,11 @@
 #define IHDR 0x49484452
 #define IDAT 0x49444154
 #define IEND 0x49454E44
+#define FNONE  0
+#define FSUB   1
+#define FUP    2
+#define FAVG   3
+#define FPAETH 4
 #define TWOGB (1u << 31)
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
@@ -35,12 +40,12 @@ inline unsigned unfilter(unsigned char* out, const unsigned char* in, const unsi
 	}
 	unsigned i, j;
 	switch (filter) {
-	case 0:
+	case FNONE:
 		for (i = 0; i != length; ++i) {
 			out[i] = in[i];
 		}
 		break;
-	case 1: {
+	case FSUB: {
 		for (i = 0; i != pixelwidth; ++i) {
 			out[i] = in[i];
 		}
@@ -49,7 +54,7 @@ inline unsigned unfilter(unsigned char* out, const unsigned char* in, const unsi
 		}
 		break;
 	}
-	case 2:
+	case FUP:
 		if (pout) {
 			for (i = 0; i != length; ++i) {
 				out[i] = in[i] + pout[i];
@@ -60,7 +65,7 @@ inline unsigned unfilter(unsigned char* out, const unsigned char* in, const unsi
 			}
 		}
 		break;
-	case 3:
+	case FAVG:
 		if (pout) {
 			for (i = 0; i != pixelwidth; ++i) {
 				out[i] = in[i] + (pout[i] >> 1u);
@@ -77,20 +82,20 @@ inline unsigned unfilter(unsigned char* out, const unsigned char* in, const unsi
 			}
 		}
 		break;
-	case 4:
+	case FPAETH:
 		if (pout) {
 			for (i = 0; i != pixelwidth; ++i) {
 				out[i] = in[i] + pout[i]; // paeth(0, pout[i], 0) is pout[i]
 			}
 			for (j = 0; i != length; ++i, ++j) {
-				out[i] = in[i] + paeth(out[i - pixelwidth], pout[i], pout[j]);
+				out[i] = in[i] + paeth(out[j], pout[i], pout[j]);
 			}
 		} else {
 			for (i = 0; i != pixelwidth; ++i) {
 				out[i] = in[i];
 			}
 			for (j = 0; i != length; ++i, ++j) {
-				out[i] = in[i] + out[j]; // paeth(out[i - pixelwidth], 0, 0) is out[i - pixelwidth]
+				out[i] = in[i] + out[j]; // paeth(out[j], 0, 0) is out[j]
 			}
 		}
 		break;
