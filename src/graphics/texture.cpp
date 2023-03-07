@@ -22,16 +22,7 @@
 #include "glutil.h"
 #include "bcndecode.h"
 #include "dds.h"
-
-#ifdef LOADPNG
 #include "png.h"
-#else
-#ifdef __APPLE__
-#include <SDL2_image/SDL_image.h>
-#else
-#include <SDL2/SDL_image.h>
-#endif
-#endif
 
 #include <string>
 #include <iostream>
@@ -42,15 +33,7 @@
 // texformat[bytespp - 1]
 static const int texformat[4] =
 {
-	GL_RED,
-	GL_RG,
-#ifdef __APPLE__
-	GL_BGR,
-	GL_BGRA,
-#else
-	GL_RGB,
-	GL_RGBA
-#endif // __APPLE__
+	GL_RED, GL_RG, GL_RGB, GL_RGBA
 };
 
 // itexformat[compressed][srgb][bytespp-1]
@@ -328,7 +311,6 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	}
 
 	// load image
-#ifdef LOADPNG
 	std::vector<unsigned char> img;
 	TextureData data;
 	unsigned pret = LoadPNG(path.c_str(), img, data.width, data.height, data.bytespp);
@@ -339,27 +321,8 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	}
 	data.data = img.data();
 
-#else
-	SDL_Surface * surface = IMG_Load(path.c_str());
-	if (!surface)
-	{
-		error << "Error loading texture file: " << path << "IMG_Load: " << IMG_GetError() << std::endl;
-		return false;
-	}
-	TextureData data;
-	data.data = (unsigned char *)surface->pixels;
-	data.width = surface->w;
-	data.height = surface->h;
-	data.bytespp = surface->format->BytesPerPixel;
-#endif
-
 	// load texture
-	bool ret = Load(data, info, error);
-
-#ifndef LOADPNG
-	SDL_FreeSurface(surface);
-#endif
-	return ret;
+	return Load(data, info, error);
 }
 
 void Texture::Unload()
