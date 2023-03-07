@@ -13,7 +13,7 @@ Windows
 
 -   Install VDrift dependencies.
 
-        pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-SDL2_image mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis
+        pacman -S mingw-w64-x86_64-SDL2 mingw-w64-x86_64-bullet mingw-w64-x86_64-curl mingw-w64-x86_64-libvorbis mingw-w64-x86_64-gettext mingw-w64-x86_64-zlib
 
 -   Adjust your paths, if necessary:
 
@@ -104,7 +104,6 @@ The required libraries include:
 -   [libcurl](http://curl.haxx.se/) - Multiprotocol file transfer library (minimum version 7.21.6)
 -   [libvorbis](http://xiph.org/vorbis/) - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0)
 -   [SDL](http://www.libsdl.org/) - Simple DirectMedia Layer Library (minimum version 2.0.0)
--   [SDL\_image](http://www.libsdl.org/projects/SDL_image/) - Image file loading library (minimum version 2.0.0)
 
 Make sure you have all the required libraries and build tools. Make sure you also have the development files for each of the libraries. Your Linux distribution may have different package names and/or bundled differently. The list above should give enough information to search for applicable packages within your distribution's package manager.
 
@@ -112,18 +111,13 @@ Make sure you have all the required libraries and build tools. Make sure you als
 
 All required packages can be installed using this command:
 
-    sudo yum install bullet-devel gcc-c++ libvorbis-devel scons SDL2-devel SDL2_image-devel curl-devel
+    sudo yum install bullet-devel gcc-c++ gettext libvorbis-devel scons SDL2-devel curl-devel zlib-devel
 
 #### Ubuntu
 
-Ubuntu 12.04 does not include libbullet and SDL2 packages. They are available in following ppas though:
-
-    sudo add-apt-repository ppa:roblib/ppa
-    sudo add-apt-repository ppa:zoogie/sdl2-snapshots
-
 All required packages can be installed using this command:
 
-    sudo apt-get install g++ scons libsdl2-dev libsdl2-image-dev libbullet-dev libvorbis-dev libcurl4-gnutls-dev
+    sudo apt-get install g++ scons gettext libsdl2-dev libbullet-dev libvorbis-dev libcurl4-gnutls-dev libz-dev
 
 ### Compiling
 

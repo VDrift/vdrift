@@ -46,7 +46,7 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
-    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
+    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
     check_libs = []
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
@@ -146,7 +146,7 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if 'LDFLAGS' in os.environ:
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
+    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
 
 if ARGUMENTS.get('verbose') != "1":

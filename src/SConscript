@@ -156,7 +156,7 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL2_image', 'vorbisfile', 'curl', 'z']
+common_libs = ['vorbisfile', 'curl', 'z']
 
 if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9']:
     common_libs.append('libLinearMath')
@@ -165,7 +165,7 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9']:
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['pthread', common_libs]
 elif ( 'darwin' == sys.platform ):
-    common_libs = ['SDL2_image', 'Vorbis', 'cURL']
+    common_libs = ['Vorbis', 'cURL']
     vdrift_install = "${PRODUCT_NAME}.app"
     pkgbase = "%s/Contents" % vdrift_install
     appdir = "%s/MacOS/" % pkgbase
