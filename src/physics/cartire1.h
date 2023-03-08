@@ -75,6 +75,15 @@ public:
 	CarTire1();
 
 private:
+	/// pacejka magic formula parameters for longitudinal force
+	void PacejkaParamFx(btScalar Fz, btScalar p[6]) const;
+
+	/// pacejka magic formula parameters for lateral force
+	void PacejkaParamFy(btScalar Fz, btScalar gamma, btScalar p[6]) const;
+
+	/// pacejka magic formula, for fx s is in percent, for fy in degrees
+	btScalar Pacejka(const btScalar p[6], btScalar s) const;
+
 	/// pacejka magic formula for longitudinal force
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff) const;
 
