@@ -65,24 +65,23 @@ struct ConstraintRow
 
 struct WheelConstraint
 {
-	btRigidBody * body;
 	DriveShaft * shaft;
 	ConstraintRow constraint[3];
 	btVector3 position;
 	btScalar radius;
 	btScalar vcam;
 
-	void init(btScalar softness, btScalar error)
+	void init(const btRigidBody & body, btScalar softness, btScalar error)
 	{
-		constraint[0].initMassInertia(*body, position);
+		constraint[0].initMassInertia(body, position);
 		constraint[0].mass = constraint[0].mass * shaft->inertia /
 			(constraint[0].mass * radius * radius + shaft->inertia);
 		constraint[0].impulse = 0;
 
-		constraint[1].initMassInertia(*body, position);
+		constraint[1].initMassInertia(body, position);
 		constraint[1].impulse = 0;
 
-		constraint[2].initMassInertia(*body, position, softness);
+		constraint[2].initMassInertia(body, position, softness);
 		constraint[2].rhs = -error * constraint[2].mass;
 		constraint[2].cfm = -softness * constraint[2].mass;
 		constraint[2].lower_impulse_limit = 0;
@@ -90,51 +89,51 @@ struct WheelConstraint
 		constraint[2].impulse = 0;
 	}
 
-	void init(btScalar stiffness, btScalar damping, btScalar displacement, btScalar dt)
+	void init(const btRigidBody & body, btScalar stiffness, btScalar damping, btScalar displacement, btScalar dt)
 	{
 		btScalar softness = 1 / (dt * (dt * stiffness + damping));
 		btScalar bias = stiffness / (dt * stiffness + damping);
 		btScalar error = -bias * displacement;
-		init(softness, error);
+		init(body, softness, error);
 	}
 
-	void getContactVelocity(btScalar v[3]) const
+	void getContactVelocity(const btRigidBody & body, btScalar v[3]) const
 	{
-		btVector3 vb = body->getVelocityInLocalPoint(position);
+		btVector3 vb = body.getVelocityInLocalPoint(position);
 		v[0] = constraint[0].axis.dot(vb);
 		v[1] = constraint[1].axis.dot(vb);
 		v[2] = shaft->ang_velocity * radius;
 	}
 
-	void solveFriction()
+	void solveFriction(btRigidBody & body)
 	{
-		btVector3 vb = body->getVelocityInLocalPoint(position);
+		btVector3 vb = body.getVelocityInLocalPoint(position);
 		btScalar ve = constraint[0].axis.dot(vb) - shaft->ang_velocity * radius;
 		btScalar dp = constraint[0].solveHard(ve);
 		btVector3 dw = constraint[0].inv_inertia * dp;
-		btVector3 dv = constraint[0].axis * (dp * body->getInvMass());
-		body->setAngularVelocity(body->getAngularVelocity() + dw);
-		body->setLinearVelocity(body->getLinearVelocity() + dv);
+		btVector3 dv = constraint[0].axis * (dp * body.getInvMass());
+		body.setAngularVelocity(body.getAngularVelocity() + dw);
+		body.setLinearVelocity(body.getLinearVelocity() + dv);
 		shaft->applyImpulse(-dp * radius);
 
-		vb = body->getVelocityInLocalPoint(position);
+		vb = body.getVelocityInLocalPoint(position);
 		ve = constraint[1].axis.dot(vb) - vcam;
 		dp = constraint[1].solveHard(ve);
 		dw = constraint[1].inv_inertia * dp;
-		dv = constraint[1].axis * (dp * body->getInvMass());
-		body->setAngularVelocity(body->getAngularVelocity() + dw);
-		body->setLinearVelocity(body->getLinearVelocity() + dv);
+		dv = constraint[1].axis * (dp * body.getInvMass());
+		body.setAngularVelocity(body.getAngularVelocity() + dw);
+		body.setLinearVelocity(body.getLinearVelocity() + dv);
 	}
 
-	void solveSuspension()
+	void solveSuspension(btRigidBody & body)
 	{
-		btVector3 vb = body->getVelocityInLocalPoint(position);
+		btVector3 vb = body.getVelocityInLocalPoint(position);
 		btScalar ve = constraint[2].axis.dot(vb);
 		btScalar dp = constraint[2].solve(ve);
 		btVector3 dw = constraint[2].inv_inertia * dp;
-		btVector3 dv = constraint[2].axis * (dp * body->getInvMass());
-		body->setAngularVelocity(body->getAngularVelocity() + dw);
-		body->setLinearVelocity(body->getLinearVelocity() + dv);
+		btVector3 dv = constraint[2].axis * (dp * body.getInvMass());
+		body.setAngularVelocity(body.getAngularVelocity() + dw);
+		body.setLinearVelocity(body.getLinearVelocity() + dv);
 	}
 };
 

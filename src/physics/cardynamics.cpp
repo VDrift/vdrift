@@ -1371,14 +1371,13 @@ void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEE
 			(1 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
 		auto & w = wheel_constraint[i];
-		w.body = body;
 		w.shaft = &wheel[i].GetShaft();
 		w.position = wheel_position[i];
 		w.radius = wheel[i].GetRadius();
 		w.constraint[0].axis = y;
 		w.constraint[1].axis = x;
 		w.constraint[2].axis = z;
-		w.init(stiffness, damping, displacement, dt);
+		w.init(*body, stiffness, damping, displacement, dt);
 
 		auto & t = tire_state[i];
 		t.friction = friction;
@@ -1437,7 +1436,7 @@ void CarDynamics::UpdateWheelConstraints(WheelConstraint wheel_constraint[WHEEL_
 		auto & c = wheel_constraint[i];
 		auto & t = tire_state[i];
 		btScalar v[3];
-		c.getContactVelocity(v);
+		c.getContactVelocity(*body, v);
 		btScalar suspension_force = c.constraint[2].impulse * rdt;
 		tire[i].ComputeState(suspension_force, v[2], v[0], v[1], t);
 		c.vcam = t.vcam;
@@ -1472,7 +1471,7 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	for (int n = 0; n < solver_iterations; ++n)
 	{
 		for (int i = 0; i < WHEEL_COUNT; ++i)
-			wheel_constraint[i].solveSuspension();
+			wheel_constraint[i].solveSuspension(*body);
 	}
 
 	ApplyWheelContactDrag(dt);
@@ -1496,11 +1495,11 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 				driveline.solve4(*body);
 
 			for (int i = 0; i < WHEEL_COUNT; ++i)
-				wheel_constraint[i].solveFriction();
+				wheel_constraint[i].solveFriction(*body);
 		}
 
 		for (int i = 0; i < WHEEL_COUNT; ++i)
-			wheel_constraint[i].solveSuspension();
+			wheel_constraint[i].solveSuspension(*body);
 	}
 
 	// update wheel and tire state
@@ -1508,7 +1507,7 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 	{
 		auto & c = wheel_constraint[i];
 		auto & t = tire_state[i];
-		c.getContactVelocity(wheel_velocity[i]);
+		c.getContactVelocity(*body, wheel_velocity[i]);
 		btScalar fz = c.constraint[2].impulse * rdt;
 		tire_slip_lut[i].get(fz, t.ideal_slip, t.ideal_slip_angle);
 		tire[i].ComputeAligningTorque(fz, t);
