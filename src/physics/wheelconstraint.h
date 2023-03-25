@@ -108,37 +108,31 @@ struct WheelConstraint
 
 	void solveFriction()
 	{
-		btScalar ve[3];
-		getContactVelocity(ve);
-		ve[0] -= ve[2];
-		ve[1] -= vcam;
-
-		btScalar dp[2];
-		btVector3 w[2];
-		btVector3 p[2];
-		for (int i = 0; i < 2; i++)
-		{
-			dp[i] = constraint[i].solveHard(ve[i]);
-			w[i] = constraint[i].inv_inertia * dp[i];
-			p[i] = constraint[i].axis * dp[i];
-		}
-		btVector3 dw = w[0] + w[1];
-		btVector3 dv = (p[0] + p[1]) * body->getInvMass();
-
+		btVector3 vb = body->getVelocityInLocalPoint(position);
+		btScalar ve = constraint[0].axis.dot(vb) - shaft->ang_velocity * radius;
+		btScalar dp = constraint[0].solveHard(ve);
+		btVector3 dw = constraint[0].inv_inertia * dp;
+		btVector3 dv = constraint[0].axis * (dp * body->getInvMass());
 		body->setAngularVelocity(body->getAngularVelocity() + dw);
 		body->setLinearVelocity(body->getLinearVelocity() + dv);
-		shaft->applyImpulse(-dp[0] * radius);
+		shaft->applyImpulse(-dp * radius);
+
+		vb = body->getVelocityInLocalPoint(position);
+		ve = constraint[1].axis.dot(vb) - vcam;
+		dp = constraint[1].solveHard(ve);
+		dw = constraint[1].inv_inertia * dp;
+		dv = constraint[1].axis * (dp * body->getInvMass());
+		body->setAngularVelocity(body->getAngularVelocity() + dw);
+		body->setLinearVelocity(body->getLinearVelocity() + dv);
 	}
 
 	void solveSuspension()
 	{
 		btVector3 vb = body->getVelocityInLocalPoint(position);
 		btScalar ve = constraint[2].axis.dot(vb);
-
 		btScalar dp = constraint[2].solve(ve);
 		btVector3 dw = constraint[2].inv_inertia * dp;
 		btVector3 dv = constraint[2].axis * (dp * body->getInvMass());
-
 		body->setAngularVelocity(body->getAngularVelocity() + dw);
 		body->setLinearVelocity(body->getLinearVelocity() + dv);
 	}
