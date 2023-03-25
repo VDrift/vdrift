@@ -389,7 +389,7 @@ btScalar FindPacejkaMax(const btScalar p[6])
 	return bs / p[0] - p[4];
 }
 
-void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2], int iterations) const
+void CarTire1::findIdealSlip(btScalar load, btScalar output_slip[2]) const
 {
 	btScalar p[6];
 

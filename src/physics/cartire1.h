@@ -99,7 +99,7 @@ private:
 	/// pacejka magic formula for the lateral combining factor
 	btScalar PacejkaGy(btScalar sigma, btScalar alpha) const;
 
-	void findIdealSlip(btScalar load, btScalar output_slip[2], int iterations = 200) const;
+	void findIdealSlip(btScalar load, btScalar output_slip[2]) const;
 
 public:
 	btScalar longitudinal[11]; ///< the parameters of the longitudinal pacejka equation.  this is series b
