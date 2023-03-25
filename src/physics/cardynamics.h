@@ -32,7 +32,6 @@
 #include "carwheelposition.h"
 #include "aerodevice.h"
 #include "collision_contact.h"
-#include "wheelconstraint.h"
 #include "driveline.h"
 #include "motionstate.h"
 #include "macros.h"
@@ -47,6 +46,7 @@ class DynamicsWorld;
 class FractureBody;
 class ContentManager;
 class PTree;
+struct WheelConstraint;
 
 class CarDynamics : public btActionInterface
 {
@@ -209,7 +209,6 @@ protected:
 	CarTireSlipLUT tire_slip_lut[WHEEL_COUNT];
 	CarTireState tire_state[WHEEL_COUNT];
 	CarSuspension suspension[WHEEL_COUNT];
-	WheelConstraint wheel_constraint[WHEEL_COUNT];
 	Driveline driveline;
 
 	// wheel contact state
@@ -277,13 +276,14 @@ protected:
 
 	void SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
 
-	void SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt);
+	void SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT],
+		WheelConstraint wheel_constraint[WHEEL_COUNT], btScalar dt);
 
 	void ApplyWheelContactDrag(btScalar dt);
 
-	void ApplyRollingResistance(int i);
+	void ApplyRollingResistance(int i, btScalar suspension_impulse);
 
-	void UpdateWheelConstraints(btScalar rdt, btScalar sdt);
+	void UpdateWheelConstraints(WheelConstraint wheel_constraint[WHEEL_COUNT], btScalar rdt, btScalar sdt);
 
 	// run driveline constraint solver
 	void UpdateDriveline(btScalar dt);

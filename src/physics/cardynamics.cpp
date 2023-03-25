@@ -22,6 +22,7 @@
 #include "tracksurface.h"
 #include "dynamicsworld.h"
 #include "fracturebody.h"
+#include "wheelconstraint.h"
 #include "loadcollisionshape.h"
 #include "coordinatesystem.h"
 #include "content/contentmanager.h"
@@ -1321,7 +1322,8 @@ void CarDynamics::SetupDriveline(const btMatrix3x3 wheel_orientation[WHEEL_COUNT
 	}
 }
 
-void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT], btScalar dt)
+void CarDynamics::SetupWheelConstraints(const btMatrix3x3 wheel_orientation[WHEEL_COUNT],
+	WheelConstraint wheel_constraint[WHEEL_COUNT], btScalar dt)
 {
 	btScalar antiroll[WHEEL_COUNT];
 	for (int i = 0; i < WHEEL_COUNT; i+=2)
@@ -1417,19 +1419,18 @@ void CarDynamics::ApplyWheelContactDrag(btScalar dt)
 	body->applyTorqueImpulse(total_torque_impulse);
 }
 
-void CarDynamics::ApplyRollingResistance(int i)
+void CarDynamics::ApplyRollingResistance(int i, btScalar suspension_impulse)
 {
 	auto & shaft = wheel[i].GetShaft();
 	btScalar vr = wheel[i].GetAngularVelocity() * wheel[i].GetRadius();
 	btScalar cr = tire[i].getRollingResistance(vr, wheel_contact[i].GetSurface().rollResistanceCoefficient);
-	btScalar suspension_impulse = wheel_constraint[i].constraint[2].impulse;
 	btScalar impulse_mag = cr * suspension_impulse * wheel[i].GetRadius();
 	btScalar impulse_limit = std::abs(shaft.ang_velocity) * shaft.inertia;
 	btScalar impulse = std::copysign(Min(impulse_mag, impulse_limit), -shaft.ang_velocity);
 	shaft.applyImpulse(impulse);
 }
 
-void CarDynamics::UpdateWheelConstraints(btScalar rdt, btScalar sdt)
+void CarDynamics::UpdateWheelConstraints(WheelConstraint wheel_constraint[WHEEL_COUNT], btScalar rdt, btScalar sdt)
 {
 	for (int i = 0; i < WHEEL_COUNT; ++i)
 	{
@@ -1464,7 +1465,8 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 		wheel_position[i] = transform.getBasis() * (suspension[i].GetWheelPosition() + GetCenterOfMassOffset());
 	}
 
-	SetupWheelConstraints(wheel_orientation, dt);
+	WheelConstraint wheel_constraint[WHEEL_COUNT];
+	SetupWheelConstraints(wheel_orientation, wheel_constraint, dt);
 
 	// presolve suspension
 	for (int n = 0; n < solver_iterations; ++n)
@@ -1475,14 +1477,14 @@ void CarDynamics::UpdateDriveline(btScalar dt)
 
 	ApplyWheelContactDrag(dt);
 	for (int i = 0; i < WHEEL_COUNT; ++i)
-		ApplyRollingResistance(i);
+		ApplyRollingResistance(i, wheel_constraint[i].constraint[2].impulse);
 
 	SetupDriveline(wheel_orientation, sdt);
 
 	// solve driveline
 	for (int n = 0; n < substeps; ++n)
 	{
-		UpdateWheelConstraints(rdt, sdt);
+		UpdateWheelConstraints(wheel_constraint, rdt, sdt);
 
 		driveline.clearImpulses();
 		driveline.updateImpulseLimits();
