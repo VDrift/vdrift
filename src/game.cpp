@@ -2989,14 +2989,18 @@ void Game::SetCarName(const std::string & value)
 	if (info.name == value)
 		return;
 
-	car_info[car_edit_id].name = value;
+	info.name = value;
 
 	GuiOption::List variants;
 	PopulateCarVariantList(value, variants);
+	assert(!variants.empty());
+	info.variant = variants.begin()->second;
 	gui.SetOptionValues("game.car_variant", info.variant, variants, error_output);
 
 	GuiOption::List paints;
 	PopulateCarPaintList(value, paints);
+	assert(!paints.empty());
+	info.paint = paints.begin()->second;
 	gui.SetOptionValues("game.car_paint", info.paint, paints, error_output);
 
 	UpdateStartList();
