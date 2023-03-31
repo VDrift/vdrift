@@ -1817,7 +1817,7 @@ bool Game::LoadCar(
 		car.SetTCS(settings.GetTCS());
 	}
 
-	info_output << "Car loading was successful: " << info.name << std::endl;
+	info_output << "Car loading was successful: " << info.name << " " << info.variant << std::endl;
 
 	return true;
 }
@@ -2992,15 +2992,17 @@ void Game::SetCarName(const std::string & value)
 	info.name = value;
 
 	GuiOption::List variants;
-	PopulateCarVariantList(value, variants);
-	assert(!variants.empty());
-	info.variant = variants.begin()->second;
-	gui.SetOptionValues("game.car_variant", info.variant, variants, error_output);
-
 	GuiOption::List paints;
+	PopulateCarVariantList(value, variants);
 	PopulateCarPaintList(value, paints);
+	assert(!variants.empty());
 	assert(!paints.empty());
-	info.paint = paints.begin()->second;
+
+	info.variant = GuiOption::GetValue(variants, info.variant);
+	info.paint = GuiOption::GetValue(paints, info.paint);
+
+	// will signal variant/paint change
+	gui.SetOptionValues("game.car_variant", info.variant, variants, error_output);
 	gui.SetOptionValues("game.car_paint", info.paint, paints, error_output);
 
 	UpdateStartList();

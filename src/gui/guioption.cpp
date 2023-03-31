@@ -23,6 +23,31 @@
 
 static const std::string null;
 
+size_t GuiOption::FindValue(const List & values, const std::string & value, bool isfloat)
+{
+	size_t current_value = 0;
+	for (const auto & v : values)
+	{
+		if (isfloat)
+		{
+			// number of trailing zeros might differ, use min match
+			size_t len = Min(v.first.length(), value.length());
+			if (!v.first.compare(0, len, value, 0, len)) break;
+		}
+		else
+		{
+			if (v.first == value) break;
+		}
+		++current_value;
+	}
+	return (current_value < values.size()) ? current_value : 0;
+}
+
+std::string GuiOption::GetValue(const List & values, const std::string & value, bool isfloat)
+{
+	return values[GuiOption::FindValue(values, value, isfloat)].first;
+}
+
 void GuiOption::SetValues(const std::string & curvalue, const List & newvalues)
 {
 	m_values = newvalues;
@@ -55,22 +80,7 @@ void GuiOption::SetCurrentValue(const std::string & value)
 	}
 	else
 	{
-		size_t current_value = 0;
-		for (const auto & v : m_values)
-		{
-			if (IsFloat())
-			{
-				// number of trailing zeros might differ, use min match
-				size_t len = Min(v.first.length(), value.length());
-				if (!v.first.compare(0, len, value, 0, len)) break;
-			}
-			else
-			{
-				if (v.first == value) break;
-			}
-			++current_value;
-		}
-		m_current_value = (current_value < m_values.size()) ? current_value : 0;
+		m_current_value = FindValue(m_values, value, IsFloat());
 	}
 
 	SignalValue();

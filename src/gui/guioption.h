@@ -31,7 +31,11 @@ class GuiOption
 public:
 	typedef std::vector< std::pair<std::string, std::string> > List;
 
-	GuiOption() {};
+	/// returns 0 (first value) on failure
+	static size_t FindValue(const List & values, const std::string & value, bool isfloat = false);
+
+	/// returns first value on failure
+	static std::string GetValue(const List & values, const std::string & value, bool isfloat = false);
 
 	/// will move new value elements to option list
 	void SetValues(const std::string & curvalue, const List & values);
