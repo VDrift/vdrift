@@ -303,7 +303,7 @@ void CarTire3::getMaxForce(
 		btScalar waq = qp * wa;
 
 		// qx * (1 - u) = qp/4 * (1 - u^2) * (4 + u)
-		btScalar t = btSqrt(qx * rq4 + 4.5f);
+		btScalar t = btSqrt(qx * rq4 + 2.25f);
 		btScalar uc = Min(t - 2.5f, btScalar(1));
 		btScalar ud = uc + 1;
 		btScalar ue = uc - 1;
@@ -410,7 +410,7 @@ void CarTire3::findIdealSlip(btScalar fz, btScalar slip[2]) const
 		btScalar waq = qp * wa;
 
 		// qx * (1 - u) = qp/4 * (1 - u^2) * (4 + u)
-		btScalar t = btSqrt(qx * rq4 + 4.5f);
+		btScalar t = btSqrt(qx * rq4 + 2.25f);
 		btScalar uc = Min(t - 2.5f, btScalar(1));
 		btScalar ud = uc + 1;
 		btScalar ue = uc - 1;
