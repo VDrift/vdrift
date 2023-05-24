@@ -169,7 +169,7 @@ solution "VDrift"
 		gen_definitions_h()
 		includedirs {"/usr/local/include/bullet/", "/usr/include/bullet"}
 		libdirs {"/usr/X11R6/lib"}
-		links {"curl", "vorbisfile", "BulletDynamics", "BulletCollision", "LinearMath", "GL", "GLU", "GLEW", "SDL", "intl", "z"}
+		links {"curl", "vorbisfile", "BulletDynamics", "BulletCollision", "LinearMath", "GL", "GLU", "GLEW", "SDL2", "intl", "z"}
 
 	configuration {"macosx"}
 		prebuildcommands {'if [ -f "SRCROOT"/src/definitions.h ]; then\n    rm "SRCROOT"/src/definitions.h\nfi\nDATE=`date +%Y-%m-%d`\necho "#ifndef _DEFINITIONS_H" > "$SRCROOT"/src/definitions.h\necho "#define _DEFINITIONS_H" >> "$SRCROOT"/src/definitions.h\necho "char* get_mac_data_dir();" >> "$SRCROOT"/src/definitions.h\necho "#define SETTINGS_DIR \"Library/Preferences/VDrift\"" >> "$SRCROOT"/src/definitions.h\necho "#define DATA_DIR get_mac_data_dir()" >> "$SRCROOT"/src/definitions.h\necho "#define PACKAGE \"VDrift\"" >> "$SRCROOT"/src/definitions.h\necho "#define LOCALEDIR \"/usr/share/locale\"" >> "$SRCROOT"/src/definitions.h\necho "#ifndef VERSION" >> "$SRCROOT"/src/definitions.h\necho "#define VERSION \"$DATE\"" >> "$SRCROOT"/src/definitions.h\necho "#endif //VERSION" >> "$SRCROOT"/src/definitions.h\necho "#ifndef REVISION" >> "$SRCROOT"/src/definitions.h\necho "#define REVISION \"$DATE\"" >> "$SRCROOT"/src/definitions.h  #No longer have svn revision to fetch, and can\'t get git, so use date at the moment.\necho "#endif //REVISION" >> "$SRCROOT"/src/definitions.h\necho "#endif // _DEFINITIONS_H" >> "$SRCROOT"/src/definitions.h\n'} --Generate definitions.h.
