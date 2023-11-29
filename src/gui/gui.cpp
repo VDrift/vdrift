@@ -253,12 +253,8 @@ bool Gui::Load(
 	actionmap["gui.page.prev"].bind<Gui, &Gui::ActivatePrevPage>(this);
 
 	// init pages
-	size_t pagecount = 0;
 	for (const auto & page : pagelist)
-	{
 		pages.emplace(page, GuiPage());
-		pagecount++;
-	}
 
 	// load pages
 	for (auto & page : pages)
