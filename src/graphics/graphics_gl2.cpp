@@ -204,23 +204,21 @@ GraphicsGL2::GraphicsGL2() :
 	sky_dynamic(false),
 	fixed_skybox(true)
 {
-	const unsigned int faces[2 * 3] = {
+	// initialize the full screen quad (clipped triangle)
+	const unsigned int faces[3] = {
 		0, 1, 2,
-		2, 3, 0,
 	};
-	const float pos[4 * 3] = {
-		0.0f,  0.0f, 0.0f,
-		1.0f,  0.0f, 0.0f,
-		1.0f,  1.0f, 0.0f,
-		0.0f,  1.0f, 0.0f,
+	const float pos[3 * 3] = {
+        -1.0f, 0.0f, 0.0f,
+         1.0f, 0.0f, 0.0f,
+         1.0f, 2.0f, 0.0f
 	};
-	const float tco[4 * 2] = {
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
+	const float tco[3 * 2] = {
+        -1.0f, 0.0f,
+         1.0f, 0.0f,
+         1.0f, 2.0f
 	};
-	screen_quad_verts.Add(faces, 6, pos, 12, tco, 8);
+	screen_quad_verts.Add(faces, 3, pos, 3 * 3, tco, 3 * 2);
 	screen_quad.SetVertArray(&screen_quad_verts);
 }
 

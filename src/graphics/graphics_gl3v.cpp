@@ -41,8 +41,21 @@ GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	light_direction(0,0,1),
 	closeshadow(5.f)
 {
-	// initialize the full screen quad
-	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
+	// initialize the full screen quad (clipped triangle)
+	const unsigned int faces[3] = {
+		0, 1, 2,
+	};
+	const float pos[3 * 3] = {
+        -1.0f, 0.0f, 0.0f,
+         1.0f, 2.0f, 0.0f,
+         1.0f, 0.0f, 0.0f
+	};
+	const float tco[3 * 2] = {
+        -1.0f,  1.0f,
+         1.0f, -1.0f,
+         1.0f,  1.0f
+	};
+	fullscreenquadVertices.Add(faces, 3, pos, 3 * 3, tco, 3 * 2);
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
 
 	initDrawableAttributes(drawAttribs, stringMap);
