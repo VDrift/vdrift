@@ -422,13 +422,30 @@ bool GraphicsConfigPass::Load(std::istream & f, std::ostream & error_output, int
 
 bool GraphicsConfig::Load(const std::string & filename, std::ostream & error_output)
 {
-	std::ifstream f(filename.c_str(), std::ifstream::binary); // binary mode to avoid newline/seekg issues
+	// use binary mode to avoid newline/seekg issues
+	std::ifstream f(filename.c_str(), std::ifstream::binary);
 	if (!f)
 	{
 		error_output << "Unable to open graphics config file: " << filename << std::endl;
 		return false;
 	}
-	return Load(f, error_output);
+	if (!Load(f, error_output))
+	{
+		return false;
+	}
+
+	// sanity check
+	if (shaders.empty())
+	{
+		error_output << "No shaders in graphics config file: " << filename << std::endl;
+		return false;
+	}
+	if (passes.empty())
+	{
+		error_output << "No passes in graphics config file: " << filename << std::endl;
+		return false;
+	}
+	return true;
 }
 
 bool GraphicsConfig::Load(std::istream & f, std::ostream & error_output)
