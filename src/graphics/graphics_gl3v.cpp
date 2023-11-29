@@ -601,6 +601,13 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 	bool passInfosLoaded = joeserialize::LoadObjectFromFile("passList", shaderpath+"/"+rendercfg, passInfos, false, true, info_output, error_output);
 	if (passInfosLoaded)
 	{
+		// sanity check
+		if (passInfos.empty())
+		{
+			error_output << "No passes defined in: " << shaderpath+"/"+rendercfg << std::endl;
+			return false;
+		}
+
 		// strip pass infos from the list that we pass to the renderer if they are disabled
 		for (int i = passInfos.size() - 1; i >= 0; i--)
 		{
