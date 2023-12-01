@@ -23,6 +23,7 @@
 #include "vertexformat.h"
 #include <vector>
 
+class Drawable;
 class SceneNode;
 class VertexArray;
 
@@ -44,7 +45,7 @@ public:
 	/// \brief Bind dynamic scene node drawables vertex data and upload it to gpu
 	/// \param nodes is the node pointer array to be processed
 	/// \param count is the size of the node array
-	void SetDynamicVertexData(SceneNode * nodes[], unsigned int count);
+	void SetDynamicVertexData(SceneNode * nodes[], unsigned int ncount, Drawable drawables[] = 0, unsigned int dcount = 0);
 
 	/// \brief Bind static scene node drawables vertex data and upload it to gpu
 	/// \param nodes is the node pointer array to be processed

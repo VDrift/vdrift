@@ -147,14 +147,7 @@ void GraphicsGL3::Deinit()
 
 void GraphicsGL3::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 {
-	// TODO: This doesn't look very efficient...
-	SceneNode quad_node;
-	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(fullscreenquad);
-	nodes.push_back(&quad_node);
-
-	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size());
-
-	fullscreenquad = quad_node.GetDrawList().twodim.get(d);
+	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size(), &fullscreenquad, 1);
 }
 
 void GraphicsGL3::BindStaticVertexData(std::vector<SceneNode*> nodes)

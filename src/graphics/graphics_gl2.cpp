@@ -367,14 +367,7 @@ void GraphicsGL2::Deinit()
 
 void GraphicsGL2::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 {
-	// TODO: This doesn't look very efficient...
-	SceneNode quad_node;
-	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(screen_quad);
-	nodes.push_back(&quad_node);
-
-	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size());
-
-	screen_quad = quad_node.GetDrawList().twodim.get(d);
+	vertex_buffer.SetDynamicVertexData(nodes.data(), nodes.size(), &screen_quad, 1);
 }
 
 void GraphicsGL2::BindStaticVertexData(std::vector<SceneNode*> nodes)

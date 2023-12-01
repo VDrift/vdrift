@@ -269,7 +269,7 @@ void VertexBuffer::Clear()
 	}
 }
 
-void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
+void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int ncount, Drawable drawables[], unsigned int dcount)
 {
 	use_vao = GLC_ARB_vertex_array_object && good_vao;
 
@@ -278,10 +278,15 @@ void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
 	InitDynamicBufferObjects();
 
 	BindDynamicVertexData bind_data(*this);
-	for (unsigned int i = 0; i < count; ++i)
+	for (unsigned int i = 0; i < ncount; ++i)
 	{
 		assert(nodes[i]);
 		nodes[i]->ApplyDrawableFunctor(Wrapper<BindDynamicVertexData>(bind_data));
+	}
+
+	for (unsigned int i = 0; i < dcount; ++i)
+	{
+		bind_data(drawables[i]);
 	}
 
 	for (unsigned int i = 0; i <= VertexFormat::LastFormat; ++i)
