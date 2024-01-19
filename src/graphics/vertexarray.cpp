@@ -113,6 +113,8 @@ void SetData(std::vector<T> & vec, const T array[], unsigned count, unsigned off
 	if (size != vec.size())
 		vec.resize(size);
 
+	if (vec.empty()) return; // sanity check
+
 	auto myarray = &(vec[offset]);
 	std::memcpy(myarray, array, sizeof(T) * count);
 }
