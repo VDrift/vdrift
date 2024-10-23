@@ -29,6 +29,7 @@ opts.Add(BoolVariable('verbose', 'Show verbose compiling output', 1))
 cppdefines = []
 default_settingsdir = ".vdrift"
 default_prefix = "/usr/local"
+default_iconsdir = "share/icons/hicolor"
 default_datadir = "share/games/vdrift/data"
 default_localedir = "share/locale"
 default_bindir = "bin"
@@ -161,8 +162,9 @@ if ARGUMENTS.get('verbose') != "1":
 #-------------------------------#
 opts.Add('settings', 'Directory under user\'s home dir where settings will be stored', default_settingsdir )
 opts.Add('prefix', 'Path prefix.', default_prefix)
-# in most case datadir doesn't exsist => do not use PathOption (Fails on build)
-opts.Add('datadir', 'Path suffix where where VDrift data will be installed', default_datadir) 
+# in most case datadir doesn't exist => do not use PathOption (Fails on build)
+opts.Add('datadir', 'Path suffix where VDrift data will be installed', default_datadir)
+opts.Add('iconsdir', 'Path suffix where VDrift icons will be installed', default_iconsdir)
 opts.Add('localedir', 'Path where VDrift locale will be installed', default_localedir)
 opts.Add('bindir', 'Path suffix where VDrift binary executable will be installed', default_bindir)
 
@@ -335,6 +337,7 @@ Type: 'scons' to compile with the default options.
       'scons destdir=$PWD/tmp' to install to $PWD/tmp staging area.
       'scons datadir=' to install data files into an alternate directory.
       'scons bindir=games/bin' to install executable into an alternate directory.
+      'scons iconsdir=share/icons/hicolor' to install the icons into an alternate directory.
       'scons localedir=/usr/share/locale' to install language files into an alternate directory.
       'scons release=1' to turn on compiler optimizations and disable debugging info.
       'scons builddir_release=build' to set release build directory.
@@ -375,6 +378,7 @@ env = conf.Finish()
 # directories #
 #-------------#
 env['data_directory'] = env['destdir'] + env['prefix'] + '/' + env['datadir']
+env['icons_directory'] = env['destdir'] + env['prefix'] + '/' + env['iconsdir']
 env['locale_directory'] = env['destdir'] + env['prefix'] + '/' + env['localedir']
 cppdefines.append(("SETTINGS_DIR", '"%s"' % env['settings']))
 if sys.platform in ['win32', 'msys', 'cygwin']:
