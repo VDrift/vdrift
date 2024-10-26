@@ -169,6 +169,30 @@ static int GetVideoDisplay()
 		return 0;
 }
 
+int Window::GetNumSupportedResolutions(std::ostream & error_output)
+{
+	int display = GetVideoDisplay();
+	int i = SDL_GetNumDisplayModes(display);
+	if (i < 0) {
+		error_output << SDL_GetError() << std::endl;
+		return 0;
+	}
+	return i;
+}
+
+void Window::GetSupportedResolution(int i, int & w, int & h, std::ostream & error_output)
+{
+	SDL_DisplayMode mode;
+	int display = GetVideoDisplay();
+	int err = SDL_GetDisplayMode(display, i, &mode);
+	if (err) {
+		error_output << SDL_GetError() << std::endl;
+		return;
+	}
+	w = mode.w;
+	h = mode.h;
+}
+
 bool Window::ResizeWindow(int width, int height)
 {
 	// We can't resize something we don't have.

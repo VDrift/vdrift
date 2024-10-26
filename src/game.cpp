@@ -481,7 +481,7 @@ bool Game::InitGUI()
 	settings.Get(optionmap);
 	gui.SetOptions(optionmap);
 
-	// Set driver/edit num to update gui explicitely
+	// Set driver/edit num to update gui explicitly
 	// as they are not stored in settings
 	gui.SetOptionValue("game.car_edit", "0");
 	gui.SetOptionValue("game.driver", "");
@@ -2089,9 +2089,9 @@ static void PopulateTrackSet(
 template <class T0, class T1>
 struct SortPairBySecond
 {
-	bool operator()(const std::pair<T0, T1> & first, const std::pair<T0, T1> & second)
+	bool operator()(const std::pair<T0, T1> & a, const std::pair<T0, T1> & b)
 	{
-		return first.second < second.second;
+		return a.second < b.second;
 	}
 };
 
@@ -2306,6 +2306,36 @@ void Game::PopulateAntialiasList(GuiOption::List & antialiaslist)
 	}
 }
 
+void Game::PopulateResolutionList(GuiOption::List & resolutionlist)
+{
+	resolutionlist.clear();
+	int w = 0, h = 0;
+	int n = window.GetNumSupportedResolutions(error_output);
+	std::vector<int> res(n);
+	for (int i = 0; i < n; i++)
+	{
+		window.GetSupportedResolution(i, w, h, error_output);
+		assert(w <= 0xFFFF && h <= 0xFFFF);
+		res[i] = (w << 16) | h;
+	}
+	std::sort(res.begin(), res.end());
+	int wp = 0, hp = 0;
+	for (int i = 0; i < n; i++)
+	{
+		w = res[i] >> 16;
+		h = res[i] & 0xFFFF;
+		if (w != wp || h != hp)
+		{
+			std::ostringstream ds, vs;
+			ds << w << " X " << h;
+			vs << w << ',' << h;
+			resolutionlist.push_back(std::make_pair(vs.str(), ds.str()));
+			wp = w;
+			hp = h;
+		}
+	}
+}
+
 void Game::PopulateValueLists(std::map<std::string, GuiOption::List> & valuelists)
 {
 	PopulateTrackList(valuelists["tracks"]);
@@ -2333,6 +2363,8 @@ void Game::PopulateValueLists(std::map<std::string, GuiOption::List> & valuelist
 	PopulateAnisoList(valuelists["anisotropy"]);
 
 	PopulateAntialiasList(valuelists["antialiasing"]);
+
+	PopulateResolutionList(valuelists["resolution"]);
 
 	// PopulateJoystickList
 	valuelists["joy_indices"].push_back(std::make_pair("0", "0"));

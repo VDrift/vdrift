@@ -56,6 +56,10 @@ public:
 
 	int GetH() const;
 
+	int GetNumSupportedResolutions(std::ostream & error_output);
+
+	void GetSupportedResolution(int i, int & w, int & h, std::ostream & error_output);
+
 private:
 	SDL_Window * window;
 	void * glcontext;

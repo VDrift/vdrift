@@ -180,6 +180,8 @@ private:
 
 	void PopulateAntialiasList(GuiOption::List & antialiaslist);
 
+	void PopulateResolutionList(GuiOption::List & resolutionlist);
+
 	void UpdateTrackMap();
 
 	void ShowLoadingScreen(float progress, float progress_max, const std::string & optional_text);
