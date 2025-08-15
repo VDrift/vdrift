@@ -217,7 +217,7 @@ elif sys.platform in ['win32', 'msys', 'cygwin']:
     #local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
     libs_link = ['opengl32', 'mingw32', 'SDL3', 'intl', common_libs ]
 else:
-    local_env.ParseConfig('SDL3-config --cflags --libs')
+    local_env.ParseConfig('sdl3-config --cflags --libs')
     #local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GL','pthread', common_libs]
 
