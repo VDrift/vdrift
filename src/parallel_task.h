@@ -22,8 +22,8 @@
 #ifndef _PARALLEL_TASK_H_
 #define _PARALLEL_TASK_H_
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_thread.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_thread.h>
 
 #include <cassert>
 #include <iostream>
@@ -40,8 +40,8 @@ class Task
 	private:
 		bool quit;
 
-		SDL_sem * sem_frame_start;
-		SDL_sem * sem_frame_end;
+		SDL_Semaphore * sem_frame_start;
+		SDL_Semaphore * sem_frame_end;
 
 		bool executing;
 
@@ -80,7 +80,7 @@ class Task
 #ifdef VERBOSE
 			std::cout << "telling child to exit" << std::endl;
 #endif
-			SDL_SemPost(sem_frame_start);
+			SDL_SignalSemaphore(sem_frame_start);
 #ifdef VERBOSE
 			std::cout << "waiting for thread to exit" << std::endl;
 #endif
@@ -111,14 +111,14 @@ class Task
 #ifdef VERBOSE
 			std::cout << "posting end semaphore to allow the main loop to run through the first iteration" << std::endl;
 #endif
-			SDL_SemPost(sem_frame_end);
+			SDL_SignalSemaphore(sem_frame_end);
 
 			while (!quit)
 			{
 #ifdef VERBOSE
 				std::cout << "waiting for start semaphore" << std::endl;
 #endif
-				SDL_SemWait(sem_frame_start);
+				SDL_WaitSemaphore(sem_frame_start);
 #ifdef VERBOSE
 				std::cout << "done waiting for start semaphore" << std::endl;
 #endif
@@ -131,7 +131,7 @@ class Task
 #ifdef VERBOSE
 				std::cout << "posting end semaphore" << std::endl;
 #endif
-				SDL_SemPost(sem_frame_end);
+				SDL_SignalSemaphore(sem_frame_end);
 			}
 #ifdef VERBOSE
 			std::cout << "child thread exit" << std::endl;
@@ -143,7 +143,7 @@ class Task
 #ifdef VERBOSE
 			std::cout << "posting start semaphore" << std::endl;
 #endif
-			SDL_SemPost(sem_frame_start);
+			SDL_SignalSemaphore(sem_frame_start);
 		}
 
 		void End()
@@ -151,7 +151,7 @@ class Task
 #ifdef VERBOSE
 			std::cout << "waiting for end semaphore" << std::endl;
 #endif
-			SDL_SemWait(sem_frame_end);
+			SDL_WaitSemaphore(sem_frame_end);
 #ifdef VERBOSE
 			std::cout << "done waiting for end semaphore" << std::endl;
 #endif

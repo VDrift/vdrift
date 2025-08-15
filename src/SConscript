@@ -161,7 +161,7 @@ common_libs = ['vorbisfile', 'curl', 'z']
 if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9']:
     common_libs.append('libLinearMath')
     common_libs.append('libBulletCollision')
-    local_env.ParseConfig('sdl2-config --cflags --libs')
+    local_env.ParseConfig('sdl3-config --cflags --libs')
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['pthread', common_libs]
 elif ( 'darwin' == sys.platform ):
@@ -171,8 +171,7 @@ elif ( 'darwin' == sys.platform ):
     appdir = "%s/MacOS/" % pkgbase
     pkgsrc = "../vdrift-mac"
 
-    common_libs.append( 'SDL2' )
-    common_libs.append( 'WebP' )
+    common_libs.append( 'SDL3' )
     common_libs.append( 'BulletCollision' )
     common_libs.append( 'BulletDynamics' )
     common_libs.append( 'BulletSoftBody' )
@@ -216,9 +215,9 @@ elif ( 'darwin' == sys.platform ):
     src.append(['../vdrift-mac/config_mac.mm'])
 elif sys.platform in ['win32', 'msys', 'cygwin']:
     #local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
-    libs_link = ['opengl32', 'mingw32', 'SDL2main', 'SDL2', 'intl', common_libs ]
+    libs_link = ['opengl32', 'mingw32', 'SDL3', 'intl', common_libs ]
 else:
-    local_env.ParseConfig('sdl2-config --cflags --libs')
+    local_env.ParseConfig('SDL3-config --cflags --libs')
     #local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GL','pthread', common_libs]
 

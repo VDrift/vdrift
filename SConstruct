@@ -47,7 +47,7 @@ if sys.platform in ['freebsd6', 'freebsd7', 'freebsd8', 'freebsd9', 'freebsd10']
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
-    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
+    check_headers = ['GL/gl.h', 'SDL3/SDL.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
     check_libs = []
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
@@ -70,7 +70,7 @@ elif sys.platform == 'darwin':
     opts.Add('SDK', 'the path to an SDK directory', '')
 
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#src', '#vdrift-mac/Frameworks', '#vdrift-mac/Frameworks/SDL2.framework/Headers', '#vdrift-mac/Libraries'],
+        CPPPATH = ['#src', '#vdrift-mac/Frameworks', '#vdrift-mac/Frameworks/SDL3.framework/Headers', '#vdrift-mac/Libraries'],
         CCFLAGS = ['-std=c++14', '-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
@@ -110,7 +110,7 @@ elif sys.platform == 'darwin':
     default_datadir = "data"
     default_bindir = ""
 
-    check_headers = ['OpenGL/gl.h', 'SDL2/sdl.h']
+    check_headers = ['OpenGL/gl.h', 'SDL3/SDL.h']
     check_libs = []
     cppdefines.append(("_DEFINE_OSX_HELPERS"))
 
@@ -147,7 +147,7 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if 'LDFLAGS' in os.environ:
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
+    check_headers = ['GL/gl.h', 'SDL3/SDL.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
     check_libs = []
 
 if ARGUMENTS.get('verbose') != "1":

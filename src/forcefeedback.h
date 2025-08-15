@@ -20,7 +20,7 @@
 #ifndef _FORCEFEEDBACK_H
 #define _FORCEFEEDBACK_H
 
-#include <SDL2/SDL_haptic.h>
+#include <SDL3/SDL_haptic.h>
 #include <iosfwd>
 #include <string>
 

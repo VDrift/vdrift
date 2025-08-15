@@ -22,7 +22,7 @@
 
 #include "toggle.h"
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <vector>
 #include <map>
 #include <list>
@@ -35,20 +35,22 @@ public:
 	class Joystick
 	{
 		private:
-			SDL_Joystick * sdl_joyptr;
+			unsigned id;
 			std::vector <float> axis;
 			std::vector <Toggle> button;
 			std::vector <uint8_t> hat;
 
 		public:
-			Joystick() : sdl_joyptr(NULL) {}
+			Joystick() : id(-1) {}
 
-			Joystick(SDL_Joystick * ptr, int numaxes, int numbuttons, int numhats) : sdl_joyptr(ptr)
+			Joystick(unsigned jid, int numaxes, int numbuttons, int numhats) : id(jid)
 			{
 				axis.resize(numaxes, 0);
 				button.resize(numbuttons + numhats * 4);
 				hat.resize(numhats);
 			}
+
+			unsigned GetId() const {return id;}
 
 			int GetNumAxes() const {return axis.size();}
 
@@ -64,43 +66,43 @@ public:
 				}
 			}
 
-			void SetAxis(unsigned int id, float val)
+			void SetAxis(unsigned n, float val)
 			{
-				assert (id < axis.size());
-				axis[id] = val;
+				assert (n < axis.size());
+				axis[n] = val;
 			}
 
-			float GetAxis(unsigned int id) const
+			float GetAxis(unsigned n) const
 			{
-				if (id < axis.size())
-					return axis[id];
+				if (n < axis.size())
+					return axis[n];
 				return 0;
 			}
 
-			Toggle GetButton(unsigned int id) const
+			Toggle GetButton(unsigned n) const
 			{
 				// don't want to assert since this could be due to a control file misconfiguration
-				if (id < button.size())
-					return button[id];
+				if (n < button.size())
+					return button[n];
 				return Toggle();
 			}
 
-			void SetButton(unsigned int id, bool state)
+			void SetButton(unsigned n, bool state)
 			{
-				assert (id < button.size());
-				button[id].Set(state);
+				assert (n < button.size());
+				button[n].Set(state);
 			}
 
-			uint8_t GetHat(unsigned int id) const
+			uint8_t GetHat(unsigned n) const
 			{
-				assert (id < hat.size());
-				return hat[id];
+				assert (n < hat.size());
+				return hat[n];
 			}
 
-			void SetHat(unsigned int id, uint8_t state)
+			void SetHat(unsigned n, uint8_t state)
 			{
-				assert (id < hat.size());
-				hat[id] = state;
+				assert (n < hat.size());
+				hat[n] = state;
 			}
 	};
 
@@ -108,7 +110,7 @@ public:
 
 	~EventSystem();
 
-	void Init(std::ostream & info_output);
+	void Init(std::ostream & info_output, std::ostream & error_output);
 
 	void BeginFrame();
 
@@ -122,9 +124,9 @@ public:
 
 	void ProcessEvents();
 
-	Toggle GetMouseButtonState(int id) const { return GetToggle(mbutmap, id); }
+	Toggle GetMouseButtonState(int n) const { return GetToggle(mbutmap, n); }
 
-	Toggle GetKeyState(SDL_Keycode id) const { return GetToggle(keymap, id); }
+	Toggle GetKeyState(SDL_Keycode k) const { return GetToggle(keymap, k); }
 
 	std::map <SDL_Keycode, Toggle> & GetKeyMap() {return keymap;}
 
@@ -211,6 +213,12 @@ private:
 	void HandleMouseButton(DirectionEnum dir, int id);
 
 	void HandleKey(DirectionEnum dir, SDL_Keycode id);
+
+	void HandleJoystickButton(unsigned joyid, uint8_t button, bool up);
+
+	void HandleJoystickHat(unsigned joyid, uint8_t hat, uint8_t val);
+
+	void HandleJoystickAxis(unsigned joyid, uint8_t axis, int val);
 
 	void RecordFPS(const float fps);
 

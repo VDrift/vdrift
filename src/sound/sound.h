@@ -30,6 +30,8 @@
 #include <iosfwd>
 #include <vector>
 
+struct SDL_AudioStream;
+
 class Sound
 {
 public:
@@ -83,6 +85,7 @@ public:
 	void Update(bool pause);
 
 private:
+	SDL_AudioStream * stream;
 	SoundInfo deviceinfo;
 	Vec3 listener_pos;
 	Vec3 listener_vel;
@@ -167,7 +170,7 @@ private:
 	TrippleBuffer<std::vector<size_t> > sources_stop;
 
 	// sound thread state
-	std::vector<int> buffer[2];
+	std::vector<float> buffer[2];
 	std::vector<Sampler> samplers;
 	size_t samplers_num;
 	bool samplers_pause;
@@ -201,7 +204,7 @@ private:
 	template <typename stream_type, typename buffer_type, int vmin, int vmax>
 	void CallbackStereo(void * sound, unsigned char stream[], int len);
 
-	static void CallbackWrapper(void * sound, unsigned char stream[], int len);
+	static void CallbackWrapper(void * sound, SDL_AudioStream * stream, int additional_amount, int total_amount);
 
 	template <typename sample_type, typename buffer_type>
 	static void SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], buffer_type chan2[], unsigned len);

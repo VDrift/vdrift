@@ -22,8 +22,11 @@
 
 #include <iosfwd>
 #include <string>
+#include <vector>
+#include <utility>
 
 struct SDL_Window;
+struct SDL_GLContextState;
 
 class Window
 {
@@ -56,13 +59,11 @@ public:
 
 	int GetH() const;
 
-	int GetNumSupportedResolutions(std::ostream & error_output);
-
-	void GetSupportedResolution(int i, int & w, int & h, std::ostream & error_output);
+	void GetSupportedResolutions(std::vector<std::pair<int, int>> & res, std::ostream & error_output);
 
 private:
 	SDL_Window * window;
-	void * glcontext;
+	SDL_GLContextState * glcontext;
 	int fsaa;
 	int w, h;
 	bool initialized;

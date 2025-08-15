@@ -19,11 +19,12 @@
 
 #include "window.h"
 #include "graphics/glcore.h"
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <sstream>
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 
 Window::Window() :
 	window(NULL),
@@ -39,7 +40,7 @@ Window::Window() :
 Window::~Window()
 {
 	if (glcontext)
-		SDL_GL_DeleteContext(glcontext);
+		SDL_GL_DestroyContext(glcontext);
 
 	if (window)
 		SDL_DestroyWindow(window);
@@ -60,7 +61,7 @@ void Window::Init(
 	std::ostream & error_output)
 {
 	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC;
-	if (SDL_Init(sdl_flags) < 0)
+	if (SDL_Init(sdl_flags) == false)
 	{
 		error_output << "SDL initialization failed: " << SDL_GetError() << std::endl;
 		assert(0);
@@ -108,38 +109,34 @@ void Window::ShowMouseCursor(bool value)
 {
 	if (value)
 	{
-		SDL_ShowCursor(SDL_ENABLE);
-		SDL_SetWindowGrab(window, SDL_FALSE);
+		SDL_ShowCursor();
+		SDL_SetWindowMouseGrab(window, false);
 	}
 	else
 	{
-		SDL_ShowCursor(SDL_DISABLE);
-		SDL_SetWindowGrab(window, SDL_TRUE);
+		SDL_HideCursor();
+		SDL_SetWindowMouseGrab(window, true);
 	}
 }
 
 void Window::Screenshot(const std::string & filename)
 {
-	SDL_Surface * temp = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 24,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-								0x000000FF, 0x0000FF00, 0x00FF0000, 0
-#else
-								0x00FF0000, 0x0000FF00, 0x000000FF, 0
-#endif
-								);
-	assert(temp);
-
 	unsigned char *pixels = (unsigned char *) malloc(3 * w * h);
 	assert(pixels);
-
 	glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
-	for (int i = 0; i < h; i++)
-		memcpy(((char *) temp->pixels) + temp->pitch * i, pixels + 3 * w * (h - i - 1), w * 3);
-	free(pixels);
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+	SDL_PixelFormat format = SDL_PIXELFORMAT_RGB24;
+#else
+	SDL_PixelFormat format = SDL_PIXELFORMAT_BGR24;
+#endif
+	SDL_Surface * surf = SDL_CreateSurfaceFrom(w, h, format, pixels, 3 * w);
+	if (surf == NULL)
+		return;
 
-	SDL_SaveBMP(temp, filename.c_str());
-	SDL_FreeSurface(temp);
+	SDL_FlipSurface(surf, SDL_FLIP_VERTICAL);
+	SDL_SaveBMP(surf, filename.c_str());
+	SDL_DestroySurface(surf);
 }
 
 bool Window::Initialized() const
@@ -157,40 +154,34 @@ int Window::GetH() const
 	return h;
 }
 
-static int GetVideoDisplay()
+void Window::GetSupportedResolutions(std::vector<std::pair<int, int>> & res, std::ostream & error_output)
 {
-	const char *variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_DISPLAY");
-	if (!variable)
-		variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_HEAD");
-
-	if (variable)
-		return SDL_atoi(variable);
-	else
-		return 0;
-}
-
-int Window::GetNumSupportedResolutions(std::ostream & error_output)
-{
-	int display = GetVideoDisplay();
-	int i = SDL_GetNumDisplayModes(display);
-	if (i < 0) {
-		error_output << SDL_GetError() << std::endl;
-		return 0;
-	}
-	return i;
-}
-
-void Window::GetSupportedResolution(int i, int & w, int & h, std::ostream & error_output)
-{
-	SDL_DisplayMode mode;
-	int display = GetVideoDisplay();
-	int err = SDL_GetDisplayMode(display, i, &mode);
-	if (err) {
+	// get supported display modes
+	SDL_DisplayID display = SDL_GetPrimaryDisplay();
+	int num_modes = 0;
+	SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(display, &num_modes);
+	if (modes == NULL) {
 		error_output << SDL_GetError() << std::endl;
 		return;
 	}
-	w = mode.w;
-	h = mode.h;
+
+	// get unique resolutions
+	std::set<std::pair<int, int>> unique_res;
+	for (int i = 0; i < num_modes; ++i)
+	{
+		SDL_DisplayMode *mode = modes[i];
+		unique_res.insert(std::make_pair(mode->w, mode->h));
+	}
+
+	res.clear();
+	res.reserve(unique_res.size());
+	for (const auto & r : unique_res)
+	{
+		res.push_back(r);
+	}
+
+	SDL_free(modes);
+	return;
 }
 
 bool Window::ResizeWindow(int width, int height)
@@ -220,16 +211,19 @@ void Window::ChangeDisplay(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	SDL_DisplayMode desktop_mode;
-	int display = GetVideoDisplay();
-
-	SDL_GetDesktopDisplayMode(display, &desktop_mode);
+	SDL_DisplayID display = SDL_GetPrimaryDisplay();
+	const SDL_DisplayMode * mode = SDL_GetDesktopDisplayMode(display);
+	if (mode == NULL)
+	{
+		error_output << SDL_GetError() << std::endl;
+		return;
+	}
 
 	if (width == 0)
-		width = desktop_mode.w;
+		width = mode->w;
 
 	if (height == 0)
-		height = desktop_mode.h;
+		height = mode->h;
 
 	// Try to resize the existing window and surface
 	if (!fullscreen && ResizeWindow(width, height))
@@ -237,7 +231,7 @@ void Window::ChangeDisplay(
 
 	if (glcontext)
 	{
-		SDL_GL_DeleteContext(glcontext);
+		SDL_GL_DestroyContext(glcontext);
 		glcontext = NULL;
 	}
 
@@ -275,13 +269,12 @@ void Window::ChangeDisplay(
 	}
 
 	// Create a new window
-	Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
+	const char * title = "VDRIFT";
+	Uint32 window_flags = SDL_WINDOW_OPENGL;
 	if (fullscreen)
 		window_flags |= SDL_WINDOW_FULLSCREEN;
 
-	window = SDL_CreateWindow(NULL,
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		width, height, window_flags);
+	window = SDL_CreateWindow(title, width, height, window_flags);
 	if (!window)
 	{
 		error_output << SDL_GetError() << std::endl;
@@ -297,7 +290,7 @@ void Window::ChangeDisplay(
 		return;
 	}
 
-	if (SDL_GL_MakeCurrent(window, glcontext) < 0)
+	if (SDL_GL_MakeCurrent(window, glcontext) == false)
 	{
 		error_output << SDL_GetError() << std::endl;
 		assert(0);

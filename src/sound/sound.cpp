@@ -20,7 +20,7 @@
 #include "sound.h"
 #include "minmax.h"
 #include "coordinatesystem.h"
-#include <SDL2/SDL_audio.h>
+#include <SDL3/SDL_audio.h>
 #include <algorithm>
 #include <cassert>
 
@@ -136,6 +136,7 @@ bool Sound::SamplersUpdate::empty() const
 }
 
 Sound::Sound() :
+	stream(NULL),
 	deviceinfo(0, 0, 0, 0),
 	sound_volume(0),
 	initdone(false),
@@ -160,7 +161,7 @@ Sound::Sound() :
 Sound::~Sound()
 {
 	if (initdone)
-		SDL_CloseAudio();
+		SDL_DestroyAudioStream(stream);
 }
 
 bool Sound::Init(unsigned short buffersize, std::ostream & info_output, std::ostream & error_output)
@@ -168,62 +169,71 @@ bool Sound::Init(unsigned short buffersize, std::ostream & info_output, std::ost
 	if (disable || initdone)
 		return false;
 
-	SDL_AudioSpec desired, obtained;
-
-	desired.freq = 44100;
-	desired.format = AUDIO_S16SYS;
-	desired.samples = Clamp<Uint16>(buffersize, 512, 2048);
-	desired.callback = Sound::CallbackWrapper;
-	desired.userdata = this;
-	desired.channels = 2;
-
-	if (SDL_OpenAudio(&desired, &obtained) < 0)
+	int num_devices;
+	SDL_AudioDeviceID *devices = SDL_GetAudioPlaybackDevices(&num_devices);
+	if (devices) {
+		info_output << "Available audio playback devices: ";
+		for (int i = 0; i < num_devices; ++i) {
+			SDL_AudioDeviceID instance_id = devices[i];
+			const char *name = SDL_GetAudioDeviceName(instance_id);
+			info_output << "\n  " << instance_id << " " << name;
+		}
+		SDL_free(devices);
+		info_output << std::endl;
+	}
+	else
 	{
-		error_output << "Error opening audio device, disabling sound." << std::endl;
-		Disable();
+		error_output << "No audio devices found, disabling sound." << std::endl;
+	}
+
+	// default specs
+	int frequency = 44100;
+	int channels = 2;
+	int bytespersample = 4;
+	int samples = buffersize / bytespersample;
+	SDL_AudioSpec spec = { SDL_AUDIO_F32, channels, frequency };
+
+	info_output << "Open default audio playback device."  << std::endl;
+	stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, CallbackWrapper, this);
+	if (stream == NULL)
+	{
+		error_output << "Failed to open default audio playback device, disabling sound." << std::endl;
+		error_output << SDL_GetError() << std::endl;
 		return false;
 	}
 
-	unsigned frequency = obtained.freq;
-	unsigned channels = obtained.channels;
-	unsigned samples = obtained.samples;
-	unsigned bytespersample = 1;
-	if (obtained.format == AUDIO_S16SYS)
+	// get stream format
+	SDL_AudioSpec src_spec, dst_spec;
+	if (SDL_GetAudioStreamFormat(stream, &src_spec, &dst_spec) == false)
 	{
+		error_output << SDL_GetError() << std::endl;
+	}
+	else
+	{
+		info_output << "Audio stream input:"
+					<< "\n  Format: " << src_spec.format
+					<< "\n  Frequency: " << src_spec.freq
+					<< "\n  Channels: " << src_spec.channels
+					<< std::endl;
+		info_output << "Audio stream output:"
+					<< "\n  Format: " << dst_spec.format
+					<< "\n  Frequency: " << dst_spec.freq
+					<< "\n  Channels: " << dst_spec.channels
+					<< std::endl;
+	}
+
+	// we prefer F32 but can also provide S16
+	if (src_spec.format == SDL_AUDIO_S16)
 		bytespersample = 2;
-	}
-	else if (obtained.format == AUDIO_F32SYS)
-	{
-		bytespersample = 4;
-	}
 
-	std::ostringstream dout;
-	dout << "Obtained audio device:" << std::endl;
-	dout << "Frequency: " << frequency << std::endl;
-	dout << "Format: " << obtained.format << std::endl;
-	dout << "Bits per sample: " << bytespersample * 8 << std::endl;
-	dout << "Channels: " << channels << std::endl;
-	dout << "Silence: " << (unsigned)obtained.silence << std::endl;
-	dout << "Samples: " << samples << std::endl;
-	dout << "Size: " << obtained.size;
-	info_output << dout.str() << std::endl;
-
-	if (((obtained.format != AUDIO_S16SYS) && (obtained.format != AUDIO_F32SYS)) ||
-		(obtained.channels != desired.channels))
-	{
-		error_output << "Audio device has unsupported format or channel count. Disabling sound." << std::endl;
-		Disable();
-		return false;
-	}
-
-	deviceinfo = SoundInfo(samples, frequency, channels, bytespersample);
+	deviceinfo = SoundInfo(samples, src_spec.freq, src_spec.channels, bytespersample);
 	buffer[0].reserve(samples);
 	buffer[1].reserve(samples);
 	initdone = true;
 	SetVolume(1);
 
 	// enable sound, run callback
-	SDL_PauseAudio(false);
+	SDL_ResumeAudioStreamDevice(stream);
 
 	return true;
 }
@@ -650,16 +660,28 @@ void Sound::CallbackStereo(void * myself, unsigned char stream[], int len)
 	SetSourceChanges();
 }
 
-void Sound::CallbackWrapper(void * sound, unsigned char stream[], int len)
+void AudioCallback()
 {
-	auto bytespersample = static_cast<Sound*>(sound)->deviceinfo.bytespersample;
-	if (bytespersample == 2)
-	{
-		static_cast<Sound*>(sound)->CallbackStereo<short, int, -32768, 32767>(sound, stream, len);
-	}
-	else if (bytespersample == 4)
-	{
-		static_cast<Sound*>(sound)->CallbackStereo<float, float, -1, 1>(sound, stream, len);
+
+}
+void Sound::CallbackWrapper(void * sound, SDL_AudioStream * stream, int additional_amount, int total_amount)
+{
+	if (additional_amount > 0) {
+		Uint8 *data = SDL_stack_alloc(Uint8, additional_amount);
+		if (data) {
+			auto bytespersample = static_cast<Sound*>(sound)->deviceinfo.bytespersample;
+			if (bytespersample == 2)
+			{
+				static_cast<Sound*>(sound)->CallbackStereo<short, int, -32768, 32767>(sound, data, additional_amount);
+			}
+			else if (bytespersample == 4)
+			{
+				static_cast<Sound*>(sound)->CallbackStereo<float, float, -1, 1>(sound, data, additional_amount);
+			}
+
+			SDL_PutAudioStreamData(stream, data, additional_amount);
+			SDL_stack_free(data);
+		}
 	}
 }
 
@@ -682,7 +704,7 @@ void Sound::SampleAndAdvanceWithPitch(Sampler & sampler, buffer_type chan1[], bu
 	assert(sampler.buffer);
 	assert(sampler.playing);
 
-	// start samlping
+	// start sampling
 	auto channels = sampler.buffer->GetInfo().channels;
 	auto chaninc = channels - 1;
 	auto samples = sampler.samples_per_channel * channels;

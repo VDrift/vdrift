@@ -36,22 +36,25 @@ ForceFeedback::ForceFeedback(
 	// Close haptic if already open.
 	if (haptic)
 	{
-		SDL_HapticClose(haptic);
+		SDL_CloseHaptic(haptic);
 		haptic = NULL;
 	}
 
 	// Do we have force feedback devices?
-	int haptic_num = SDL_NumHaptics();
-	if (haptic_num == 0)
+	int haptic_num = 0;
+	SDL_HapticID * haptics = SDL_GetHaptics(&haptic_num);
+	if (haptics == NULL)
 	{
 		info_output << "No force feedback devices found." << std::endl;
 		return;
 	}
 	info_output << "Number of force feedback devices: " << haptic_num << std::endl;
 
-	// Try to create haptic device.
-	int haptic_id = 0;
-	haptic = SDL_HapticOpen(haptic_id);
+	SDL_HapticID id = haptics[0];
+	SDL_free(haptics);
+
+	// Try to create a haptic device.
+	haptic = SDL_OpenHaptic(id);
 	if (!haptic)
 	{
 		error_output << "Failed to initialize force feedback device: " << SDL_GetError();
@@ -59,7 +62,7 @@ ForceFeedback::ForceFeedback(
 	}
 
 	// Check for constant force support.
-	unsigned int haptic_query = SDL_HapticQuery(haptic);
+	unsigned int haptic_query = SDL_GetHapticFeatures(haptic);
 	if (!(haptic_query & SDL_HAPTIC_CONSTANT))
 	{
 		error_output << "Constant force feedback not supported: " << SDL_GetError();
@@ -83,7 +86,7 @@ ForceFeedback::ForceFeedback(
 	effect.constant.fade_level = 0;
 
 	// Upload the effect.
-	effect_id = SDL_HapticNewEffect(haptic, &effect);
+	effect_id = SDL_CreateHapticEffect(haptic, &effect);
 	if (effect_id == -1)
 	{
 		error_output << "Failed to initialize force feedback effect: " << SDL_GetError();
@@ -96,7 +99,7 @@ ForceFeedback::ForceFeedback(
 ForceFeedback::~ForceFeedback()
 {
 	if (haptic)
-		SDL_HapticClose(haptic);
+		SDL_CloseHaptic(haptic);
 }
 
 void ForceFeedback::update(
@@ -115,7 +118,7 @@ void ForceFeedback::update(
 
 	// Update effect.
 	effect.constant.level = Sint16(lastforce * 32767);
-	int new_effect_id = SDL_HapticUpdateEffect(haptic, effect_id, &effect);
+	int new_effect_id = SDL_UpdateHapticEffect(haptic, effect_id, &effect);
 	if (new_effect_id == -1)
 	{
 		error_output << "Failed to update force feedback effect: " << SDL_GetError();
@@ -127,7 +130,7 @@ void ForceFeedback::update(
 	}
 
 	// Run effect.
-	if (SDL_HapticRunEffect(haptic, effect_id, 1) == -1)
+	if (SDL_RunHapticEffect(haptic, effect_id, 1) == false)
 	{
 		error_output << "Failed to run force feedback effect: " << SDL_GetError();
 		return;

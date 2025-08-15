@@ -30,7 +30,6 @@
 using std::vector;
 using std::map;
 using std::list;
-using std::endl;
 
 EventSystem::EventSystem() :
 	lasttick(0),
@@ -47,37 +46,34 @@ EventSystem::EventSystem() :
 
 EventSystem::~EventSystem()
 {
-	// dtor
+	for (const auto & j : joysticks)
+	{
+		auto jptr = SDL_GetJoystickFromID(j.GetId());
+		if (jptr) SDL_CloseJoystick(jptr);
+	}
 }
 
-void EventSystem::Init(std::ostream & info_output)
+void EventSystem::Init(std::ostream & info_output, std::ostream & error_output)
 {
-	const int num_joysticks = SDL_NumJoysticks();
-
-	info_output << num_joysticks << " joystick";
-	if (num_joysticks != 1)
-		info_output << "s";
-	info_output << " found";
-	if (num_joysticks > 0)
-		info_output << ":" << endl;
-	else
-		info_output << "." << endl;
-
-	SDL_JoystickEventState(SDL_ENABLE);
+	int num_joysticks = 0;
+	SDL_JoystickID * joystiks_ids = SDL_GetJoysticks(&num_joysticks);
+	info_output << "Joysticks found: " << num_joysticks << std::endl;
 
 	joysticks.resize(num_joysticks);
 	for (int i = 0; i < num_joysticks; ++i)
 	{
-		SDL_Joystick * jp = SDL_JoystickOpen(i);
-		assert(jp);
-
-		const int id = SDL_JoystickInstanceID(jp);
-		assert(id >= 0 && id < num_joysticks);
-
-		joysticks[id] = Joystick(jp, SDL_JoystickNumAxes(jp), SDL_JoystickNumButtons(jp), SDL_JoystickNumHats(jp));
-
-		info_output << "    " << id << " " << SDL_JoystickName(jp) << endl;
+		SDL_JoystickID id = joystiks_ids[i];
+		SDL_Joystick * jp = SDL_OpenJoystick(id);
+		if (jp == NULL)
+		{
+			error_output << SDL_GetError() << std::endl;
+		}
+		joysticks[i] = Joystick(id, SDL_GetNumJoystickAxes(jp), SDL_GetNumJoystickButtons(jp), SDL_GetNumJoystickHats(jp));
+		info_output << "  " << id << " " << SDL_GetJoystickName(jp) << std::endl;
 	}
+
+	SDL_free(joystiks_ids);
+	SDL_SetJoystickEventsEnabled(true);
 }
 
 void EventSystem::BeginFrame()
@@ -92,7 +88,7 @@ void EventSystem::BeginFrame()
 
 		/*if (throttle && dt < game.TickPeriod())
 		{
-			//cout << "throttling: " << lasttick.data << "," << thistick << endl;
+			//cout << "throttling: " << lasttick.data << "," << thistick << std::endl;
 			SDL_Delay(10);
 			thistick = SDL_GetTicks();
 			dt = (thistick-lasttick)*1E-3;
@@ -102,6 +98,90 @@ void EventSystem::BeginFrame()
 	}
 
 	RecordFPS(1/dt);
+}
+
+void EventSystem::ProcessEvents()
+{
+	AgeToggles(keymap);
+	AgeToggles(mbutmap);
+	for (auto & joystick : joysticks)
+	{
+		joystick.AgeToggles();
+	}
+
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+		case SDL_EVENT_MOUSE_MOTION:
+			HandleMouseMotion(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+			HandleMouseButton(DOWN, event.button.button);
+			break;
+		case SDL_EVENT_MOUSE_BUTTON_UP:
+			HandleMouseButton(UP, event.button.button);
+			break;
+		case SDL_EVENT_KEY_DOWN:
+			HandleKey(DOWN, event.key.key);
+			break;
+		case SDL_EVENT_KEY_UP:
+			HandleKey(UP, event.key.key);
+			break;
+		case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+			HandleJoystickButton(event.jbutton.which, event.jbutton.button, true);
+			break;
+		case SDL_EVENT_JOYSTICK_BUTTON_UP:
+			HandleJoystickButton(event.jbutton.which, event.jbutton.button, false);
+			break;
+		case SDL_EVENT_JOYSTICK_HAT_MOTION:
+			HandleJoystickHat(event.jhat.which, event.jhat.hat, event.jhat.value);
+			break;
+		case SDL_EVENT_JOYSTICK_AXIS_MOTION:
+			HandleJoystickAxis(event.jbutton.which, event.jaxis.axis, event.jaxis.value);
+			break;
+		case SDL_EVENT_QUIT:
+			HandleQuit();
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void EventSystem::HandleMouseMotion(int x, int y, int xrel, int yrel)
+{
+	mousex = x;
+	mousey = y;
+	mousexrel = xrel;
+	mouseyrel = yrel;
+}
+
+void EventSystem::HandleMouseButton(DirectionEnum dir, int id)
+{
+	//std::cout << "Mouse button " << id << ", " << (dir==DOWN) << endl;
+	//mbutmap[id].Tick();
+	HandleToggle(mbutmap, dir, id);
+}
+
+void EventSystem::HandleKey(DirectionEnum dir, SDL_Keycode id)
+{
+	//if (dir == DOWN) std::cout << "Key #" << (int)id << " pressed" << endl;
+	HandleToggle(keymap, dir, id);
+}
+
+void EventSystem::HandleJoystickButton(unsigned joyid, uint8_t button, bool up)
+{
+	for (auto & joy : joysticks)
+	{
+		if (joy.GetId() == joyid)
+		{
+			joy.SetButton(button, up);
+			return;
+		}
+	}
+	// TODO: log unknown joystick button event
 }
 
 template <class Joystick>
@@ -132,80 +212,30 @@ inline void HandleHat(Joystick & joystick, uint8_t hatid, uint8_t hatvalue)
 	}
 }
 
-void EventSystem::ProcessEvents()
+void EventSystem::HandleJoystickHat(unsigned joyid, uint8_t hat, uint8_t val)
 {
-	AgeToggles(keymap);
-	AgeToggles(mbutmap);
-	for (auto & joystick : joysticks)
+	for (auto & joy : joysticks)
 	{
-		joystick.AgeToggles();
-	}
-
-	SDL_Event event;
-	while (SDL_PollEvent(&event))
-	{
-		switch (event.type)
+		if (joy.GetId() == joyid)
 		{
-		case SDL_MOUSEMOTION:
-			HandleMouseMotion(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-			HandleMouseButton(DOWN, event.button.button);
-			break;
-		case SDL_MOUSEBUTTONUP:
-			HandleMouseButton(UP, event.button.button);
-			break;
-		case SDL_KEYDOWN:
-			HandleKey(DOWN, event.key.keysym.sym);
-			break;
-		case SDL_KEYUP:
-			HandleKey(UP, event.key.keysym.sym);
-			break;
-		case SDL_JOYBUTTONDOWN:
-			assert(size_t(event.jbutton.which) < joysticks.size()); //ensure the event came from a known joystick
-			joysticks[event.jbutton.which].SetButton(event.jbutton.button, true);
-			break;
-		case SDL_JOYBUTTONUP:
-			assert(size_t(event.jbutton.which) < joysticks.size()); //ensure the event came from a known joystick
-			joysticks[event.jbutton.which].SetButton(event.jbutton.button, false);
-			break;
-		case SDL_JOYHATMOTION:
-			assert(size_t(event.jhat.which) < joysticks.size());
-			HandleHat(joysticks[event.jhat.which], event.jhat.hat, event.jhat.value);
-			break;
-		case SDL_JOYAXISMOTION:
-			assert(size_t(event.jaxis.which) < joysticks.size()); //ensure the event came from a known joystick
-			joysticks[event.jaxis.which].SetAxis(event.jaxis.axis, event.jaxis.value / 32768.0f);
-			//std::cout << "Joy " << (int) event.jaxis.which << " axis " << (int) event.jaxis.axis << " value " << event.jaxis.value / 32768.0f << endl;
-			break;
-		case SDL_QUIT:
-			HandleQuit();
-			break;
-		default:
-			break;
+			HandleHat(joy, hat, val);
+			return;
 		}
 	}
+	// TODO: log unknown joystick hat event
 }
 
-void EventSystem::HandleMouseMotion(int x, int y, int xrel, int yrel)
+void EventSystem::HandleJoystickAxis(unsigned joyid, uint8_t axis, int val)
 {
-	mousex = x;
-	mousey = y;
-	mousexrel = xrel;
-	mouseyrel = yrel;
-}
-
-void EventSystem::HandleMouseButton(DirectionEnum dir, int id)
-{
-	//std::cout << "Mouse button " << id << ", " << (dir==DOWN) << endl;
-	//mbutmap[id].Tick();
-	HandleToggle(mbutmap, dir, id);
-}
-
-void EventSystem::HandleKey(DirectionEnum dir, SDL_Keycode id)
-{
-	//if (dir == DOWN) std::cout << "Key #" << (int)id << " pressed" << endl;
-	HandleToggle(keymap, dir, id);
+	for (auto & joy : joysticks)
+	{
+		if (joy.GetId() == joyid)
+		{
+			joy.SetAxis(axis, val / 32768.0f);
+			return;
+		}
+	}
+	// TODO: log unknown joystick axis event
 }
 
 vector <int> EventSystem::GetMousePosition() const
@@ -238,11 +268,11 @@ void EventSystem::TestStim(StimEnum stim)
 	}
 	if (stim == STIM_INSERT_KEY_DOWN)
 	{
-		HandleKey(DOWN, SDLK_t);
+		HandleKey(DOWN, SDLK_T);
 	}
 	if (stim == STIM_INSERT_KEY_UP)
 	{
-		HandleKey(UP, SDLK_t);
+		HandleKey(UP, SDLK_T);
 	}
 	if (stim == STIM_INSERT_MBUT_DOWN)
 	{
@@ -266,28 +296,28 @@ QT_TEST(eventsystem_test)
 	{
 		//check key insertion
 		e.TestStim(EventSystem::STIM_INSERT_KEY_DOWN);
-		auto b = e.GetKeyState(SDLK_t);
+		auto b = e.GetKeyState(SDLK_T);
 		QT_CHECK(b.GetState() && b.GetImpulseRising() && !b.GetImpulseFalling());
 
 		//check key aging
 		e.TestStim(EventSystem::STIM_AGE_KEYS);
-		b = e.GetKeyState(SDLK_t);
+		b = e.GetKeyState(SDLK_T);
 		QT_CHECK(b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 		e.TestStim(EventSystem::STIM_AGE_KEYS); //age again
-		b = e.GetKeyState(SDLK_t);
+		b = e.GetKeyState(SDLK_T);
 		QT_CHECK(b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 
 		//check key removal
 		e.TestStim(EventSystem::STIM_INSERT_KEY_UP);
-		b = e.GetKeyState(SDLK_t);
+		b = e.GetKeyState(SDLK_T);
 		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && b.GetImpulseFalling());
 
 		//check key aging
 		e.TestStim(EventSystem::STIM_AGE_KEYS);
-		b = e.GetKeyState(SDLK_t);
+		b = e.GetKeyState(SDLK_T);
 		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 		e.TestStim(EventSystem::STIM_AGE_KEYS); //age again
-		b = e.GetKeyState(SDLK_t);
+		b = e.GetKeyState(SDLK_T);
 		QT_CHECK(!b.GetState() && !b.GetImpulseRising() && !b.GetImpulseFalling());
 	}
 

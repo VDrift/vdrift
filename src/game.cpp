@@ -401,7 +401,7 @@ bool Game::InitCoreSubsystems()
 	content.addSharedPath(pathmanager.GetCarPartsPath());
 	content.addSharedPath(pathmanager.GetTrackPartsPath());
 
-	eventsystem.Init(info_output);
+	eventsystem.Init(info_output, error_output);
 
 	return true;
 }
@@ -2308,31 +2308,19 @@ void Game::PopulateAntialiasList(GuiOption::List & antialiaslist)
 
 void Game::PopulateResolutionList(GuiOption::List & resolutionlist)
 {
+	std::vector<std::pair<int, int>> resolutions;
+	window.GetSupportedResolutions(resolutions, error_output);
+
 	resolutionlist.clear();
-	int w = 0, h = 0;
-	int n = window.GetNumSupportedResolutions(error_output);
-	std::vector<int> res(n);
-	for (int i = 0; i < n; i++)
+	resolutionlist.reserve(resolutions.size());
+	for (const auto & r : resolutions)
 	{
-		window.GetSupportedResolution(i, w, h, error_output);
-		assert(w <= 0xFFFF && h <= 0xFFFF);
-		res[i] = (w << 16) | h;
-	}
-	std::sort(res.begin(), res.end());
-	int wp = 0, hp = 0;
-	for (int i = 0; i < n; i++)
-	{
-		w = res[i] >> 16;
-		h = res[i] & 0xFFFF;
-		if (w != wp || h != hp)
-		{
-			std::ostringstream ds, vs;
-			ds << w << " X " << h;
-			vs << w << ',' << h;
-			resolutionlist.push_back(std::make_pair(vs.str(), ds.str()));
-			wp = w;
-			hp = h;
-		}
+		int w = r.first;
+		int h = r.second;
+		std::ostringstream ds, vs;
+		ds << w << " X " << h;
+		vs << w << ',' << h;
+		resolutionlist.push_back(std::make_pair(vs.str(), ds.str()));
 	}
 }
 
