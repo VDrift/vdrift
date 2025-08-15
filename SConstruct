@@ -117,13 +117,13 @@ elif sys.platform == 'darwin':
 #---------------#
 # Windows build #
 #---------------#
-elif sys.platform in ['win32', 'msys', 'cygwin']:
+elif sys.platform in ['win32', 'msys']:
     env = Environment(ENV = os.environ, tools = ['mingw'],
-        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra', '-mwindows'],
+        CCFLAGS = ['-std=c++14', '-Wall', '-Wextra'],
         CPPPATH = ['#src', '#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
         #LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
-        CPPDEFINES = ['_USE_MATH_DEFINES'],
+        CPPDEFINES = ['_USE_MATH_DEFINES', '_WIN32', 'WIN32'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = []
