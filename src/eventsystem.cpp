@@ -20,16 +20,8 @@
 #include "eventsystem.h"
 #include "unittest.h"
 
-#include <map>
-#include <list>
-#include <vector>
 #include <iostream>
 #include <numeric>
-#include <cassert>
-
-using std::vector;
-using std::map;
-using std::list;
 
 EventSystem::EventSystem() :
 	lasttick(0),
@@ -238,18 +230,18 @@ void EventSystem::HandleJoystickAxis(unsigned joyid, uint8_t axis, int val)
 	// TODO: log unknown joystick axis event
 }
 
-vector <int> EventSystem::GetMousePosition() const
+std::vector <int> EventSystem::GetMousePosition() const
 {
-	vector <int> o;
+	std::vector <int> o;
 	o.reserve(2);
 	o.push_back(mousex);
 	o.push_back(mousey);
 	return o;
 }
 
-vector <int> EventSystem::GetMouseRelativeMotion() const
+std::vector <int> EventSystem::GetMouseRelativeMotion() const
 {
-	vector <int> o;
+	std::vector <int> o;
 	o.reserve(2);
 	o.push_back(mousexrel);
 	o.push_back(mouseyrel);
@@ -353,11 +345,11 @@ QT_TEST(eventsystem_test)
 	//mouse motion stuff
 	{
 		e.TestStim(EventSystem::STIM_INSERT_MOTION);
-		vector <int> mpos = e.GetMousePosition();
+		std::vector <int> mpos = e.GetMousePosition();
 		QT_CHECK_EQUAL(mpos.size(),2);
 		QT_CHECK_EQUAL(mpos[0],50);
 		QT_CHECK_EQUAL(mpos[1],55);
-		vector <int> mrel = e.GetMouseRelativeMotion();
+		std::vector <int> mrel = e.GetMouseRelativeMotion();
 		QT_CHECK_EQUAL(mrel.size(),2);
 		QT_CHECK_EQUAL(mrel[0],2);
 		QT_CHECK_EQUAL(mrel[1],1);
