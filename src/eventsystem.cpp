@@ -30,8 +30,7 @@ EventSystem::EventSystem() :
 	mousex(0),
 	mousey(0),
 	mousexrel(0),
-	mouseyrel(0),
-	fps_memory_window(10)
+	mouseyrel(0)
 {
 	// ctor
 }
@@ -358,20 +357,12 @@ QT_TEST(eventsystem_test)
 
 void EventSystem::RecordFPS(const float fps)
 {
-	fps_memory.push_back(fps);
-	if (fps_memory.size() > fps_memory_window)
-		fps_memory.pop_front();
+	fps_memory[fps_memory_index] = fps;
+	fps_memory_index = (fps_memory_index + 1) % fps_memory_window;
 
-	//ensure no fps memory corruption
-	assert(fps_memory.size() <= fps_memory_window);
-}
+	float fps_sum = 0;
+	for (int i = 0; i < fps_memory_window; i++)
+		fps_sum += fps_memory[i];
 
-float EventSystem::GetFPS() const
-{
-	float avg = std::accumulate(fps_memory.begin(), fps_memory.end(), 0);
-
-	if (!fps_memory.empty())
-		avg = avg / fps_memory.size();
-
-	return avg;
+	fps_avg = fps_sum / fps_memory_window;
 }

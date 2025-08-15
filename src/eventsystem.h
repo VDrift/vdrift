@@ -25,7 +25,6 @@
 #include <SDL3/SDL.h>
 #include <vector>
 #include <map>
-#include <list>
 #include <iosfwd>
 #include <cassert>
 
@@ -136,7 +135,7 @@ public:
 	///returns a 2 element vector (x,y)
 	std::vector <int> GetMouseRelativeMotion() const;
 
-	float GetFPS() const;
+	float GetFPS() const {return fps_avg;}
 
 	enum StimEnum
 	{
@@ -203,8 +202,10 @@ private:
 
 	int mousex, mousey, mousexrel, mouseyrel;
 
-	unsigned int fps_memory_window;
-	std::list <float> fps_memory;
+	static const int fps_memory_window = 10;
+	float fps_memory[fps_memory_window] = {0};
+	int fps_memory_index = 0;
+	float fps_avg = 0;
 
 	enum DirectionEnum {UP, DOWN};
 
