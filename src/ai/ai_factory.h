@@ -20,13 +20,15 @@
 #ifndef _AI_FACTORY_H
 #define _AI_FACTORY_H
 
+#include <memory>
+
 class AiCar;
 
 /// Abstract Factory for the AI implementations
 class AiFactory
 {
 public:
-	virtual AiCar * Create(unsigned carid, float difficulty) = 0;
+	virtual std::unique_ptr<AiCar> Create(unsigned carid, float difficulty) = 0;
 
 	virtual ~AiFactory() {};
 };

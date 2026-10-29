@@ -19,6 +19,7 @@
 
 #include "ai.h"
 #include <cassert>
+#include <memory>
 // AI implementations:
 #include "ai_car_standard.h"
 #include "ai_car_experimental.h"
@@ -27,45 +28,30 @@ const std::string Ai::default_type = "aistd";
 
 Ai::Ai()
 {
-	AddFactory("aistd", new AiCarStandardFactory());
-	AddFactory("aiexp", new AiCarExperimentalFactory());
-}
-
-Ai::~Ai()
-{
-	Ai::ClearCars();
-
-	for (auto & factory : ai_factories)
-	{
-		delete factory.second;
-	}
-	ai_factories.clear();
+	AddFactory("aistd", std::make_unique<AiCarStandardFactory>());
+	AddFactory("aiexp", std::make_unique<AiCarExperimentalFactory>());
 }
 
 unsigned Ai::AddCar(unsigned carid, float difficulty, const std::string & type)
 {
 	auto it = ai_factories.find(type);
 	assert(it != ai_factories.end());
-	AiFactory * factory = it->second;
+	auto & factory = it->second;
 
-	AiCar * aicar = factory->Create(carid, difficulty);
-	ai_cars.push_back(aicar);
+	auto car = factory->Create(carid, difficulty);
+	ai_cars.push_back(std::move(car));
 
 	return ai_cars.size() - 1;
 }
 
 void Ai::ClearCars()
 {
-	for (auto ai_car : ai_cars)
-	{
-		delete ai_car;
-	}
 	ai_cars.clear();
 }
 
 void Ai::Update(float dt, const CarDynamics cars[], const int cars_num)
 {
-	for (auto ai_car : ai_cars)
+	for (auto & ai_car : ai_cars)
 	{
 		ai_car->Update(dt, cars, cars_num);
 	}
@@ -76,9 +62,9 @@ const std::vector<float> & Ai::GetInputs(unsigned id) const
 	return ai_cars[id]->GetInputs();
 }
 
-void Ai::AddFactory(const std::string & type_name, AiFactory * factory)
+void Ai::AddFactory(const std::string & type_name, std::unique_ptr<AiFactory> factory)
 {
-	ai_factories.emplace(type_name, factory);
+	ai_factories.emplace(type_name, std::move(factory));
 }
 
 std::vector<std::string> Ai::ListFactoryTypes()

@@ -51,9 +51,9 @@
 
 static const float rad2deg = 180 / M_PI;
 
-AiCar * AiCarExperimentalFactory::Create(unsigned carid, float difficulty)
+std::unique_ptr<AiCar> AiCarExperimentalFactory::Create(unsigned carid, float difficulty)
 {
-	return new AiCarExperimental(carid, difficulty);
+	return std::make_unique<AiCarExperimental>(carid, difficulty);
 }
 
 AiCarExperimental::AiCarExperimental(unsigned new_carid, float new_difficulty) :

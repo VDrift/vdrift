@@ -21,19 +21,16 @@
 #define _AI_H
 
 #include "ai_car.h"
+#include "ai_factory.h"
 #include <string>
 #include <vector>
 #include <map>
-
-class AiFactory;
 
 /// Manages all Ai cars.
 class Ai
 {
 public:
 	Ai();
-
-	~Ai();
 
 	unsigned AddCar(unsigned carid, float difficulty, const std::string & type = default_type);
 
@@ -43,7 +40,7 @@ public:
 
 	const std::vector<float> & GetInputs(unsigned id) const;
 
-	void AddFactory(const std::string & type_name, AiFactory * factory);
+	void AddFactory(const std::string & type_name, std::unique_ptr<AiFactory> factory);
 
 	std::vector<std::string> ListFactoryTypes();
 
@@ -52,8 +49,8 @@ public:
 	static const std::string default_type;
 
 private:
-	std::vector <AiCar*> ai_cars;
-	std::map <std::string, AiFactory*> ai_factories;
+	std::vector<std::unique_ptr<AiCar>> ai_cars;
+	std::map<std::string, std::unique_ptr<AiFactory>> ai_factories;
 };
 
 #endif //_AI_H

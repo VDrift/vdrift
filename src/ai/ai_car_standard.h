@@ -32,7 +32,7 @@ class CarDynamics;
 
 class AiCarStandardFactory : public AiFactory
 {
-	AiCar * Create(unsigned carid, float difficulty) override;
+	std::unique_ptr<AiCar> Create(unsigned carid, float difficulty) override;
 };
 
 class AiCarStandard : public AiCar
