@@ -94,7 +94,6 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	clocktime(0),
 	target_time(0),
 	timestep(1/90.0),
-	graphics(NULL),
 	content(error_out),
 	carupdater(autoupdate, info_out, error_out),
 	trackupdater(autoupdate, info_out, error_out),
@@ -274,7 +273,6 @@ void Game::End()
 	settings.Save(pathmanager.GetSettingsFile(), error_output);
 
 	graphics->Deinit();
-	delete graphics;
 }
 
 /* Initialize the most important, basic subsystems... */
@@ -349,11 +347,11 @@ bool Game::InitCoreSubsystems()
 		// Attempt to enable the GL3 renderer...
 		if (using_gl3)
 		{
-			graphics = new GraphicsGL3(stringMap);
+			graphics = std::make_unique<GraphicsGL3>(stringMap);
 		}
 		else
 		{
-			graphics = new GraphicsGL2();
+			graphics = std::make_unique<GraphicsGL2>();
 		}
 
 		bool success = graphics->Init(
@@ -374,14 +372,13 @@ bool Game::InitCoreSubsystems()
 		}
 		else
 		{
-			delete graphics;
-			graphics = NULL;
+			graphics.release();
 			render_ver = "gl2";
 			using_gl3 = false;
 		}
 	}
 
-	if (!graphics)
+	if (graphics == nullptr)
 	{
 		error_output << "Failed to create renderer." << std::endl;
 		return false;

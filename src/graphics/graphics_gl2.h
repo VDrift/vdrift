@@ -21,6 +21,7 @@
 #define _GRAPHICS_GL2_H
 
 #include "graphics.h"
+#include "graphics_camera.h"
 #include "graphics_config.h"
 #include "graphicsstate.h"
 #include "texture.h"
@@ -29,6 +30,7 @@
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
+#include "shader.h"
 #include "vertexarray.h"
 #include "vertexbuffer.h"
 

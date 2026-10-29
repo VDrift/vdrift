@@ -318,7 +318,7 @@ private:
 	PathManager pathmanager;
 	Settings settings;
 	Window window;
-	Graphics * graphics;
+	std::unique_ptr<Graphics> graphics;
 	StringIdMap stringMap;
 	EventSystem eventsystem;
 	ContentManager content;
