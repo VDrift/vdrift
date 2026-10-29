@@ -32,9 +32,9 @@ void GuiLabelList::SetupDrawable(
 
 		float xywh[4] = {x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh};
 
-		GuiLabel * element = new GuiLabel();
+		auto element = std::make_unique<GuiLabel>();
 		element->SetupDrawable(scene, font, align, scalex, scaley, xywh, z);
-		m_elements[i] = element;
+		m_elements[i] = std::move(element);
 	}
 }
 
@@ -43,10 +43,10 @@ void GuiLabelList::UpdateElements(SceneNode &)
 	assert(m_values.size() <= m_elements.size());
 	for (size_t i = 0; i < m_values.size(); ++i)
 	{
-		static_cast<GuiLabel*>(m_elements[i])->SetText(m_values[i]);
+		static_cast<GuiLabel*>(m_elements[i].get())->SetText(m_values[i]);
 	}
 	for (size_t i = m_values.size(); i < m_elements.size(); ++i)
 	{
-		static_cast<GuiLabel*>(m_elements[i])->SetText("");
+		static_cast<GuiLabel*>(m_elements[i].get())->SetText("");
 	}
 }

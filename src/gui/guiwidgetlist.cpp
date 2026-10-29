@@ -21,14 +21,6 @@
 #include "guiwidget.h"
 #include <sstream>
 
-GuiWidgetList::~GuiWidgetList()
-{
-	for (auto element : m_elements)
-	{
-		delete element;
-	}
-}
-
 void GuiWidgetList::Update(SceneNode & scene, float dt)
 {
 	if (!m_values.empty())
@@ -37,7 +29,7 @@ void GuiWidgetList::Update(SceneNode & scene, float dt)
 		m_values.clear();
 	}
 
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 	{
 		element->Update(scene, dt);
 	}
@@ -45,7 +37,7 @@ void GuiWidgetList::Update(SceneNode & scene, float dt)
 
 void GuiWidgetList::SetAlpha(SceneNode & scene, float value)
 {
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 	{
 		element->SetAlpha(scene, value);
 	}
@@ -170,25 +162,25 @@ void GuiWidgetList::UpdateList(const std::string & vnum)
 
 void GuiWidgetList::SetOpacityAll(const std::string & value)
 {
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 		element->SetOpacity(value);
 }
 
 void GuiWidgetList::SetHueAll(const std::string & value)
 {
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 		element->SetHue(value);
 }
 
 void GuiWidgetList::SetSatAll(const std::string & value)
 {
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 		element->SetSat(value);
 }
 
 void GuiWidgetList::SetValAll(const std::string & value)
 {
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 		element->SetVal(value);
 }
 

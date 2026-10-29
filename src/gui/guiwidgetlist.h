@@ -24,6 +24,8 @@
 #include "guiwidget.h"
 #include "signalslot.h"
 
+#include <memory>
+
 class SceneNode;
 class Drawable;
 
@@ -31,9 +33,6 @@ class Drawable;
 class GuiWidgetList : public GuiWidget, public GuiList
 {
 public:
-	/// base destructor
-	virtual ~GuiWidgetList();
-
 	/// update state
 	void Update(SceneNode & scene, float dt) override;
 
@@ -60,7 +59,7 @@ public:
 	Signald<int, std::vector<std::string> &> get_values;
 
 protected:
-	std::vector<GuiWidget*> m_elements;
+	std::vector<std::unique_ptr<GuiWidget>> m_elements;
 	std::vector<std::string> m_values;
 
 	GuiWidgetList() {};

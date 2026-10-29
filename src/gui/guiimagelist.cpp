@@ -36,17 +36,17 @@ void GuiImageList::SetupDrawable(
 
 		float xywh[4] = {x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh};
 
-		GuiImage * element = new GuiImage();
+		auto element = std::make_unique<GuiImage>();
 		element->SetupDrawable(scene, content, path, ext, xywh, uv, z);
-		m_elements[i] = element;
+		m_elements[i] = std::move(element);
 	}
 }
 
 void GuiImageList::SetImage(const std::string & value)
 {
-	for (auto element : m_elements)
+	for (auto & element : m_elements)
 	{
-		static_cast<GuiImage*>(element)->SetImage(value);
+		static_cast<GuiImage*>(element.get())->SetImage(value);
 	}
 }
 
@@ -55,10 +55,10 @@ void GuiImageList::UpdateElements(SceneNode & /*scene*/)
 	assert(m_values.size() <= m_elements.size());
 	for (size_t i = 0; i < m_values.size(); ++i)
 	{
-		static_cast<GuiImage*>(m_elements[i])->SetImage(m_values[i]);
+		static_cast<GuiImage*>(m_elements[i].get())->SetImage(m_values[i]);
 	}
 	for (size_t i = m_values.size(); i < m_elements.size(); ++i)
 	{
-		static_cast<GuiImage*>(m_elements[i])->SetImage("");
+		static_cast<GuiImage*>(m_elements[i].get())->SetImage("");
 	}
 }
