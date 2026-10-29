@@ -22,15 +22,16 @@
 
 #include "graphics/scenenode.h"
 #include "signalslot.h"
+#include "guicontrol.h"
+#include "guiwidget.h"
 
 #include <map>
+#include <memory>
 #include <vector>
 #include <iosfwd>
 #include <string>
 
 class GuiLanguage;
-class GuiWidget;
-class GuiControl;
 class GuiLabel;
 class Font;
 class Config;
@@ -47,8 +48,6 @@ class GuiPage
 {
 public:
 	GuiPage();
-
-	~GuiPage();
 
 	bool Load(
 		const std::string & path,
@@ -87,8 +86,8 @@ public:
 
 private:
 	std::map <std::string, GuiLabel *> labels;
-	std::vector <GuiControl *> controls;
-	std::vector <GuiWidget *> widgets;
+	std::vector <std::unique_ptr<GuiControl>> controls;
+	std::vector <std::unique_ptr<GuiWidget>> widgets;
 	GuiControl * default_control;
 	GuiControl * active_control;
 	SceneNode node;
@@ -100,7 +99,7 @@ private:
 	{
 		GuiPage * page = 0;
 		GuiControl * control = 0;
-		void call() { assert(page && control); page->SetActiveControl(*control); };
+		void call() { assert(page && control); page->SetActiveControl(control); };
 	};
 	// allow a conrol to signal slots with an extra parameter
 	struct SignalVal
@@ -125,7 +124,7 @@ private:
 
 	void Clear();
 
-	void SetActiveControl(GuiControl & control);
+	void SetActiveControl(GuiControl * control);
 };
 
 #endif

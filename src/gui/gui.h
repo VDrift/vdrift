@@ -104,7 +104,7 @@ public:
 	const Font & GetFont() const;
 
 	typedef std::map<std::string, GuiOption> OptionMap;
-	typedef std::map<std::string, GuiPage> PageMap;
+	typedef std::map<std::string, std::unique_ptr<GuiPage>> PageMap;
 
 private:
 	OptionMap options;
