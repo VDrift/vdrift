@@ -372,7 +372,7 @@ bool Game::InitCoreSubsystems()
 		}
 		else
 		{
-			graphics.release();
+			graphics.reset();
 			render_ver = "gl2";
 			using_gl3 = false;
 		}
