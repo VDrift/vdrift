@@ -22,6 +22,7 @@
 #include "unittest.h"
 
 #include <unordered_map>
+#include <memory>
 #include <fstream>
 #include <cassert>
 
@@ -36,7 +37,7 @@ struct JoePack::Impl
 		unsigned offset;
 		unsigned length;
 	};
-	const std::string versionstr;
+	const std::string versionstr = "JPK01.00";
 	std::unordered_map<std::string, FatEntry> fat;
 	std::unordered_map<std::string, FatEntry>::iterator curfa;
 	std::ifstream f;
@@ -49,7 +50,7 @@ struct JoePack::Impl
 	int fread(void * buffer, const unsigned size, const unsigned count);
 };
 
-JoePack::Impl::Impl() : versionstr("JPK01.00")
+JoePack::Impl::Impl()
 {
 	curfa = fat.end();
 }
@@ -62,12 +63,10 @@ bool JoePack::Impl::Load(const string & fn)
 	if (f)
 	{
 		//load header
-		char * versioncstr = new char[versionstr.length() + 1];
-		f.read(versioncstr, versionstr.length());
+		auto versioncstr = std::make_unique<char[]>(versionstr.length() + 1);
+		f.read(versioncstr.get(), versionstr.length());
 		versioncstr[versionstr.length()] = '\0';
-		string fversionstr = versioncstr;
-		delete [] versioncstr;
-		if (fversionstr != versionstr)
+		if (versionstr != versioncstr.get())
 		{
 			//write out an error?
 			return false;
@@ -86,7 +85,7 @@ bool JoePack::Impl::Load(const string & fn)
 
 		//DPRINT(maxstrlen << " max string length");
 
-		char * fnch = new char[maxstrlen+1];
+		auto fnch = std::make_unique<char[]>(maxstrlen + 1);
 
 		//load FAT
 		fat.reserve(numobjs);
@@ -97,15 +96,14 @@ bool JoePack::Impl::Load(const string & fn)
 			fa.offset = ENDIAN_SWAP_32(fa.offset);
 			f.read((char*)(&(fa.length)), sizeof(unsigned int));
 			fa.length = ENDIAN_SWAP_32(fa.length);
-			f.read(fnch, maxstrlen);
+			f.read(fnch.get(), maxstrlen);
 			fnch[maxstrlen] = '\0';
-			string filename = fnch;
+			string filename(fnch.get());
 			fat[filename] = fa;
 
 			//DPRINT(filename << ": offest " << fa.offset << " length " << fa.length);
 		}
 
-		delete [] fnch;
 		return true;
 	}
 	else
@@ -173,13 +171,12 @@ int JoePack::Impl::fread(void * buffer, const unsigned size, const unsigned coun
 
 JoePack::JoePack()
 {
-	impl = new Impl();
+	impl = std::make_unique<Impl>();
 }
 
 JoePack::~JoePack()
 {
 	Close();
-	delete impl;
 }
 
 bool JoePack::Load(const std::string & fn)

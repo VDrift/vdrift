@@ -21,6 +21,7 @@
 #define _JOEPACK_H
 
 #include <string>
+#include <memory>
 
 class JoePack
 {
@@ -44,7 +45,7 @@ public:
 private:
 	std::string packpath;
 	struct Impl;
-	Impl* impl;
+	std::unique_ptr<Impl> impl;
 };
 
 #endif
