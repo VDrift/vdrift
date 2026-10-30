@@ -1224,20 +1224,19 @@ class BinaryInputSerializer : public SerializerInput
 			(void) name;
 			int strlen = 0;
 			if (!ReadData("length", strlen)) return false;
-			char * inbuffer = new char[strlen+1];
+			auto inbuffer = std::make_unique<char[]>(strlen + 1);
 			inbuffer[strlen] = '\0';
-			in_.read(inbuffer, strlen * sizeof(char));
+			in_.read(inbuffer.get(), strlen * sizeof(char));
 			if (in_.fail() || in_.gcount() != (int)(strlen * sizeof(char)))
 			{
-				delete [] inbuffer;
 				return false;
 			}
+
 			s.clear();
 			for (int n = 0; n < strlen; n++)
 			{
 				s.push_back(inbuffer[n]);
 			}
-			delete [] inbuffer;
 			return true;
 		}
 
