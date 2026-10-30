@@ -22,8 +22,10 @@
 
 #include "pairsort.h"
 
+#include <array>
 #include <vector>
 #include <map>
+#include <memory>
 #include <algorithm>
 #include <cassert>
 
@@ -41,10 +43,10 @@ private:
 	{
 		size_t n = points.size ();
 		assert (n > 1);
-		T * a = new T[n];
-		T * b = new T[n];
-		T * c = new T[n];
-		T * r = new T[n];
+		auto a = std::make_unique<T[]>(n);
+		auto b = std::make_unique<T[]>(n);
+		auto c = std::make_unique<T[]>(n);
+		auto r = std::make_unique<T[]>(n);
 
 		// Fill in the arrays that represent the tridiagonal matrix.
 		// a [0] is not used.
@@ -92,11 +94,6 @@ private:
 			// Use the solution for y"[i+1] to find y"[i].
 			second_derivs [i] = ( r [i] - c [i] * second_derivs [i+1] ) / b [i];
 		}
-
-		delete [] a;
-		delete [] b;
-		delete [] c;
-		delete [] r;
 
 		derivs_calculated = true;
 	}
