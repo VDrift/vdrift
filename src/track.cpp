@@ -95,23 +95,11 @@ void Track::Clear()
 {
 	for (auto & object : data.objects)
 	{
-		data.world->removeCollisionObject(object);
-		delete object;
+		data.world->removeCollisionObject(object.get());
 	}
 	data.objects.clear();
-
-	for (auto & shape : data.shapes)
-	{
-		delete shape;
-	}
 	data.shapes.clear();
-
-	for (auto & mesh : data.meshes)
-	{
-		delete mesh;
-	}
 	data.meshes.clear();
-
 	data.static_node.Clear();
 	data.surfaces.clear();
 	data.models.clear();

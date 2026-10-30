@@ -385,32 +385,17 @@ static bool LoadDifferential(
 
 struct AeroDeviceFracture : public FractureCallback
 {
-	btAlignedObjectArray<AeroDevice> & aerodevice;
+	btAlignedObjectArray<AeroDevice> & device;
 	int id;
 
-	AeroDeviceFracture(btAlignedObjectArray<AeroDevice> & aerodevice, int id) :
-		aerodevice(aerodevice),
-		id(id)
+	AeroDeviceFracture(btAlignedObjectArray<AeroDevice> & d, int n) : device(d), id(n)
 	{
 		// ctor
 	}
 
-	~AeroDeviceFracture()
+	void operator()(FractureConnection & /*connection*/) override
 	{
-		// dtor
-	}
-
-	void operator()(FractureBody::Connection & /*connection*/) override
-	{
-		int last = aerodevice.size() - 1;
-		if (id < last)
-		{
-			aerodevice.swap(id, last);
-			auto ad = static_cast<AeroDeviceFracture*>(aerodevice[id].GetUserPointer());
-			btAssert(ad);
-			ad->id = id;
-		}
-		aerodevice.resize(last);
+		device[id] = AeroDevice();
 	}
 };
 
@@ -435,7 +420,7 @@ struct BodyLoader
 	bool operator() (
 		const PTree & cfg,
 		std::ostream & /*error*/,
-		btCollisionShape * shape = 0,
+		std::unique_ptr<btCollisionShape> & shape,
 		btScalar mass = 0,
 		bool link = false)
 	{
@@ -500,10 +485,8 @@ struct BodyLoader
 		cfg.get("lift-efficiency", ad.lift_efficiency);
 		if (link)
 		{
-			int id = aerodevice.size();
-			auto adf = new AeroDeviceFracture(aerodevice, id);
-			info.m_connections[info.m_connections.size() - 1].m_fracture = adf;
-			ad.user_ptr = adf;
+			auto & adf = info.m_connections[info.m_connections.size() - 1].m_fracture;
+			adf = std::make_unique<AeroDeviceFracture>(aerodevice, aerodevice.size());
 		}
 		aerodevice.push_back(AeroDevice(ad));
 		return true;
@@ -614,15 +597,18 @@ bool CarDynamics::Load(
 		btScalar width = wheel[i].GetWidth();
 		btScalar radius = wheel[i].GetRadius();
 		btVector3 size(width * 0.5f, radius, radius);
-		btCollisionShape * shape = new btCylinderShapeX(size);
+		std::unique_ptr<btCollisionShape> shape(new btCylinderShapeX(size));
 		loadBody(cfg_wheel, error, shape, mass, true);
+		shapes.push_back(std::move(shape));
 		i++;
 	}
 
 	// load children bodies
 	for (const auto & node : cfg)
 	{
-		if (!loadBody(node.second, error)) return false;
+		std::unique_ptr<btCollisionShape> shape;
+		if (!loadBody(node.second, error, shape)) return false;
+		shapes.push_back(std::move(shape));
 	}
 
 	// get suspension load at rest
@@ -655,12 +641,12 @@ bool CarDynamics::Load(
 	transform.setRotation(rotation);
 	transform.setOrigin(position);
 
-	body = new FractureBody(bodyinfo);
+	body = std::make_unique<FractureBody>(bodyinfo);
 	body->setCenterOfMassTransform(transform);
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0);
 	body->setCollisionFlags(body->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-	world.addRigidBody(body);
+	world.addRigidBody(body.get());
 	world.addAction(this);
 	this->world = &world;
 
@@ -1238,7 +1224,7 @@ void CarDynamics::UpdateWheelContacts()
 		}
 		else
 		{
-			world->castRay(raystart, raydir, raylen, body, wheel_contact[i]);
+			world->castRay(raystart, raydir, raylen, body.get(), wheel_contact[i]);
 		}
 	}
 }
@@ -1838,36 +1824,18 @@ void CarDynamics::Clear()
 	if (!body) return;
 
 	assert(world);
-	for (int i = 0; i < body->getNumChildren(); ++i)
+	for (int i = 0; i < body.get()->getNumChildren(); ++i)
 	{
-		btRigidBody * child = body->getChildBody(i);
+		auto child = body.get()->getChildBody(i);
 		if (child->isInWorld())
 		{
 			world->removeRigidBody(child);
-			delete child->getCollisionShape();
 		}
-		delete child;
 	}
 	world->removeAction(this);
-	world->removeRigidBody(body);
-	world = 0;
-
-	if (body->getCollisionShape()->isCompound())
-	{
-		const btCompoundShape * shape = static_cast<btCompoundShape*>(body->getCollisionShape());
-		for (int i = 0; i < shape->getNumChildShapes(); ++i)
-		{
-			delete shape->getChildShape(i);
-		}
-	}
-	delete body->getCollisionShape();
-	delete body;
-	body = 0;
-
-	for (int i = 0; i < aerodevice.size(); ++i)
-	{
-		delete static_cast<AeroDeviceFracture*>(aerodevice[i].GetUserPointer());
-	}
+	world->removeRigidBody(body.get());
+	world = nullptr;
+	body.reset();
 	aerodevice.clear();
 }
 
@@ -1973,5 +1941,5 @@ bool CarDynamics::WheelContactCallback(
 
 const btCollisionObject & CarDynamics::getCollisionObject() const
 {
-	return *static_cast<btCollisionObject*>(body);
+	return *static_cast<btCollisionObject*>(body.get());
 }

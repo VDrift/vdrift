@@ -173,9 +173,9 @@ private:
 		// static track objects
 		SceneNode static_node;
 		std::vector<TrackSurface> surfaces;
-		std::vector<btStridingMeshInterface*> meshes;
-		std::vector<btCollisionShape*> shapes;
-		std::vector<btCollisionObject*> objects;
+		std::vector<std::unique_ptr<btStridingMeshInterface>> meshes;
+		std::vector<std::unique_ptr<btCollisionShape>> shapes;
+		std::vector<std::unique_ptr<btCollisionObject>> objects;
 
 		// dynamic track objects
 		SceneNode dynamic_node;

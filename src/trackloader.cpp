@@ -331,10 +331,9 @@ bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & bod
 {
 	if (body.mass < 1E-3f)
 	{
-		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+		auto mesh = std::make_unique<btTriangleIndexVertexArray>();
 		mesh->addIndexedMesh(GetIndexedMesh(model));
-		data.meshes.push_back(mesh);
-		body.mesh = mesh;
+		body.mesh = mesh.get();
 
 		int surface = 0;
 		cfg.get("surface", surface);
@@ -343,10 +342,12 @@ bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & bod
 			surface = 0;
 		}
 
-		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+		auto shape = std::make_unique<btBvhTriangleMeshShape>(mesh.get(), true);
 		shape->setUserPointer((void*)&data.surfaces[surface]);
-		data.shapes.push_back(shape);
-		body.shape = shape;
+		body.shape = shape.get();
+
+		data.meshes.push_back(std::move(mesh));
+		data.shapes.push_back(std::move(shape));
 	}
 	else
 	{
@@ -355,25 +356,26 @@ bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & bod
 		btTransform transform = btTransform::getIdentity();
 		transform.getOrigin() -= center;
 
-		btCompoundShape * compound = 0;
-		btCollisionShape * shape = 0;
+		std::unique_ptr<btCompoundShape> compound;
+		std::unique_ptr<btCollisionShape> shape;
 		LoadCollisionShape(cfg, transform, shape, compound);
-
 		if (!shape)
 		{
 			// fall back to model bounding box
-			shape = new btBoxShape(ToBulletVector(model.GetAabb().GetExtent()));
+			shape = std::make_unique<btBoxShape>(ToBulletVector(model.GetAabb().GetExtent()));
 			center = center + ToBulletVector(model.GetAabb().GetCenter());
 		}
 		if (compound)
 		{
-			shape = compound;
+			data.shapes.push_back(std::move(shape));
+			shape = std::move(compound);
 		}
-		data.shapes.push_back(shape);
 
 		shape->calculateLocalInertia(body.mass, body.inertia);
-		body.shape = shape;
+		body.shape = shape.get();
 		body.center = center;
+
+		data.shapes.push_back(std::move(shape));
 	}
 
 	return true;
@@ -565,13 +567,13 @@ bool Track::Loader::LoadNode(const PTree & sec)
 #ifndef EXTBULLET
 			track_shape->addChildShape(transform, body.shape);
 #else
-			btCollisionObject * object = new btCollisionObject();
+			auto object = std::make_unique<btCollisionObject>();
 			object->setActivationState(DISABLE_SIMULATION);
 			object->setWorldTransform(transform);
 			object->setCollisionShape(body.shape);
 			object->setUserPointer(body.shape->getUserPointer());
-			data.objects.push_back(object);
-			world.addCollisionObject(object);
+			world.addCollisionObject(object.get());
+			data.objects.push_back(std::move(object));
 #endif
 		}
 	}
@@ -594,10 +596,10 @@ bool Track::Loader::LoadNode(const PTree & sec)
 			btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
 			info.m_friction = 0.9;
 
-			btRigidBody * object = new btRigidBody(info);
+			auto object = std::make_unique<btRigidBody>(info);
 			object->setContactProcessingThreshold(0.0);
-			data.objects.push_back(object);
-			world.addRigidBody(object);
+			world.addRigidBody(object.get());
+			data.objects.push_back(std::move(object));
 
 			SceneNode::Handle node_handle = data.dynamic_node.AddNode();
 			SceneNode & node = data.dynamic_node.GetNode(node_handle);
@@ -613,13 +615,13 @@ bool Track::Loader::LoadNode(const PTree & sec)
 			transform.setOrigin(ToBulletVector(position));
 			transform.setRotation(ToBulletQuaternion(rotation));
 
-			btCollisionObject * object = new btCollisionObject();
+			auto object = std::make_unique<btCollisionObject>();
 			object->setActivationState(DISABLE_SIMULATION);
 			object->setWorldTransform(transform);
 			object->setCollisionShape(body.shape);
 			object->setUserPointer(body.shape->getUserPointer());
-			data.objects.push_back(object);
-			world.addCollisionObject(object);
+			world.addCollisionObject(object.get());
+			data.objects.push_back(std::move(object));
 
 			SceneNode::Handle h = data.static_node.AddNode();
 			SceneNode & node = data.static_node.GetNode(h);
@@ -768,26 +770,26 @@ bool Track::Loader::AddObject(const Object & object)
 
 	if (object.collideable)
 	{
-		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+		auto mesh = std::make_unique<btTriangleIndexVertexArray>();
 		mesh->addIndexedMesh(GetIndexedMesh(*object.model));
-		data.meshes.push_back(mesh);
 
+		auto shape = std::make_unique<btBvhTriangleMeshShape>(mesh.get(), true);
 		assert(object.surface >= 0 && object.surface < (int)data.surfaces.size());
-		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
 		shape->setUserPointer((void*)&data.surfaces[object.surface]);
-		data.shapes.push_back(shape);
 
 #ifndef EXTBULLET
 		btTransform transform = btTransform::getIdentity();
-		track_shape->addChildShape(transform, shape);
+		track_shape->addChildShape(transform, shape.get());
 #else
-		btCollisionObject * co = new btCollisionObject();
-		co->setActivationState(DISABLE_SIMULATION);
-		co->setCollisionShape(shape);
-		co->setUserPointer(shape->getUserPointer());
-		data.objects.push_back(co);
-		world.addCollisionObject(co);
+		auto cobject = std::make_unique<btCollisionObject>();
+		cobject->setActivationState(DISABLE_SIMULATION);
+		cobject->setCollisionShape(shape.get());
+		cobject->setUserPointer(shape->getUserPointer());
+		world.addCollisionObject(cobject.get());
+		data.objects.push_back(std::move(cobject));
 #endif
+		data.shapes.push_back(std::move(shape));
+		data.meshes.push_back(std::move(mesh));
 	}
 	return true;
 }

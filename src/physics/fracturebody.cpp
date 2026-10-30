@@ -49,9 +49,10 @@ static inline btVector3 getPrincipalInertia(const btVector3 & p, const btScalar 
 		p.x() * p.x() + p.y() * p.y());
 }
 
-FractureBody::FractureBody(const FractureBodyInfo & info) :
-	btRigidBody(btRigidBodyConstructionInfo(1, 0, info.m_shape, btVector3(1, 1, 1))),
-	m_connections(info.m_connections),
+FractureBody::FractureBody(FractureBodyInfo & info) :
+	btRigidBody(btRigidBodyConstructionInfo(1, 0, info.m_shape.get(), btVector3(1, 1, 1))),
+	m_connections(std::move(info.m_connections)),
+	m_shape(std::move(info.m_shape)),
 	m_motionState(*this)
 {
 	m_internalType = CO_FRACTURE_TYPE | CO_RIGID_BODY;
@@ -62,11 +63,11 @@ FractureBody::FractureBody(const FractureBodyInfo & info) :
 	setMassProps(info.m_mass, inertia);
 
 	// shift children shapes due to new center of mass
-	for (int i = 0; i < info.m_shape->getNumChildShapes(); ++i)
+	for (int i = 0; i < m_shape->getNumChildShapes(); ++i)
 	{
-		info.m_shape->getChildTransform(i).getOrigin() += m_centerOfMassOffset;
+		m_shape->getChildTransform(i).getOrigin() += m_centerOfMassOffset;
 	}
-	info.m_shape->recalculateLocalAabb();
+	m_shape->recalculateLocalAabb();
 
 	// set motion states
 	if (info.m_states.size() == m_connections.size() + 1)
@@ -104,7 +105,7 @@ int FractureBody::getNumChildren() const
 btRigidBody* FractureBody::getChildBody(int i) const
 {
 	btAssert(i >= 0 && i < m_connections.size());
-	return m_connections[i].m_body;
+	return m_connections[i].m_body.get();
 }
 
 void FractureBody::setChildTransform(int i, const btTransform& transform)
@@ -129,7 +130,7 @@ bool FractureBody::applyImpulse(int con_id, btScalar impulse)
 btRigidBody* FractureBody::updateConnection(int con_id)
 {
 	btAssert(con_id >= 0 && con_id < m_connections.size());
-	Connection& connection = m_connections[con_id];
+	auto & connection = m_connections[con_id];
 	if (m_connections[con_id].m_shapeId < 0)
 	{
 		return 0;
@@ -155,7 +156,7 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	btCompoundShape* compound = static_cast<btCompoundShape*>(m_collisionShape);
 
 	// Init child body.
-	btRigidBody* child = m_connections[con_id].m_body;
+	btRigidBody* child = m_connections[con_id].m_body.get();
 	btTransform trans = getWorldTransform() * compound->getChildTransform(shape_id);
 	child->setWorldTransform(trans);
 	child->setLinearVelocity(getVelocityInLocalPoint(trans.getOrigin()-getCenterOfMassPosition()));
@@ -216,7 +217,7 @@ void FractureBodyInfo::addBody(
 	btScalar plasticLimit)
 {
 	btCollisionShape* shape = m_shape->getChildShape(shape_id);
-	btAssert(!shape->isCompound()); // compound children not suported
+	btAssert(!shape->isCompound()); // compound children not supported
 
 	setConId(*shape, m_connections.size());
 
@@ -226,16 +227,15 @@ void FractureBodyInfo::addBody(
 		shape->calculateLocalInertia(mass, shape_inertia);
 	}
 
-	btRigidBody::btRigidBodyConstructionInfo info(mass, 0, shape, shape_inertia);
-	btRigidBody* body = new btRigidBody(info);
+	m_connections.resize(m_connections.size() + 1);
+	auto & connection = m_connections.back();
 
-	FractureBody::Connection connection;
-	connection.m_body = body;
+	btRigidBody::btRigidBodyConstructionInfo info(mass, 0, shape, shape_inertia);
+	connection.m_body = std::make_unique<btRigidBody>(info);
 	connection.m_elasticLimit = elasticLimit;
 	connection.m_plasticLimit = plasticLimit;
 	connection.m_accImpulse = 0;
 	connection.m_shapeId = shape_id;
-	m_connections.push_back(connection);
 }
 
 void FractureBodyInfo::addBody(
@@ -250,9 +250,7 @@ void FractureBodyInfo::addBody(
 	addBody(m_shape->getNumChildShapes(), inertia, mass, elasticLimit, plasticLimit);
 }
 
-FractureBody::Connection::Connection() :
-	m_body(0),
-	m_fracture(0),
+FractureConnection::FractureConnection() :
 	m_elasticLimit(0),
 	m_plasticLimit(0),
 	m_accImpulse(0),

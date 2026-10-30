@@ -21,7 +21,9 @@
 #define _FRACTUREBODY_H
 
 #include "BulletDynamics/Dynamics/btRigidBody.h"
-#include "LinearMath/btAlignedObjectArray.h"
+
+#include <memory>
+#include <vector>
 
 #define CO_FRACTURE_TYPE (btRigidBody::CO_USER_TYPE)
 
@@ -29,11 +31,13 @@ class btDynamicsWorld;
 class btCompoundShape;
 struct MotionState;
 struct FractureBodyInfo;
+struct FractureCallback;
+struct FractureConnection;
 
 class FractureBody : public btRigidBody
 {
 public:
-	FractureBody(const FractureBodyInfo & info);
+	FractureBody(FractureBodyInfo & info);
 
 	// returns >= 0 if shape is connected
 	int getConnectionId(int shape_id) const;
@@ -62,10 +66,9 @@ public:
 		return m_centerOfMassOffset;
 	}
 
-	struct Connection;
-
 private:
-	btAlignedObjectArray<Connection> m_connections;
+	std::vector<FractureConnection> m_connections;
+	std::unique_ptr<btCompoundShape> m_shape;
 	btVector3 m_centerOfMassOffset;
 
 	// motion state wrapper, updates children motion states
@@ -109,9 +112,9 @@ struct FractureBodyInfo
 
 	FractureBodyInfo(btAlignedObjectArray<MotionState>& m_states);
 
-	btCompoundShape* m_shape;
+	std::unique_ptr<btCompoundShape> m_shape;
 	btAlignedObjectArray<MotionState>& m_states;
-	btAlignedObjectArray<FractureBody::Connection> m_connections;
+	std::vector<FractureConnection> m_connections;
 	btVector3 m_inertia;
 	btVector3 m_massCenter;
 	btScalar m_mass;
@@ -119,19 +122,20 @@ struct FractureBodyInfo
 
 struct FractureCallback
 {
-	virtual void operator()(FractureBody::Connection & connection) = 0;
+	virtual void operator()(FractureConnection & connection) = 0;
 	virtual ~FractureCallback() {};
 };
 
-struct FractureBody::Connection
+struct FractureConnection
 {
-	btRigidBody* m_body;
-	FractureCallback* m_fracture;
+	FractureConnection();
+
+	std::unique_ptr<btRigidBody> m_body;
+	std::unique_ptr<FractureCallback> m_fracture;
 	btScalar m_elasticLimit;
 	btScalar m_plasticLimit;
 	btScalar m_accImpulse;
 	int m_shapeId;
-	Connection();
 };
 
 #endif

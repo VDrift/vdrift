@@ -190,12 +190,13 @@ protected:
 	enum DriveEnum { NONE, FWD, RWD, AWD };
 
 	DynamicsWorld * world;
-	FractureBody * body;
+	std::unique_ptr<FractureBody> body;
 
 	// body state
 	btTransform transform;
 	btAlignedObjectArray<MotionState> motion_state;
 	btAlignedObjectArray<AeroDevice> aerodevice;
+	std::vector<std::unique_ptr<btCollisionShape>> shapes;
 
 	// driveline state
 	CarEngine engine;
@@ -492,7 +493,7 @@ inline bool Serializex(Serializer & s, btRigidBody & b)
 template <class Serializer>
 inline bool CarDynamics::Serialize(Serializer & s)
 {
-	_SERIALIZEX_(s, *(btRigidBody*)body);
+	_SERIALIZEX_(s, *(btRigidBody*)body.get());
 	_SERIALIZEX_(s, transform);
 	_SERIALIZE_(s, engine);
 	_SERIALIZE_(s, clutch);

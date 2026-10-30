@@ -39,8 +39,8 @@ static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 void LoadCapsuleShape(
 	const PTree & cfg,
 	const btTransform & transform,
-	btCollisionShape *& shape,
-	btCompoundShape *& compound)
+	std::unique_ptr<btCollisionShape> & shape,
+	std::unique_ptr<btCompoundShape> & compound)
 {
 	btVector3 center(0, 0, 0);
 	cfg.get("center", center);
@@ -55,33 +55,33 @@ void LoadCapsuleShape(
 	btScalar radius = size[size.minAxis()] * btScalar(0.5);
 	if (axis == 0)
 	{
-		shape = new btCapsuleShapeX(radius, height);
+		shape.reset(new btCapsuleShapeX(radius, height));
 	}
 	else if (axis == 1)
 	{
-		shape = new btCapsuleShape(radius, height);
+		shape.reset(new btCapsuleShape(radius, height));
 	}
 	else
 	{
-		shape = new btCapsuleShapeZ(radius, height);
+		shape.reset(new btCapsuleShapeZ(radius, height));
 	}
 
 	if (!shape_transform.getOrigin().isZero() && !compound)
 	{
-		compound = new btCompoundShape(false);
+		compound.reset(new btCompoundShape(false));
 	}
 
 	if (compound)
 	{
-		compound->addChildShape(shape_transform, shape);
+		compound->addChildShape(shape_transform, shape.get());
 	}
 }
 
 void LoadBoxShape(
 	const PTree & cfg,
 	const btTransform & transform,
-	btCollisionShape *& shape,
-	btCompoundShape *& compound)
+	std::unique_ptr<btCollisionShape> & shape,
+	std::unique_ptr<btCompoundShape> & compound)
 {
 	btVector3 center(0, 0, 0);
 	cfg.get("center", center);
@@ -90,25 +90,24 @@ void LoadBoxShape(
 
 	btVector3 size(1, 1, 1);
 	cfg.get("size", size);
-	btBoxShape * box = new btBoxShape(size * 0.5);
+	shape.reset(new btBoxShape(size * 0.5));
 
 	if (!shape_transform.getOrigin().isZero() && !compound)
 	{
-		compound = new btCompoundShape(false);
+		compound.reset(new btCompoundShape(false));
 	}
 
-	shape = box;
 	if (compound)
 	{
-		compound->addChildShape(shape_transform, shape);
+		compound->addChildShape(shape_transform, shape.get());
 	}
 }
 
 void LoadHullShape(
 	const PTree & cfg,
 	const btTransform & transform,
-	btCollisionShape *& shape,
-	btCompoundShape *& compound)
+	std::unique_ptr<btCollisionShape> & shape,
+	std::unique_ptr<btCompoundShape> & compound)
 {
 	btAlignedObjectArray<btVector3> points;
 	btAlignedObjectArray<btScalar> radii;
@@ -129,33 +128,31 @@ void LoadHullShape(
 
 	if (has_radius > 0)
 	{
-		shape = new btMultiSphereShape(&points[0], &radii[0], points.size());
+		shape.reset(new btMultiSphereShape(&points[0], &radii[0], points.size()));
 	}
 	else
 	{
-		shape = new btConvexHullShape(&points[0][0], points.size());
+		shape.reset(new btConvexHullShape(&points[0][0], points.size()));
 	}
 
 	if (compound)
 	{
-		compound->addChildShape(btTransform::getIdentity(), shape);
+		compound->addChildShape(btTransform::getIdentity(), shape.get());
 	}
 }
 
 void LoadCollisionShape(
 	const PTree & cfg,
 	const btTransform & transform,
-	btCollisionShape *& shape,
-	btCompoundShape *& compound)
+	std::unique_ptr<btCollisionShape> & shape,
+	std::unique_ptr<btCompoundShape> & compound)
 {
+	const PTree * cfg_shape = 0;
 	if (shape && compound)
 	{
-		compound->addChildShape(transform, shape);
-		return;
+		compound->addChildShape(transform, shape.get());
 	}
-
-	const PTree * cfg_shape = 0;
-	if (cfg.get("hull", cfg_shape))
+	else if (cfg.get("hull", cfg_shape))
 	{
 		LoadHullShape(*cfg_shape, transform, shape, compound);
 	}
