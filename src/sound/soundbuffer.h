@@ -23,6 +23,7 @@
 #include "soundinfo.h"
 
 #include <iosfwd>
+#include <memory>
 #include <string>
 
 class SoundBuffer
@@ -30,25 +31,16 @@ class SoundBuffer
 public:
 	SoundBuffer();
 
-	~SoundBuffer();
-
 	bool Load(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output);
-
-	void Unload();
 
 	const SoundInfo & GetInfo() const
 	{
 		return info;
 	}
 
-	inline int GetSample16bit(const unsigned int channel, const unsigned int position) const
-	{
-		return ((short *)sound_buffer)[position * info.channels + (channel - 1) * (info.channels - 1)];
-	}
-
 	const char * GetRawBuffer() const
 	{
-		return sound_buffer;
+		return sound_buffer.get();
 	}
 
 	const std::string & GetName() const
@@ -56,15 +48,9 @@ public:
 		return name;
 	}
 
-	bool GetLoaded() const
-	{
-		return loaded;
-	}
-
 private:
 	SoundInfo info;
-	bool loaded;
-	char * sound_buffer;
+	std::unique_ptr<char[]> sound_buffer;
 	std::string name;
 
 	bool LoadWAV(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output);

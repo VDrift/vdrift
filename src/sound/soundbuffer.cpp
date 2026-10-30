@@ -31,43 +31,26 @@
 #include <cstdio>
 #include <cstring>
 
-SoundBuffer::SoundBuffer() :
-	info(0, 0, 0, 0),
-	loaded(false),
-	sound_buffer(0)
+SoundBuffer::SoundBuffer() : info(0, 0, 0, 0)
 {
 	// ctor
-}
-
-SoundBuffer::~SoundBuffer()
-{
-	Unload();
 }
 
 bool SoundBuffer::Load(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output)
 {
 	if (filename.find(".wav") != std::string::npos)
 		return LoadWAV(filename, sound_device_info, error_output);
-	else if (filename.find(".ogg") != std::string::npos)
-		return LoadOGG(filename, sound_device_info, error_output);
-	else
-	{
-		error_output << "Unable to determine file type from filename: " << filename << std::endl;
-		return false;
-	}
-}
 
-void SoundBuffer::Unload()
-{
-	if (loaded && sound_buffer)
-		delete [] sound_buffer;
-	sound_buffer = 0;
+	if (filename.find(".ogg") != std::string::npos)
+		return LoadOGG(filename, sound_device_info, error_output);
+
+	error_output << "Unable to determine file type from filename: " << filename << std::endl;
+	return false;
 }
 
 bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output)
 {
-	if (loaded)
-		Unload();
+	sound_buffer.reset();
 
 	name = filename;
 
@@ -194,9 +177,20 @@ bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_
 		return false;
 	}
 
+	unsigned int bytespersample = bits_per_sample / 8;
+	unsigned int samples = size / bytespersample;
+	unsigned int buffer_size = size;
+	unsigned int buffer_offset = 0;
+	if (sound_device_info.bytespersample == 4)
+	{
+		bytespersample = 4;
+		buffer_size = size * 2;
+		buffer_offset = size;
+	}
+
 	// read in our whole sound data chunk
-	sound_buffer = new char[size];
-	file.read(sound_buffer, size);
+	auto buffer = std::make_unique<char[]>(buffer_size);
+	file.read(buffer.get() + buffer_offset, size);
 	if (!file)
 	{
 		error_output << "Failed to read wave data " << filename << std::endl;
@@ -204,36 +198,32 @@ bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_
 	}
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	for (unsigned int i = 0; i < size / 2; i++)
+	short * buffer_short = (short *)sound_buffer.get();
+	for (unsigned int i = buffer_offset/2; i < buffer_size/2; i++)
 	{
-		((short *)sound_buffer)[i] = ENDIAN_SWAP_16(((short *)sound_buffer)[i]);
+		buffer_short[i] = ENDIAN_SWAP_16(buffer_short[i]);
 	}
 #endif
 
-	unsigned int bytespersample = bits_per_sample / 8;
-	unsigned int samples = size / bytespersample;
-	if (sound_device_info.bytespersample == 4)
+	// convert to float
+	if (bytespersample == 4)
 	{
-		// convert to float
-		bytespersample = 4;
-		float * sound_buffer_float = new float[samples];
+		float * buffer_float = (float*)buffer.get();
+		short * buffer_short = (short*)(buffer.get() + buffer_offset);
 		for (unsigned int i = 0; i < samples; i++)
 		{
-			sound_buffer_float[i] = ((short *)sound_buffer)[i] * (1.0f / 32767);
+			buffer_float[i] = buffer_short[i] * (1.0f / 32767);
 		}
-		delete [] sound_buffer;
-		sound_buffer = (char*)sound_buffer_float;
 	}
 
 	info = SoundInfo(samples, sample_rate, channels, bytespersample);
-	loaded = true;
+	sound_buffer = std::move(buffer);
 	return true;
 }
 
 bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output)
 {
-	if (loaded)
-		Unload();
+	sound_buffer.reset();
 
 	name = filename;
 
@@ -260,7 +250,7 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 
 	// allocate space
 	unsigned int size = info.samples * info.bytespersample;
-	sound_buffer = new char[size];
+	auto buffer = std::make_unique<char[]>(size);
 
 	if (bytespersample == 2)
 	{
@@ -271,11 +261,10 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 		unsigned int bufpos = 0; // total bytes read
 		while (bufpos < size)
 		{
-			int bytes_read = ov_read(&oggFile, sound_buffer + bufpos, size - bufpos, endian, wordsize, issigned, &bitstream);
+			int bytes_read = ov_read(&oggFile, buffer.get() + bufpos, size - bufpos, endian, wordsize, issigned, &bitstream);
 			if (bytes_read <= 0)
 			{
 				error_output << "Error decoding " + filename << std::endl;
-				delete [] sound_buffer;
 				ov_clear(&oggFile);
 				return false;
 			}
@@ -284,7 +273,7 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 	}
 	else
 	{
-		float * buffer = (float*)sound_buffer;
+		float * buffer_float = (float*)buffer.get();
 		int bitstream;
 		unsigned int bufpos = 0; // total samples read
 		while (bufpos < samples)
@@ -294,7 +283,6 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 			if (samples_read <= 0)
 			{
 				error_output << "Error decoding " + filename << std::endl;
-				delete [] sound_buffer;
 				ov_clear(&oggFile);
 				return false;
 			}
@@ -305,22 +293,20 @@ bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_
 				for (int i = 0; i < samples_read; i++)
 				{
 					unsigned int n = (bufpos + i) * 2;
-					buffer[n] = pcm[0][i];
-					buffer[n + 1] = pcm[1][i];
+					buffer_float[n] = pcm[0][i];
+					buffer_float[n + 1] = pcm[1][i];
 				}
 			}
 			else
 			{
-				memcpy(buffer + bufpos, pcm[0], samples_read * sizeof(float));
+				memcpy(buffer_float + bufpos, pcm[0], samples_read * sizeof(float));
 			}
 
 			bufpos += samples_read;
 		}
 	}
 
-	// note: no need to call fclose(); ov_clear does it for us
-	ov_clear(&oggFile);
-
-	loaded = true;
+	sound_buffer = std::move(buffer);
+	ov_clear(&oggFile); // note: no need to call fclose(); ov_clear does it for us
 	return true;
 }
