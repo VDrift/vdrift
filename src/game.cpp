@@ -1402,7 +1402,7 @@ void Game::ProcessCameraInputs()
 		camera_id--;
 
 	// wrap around
-	unsigned camera_count = car_gfx.GetCameras().size();
+	unsigned camera_count = car_gfx.GetNumCameras();
 	if (camera_id > camera_count)
 		camera_id = camera_count - 1;
 	else if (camera_id == camera_count)
@@ -1410,7 +1410,7 @@ void Game::ProcessCameraInputs()
 
 	// set active camera
 	Camera * old_camera = active_camera;
-	active_camera = car_gfx.GetCameras()[camera_id];
+	active_camera = car_gfx.GetCamera(camera_id);
 	settings.SetCamera(camera_id);
 
 	// handle rear view

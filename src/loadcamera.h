@@ -21,6 +21,7 @@
 #define _LOADCAMERA_H
 
 #include <iosfwd>
+#include <memory>
 
 class PTree;
 class Camera;
@@ -35,7 +36,7 @@ class Camera;
 // stiffness = 0		#optional used by mount
 // fov = 90				#optional [40, 160], overrides global fov
 //
-Camera * LoadCamera(
+std::unique_ptr<Camera> LoadCamera(
 	const PTree & cfg,
 	float camera_bounce,
 	std::ostream & error_output);

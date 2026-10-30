@@ -24,7 +24,7 @@
 #include "camera_orbit.h"
 #include "cfg/ptree.h"
 
-Camera * LoadCamera(
+std::unique_ptr<Camera> LoadCamera(
 	const PTree & cfg,
 	const float camerabounce,
 	std::ostream & error_output)
@@ -45,38 +45,40 @@ Camera * LoadCamera(
 		lookat = position + Direction::Forward;
 	}
 
-	Camera * cam;
 	if (type == "mount")
 	{
-		CameraMount * c = new CameraMount(name);
-		c->SetEffectStrength(camerabounce);
-		c->SetStiffness(stiffness);
-		c->SetOffset(position, lookat);
-		cam = c;
+		auto cam = std::make_unique<CameraMount>(name);
+		cam->SetEffectStrength(camerabounce);
+		cam->SetStiffness(stiffness);
+		cam->SetOffset(position, lookat);
+		cam->SetFOV(fov);
+		return cam;
 	}
-	else if (type == "chase")
+
+	if (type == "chase")
 	{
-		CameraChase * c = new CameraChase(name);
-		c->SetOffset(position);
-		cam = c;
+		auto cam = std::make_unique<CameraChase>(name);
+		cam->SetOffset(position);
+		cam->SetFOV(fov);
+		return cam;
 	}
-	else if (type == "orbit")
+
+	if (type == "orbit")
 	{
-		CameraOrbit * c = new CameraOrbit(name);
-		c->SetOffset(position);
-		cam = c;
+		auto cam = std::make_unique<CameraOrbit>(name);
+		cam->SetOffset(position);
+		cam->SetFOV(fov);
+		return cam;
 	}
-	else if (type == "free")
+
+	if (type == "free")
 	{
-		CameraFree * c = new CameraFree(name);
-		c->SetOffset(position);
-		cam = c;
+		auto cam = std::make_unique<CameraFree>(name);
+		cam->SetOffset(position);
+		cam->SetFOV(fov);
+		return cam;
 	}
-	else
-	{
-		error_output << "Unknown camera type " << type << std::endl;
-		return 0;
-	}
-	cam->SetFOV(fov);
-	return cam;
+
+	error_output << "Unknown camera type " << type << std::endl;
+	return std::unique_ptr<Camera>();
 }

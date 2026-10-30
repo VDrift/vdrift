@@ -200,11 +200,6 @@ CarGraphics & CarGraphics::operator= (const CarGraphics & other)
 	return *this;
 }
 
-CarGraphics::~CarGraphics()
-{
-	ClearCameras();
-}
-
 bool CarGraphics::Load(
 	const PTree & cfg,
 	const std::string & carpath,
@@ -434,9 +429,14 @@ SceneNode & CarGraphics::GetNode()
 	return topnode;
 }
 
-const std::vector<Camera*> & CarGraphics::GetCameras() const
+unsigned CarGraphics::GetNumCameras() const
 {
-	return cameras;
+	return cameras.size();
+}
+
+Camera * CarGraphics::GetCamera(unsigned i) const
+{
+	return cameras[i].get();
 }
 
 bool CarGraphics::LoadLight(
@@ -502,23 +502,14 @@ bool CarGraphics::LoadCameras(
 	cameras.reserve(cfg_cams->size());
 	for (const auto & cfg_cam : *cfg_cams)
 	{
-		Camera * cam = LoadCamera(cfg_cam.second, cambounce, error_output);
-		if (!cam)
+		auto cam = LoadCamera(cfg_cam.second, cambounce, error_output);
+		if (cam == nullptr)
 		{
-			ClearCameras();
+			cameras.clear();
 			return false;
 		}
-		cameras.push_back(cam);
+		cameras.push_back(std::move(cam));
 	}
 
 	return true;
-}
-
-void CarGraphics::ClearCameras()
-{
-	for (auto & camera : cameras)
-	{
-		delete camera;
-	}
-	cameras.clear();
 }

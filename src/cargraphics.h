@@ -46,8 +46,6 @@ public:
 
 	CarGraphics & operator= (const CarGraphics & other);
 
-	~CarGraphics();
-
 	bool Load(
 		const PTree & cfg,
 		const std::string & carpath,
@@ -71,7 +69,9 @@ public:
 
 	SceneNode & GetNode();
 
-	const std::vector<Camera*> & GetCameras() const;
+	unsigned GetNumCameras() const;
+
+	Camera * GetCamera(unsigned i) const;
 
 private:
 	SceneNode topnode;
@@ -81,7 +81,7 @@ private:
 	SceneNode::DrawableHandle reverselights;
 
 	// car cameras
-	std::vector<Camera*> cameras;
+	std::vector<std::unique_ptr<Camera>> cameras;
 
 	// car lights
 	struct Light
