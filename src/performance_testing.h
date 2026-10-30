@@ -46,8 +46,8 @@ private:
 	CarDynamics car;
 
 	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
+	std::unique_ptr<btCollisionObject> track;
+	std::unique_ptr<btCollisionShape> plane;
 
 	void ResetCar();
 

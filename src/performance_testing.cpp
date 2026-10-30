@@ -43,8 +43,7 @@ static inline float ConvertToFeet(float meters)
 	return meters * 3.2808399f;
 }
 
-PerformanceTesting::PerformanceTesting(DynamicsWorld & world) :
-	world(world), track(0), plane(0)
+PerformanceTesting::PerformanceTesting(DynamicsWorld & world) : world(world)
 {
 	surface.type = TrackSurface::ASPHALT;
 	surface.bumpWaveLength = 1;
@@ -53,18 +52,25 @@ PerformanceTesting::PerformanceTesting(DynamicsWorld & world) :
 	surface.frictionTread = 1;
 	surface.rollResistanceCoefficient = 1;
 	surface.rollingDrag = 0;
+
+	btVector3 planeNormal(0, 0, 1);
+	btScalar planeConstant = 0;
+	plane = std::make_unique<btStaticPlaneShape>(planeNormal, planeConstant);
+	plane->setUserPointer(static_cast<void*>(&surface));
+
+	track = std::make_unique<btCollisionObject>();
+	track->setCollisionShape(plane.get());
+	track->setActivationState(DISABLE_SIMULATION);
+	track->setUserPointer(static_cast<void*>(&surface));
+
+	world.addCollisionObject(track.get());
 }
 
 PerformanceTesting::~PerformanceTesting()
 {
 	if (track)
 	{
-		world.removeCollisionObject(track);
-		delete track;
-	}
-	if (plane)
-	{
-		delete plane;
+		world.removeCollisionObject(track.get());
 	}
 }
 
@@ -76,19 +82,6 @@ void PerformanceTesting::Test(
 	std::ostream & error_output)
 {
 	info_output << "Beginning car performance test on " << carname << std::endl;
-
-	// init track
-	assert(!track);
-	assert(!plane);
-	btVector3 planeNormal(0, 0, 1);
-	btScalar planeConstant = 0;
-	plane = new btStaticPlaneShape(planeNormal, planeConstant);
-	plane->setUserPointer(static_cast<void*>(&surface));
-	track = new btCollisionObject();
-	track->setCollisionShape(plane);
-	track->setActivationState(DISABLE_SIMULATION);
-	track->setUserPointer(static_cast<void*>(&surface));
-	world.addCollisionObject(track);
 
 	//load the car dynamics
 	std::shared_ptr<PTree> cfg;
