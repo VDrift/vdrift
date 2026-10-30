@@ -278,12 +278,11 @@ void Replay::Version::Save(std::ostream & outstream)
 void Replay::Version::Load(std::istream & instream)
 {
 	// read the file format version data manually
-	const unsigned bufsize = format_version.length();
-	char * version_buf = new char[bufsize+1];
-	instream.read(version_buf, bufsize);
+	auto bufsize = format_version.length();
+	auto version_buf = std::make_unique<char[]>(bufsize + 1);
+	instream.read(version_buf.get(), bufsize);
 	version_buf[bufsize] = '\0';
-	format_version = version_buf;
-	delete [] version_buf;
+	format_version = version_buf.get();
 
 	// read the rest of the versioning info
 	joeserialize::BinaryInputSerializer serialize_input(instream);
